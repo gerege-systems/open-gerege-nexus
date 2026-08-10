@@ -3,8 +3,14 @@
  * Copyright (c) 2026 Gerege Systems Development Team, @craftzbay, Gemini AI & Claude AI
  * Distributed under the Apache 2.0 License.
  *
- * Package ssoprovider provides an ORY Hydra-grade OAuth2 and OpenID Connect (OIDC)
- * Single Sign-On (SSO) Identity Provider engine.
+ * Package ssoprovider implements the platform's OAuth2 Authorization Server and
+ * OpenID Connect Provider.
+ *
+ * Supported today, and advertised in the discovery document only because it is
+ * supported: authorization_code with mandatory PKCE, refresh_token with
+ * rotation and replay detection, and client_credentials for machine callers.
+ * Access tokens are opaque and validated at /oauth2/introspect; id_tokens are
+ * RS256 JWTs verifiable against /.well-known/jwks.json.
  */
 
 package ssoprovider
@@ -12,531 +18,313 @@ package ssoprovider
 import (
 	"context"
 	"crypto/rand"
-	"crypto/sha256"
-	"crypto/subtle"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"log/slog"
 	"net/http"
-	"net/url"
 	"os"
 	"slices"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/gerege-systems/open-gerege-nexus/backend/internal/platform/config"
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// ValidateRedirectURI enforces both transport security and the operator's host
-// allowlist. OAUTH_REDIRECT_HOSTS is a comma-separated list of exact hostnames;
-// subdomains do not inherit trust. Local loopback callbacks remain available
-// for installed development clients.
-func ValidateRedirectURI(raw string) error {
-	u, err := url.Parse(strings.TrimSpace(raw))
-	if err != nil || u.Host == "" || u.User != nil || u.Fragment != "" {
-		return errors.New("invalid redirect URI")
+// Lifetimes. Access tokens are short because they cannot be revoked mid-flight
+// by a resource server that caches introspection results; refresh tokens carry
+// the long-lived grant and rotate on every use.
+const (
+	accessTokenTTL  = 1 * time.Hour
+	refreshTokenTTL = 30 * 24 * time.Hour
+	authCodeTTL     = 5 * time.Minute
+)
+
+// ErrInvalidClient covers every client authentication failure. Callers must not
+// distinguish "unknown client" from "wrong secret", or the endpoint becomes a
+// client_id oracle.
+var ErrInvalidClient = errors.New("invalid_client")
+
+// Scope is a permission a client can ask a user to grant. Description and
+// DescriptionMN are what the consent screen actually renders, so a user is
+// approving something they can read rather than a bare identifier.
+type Scope struct {
+	Name          string `json:"name"`
+	Description   string `json:"description"`
+	DescriptionMN string `json:"description_mn"`
+	// Sensitive scopes are called out on the consent screen.
+	Sensitive bool `json:"sensitive"`
+}
+
+// SupportedScopes is the whole vocabulary. A client may not be registered with,
+// nor request, anything outside it.
+var SupportedScopes = []Scope{
+	{Name: "openid", Description: "Sign you in and confirm your identity", DescriptionMN: "Таныг нэвтрүүлж, хэн болохыг баталгаажуулна"},
+	{Name: "profile", Description: "Read your name and account details", DescriptionMN: "Таны нэр болон бүртгэлийн мэдээллийг харна"},
+	{Name: "email", Description: "Read your email address", DescriptionMN: "Таны и-мэйл хаягийг харна"},
+	{Name: "phone", Description: "Read your phone number", DescriptionMN: "Таны утасны дугаарыг харна"},
+	{Name: "offline_access", Description: "Stay signed in when you are away", DescriptionMN: "Та байхгүй үед ч холболтоо хадгална"},
+	{Name: "erp.read", Description: "Read your organisation's ERP data", DescriptionMN: "Танай байгууллагын ERP өгөгдлийг унших", Sensitive: true},
+	{Name: "erp.write", Description: "Create and change your organisation's ERP data", DescriptionMN: "Танай байгууллагын ERP өгөгдлийг үүсгэх, өөрчлөх", Sensitive: true},
+}
+
+// SupportedGrantTypes is what the token endpoint actually implements.
+var SupportedGrantTypes = []string{"authorization_code", "refresh_token", "client_credentials"}
+
+func scopeNames() []string {
+	names := make([]string, 0, len(SupportedScopes))
+	for _, s := range SupportedScopes {
+		names = append(names, s.Name)
 	}
-	host := strings.ToLower(u.Hostname())
-	loopback := host == "localhost" || host == "127.0.0.1" || host == "::1"
-	if u.Scheme != "https" && (u.Scheme != "http" || !loopback) {
-		return errors.New("redirect URI must use HTTPS")
-	}
-	if loopback {
-		return nil
-	}
-	allowed := os.Getenv("OAUTH_REDIRECT_HOSTS")
-	if strings.TrimSpace(allowed) == "" {
-		allowed = "nexus.gerege.mn"
-	}
-	for _, candidate := range strings.Split(allowed, ",") {
-		if strings.EqualFold(strings.TrimSpace(candidate), host) {
-			return nil
+	return names
+}
+
+// IsSupportedScope reports whether a scope is in the vocabulary above.
+func IsSupportedScope(name string) bool {
+	return slices.ContainsFunc(SupportedScopes, func(s Scope) bool { return s.Name == name })
+}
+
+// LookupScope returns the descriptions for a scope name.
+func LookupScope(name string) (Scope, bool) {
+	for _, s := range SupportedScopes {
+		if s.Name == name {
+			return s, true
 		}
 	}
-	return errors.New("redirect URI host is not allowed")
+	return Scope{}, false
 }
 
-type OAuth2Client struct {
-	ID string `json:"id"`
-	// ClientSecret is populated only in the response that creates the client;
-	// every later read redacts it (see Redacted).
-	ClientID     string    `json:"client_id"`
-	ClientSecret string    `json:"client_secret,omitempty"`
-	ClientName   string    `json:"client_name"`
-	RedirectURIs []string  `json:"redirect_uris"`
-	GrantTypes   []string  `json:"grant_types"`
-	Scopes       []string  `json:"scopes"`
-	CreatedAt    time.Time `json:"created_at"`
-	secretHash   string
-}
-
-// Redacted returns a copy safe to serialise to API consumers.
-func (c *OAuth2Client) Redacted() *OAuth2Client {
-	if c == nil {
-		return nil
-	}
-	clone := *c
-	clone.ClientSecret = ""
-	return &clone
-}
-
-type TokenIntrospection struct {
-	Active    bool   `json:"active"`
-	Scope     string `json:"scope,omitempty"`
-	ClientID  string `json:"client_id,omitempty"`
-	Sub       string `json:"sub,omitempty"`
-	Exp       int64  `json:"exp,omitempty"`
-	TokenType string `json:"token_type,omitempty"`
-}
-
+// SSOProvider is the authorization server.
 type SSOProvider struct {
-	mu      sync.RWMutex
-	issuer  string
-	clients map[string]*OAuth2Client
-	tokens  map[string]*TokenIntrospection
-	db      *pgxpool.Pool
+	store  *Store
+	issuer string
+
+	// sessions resolves the platform session behind a browser hitting the
+	// authorization endpoint. Wired by AttachSessions after construction,
+	// because the session store and the provider are both built by the Server.
+	sessions SessionResolver
+
+	keyMu sync.RWMutex
+	key   *signingKey
 }
 
-func NewSSOProvider(pools ...*pgxpool.Pool) *SSOProvider {
-	issuer := os.Getenv("SSO_ISSUER")
+// NewSSOProvider builds the provider over a database. The previous constructor
+// took no arguments and kept clients and tokens in Go maps, which meant every
+// deploy silently deregistered every integration.
+func NewSSOProvider(db *pgxpool.Pool) *SSOProvider {
+	issuer := strings.TrimSuffix(os.Getenv("SSO_ISSUER"), "/")
 	if issuer == "" {
-		// The issuer is baked into every token already granted and into the
-		// relying parties' configuration, so it is migrated deliberately rather
-		// than tracked automatically. It moved from openerp.gerege.mn with the
-		// Gerege Nexus rebrand; tokens issued under the old issuer stop
-		// validating, so clients pinning it must be updated alongside.
-		// Deployments override it with SSO_ISSUER.
-		issuer = "https://nexus.gerege.mn"
+		issuer = strings.TrimSuffix(os.Getenv("PUBLIC_ORIGIN"), "/")
+	}
+	if issuer == "" {
+		issuer = "http://localhost:8080"
+		slog.Warn("SSO_ISSUER is not set; falling back to localhost, which no external client can reach",
+			"issuer", issuer)
 	}
 
-	provider := &SSOProvider{
-		issuer:  issuer,
-		clients: make(map[string]*OAuth2Client),
-		tokens:  make(map[string]*TokenIntrospection),
-	}
-	if len(pools) > 0 {
-		provider.db = pools[0]
-	}
-
-	// Bootstrap the built-in developer-portal client. Its secret used to be a
-	// constant compiled into the binary — a published credential for every
-	// deployment. It now comes from the environment, and outside production a
-	// random one is generated and logged for local use.
-	secret := os.Getenv("SSO_DEFAULT_CLIENT_SECRET")
-	switch {
-	case secret != "":
-	case config.IsProduction():
-		slog.Warn("SSO_DEFAULT_CLIENT_SECRET is not set — the built-in developer portal client is disabled")
-		return provider
-	default:
-		secret = "sec_" + generateRandomString(32)
-		slog.Info("generated development SSO client secret",
-			"client_id", "gerege-dev-portal", "client_secret", secret)
-	}
-
-	// The built-in client is intentionally memory-backed. Tenant-created
-	// clients are durable; this operator-owned bootstrap identity comes from
-	// deployment configuration on every replica.
-	provider.registerMemoryClient(&OAuth2Client{
-		ID:           "cli_01",
-		ClientID:     "gerege-dev-portal",
-		ClientSecret: secret,
-		ClientName:   "Gerege Developer Portal App",
-		// A redirect URI is matched exactly against what the client sends, so a
-		// client still sending the pre-rebrand openerp.gerege.mn callback is
-		// rejected until it is updated. Add entries here rather than editing in
-		// place if both origins must be accepted during a migration window.
-		RedirectURIs: []string{"http://localhost:3000/callback", "https://nexus.gerege.mn/callback"},
-		GrantTypes:   []string{"authorization_code", "client_credentials", "refresh_token"},
-		// erp.read/erp.write are legacy compatibility scope names, kept through
-		// the Gerege Nexus rebrand. They are protocol identifiers already held
-		// in issued tokens and third-party client registrations; renaming them
-		// would invalidate live grants.
-		Scopes:    []string{"openid", "profile", "email", "erp.read", "erp.write"},
-		CreatedAt: time.Now(),
-	})
-
-	return provider
+	return &SSOProvider{store: NewStore(db), issuer: issuer}
 }
 
-func (s *SSOProvider) RegisterClient(client *OAuth2Client) {
-	s.registerMemoryClient(client)
-}
+// Issuer is the origin this provider names itself by in tokens and discovery.
+func (s *SSOProvider) Issuer() string { return s.issuer }
 
-func (s *SSOProvider) registerMemoryClient(client *OAuth2Client) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if client.ID == "" {
-		client.ID = generateRandomString(12)
-	}
-	if client.ClientID == "" {
-		client.ClientID = "app_" + generateRandomString(16)
-	}
-	if client.ClientSecret == "" {
-		client.ClientSecret = "sec_" + generateRandomString(32)
-	}
-	client.CreatedAt = time.Now()
-	s.clients[client.ClientID] = client
-}
+// Store exposes persistence to the developer portal module, which manages
+// clients on a tenant's behalf.
+func (s *SSOProvider) Store() *Store { return s.store }
 
-// RegisterTenantClient persists one tenant's client. Only a SHA-256 digest of
-// the high-entropy generated secret is stored, so a database leak cannot mint
-// tokens as that client.
-func (s *SSOProvider) RegisterTenantClient(ctx context.Context, tenantID string, client *OAuth2Client) error {
-	if s.db == nil {
-		s.registerMemoryClient(client)
-		return nil
+// signingKey returns the active key, loading it once and caching it.
+func (s *SSOProvider) signingKey(ctx context.Context) (*signingKey, error) {
+	s.keyMu.RLock()
+	cached := s.key
+	s.keyMu.RUnlock()
+	if cached != nil {
+		return cached, nil
 	}
-	if client.ID == "" {
-		client.ID = uuid.NewString()
+	s.keyMu.Lock()
+	defer s.keyMu.Unlock()
+	if s.key != nil {
+		return s.key, nil
 	}
-	if client.ClientID == "" {
-		client.ClientID = "app_" + generateRandomString(16)
-	}
-	if client.ClientSecret == "" {
-		client.ClientSecret = "sec_" + generateRandomString(32)
-	}
-	client.CreatedAt = time.Now()
-	_, err := s.db.Exec(ctx, `INSERT INTO oauth2_clients
-		(id,tenant_id,client_id,client_secret_hash,client_name,redirect_uris,grant_types,scopes,created_at)
-		VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)`, client.ID, tenantID, client.ClientID,
-		hashSecret(client.ClientSecret), client.ClientName, client.RedirectURIs, client.GrantTypes, client.Scopes, client.CreatedAt)
-	return err
-}
-
-// ListClients returns every registered client with its secret redacted. The
-// secret is shown once, in the response to the call that creates the client.
-func (s *SSOProvider) ListClients() []*OAuth2Client {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	list := make([]*OAuth2Client, 0, len(s.clients))
-	for _, c := range s.clients {
-		list = append(list, c.Redacted())
-	}
-	slices.SortFunc(list, func(a, b *OAuth2Client) int {
-		return strings.Compare(a.ClientID, b.ClientID)
-	})
-	return list
-}
-
-func (s *SSOProvider) ListTenantClients(ctx context.Context, tenantID string) ([]*OAuth2Client, error) {
-	if s.db == nil {
-		return s.ListClients(), nil
-	}
-	rows, err := s.db.Query(ctx, `SELECT id::text,client_id,client_name,redirect_uris,grant_types,scopes,created_at
-		FROM oauth2_clients WHERE tenant_id=$1 ORDER BY client_id`, tenantID)
+	key, err := s.store.ActiveSigningKey(ctx)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-	list := make([]*OAuth2Client, 0)
-	for rows.Next() {
-		c := &OAuth2Client{}
-		if err := rows.Scan(&c.ID, &c.ClientID, &c.ClientName, &c.RedirectURIs, &c.GrantTypes, &c.Scopes, &c.CreatedAt); err != nil {
-			return nil, err
+	s.key = key
+	return key, nil
+}
+
+// EnsureDefaultClient registers the platform's own first-party client from
+// SSO_DEFAULT_CLIENT_SECRET.
+//
+// Clients are tenant-owned now, so this one needs an owner: the tenant named by
+// SSO_DEFAULT_CLIENT_TENANT (slug, default "demo"). If that tenant does not
+// exist the client is skipped rather than created ownerless — an ownerless row
+// would be invisible to every developer portal and impossible to rotate.
+func (s *SSOProvider) EnsureDefaultClient(ctx context.Context) {
+	secret := os.Getenv("SSO_DEFAULT_CLIENT_SECRET")
+	if secret == "" {
+		slog.Info("SSO_DEFAULT_CLIENT_SECRET is not set; skipping the built-in client")
+		return
+	}
+
+	slug := os.Getenv("SSO_DEFAULT_CLIENT_TENANT")
+	if slug == "" {
+		slug = "demo"
+	}
+
+	var tenantID string
+	if err := s.store.db.QueryRow(ctx,
+		`SELECT id::text FROM tenants WHERE slug = $1`, slug).Scan(&tenantID); err != nil {
+		slog.Info("skipping the built-in SSO client: its owning tenant does not exist",
+			"tenant_slug", slug)
+		return
+	}
+
+	const clientID = "gerege-dev-portal"
+	if existing, err := s.store.GetClient(ctx, clientID); err == nil {
+		// Keep the secret in step with the environment so rotating the
+		// deployment secret actually rotates the credential.
+		if err := s.store.RotateClientSecret(ctx, existing.TenantID, clientID, hashSecret(secret)); err != nil {
+			slog.Error("failed to sync the built-in SSO client secret", "error", err)
 		}
-		list = append(list, c)
+		return
 	}
-	return list, rows.Err()
+
+	_, err := s.store.CreateClient(ctx, &Client{
+		TenantID:     tenantID,
+		ClientID:     clientID,
+		ClientName:   "Gerege Developer Portal",
+		ClientType:   clientTypeConfidential,
+		RedirectURIs: []string{s.issuer + "/oauth/callback"},
+		GrantTypes:   SupportedGrantTypes,
+		// offline_access belongs here because the grant list above includes
+		// refresh_token, and offline_access is the only scope that produces a
+		// refresh token — registering one without the other left the client
+		// holding a grant it could never exercise.
+		Scopes: []string{"openid", "profile", "email", "offline_access", "erp.read", "erp.write"},
+	}, hashSecret(secret), "")
+	if err != nil {
+		slog.Error("failed to register the built-in SSO client", "error", err)
+		return
+	}
+	slog.Info("registered the built-in SSO client", "client_id", clientID, "tenant_slug", slug)
 }
 
-func (s *SSOProvider) GetClient(clientID string) (*OAuth2Client, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	client, ok := s.clients[clientID]
-	if !ok {
-		return nil, errors.New("client not found")
-	}
-	return client, nil
+// StartJanitor sweeps spent codes and dead tokens until ctx is cancelled.
+// Without it the tables grow without bound, which is the durable version of the
+// unbounded token map this provider used to keep in memory.
+func (s *SSOProvider) StartJanitor(ctx context.Context, every time.Duration) {
+	go func() {
+		ticker := time.NewTicker(every)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				sweepCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+				removed, err := s.store.DeleteExpired(sweepCtx)
+				cancel()
+				if err != nil {
+					slog.Warn("oauth2 janitor sweep failed", "error", err)
+					continue
+				}
+				if removed > 0 {
+					slog.Info("oauth2 janitor reclaimed expired rows", "rows", removed)
+				}
+			}
+		}
+	}()
 }
 
-func (s *SSOProvider) getClient(ctx context.Context, clientID string) (*OAuth2Client, error) {
-	if c, err := s.GetClient(clientID); err == nil {
-		return c, nil
-	}
-	if s.db == nil {
-		return nil, errors.New("client not found")
-	}
-	c := &OAuth2Client{}
-	err := s.db.QueryRow(ctx, `SELECT id::text,client_id,client_secret_hash,client_name,redirect_uris,grant_types,scopes,created_at
-		FROM oauth2_clients WHERE client_id=$1`, clientID).Scan(&c.ID, &c.ClientID, &c.secretHash, &c.ClientName, &c.RedirectURIs, &c.GrantTypes, &c.Scopes, &c.CreatedAt)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, errors.New("client not found")
-	}
-	return c, err
-}
-
-// IssueToken generates a new OAuth2 Access Token
-func (s *SSOProvider) IssueToken(clientID, sub, scope string, duration time.Duration) (string, error) {
-	return s.issueToken(context.Background(), clientID, sub, scope, duration)
-}
-
-func (s *SSOProvider) issueToken(ctx context.Context, clientID, sub, scope string, duration time.Duration) (string, error) {
-	token := "hydra_at_" + generateRandomString(32)
-	exp := time.Now().Add(duration).Unix()
-	if s.db != nil {
-		_, err := s.db.Exec(ctx, `INSERT INTO oauth2_access_tokens(token_hash,client_id,subject,scope,expires_at)
-			VALUES($1,$2,$3,$4,to_timestamp($5))`, hashSecret(token), clientID, sub, scope, exp)
-		return token, err
-	}
-
-	s.mu.Lock()
-	s.tokens[token] = &TokenIntrospection{
-		Active:    true,
-		Scope:     scope,
-		ClientID:  clientID,
-		Sub:       sub,
-		Exp:       exp,
-		TokenType: "Bearer",
-	}
-	s.mu.Unlock()
-
-	return token, nil
-}
-
-// IntrospectToken inspects token validity (ORY Hydra standard)
-func (s *SSOProvider) IntrospectToken(token string) *TokenIntrospection {
-	return s.introspectToken(context.Background(), token)
-}
-
-func (s *SSOProvider) introspectToken(ctx context.Context, token string) *TokenIntrospection {
-	if s.db != nil {
-		res := &TokenIntrospection{TokenType: "Bearer"}
-		err := s.db.QueryRow(ctx, `SELECT client_id,subject,scope,extract(epoch from expires_at)::bigint
-			FROM oauth2_access_tokens WHERE token_hash=$1 AND revoked_at IS NULL AND expires_at>NOW()`, hashSecret(token)).
-			Scan(&res.ClientID, &res.Sub, &res.Scope, &res.Exp)
-		res.Active = err == nil
-		return res
-	}
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	t, ok := s.tokens[token]
-	if !ok {
-		return &TokenIntrospection{Active: false}
-	}
-
-	if time.Now().Unix() > t.Exp {
-		return &TokenIntrospection{Active: false}
-	}
-
-	return t
-}
-
-// RevokeToken invalidates an issued token
-func (s *SSOProvider) RevokeToken(token string) bool {
-	return s.revokeToken(context.Background(), token)
-}
-
-func (s *SSOProvider) revokeToken(ctx context.Context, token string) bool {
-	return s.revokeTokenForClient(ctx, token, "")
-}
-
-func (s *SSOProvider) revokeTokenForClient(ctx context.Context, token, clientID string) bool {
-	if s.db != nil {
-		tag, err := s.db.Exec(ctx, `UPDATE oauth2_access_tokens SET revoked_at=NOW()
-			WHERE token_hash=$1 AND revoked_at IS NULL AND ($2='' OR client_id=$2)`, hashSecret(token), clientID)
-		return err == nil && tag.RowsAffected() > 0
-	}
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if _, ok := s.tokens[token]; ok {
-		delete(s.tokens, token)
-		return true
-	}
-	return false
-}
-
-// HTTP Handlers for OpenID Connect & OAuth2 Provider
-
-// HandleOIDCDiscovery advertises only what this provider actually implements.
-// Announcing authorization_code/refresh_token and RS256 id_tokens while the
-// server issues opaque client_credentials tokens breaks conformant clients at
-// the first redirect.
+// HandleOIDCDiscovery advertises exactly what is implemented.
+//
+// The earlier document listed an empty response_types_supported and only
+// client_credentials, which told conformant clients that interactive sign-in
+// was impossible. It is now implemented, so it is now advertised.
 func (s *SSOProvider) HandleOIDCDiscovery(w http.ResponseWriter, r *http.Request) {
-	doc := map[string]any{
+	writeJSON(w, http.StatusOK, map[string]any{
 		"issuer":                                s.issuer,
+		"authorization_endpoint":                s.issuer + "/oauth2/auth",
 		"token_endpoint":                        s.issuer + "/oauth2/token",
+		"userinfo_endpoint":                     s.issuer + "/oauth2/userinfo",
 		"jwks_uri":                              s.issuer + "/.well-known/jwks.json",
 		"introspection_endpoint":                s.issuer + "/oauth2/introspect",
 		"revocation_endpoint":                   s.issuer + "/oauth2/revoke",
-		"response_types_supported":              []string{},
-		"grant_types_supported":                 []string{"client_credentials"},
-		"token_endpoint_auth_methods_supported": []string{"client_secret_basic", "client_secret_post"},
+		"end_session_endpoint":                  s.issuer + "/oauth2/logout",
+		"response_types_supported":              []string{"code"},
+		"response_modes_supported":              []string{"query"},
+		"grant_types_supported":                 SupportedGrantTypes,
+		"code_challenge_methods_supported":      []string{"S256"},
+		"token_endpoint_auth_methods_supported": []string{"client_secret_basic", "client_secret_post", "none"},
 		"subject_types_supported":               []string{"public"},
-		"scopes_supported":                      []string{"openid", "profile", "email", "phone", "erp.read", "erp.write"},
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(doc)
-}
-
-// HandleJWKS returns an empty key set: access tokens are opaque and validated
-// through /oauth2/introspect. The previous handler published a placeholder RSA
-// key ("n": "mock_rsa_n_val") that no client could ever verify against.
-func (s *SSOProvider) HandleJWKS(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]any{"keys": []map[string]any{}})
-}
-
-// AuthenticateClient verifies client credentials in constant time.
-//
-// The previous condition — `clientSecret != "" && client.ClientSecret != secret`
-// — skipped verification entirely when the request omitted the secret, so any
-// caller who knew a client_id could mint access tokens.
-func (s *SSOProvider) AuthenticateClient(clientID, clientSecret string) (*OAuth2Client, error) {
-	return s.authenticateClient(context.Background(), clientID, clientSecret)
-}
-
-func (s *SSOProvider) authenticateClient(ctx context.Context, clientID, clientSecret string) (*OAuth2Client, error) {
-	client, err := s.getClient(ctx, clientID)
-	if err != nil {
-		return nil, ErrInvalidClient
-	}
-	want := client.ClientSecret
-	got := clientSecret
-	if client.secretHash != "" {
-		want, got = client.secretHash, hashSecret(clientSecret)
-	}
-	if subtle.ConstantTimeCompare([]byte(want), []byte(got)) != 1 {
-		return nil, ErrInvalidClient
-	}
-	return client, nil
-}
-
-// ErrInvalidClient is returned for any client authentication failure; callers
-// must not distinguish "unknown client" from "wrong secret".
-var ErrInvalidClient = errors.New("invalid_client")
-
-func (s *SSOProvider) HandleTokenEndpoint(w http.ResponseWriter, r *http.Request) {
-	// RFC 6749 §2.3.1 allows credentials either in the body or via HTTP Basic.
-	clientID, clientSecret, hasBasic := r.BasicAuth()
-	if !hasBasic {
-		clientID = r.FormValue("client_id")
-		clientSecret = r.FormValue("client_secret")
-	}
-
-	client, err := s.authenticateClient(r.Context(), clientID, clientSecret)
-	if err != nil {
-		w.Header().Set("WWW-Authenticate", `Basic realm="oauth2"`)
-		writeOAuthError(w, http.StatusUnauthorized, "invalid_client", "client authentication failed")
-		return
-	}
-
-	grantType := r.FormValue("grant_type")
-	if grantType == "" {
-		grantType = "client_credentials"
-	}
-	if len(client.GrantTypes) > 0 && !slices.Contains(client.GrantTypes, grantType) {
-		writeOAuthError(w, http.StatusBadRequest, "unauthorized_client",
-			"grant type "+grantType+" is not enabled for this client")
-		return
-	}
-	// Only client_credentials is implemented today; advertising support for
-	// authorization_code without an /oauth2/auth endpoint would be a lie.
-	if grantType != "client_credentials" {
-		writeOAuthError(w, http.StatusBadRequest, "unsupported_grant_type",
-			"only client_credentials is currently implemented")
-		return
-	}
-
-	grantedScopes := client.Scopes
-	if requested := strings.Fields(r.FormValue("scope")); len(requested) > 0 {
-		for _, scope := range requested {
-			if !slices.Contains(client.Scopes, scope) {
-				writeOAuthError(w, http.StatusBadRequest, "invalid_scope", "requested scope is not enabled for this client")
-				return
-			}
-		}
-		grantedScopes = requested
-	}
-	scope := strings.Join(grantedScopes, " ")
-	accessToken, err := s.issueToken(r.Context(), client.ClientID, client.ClientID, scope, tokenTTL)
-	if err != nil {
-		writeOAuthError(w, http.StatusInternalServerError, "server_error", "failed to issue token")
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Cache-Control", "no-store")
-	w.Header().Set("Pragma", "no-cache")
-	_ = json.NewEncoder(w).Encode(map[string]any{
-		"access_token": accessToken,
-		"token_type":   "Bearer",
-		"expires_in":   int(tokenTTL.Seconds()),
-		"scope":        scope,
+		"id_token_signing_alg_values_supported": []string{"RS256"},
+		"scopes_supported":                      scopeNames(),
+		"claims_supported": []string{
+			"iss", "sub", "aud", "exp", "iat", "nonce", "auth_time",
+			"email", "email_verified", "name", "tenant_id",
+		},
+		"service_documentation": s.issuer + "/developer/apps",
 	})
 }
 
-// HandleIntrospectEndpoint requires client authentication: an unauthenticated
-// introspection endpoint lets anyone probe token validity (RFC 7662 §2.1).
-func (s *SSOProvider) HandleIntrospectEndpoint(w http.ResponseWriter, r *http.Request) {
-	clientID, clientSecret, hasBasic := r.BasicAuth()
-	if !hasBasic {
-		clientID = r.FormValue("client_id")
-		clientSecret = r.FormValue("client_secret")
-	}
-	if _, err := s.authenticateClient(r.Context(), clientID, clientSecret); err != nil {
-		writeOAuthError(w, http.StatusUnauthorized, "invalid_client", "client authentication failed")
+// HandleJWKS publishes the public halves of the id_token signing keys.
+func (s *SSOProvider) HandleJWKS(w http.ResponseWriter, r *http.Request) {
+	keys, err := s.store.PublicKeys(r.Context())
+	if err != nil {
+		slog.Error("failed to load JWKS", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]any{"keys": []any{}})
 		return
 	}
-
-	res := s.introspectToken(r.Context(), r.FormValue("token"))
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Cache-Control", "no-store")
-	_ = json.NewEncoder(w).Encode(res)
+	// Ensure a key exists even on a provider that has not signed anything yet,
+	// so a client integrating against us never fetches an empty set.
+	if len(keys) == 0 {
+		if _, err := s.signingKey(r.Context()); err == nil {
+			keys, _ = s.store.PublicKeys(r.Context())
+		}
+	}
+	w.Header().Set("Cache-Control", "public, max-age=300")
+	writeJSON(w, http.StatusOK, map[string]any{"keys": keys})
 }
 
-func (s *SSOProvider) HandleRevokeEndpoint(w http.ResponseWriter, r *http.Request) {
-	clientID, clientSecret, hasBasic := r.BasicAuth()
-	if !hasBasic {
-		clientID = r.FormValue("client_id")
-		clientSecret = r.FormValue("client_secret")
-	}
-	if _, err := s.authenticateClient(r.Context(), clientID, clientSecret); err != nil {
-		writeOAuthError(w, http.StatusUnauthorized, "invalid_client", "client authentication failed")
-		return
-	}
+// HandleScopes lists the scope vocabulary with human descriptions, for the
+// consent screen and the developer portal's scope picker.
+func (s *SSOProvider) HandleScopes(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, http.StatusOK, map[string]any{"scopes": SupportedScopes})
+}
 
-	s.revokeTokenForClient(r.Context(), r.FormValue("token"), clientID)
-	w.WriteHeader(http.StatusOK)
+// NewIdentifier returns n hex characters of crypto/rand output, for callers
+// outside the package that need to mint a client_id or a secret.
+func NewIdentifier(n int) string { return generateRandomString(n) }
+
+// HashSecret digests a client secret the way the store expects to find it.
+// Exported so the developer portal can hand over a hash and never a secret.
+func HashSecret(secret string) string { return hashSecret(secret) }
+
+func writeJSON(w http.ResponseWriter, status int, body any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(body)
 }
 
 func writeOAuthError(w http.ResponseWriter, status int, code, description string) {
-	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-store")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(map[string]string{
-		"error":             code,
-		"error_description": description,
-	})
-}
-
-const tokenTTL = 1 * time.Hour
-
-func hashSecret(value string) string {
-	sum := sha256.Sum256([]byte(value))
-	return hex.EncodeToString(sum[:])
+	writeJSON(w, status, map[string]string{"error": code, "error_description": description})
 }
 
 // generateRandomString returns n hex characters of crypto/rand output.
 //
-// The old implementation drew n bytes and then truncated the 2n-character hex
-// string back to n, silently halving the entropy of every generated secret.
+// The original implementation drew n bytes and then truncated the 2n-character
+// hex string back to n, silently halving the entropy of every secret it made.
 func generateRandomString(n int) string {
 	if n <= 0 {
 		return ""
 	}
 	b := make([]byte, (n+1)/2)
 	if _, err := rand.Read(b); err != nil {
-		// crypto/rand never fails on supported platforms; treat it as fatal
-		// rather than returning a predictable value.
+		// crypto/rand does not fail on supported platforms; a predictable
+		// fallback here would be worse than stopping.
 		panic("ssoprovider: crypto/rand unavailable: " + err.Error())
 	}
 	return hex.EncodeToString(b)[:n]

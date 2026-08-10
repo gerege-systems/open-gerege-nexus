@@ -17,7 +17,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/apps"
@@ -199,6 +198,21 @@ func NewServer(db *pgxpool.Pool, catalogPath string, bus *cache.Bus) (*Server, e
 		eidMN:          eidMN,
 	}
 
+	// The authorization endpoint has to know who is signing in, which is the
+	// platform session rather than anything OAuth owns.
+	ssoProvider.AttachSessions(s.sessions)
+
+	// Clients live in Postgres now, so the built-in one is registered once
+	// rather than rebuilt into a map on every boot. A cold database must not
+	// stop the process from starting: /ready reports that separately.
+	ssoCtx, cancelSSO := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancelSSO()
+	ssoProvider.EnsureDefaultClient(ssoCtx)
+
+	// Spent codes and dead tokens are reclaimed on a timer. The in-memory
+	// token map this replaced had no eviction at all — it only ever grew.
+	ssoProvider.StartJanitor(context.Background(), 15*time.Minute)
+
 	// The bus has to know the caches before a message can arrive for one, and a
 	// message can arrive as soon as the subscriber connects.
 	s.bus.Register(rbac.GrantCacheName, rbac.GrantCache())
@@ -283,16 +297,22 @@ func (s *Server) setupRoutes() {
 	// Prometheus Metrics Endpoint
 	r.Handle("/metrics", observability.MetricsHandler())
 
-	// Opaque SSO tokens are not accepted by the platform API yet. Do not
-	// advertise or mint them accidentally; an operator must explicitly expose
-	// the provider for external resource servers that use introspection.
-	if ssoEndpointsEnabled() {
-		r.Get("/.well-known/openid-configuration", s.ssoProvider.HandleOIDCDiscovery)
-		r.Get("/.well-known/jwks.json", s.ssoProvider.HandleJWKS)
-		r.Post("/oauth2/token", s.ssoProvider.HandleTokenEndpoint)
-		r.Post("/oauth2/introspect", s.ssoProvider.HandleIntrospectEndpoint)
-		r.Post("/oauth2/revoke", s.ssoProvider.HandleRevokeEndpoint)
-	}
+	// OpenID Connect Provider & OAuth2 Authorization Server.
+	//
+	// These sit at the root rather than under /api/, which is where the
+	// specification puts them and what SSO_ISSUER advertises — the reverse
+	// proxy has to route them to this service explicitly.
+	r.Get("/.well-known/openid-configuration", s.ssoProvider.HandleOIDCDiscovery)
+	r.Get("/.well-known/jwks.json", s.ssoProvider.HandleJWKS)
+	// The authorization endpoint is a browser destination: it reads the
+	// session cookie itself and answers with redirects, so it must not sit
+	// behind the API's bearer-token middleware.
+	r.Get("/oauth2/auth", s.ssoProvider.HandleAuthorize)
+	r.Post("/oauth2/token", s.ssoProvider.HandleTokenEndpoint)
+	r.Post("/oauth2/introspect", s.ssoProvider.HandleIntrospect)
+	r.Post("/oauth2/revoke", s.ssoProvider.HandleRevoke)
+	r.Get("/oauth2/userinfo", s.ssoProvider.HandleUserInfo)
+	r.Post("/oauth2/userinfo", s.ssoProvider.HandleUserInfo)
 
 	// Platform API
 	r.Route("/api/v1", func(api chi.Router) {
@@ -336,6 +356,13 @@ func (s *Server) setupRoutes() {
 			pr.Get("/auth/tenants", s.handleTenants)
 			pr.Post("/auth/switch-tenant", s.handleSwitchTenant)
 			pr.Get("/menus", s.handleMenus)
+
+			// Consent screen. The browser endpoint at /oauth2/auth redirects
+			// here; these two describe the pending grant and record the
+			// answer. Both re-validate the request against the database, so
+			// the frontend is a renderer rather than a source of truth.
+			pr.Get("/oauth2/consent", s.ssoProvider.HandleConsentPrompt)
+			pr.Post("/oauth2/consent", s.ssoProvider.HandleConsentDecision)
 
 			// Tenant access control. Mutations are deliberately admin-only;
 			// authorization configuration can otherwise be used to self-elevate.
@@ -410,15 +437,6 @@ func (s *Server) setupRoutes() {
 
 	// Register compile-time Business App Routes with Tenant & App Gate protection
 	s.registerAppModuleRoutes()
-}
-
-func ssoEndpointsEnabled() bool {
-	switch strings.ToLower(strings.TrimSpace(os.Getenv("EXPOSE_SSO_ENDPOINTS"))) {
-	case "1", "true", "yes":
-		return true
-	default:
-		return false
-	}
 }
 
 // registerAppModuleRoutes mounts every compile-time business module behind the

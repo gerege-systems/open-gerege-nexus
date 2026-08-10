@@ -48,7 +48,10 @@ const iconMap: Record<string, React.ReactNode> = {
   // gov services
   inbox:<Inbox className="w-5 h-5"/>, "calendar-clock":<CalendarClock className="w-5 h-5"/>, timer:<Timer className="w-5 h-5"/>,
 };
-const PUBLIC_ROUTES=["/","/login","/auth/eid/callback"];
+// Routes that render without the ERP chrome. /oauth/consent is signed-in but
+// belongs here too: it is an identity handoff to another product, and framing
+// it in this one's navigation invites the user to wander off mid-flow.
+const PUBLIC_ROUTES=["/","/login","/auth/eid/callback","/oauth/consent"];
 // The platform groups are the only ones not backed by a server menu row, so
 // they need ids of their own. Not the translated title: the collapsed set is
 // remembered across sessions and a Mongolian operator who switches to English
