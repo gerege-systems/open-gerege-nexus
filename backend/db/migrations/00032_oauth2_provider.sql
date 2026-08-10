@@ -141,6 +141,41 @@ CREATE TABLE IF NOT EXISTS oauth2_signing_keys (
 CREATE UNIQUE INDEX IF NOT EXISTS idx_oauth2_signing_keys_one_active
     ON oauth2_signing_keys(active) WHERE active;
 
+-- Row-level security for the three new tenant-scoped tables, matching what
+-- 00029_tenant_rls applied to every table carrying a tenant_id at the time.
+--
+-- 00029 walked the schema once; a table created after it is not covered by
+-- anything, so each new one has to opt in explicitly. TestEveryTenantTableHasForcedRLS
+-- is what catches the omission, and it caught this one.
+--
+-- oauth2_signing_keys is deliberately absent: the keys are the provider's, not
+-- a tenant's, and the table has no tenant_id for a policy to key on.
+--
+-- The token and code endpoints are unaffected. They are reached by a client
+-- with no platform session, so no tenant is in context and dbguard leaves the
+-- connection on the login role, which these policies do not apply to. What they
+-- do cover is the developer portal, which always runs with a tenant bound.
+ALTER TABLE oauth2_authorization_codes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE oauth2_authorization_codes FORCE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_isolation ON oauth2_authorization_codes;
+CREATE POLICY tenant_isolation ON oauth2_authorization_codes TO gerege_nexus_app
+    USING (tenant_id IS NULL OR tenant_id = NULLIF(current_setting('app.current_tenant', true), '')::uuid)
+    WITH CHECK (tenant_id = NULLIF(current_setting('app.current_tenant', true), '')::uuid);
+
+ALTER TABLE oauth2_tokens ENABLE ROW LEVEL SECURITY;
+ALTER TABLE oauth2_tokens FORCE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_isolation ON oauth2_tokens;
+CREATE POLICY tenant_isolation ON oauth2_tokens TO gerege_nexus_app
+    USING (tenant_id IS NULL OR tenant_id = NULLIF(current_setting('app.current_tenant', true), '')::uuid)
+    WITH CHECK (tenant_id = NULLIF(current_setting('app.current_tenant', true), '')::uuid);
+
+ALTER TABLE oauth2_consents ENABLE ROW LEVEL SECURITY;
+ALTER TABLE oauth2_consents FORCE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_isolation ON oauth2_consents;
+CREATE POLICY tenant_isolation ON oauth2_consents TO gerege_nexus_app
+    USING (tenant_id IS NULL OR tenant_id = NULLIF(current_setting('app.current_tenant', true), '')::uuid)
+    WITH CHECK (tenant_id = NULLIF(current_setting('app.current_tenant', true), '')::uuid);
+
 -- +goose Down
 DROP TABLE IF EXISTS oauth2_signing_keys;
 DROP TABLE IF EXISTS oauth2_consents;

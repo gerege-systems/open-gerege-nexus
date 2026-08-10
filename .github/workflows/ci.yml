@@ -75,6 +75,9 @@ jobs:
       GOV_TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/platform_test?sslmode=disable
       DOCUMENTS_TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/platform_test?sslmode=disable
       EMAILVERIFY_TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/platform_test?sslmode=disable
+      # Single-use code redemption and refresh rotation are enforced by SQL
+      # predicates, not by Go, so the OAuth2 flow tests need a real schema.
+      OAUTH_TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/platform_test?sslmode=disable
       # Tenant row-level isolation, the permission cache and the session idle
       # timeout are all database behaviour, and all self-skip without this.
       TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/platform_test?sslmode=disable
@@ -122,6 +125,19 @@ jobs:
             | tee /tmp/emailverify.log
           if grep -q -- '--- SKIP' /tmp/emailverify.log; then
             echo "::error::email verification integration tests skipped — EMAILVERIFY_TEST_DATABASE_URL is not reaching the test"
+            exit 1
+          fi
+      - name: Fail if the OAuth2 flow tests were skipped
+        # An authorization code is spent by an UPDATE predicate and a refresh
+        # token family is revoked by another, so the properties that make the
+        # provider safe to expose — single use, rotation, replay detection —
+        # are not observable without a database. Skipped, every one of them
+        # reports green having asserted nothing.
+        run: |
+          go test -run 'TestAuthorizationCodeIsSingleUse' -v \
+            ./internal/platform/ssoprovider/... | tee /tmp/oauth.log
+          if grep -q -- '--- SKIP' /tmp/oauth.log; then
+            echo "::error::OAuth2 flow tests skipped — OAUTH_TEST_DATABASE_URL is not reaching the test"
             exit 1
           fi
       - name: Fail if the tenant isolation tests were skipped
