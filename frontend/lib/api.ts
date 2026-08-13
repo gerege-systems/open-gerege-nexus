@@ -386,9 +386,25 @@ export const api = {
         email?: string; name?: string; surname?: string;
         linked_at: string; last_seen_at: string;
         claims?: Record<string, unknown>;
+        issuer?: string; removable?: boolean;
       }>;
       active_sessions: number;
     }>("/profile"),
+
+  // Detach one linked identity. Scoped to the caller for the same reason
+  // profile() is: the body names a provider and an account there, never a
+  // person. The answer is the list that remains, so the screen never has to
+  // guess which buttons should still exist.
+  unlinkIdentity: (body: { kind: string; issuer?: string; subject: string }) =>
+    fetcher<{
+      identities: Array<{
+        kind: string; provider: string; subject: string;
+        email?: string; name?: string; surname?: string;
+        linked_at: string; last_seen_at: string;
+        claims?: Record<string, unknown>;
+        issuer?: string; removable?: boolean;
+      }>;
+    }>("/profile/identities/unlink", { method: "POST", body: JSON.stringify(body) }),
 
   // A first sign-in from an external provider, waiting on eID. The binding
   // token names it; nobody is signed in yet, so it is the whole authority.
