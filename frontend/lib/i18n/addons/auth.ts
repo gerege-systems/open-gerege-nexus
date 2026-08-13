@@ -114,6 +114,10 @@ export const auth = {
   "profile.stat.identities": { mn: "Таних тэмдэг", en: "Identities" },
   "profile.stat.sessions": { mn: "Нээлттэй session", en: "Open sessions" },
   "profile.stat.since": { mn: "Бүртгүүлсэн", en: "Member since" },
+  // Хуудсыг нэрлэх нэр — цэс болон толгой хэсгийн товч хоёулаа үүнийг хэлнэ.
+  // "Таны таних тэмдгүүд" нь доторх нэг л хэсгийн гарчиг: тэрийг цэсэнд тавихад
+  // хүн статистик, байгууллага, session-оо тэндээс олохоо мэдэхгүй өнгөрдөг.
+  "profile.title": { mn: "Миний профайл", en: "My profile" },
   "profile.identities": { mn: "Таны таних тэмдгүүд", en: "Your identities" },
   "profile.identities_lede": {
     mn: "Эдгээрээр та энэ платформд нэвтэрдэг. Провайдер бүрийн юу хэлснийг доор нь харж болно.",

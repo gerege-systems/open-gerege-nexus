@@ -13,7 +13,7 @@ import { TenantChoices, forgetTenants, useTenants } from "@/components/TenantCho
 import AICopilot from "@/components/AICopilot";
 import { invokeShell, useShell, SHELL_EVENTS, SHELL_METHODS, type ShellNavigatePayload, type ShellSearchPayload } from "@/lib/shell";
 import { currentDeviceLine, type DeviceLine } from "@/lib/deviceLine";
-import { BarChart3, Landmark, LayoutGrid, Settings, Users, Package, Boxes, Share2, CreditCard, FileText, Code2, Menu as MenuIcon, Palette, Building2, BrainCircuit, Search, Ellipsis, ShieldCheck, PenTool, ScrollText, Layers, Move, ServerCog, Activity, Copy, Upload, Tags, BadgeDollarSign, Ruler, Sliders, Percent, ArrowRightLeft, RefreshCw, Warehouse, Route, Calculator, Wallet, ChartColumn, ListOrdered, Receipt, ListChecks, Files, Workflow, Archive, KeyRound, KeySquare, Webhook, MonitorCog, Inbox, CalendarClock, Timer, MailCheck, Network, ChevronDown, ChevronsDownUp, ChevronsUpDown, ExternalLink } from "lucide-react";
+import { BarChart3, Landmark, LayoutGrid, Settings, Users, Package, Boxes, Share2, CreditCard, FileText, Code2, Menu as MenuIcon, Palette, Building2, BrainCircuit, Search, Ellipsis, ShieldCheck, PenTool, ScrollText, Layers, Move, ServerCog, Activity, Copy, Upload, Tags, BadgeDollarSign, Ruler, Sliders, Percent, ArrowRightLeft, RefreshCw, Warehouse, Route, Calculator, Wallet, ChartColumn, ListOrdered, Receipt, ListChecks, Files, Workflow, Archive, KeyRound, KeySquare, Webhook, MonitorCog, Inbox, CalendarClock, Timer, MailCheck, Network, ChevronDown, ChevronsDownUp, ChevronsUpDown, ExternalLink, UserRound } from "lucide-react";
 
 interface MenuItem { id:string; app_id?:string; app_name?:string; parent_id?:string; label:string; path?:string; external_url?:string; icon:string; order:number }
 // path is a route in this application; external_url is somewhere else. An app
@@ -329,7 +329,11 @@ export default function Layout({children}:{children:React.ReactNode}){
           {results.length>0&&<div className="gerege-topbar-onlight absolute top-12 inset-x-0 bg-white border border-slate-200 rounded-xl shadow-xl p-1.5 z-[70]">{results.map(item=><button key={item.path} onClick={()=>{router.push(item.path);setQuery("")}} className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-[var(--gerege-surface-2)]"><span className="text-[var(--gerege-blue)]">{iconMap[item.icon]||<Search className="w-4 h-4"/>}</span><span className="min-w-0"><strong className="block text-sm truncate">{item.label}</strong><small className="text-slate-500 truncate">{item.app}</small></span></button>)}</div>}
         </div>
       </div>
-      <div className="gerege-header-user flex items-center gap-2 pr-2 sm:pr-4 lg:pr-6"><AICopilot/><UserMenu user={user} onLogout={logout}/></div>
+      {/* Профайл нь аватарын цэсэн дотор ч байдаг, гэхдээ тэнд байх нь хүн
+          хайж эхэлсний дараа л олддог гэсэн үг. Толгой хэсэгт байнга харагдаж
+          байвал хайх шаардлагагүй. Аватарын хажууд, учир нь хоёулаа хүнийг
+          өөрийг нь хэлж байгаа — тэнант, апп биш. */}
+      <div className="gerege-header-user flex items-center gap-2 pr-2 sm:pr-4 lg:pr-6"><ProfileButton active={pathname==="/profile"} label={t("profile.title")}/><AICopilot/><UserMenu user={user} onLogout={logout}/></div>
     </header>
 
     <div className="flex flex-1 min-h-0">
@@ -483,6 +487,16 @@ function TenantSwitcher({current,currentName,children}:{current?:string;currentN
 // somebody else's and must not be handed a reference back to this window.
 function ExternalAnchor({href,className,children,...rest}:{href:string;className?:string;children:React.ReactNode}&React.AnchorHTMLAttributes<HTMLAnchorElement>){
   return <a href={href} target="_blank" rel="noopener noreferrer" className={className} {...rest}>{children}</a>;
+}
+// Толгой хэсгийн профайл товч. Copilot-ийн товчтой ижил хэлбэр — хоёулаа
+// ажлын мужид биш, хүнд өөрт нь хамаатай хэрэгсэл тул нэг эгнээнд нэг л
+// хэмжээтэй байх ёстой. Дүрс дангаараа: энэ нүдэнд үг багтахгүй, харин title
+// болон aria-label нь нэрийг нь хэлнэ.
+function ProfileButton({active,label}:{active:boolean;label:string}){
+  return <Link href="/profile" title={label} aria-label={label} aria-current={active?"page":undefined}
+    className={`w-10 h-10 rounded-full grid place-items-center border transition shrink-0 ${active?"border-[var(--gerege-blue)] bg-[var(--gerege-blue-soft)] text-[var(--gerege-blue)]":"border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>
+    <UserRound className="w-5 h-5"/>
+  </Link>;
 }
 function AppRailLink({href,external,active,title,icon}:{href:string;external?:boolean;active:boolean;title:string;icon:React.ReactNode}){
   const className=`w-11 h-11 rounded-xl grid place-items-center transition ${active?"bg-[var(--gerege-blue-soft)] text-[var(--gerege-blue)] shadow-sm":"text-slate-500 hover:bg-[var(--gerege-surface-2)] hover:text-slate-800"}`;

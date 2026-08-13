@@ -113,7 +113,7 @@ export default function UserMenu({
               role="menuitem"
             >
               <UserRound className="w-4 h-4 text-slate-400" />
-              {t("profile.identities")}
+              {t("profile.title")}
             </Link>
             <Link
               href="/settings/appearance"
