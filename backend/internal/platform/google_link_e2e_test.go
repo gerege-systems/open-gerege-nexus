@@ -220,10 +220,19 @@ func (f *linkFixture) newSignedInPerson(t *testing.T) (userID, token string) {
 		t.Fatalf("insert eid identity: %v", err)
 	}
 
+	// Its own organisation rather than whichever one happens to be in the
+	// database. Borrowing an existing row made this test depend on what other
+	// tests leave behind: it passed locally against a seeded database and
+	// failed in CI on a foreign key, because the tenant it had just read was
+	// gone by the time the membership referenced it.
 	var tenantID string
-	if err := f.pool.QueryRow(ctx, `SELECT id::text FROM tenants ORDER BY created_at LIMIT 1`).Scan(&tenantID); err != nil {
-		t.Fatalf("read a tenant: %v", err)
+	if err := f.pool.QueryRow(ctx,
+		`INSERT INTO tenants(slug, name) VALUES($1,'Link probe') RETURNING id::text`,
+		"link-probe-"+uuid.NewString()[:8]).Scan(&tenantID); err != nil {
+		t.Fatalf("insert tenant: %v", err)
 	}
+	t.Cleanup(func() { _, _ = f.pool.Exec(context.Background(), `DELETE FROM tenants WHERE id=$1`, tenantID) })
+
 	if _, err := f.pool.Exec(ctx,
 		`INSERT INTO memberships(tenant_id, user_id) VALUES($1,$2) ON CONFLICT DO NOTHING`,
 		tenantID, userID); err != nil {
