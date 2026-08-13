@@ -91,8 +91,12 @@ func (s *Server) handleGoogleStart(w http.ResponseWriter, r *http.Request) {
 // session cookie rides along on a same-origin top-level GET, which is what
 // makes the callback able to tell whose account to attach the result to.
 func (s *Server) handleGoogleLinkStart(w http.ResponseWriter, r *http.Request) {
+	// Every refusal here is a redirect rather than a status code. This handler
+	// is reached by pressing a button, not by a fetch — the browser navigates
+	// to it — so a JSON body would replace the person's screen with a line of
+	// machine-readable text and no way back.
 	if !s.googleLoginEnabled() {
-		httpx.Error(w, http.StatusNotFound, "Google sign-in is not configured on this deployment")
+		s.failGoogleLink(w, r, "google_not_configured")
 		return
 	}
 	// A linked Google account is a way in, not merely a label on a profile —
@@ -101,7 +105,7 @@ func (s *Server) handleGoogleLinkStart(w http.ResponseWriter, r *http.Request) {
 	// themselves a second door from inside, which is the same reason
 	// handleGoogleStart refuses.
 	if !s.localLoginAllowed() {
-		httpx.Error(w, http.StatusForbidden, "this deployment signs in through its SSO provider")
+		s.failGoogleLink(w, r, "sso_required")
 		return
 	}
 	// Checked before the trip to Google rather than only on the way back. The
@@ -109,14 +113,15 @@ func (s *Server) handleGoogleLinkStart(w http.ResponseWriter, r *http.Request) {
 	// sending somebody through a consent screen that cannot possibly succeed
 	// is a worse way to say "you are not signed in".
 	if _, err := s.sessions.Resolve(r.Context(), auth.TokenFromRequest(r)); err != nil {
-		httpx.Error(w, http.StatusUnauthorized, "sign in before linking a provider")
+		slog.Info("a Google link was started without a live session", "error", err)
+		s.failGoogleLink(w, r, "session_expired")
 		return
 	}
 
 	request, err := s.googleLogin.BeginAuthorization(r.Context())
 	if err != nil {
 		slog.Error("could not start a Google link", "error", err)
-		s.failGoogle(w, r, "provider_unreachable")
+		s.failGoogleLink(w, r, "provider_unreachable")
 		return
 	}
 
@@ -148,7 +153,7 @@ func (s *Server) linkGoogleToCurrentAccount(w http.ResponseWriter, r *http.Reque
 		// answer. Nothing is linked, and saying so is better than silently
 		// turning this into a sign-in for whoever holds the browser.
 		slog.Info("a Google link came back without a live session", "error", err)
-		s.failGoogle(w, r, "session_expired")
+		s.failGoogleLink(w, r, "session_expired")
 		return
 	}
 
@@ -167,7 +172,7 @@ func (s *Server) linkGoogleToCurrentAccount(w http.ResponseWriter, r *http.Reque
 	case err == nil && owner != claims.UserID:
 		slog.Info("refused to move a Google identity between accounts",
 			"issuer", issuer, "requested_by", claims.UserID)
-		s.failGoogle(w, r, "already_linked_elsewhere")
+		s.failGoogleLink(w, r, "already_linked_elsewhere")
 		return
 	case err == nil:
 		// Already theirs. Re-running the flow refreshes what Google says about
@@ -289,6 +294,17 @@ func (s *Server) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 func (s *Server) failGoogle(w http.ResponseWriter, r *http.Request, reason string) {
 	observability.RecordLogin(observability.LoginGoogle, false)
 	http.Redirect(w, r, config.WebOrigin()+"/login?sso_error="+reason, http.StatusFound)
+}
+
+// failGoogleLink reports a failure to somebody who is already signed in.
+//
+// Separate from failGoogle because the sign-in screen is the wrong place to
+// send them: they have a session, so /login bounces them straight back, and
+// the round trip looks from the outside like the button did nothing at all.
+// Sent back to the screen they pressed it on, carrying the reason.
+func (s *Server) failGoogleLink(w http.ResponseWriter, r *http.Request, reason string) {
+	slog.Info("a Google link attempt failed", "reason", reason)
+	http.Redirect(w, r, config.WebOrigin()+"/profile?link_error="+reason, http.StatusFound)
 }
 
 // domainOf is for the log line only: the address itself is somebody's, and the

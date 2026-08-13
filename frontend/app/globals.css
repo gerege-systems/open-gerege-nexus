@@ -457,6 +457,7 @@ html[data-theme="dark"] .divide-slate-100 > * { border-color: var(--gerege-borde
 .profile__link-provider:hover{background:#f8fafc;border-color:#cbd5e1}
 .profile__link-provider svg{width:18px;height:18px}
 .profile__link-note{margin:8px 0 0;max-width:62ch}
+.profile__link-error{margin:12px 0 0;padding:11px 14px;border:1px solid #fecdca;background:#fef3f2;border-radius:10px;max-width:62ch}
 .profile__icon{display:grid;place-items:center;width:34px;height:34px;border-radius:9px;background:#eef4ff;color:#1d4ed8;flex:none}
 .profile__icon svg{width:18px;height:18px}
 .profile__grow{flex:1;display:grid}

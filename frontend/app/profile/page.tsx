@@ -57,6 +57,15 @@ function Avatar({ identity, person }: { identity: Identity; person: string }) {
   return <span className="profile__photo profile__photo--letter">{person.trim().charAt(0).toUpperCase()}</span>;
 }
 
+/**
+ * Холболтын алдааны кодыг хүний хэл рүү. Танихгүй кодыг өөрийг нь үзүүлнэ —
+ * ойлгомжгүй ч гэсэн үнэн, "ямар нэг зүйл буруу боллоо" гэхээс тусалдаг.
+ */
+function linkErrorText(t:(k:any,v?:any)=>string,code:string){
+  const known=["session_expired","already_linked_elsewhere","google_not_configured","sso_required","provider_unreachable","email_unverified","domain_not_allowed"];
+  return known.includes(code)?t(("profile.link_error."+code) as any):t("profile.link_error.unknown",{code});
+}
+
 export default function ProfilePage(){const {t}=useI18n();
   const [profile,setProfile]=useState<Profile|null>(null);
   const [error,setError]=useState("");
@@ -64,6 +73,16 @@ export default function ProfilePage(){const {t}=useI18n();
   const [busy,setBusy]=useState<string>("");
 
   const [canLinkGoogle,setCanLinkGoogle]=useState(false);
+  // Google-ээс буцаж ирэхэд асуудал гарсан бол шалтгаан нь URL-д ирнэ. Хүн
+  // товч дараад юу ч болоогүй мэт байхаас, юу болсныг хэлэх нь дээр.
+  const [linkError,setLinkError]=useState("");
+  useEffect(()=>{
+    const code=new URLSearchParams(location.search).get("link_error");
+    if(!code)return;
+    setLinkError(code);
+    // Хаягаас нь арчина: сэргээхэд дахин гарч ирэх ёсгүй, аль хэдийн уншсан.
+    history.replaceState(null,"",location.pathname);
+  },[]);
 
   useEffect(()=>{void api.profile().then(setProfile).catch((e:any)=>setError(e?.message||"—"))},[]);
   // Серверээс асууна, таамаглахгүй: Google-ээр нэвтрэх тохируулаагүй
@@ -165,6 +184,7 @@ export default function ProfilePage(){const {t}=useI18n();
       {/* Холбох нь навигаци, fetch биш — Google дээр очиж, зөвшөөрөл асууж,
           буцаж ирдэг. Аль хэдийн холбогдсон бол харагдахгүй: энэ товч нэг л
           зүйл хийдэг бөгөөд түүнийг хийчихсэн байна. */}
+      {linkError&&<p className="profile__error profile__link-error">{linkErrorText(t,linkError)}</p>}
       {canLinkGoogle&&!hasGoogle&&<a className="profile__link-provider" href={`${apiBase()}/auth/google/link`}>
         <GoogleMark/> {t("profile.link_google")}
       </a>}

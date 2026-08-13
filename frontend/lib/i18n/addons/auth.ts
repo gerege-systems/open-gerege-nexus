@@ -125,6 +125,38 @@ export const auth = {
   },
   "profile.linked_provider": { mn: "Холбогдсон {provider}", en: "{provider}, connected" },
   "profile.verified": { mn: "Баталгаажсан", en: "Verified" },
+  "profile.link_error.session_expired": {
+    mn: "Нэвтрэлт дуусжээ. Дахин нэвтэрч байж холбоно уу.",
+    en: "Your session ended. Sign in again, then connect.",
+  },
+  "profile.link_error.already_linked_elsewhere": {
+    mn: "Энэ Google хаяг өөр бүртгэлд холбогдсон байна. Тэндээс нь салгаж байж энд холбоно.",
+    en: "That Google account belongs to another record here. Unlink it there first.",
+  },
+  "profile.link_error.google_not_configured": {
+    mn: "Энэ платформ дээр Google-ээр нэвтрэх тохируулаагүй байна.",
+    en: "Google sign-in is not configured on this deployment.",
+  },
+  "profile.link_error.sso_required": {
+    mn: "Энэ платформ нь өөрийн SSO провайдераар нэвтэрдэг тул Google холбох боломжгүй.",
+    en: "This deployment signs in through its SSO provider, so Google cannot be connected.",
+  },
+  "profile.link_error.provider_unreachable": {
+    mn: "Google-тэй холбогдож чадсангүй. Дараа дахин оролдоно уу.",
+    en: "Could not reach Google. Try again shortly.",
+  },
+  "profile.link_error.email_unverified": {
+    mn: "Google тэр хаягийг баталгаажуулаагүй байна.",
+    en: "Google has not verified that address.",
+  },
+  "profile.link_error.domain_not_allowed": {
+    mn: "Тэр хаягийн домэйныг энэ платформ зөвшөөрдөггүй.",
+    en: "That address's domain is not allowed here.",
+  },
+  "profile.link_error.unknown": {
+    mn: "Холбож чадсангүй ({code}).",
+    en: "Could not connect ({code}).",
+  },
   "profile.link_google": { mn: "Google хаягаа холбох", en: "Connect your Google account" },
   "profile.link_google_note": {
     mn: "Та хэн болохоо аль хэдийн баталсан тул зөвхөн Google дээрээ зөвшөөрөл өгнө. Дараа нь Google-ээр шууд нэвтэрч болно.",
