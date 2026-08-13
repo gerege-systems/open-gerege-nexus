@@ -68,6 +68,18 @@ type Config struct {
 	ClientSecret string
 	Scopes       []string
 
+	// AuthParams are extra query parameters put on the authorization request.
+	//
+	// They exist because "ask the provider" is not one behaviour. A provider
+	// that already has a session with this browser, for a person who has
+	// already granted these scopes, is entitled to answer immediately and send
+	// the browser back without showing anything — which is correct for a
+	// silent re-authentication and wrong for somebody who pressed a button and
+	// expects to be asked. prompt=select_account is how that is said in the
+	// protocol, and it belongs to the deployment's configuration of a provider
+	// rather than to this package, which does not know which case it is in.
+	AuthParams map[string]string
+
 	// RedirectURI is this deployment's callback, registered at the provider.
 	RedirectURI string
 	// PostLogoutRedirectURI is where the provider returns somebody after they
@@ -276,6 +288,14 @@ func (c *Client) BeginAuthorization(ctx context.Context) (*AuthorizationRequest,
 		"nonce":                 {req.Nonce},
 		"code_challenge":        {base64.RawURLEncoding.EncodeToString(challenge[:])},
 		"code_challenge_method": {"S256"},
+	}
+	// Added after the protocol's own parameters and never over them: a
+	// deployment may want to ask the provider for a different prompt, not to
+	// rewrite the state or the PKCE challenge this package just generated.
+	for key, value := range c.cfg.AuthParams {
+		if _, reserved := q[key]; !reserved && value != "" {
+			q.Set(key, value)
+		}
 	}
 
 	target, err := url.Parse(meta.AuthorizationEndpoint)

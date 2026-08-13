@@ -64,6 +64,19 @@ func GoogleConfigFromEnv() Config {
 		// they are — on a screen whose whole purpose is to establish who they
 		// are — is a consent prompt that argues against itself.
 		Scopes: []string{"openid", "email", "profile"},
+		AuthParams: map[string]string{
+			// Always show the account chooser. Without it Google is free to
+			// answer from the browser's existing session, and for somebody who
+			// has already granted these scopes it does: the browser leaves and
+			// returns with no screen in between. That is indistinguishable
+			// from a button that did nothing, and it silently picks an account
+			// on a shared machine instead of asking which one.
+			"prompt": "select_account",
+			// Identity only. A refresh token is for acting on somebody's
+			// behalf later, which this never does — it reads who they are once
+			// and writes it down.
+			"access_type": "online",
+		},
 	}
 	if cfg.RedirectURI == "" && origin != "" {
 		cfg.RedirectURI = origin + GoogleCallbackPath

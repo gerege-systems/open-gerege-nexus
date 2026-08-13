@@ -342,3 +342,83 @@ func TestEndSessionURLIsEmptyWithoutTheEndpoint(t *testing.T) {
 		t.Errorf("EndSessionURL = %q, want empty for a provider that offers no logout endpoint", got)
 	}
 }
+
+// A provider that already has a session with the browser, for somebody who has
+// already granted these scopes, may answer without showing anything at all.
+// The browser leaves and comes straight back, which reads as a button that did
+// nothing — and picks an account on a shared machine without asking. So the
+// request has to say what it wants.
+func TestAuthParamsReachTheAuthorizationRequest(t *testing.T) {
+	provider := newFakeProvider(t)
+	client := provider.client(func(cfg *Config) {
+		cfg.AuthParams = map[string]string{"prompt": "select_account", "access_type": "online"}
+	})
+
+	request, err := client.BeginAuthorization(context.Background())
+	if err != nil {
+		t.Fatalf("begin: %v", err)
+	}
+	q, err := url.Parse(request.URL)
+	if err != nil {
+		t.Fatalf("parse authorization URL: %v", err)
+	}
+	if got := q.Query().Get("prompt"); got != "select_account" {
+		t.Errorf("prompt = %q, want select_account", got)
+	}
+	if got := q.Query().Get("access_type"); got != "online" {
+		t.Errorf("access_type = %q, want online", got)
+	}
+}
+
+// Configuration may add to the request; it may not rewrite what the protocol
+// just generated. A deployment that could set state or code_challenge could
+// turn its own PKCE off by writing a value it does not hold the verifier for.
+func TestAuthParamsCannotOverrideProtocolParameters(t *testing.T) {
+	provider := newFakeProvider(t)
+	client := provider.client(func(cfg *Config) {
+		cfg.AuthParams = map[string]string{
+			"state":                 "attacker-chosen",
+			"code_challenge":        "attacker-chosen",
+			"code_challenge_method": "plain",
+			"redirect_uri":          "https://elsewhere.invalid/callback",
+		}
+	})
+
+	request, err := client.BeginAuthorization(context.Background())
+	if err != nil {
+		t.Fatalf("begin: %v", err)
+	}
+	parsed, err := url.Parse(request.URL)
+	if err != nil {
+		t.Fatalf("parse authorization URL: %v", err)
+	}
+	q := parsed.Query()
+	if q.Get("state") == "attacker-chosen" || q.Get("state") != request.State {
+		t.Error("configuration overwrote the generated state")
+	}
+	if q.Get("code_challenge") == "attacker-chosen" {
+		t.Error("configuration overwrote the PKCE challenge")
+	}
+	if q.Get("code_challenge_method") != "S256" {
+		t.Error("configuration downgraded the PKCE method")
+	}
+	if q.Get("redirect_uri") == "https://elsewhere.invalid/callback" {
+		t.Error("configuration redirected the callback elsewhere")
+	}
+}
+
+// The Google configuration is where the choice is actually made, so assert it
+// there too: a future edit that drops the map would otherwise leave both tests
+// above passing and the behaviour gone.
+func TestGoogleAsksForTheAccountChooser(t *testing.T) {
+	t.Setenv("GOOGLE_LOGIN_CLIENT_ID", "id.apps.googleusercontent.com")
+	t.Setenv("SSO_ISSUER", "https://nexus.example.mn")
+
+	cfg := GoogleConfigFromEnv()
+	if cfg.AuthParams["prompt"] != "select_account" {
+		t.Errorf("prompt = %q, want select_account", cfg.AuthParams["prompt"])
+	}
+	if cfg.AuthParams["access_type"] != "online" {
+		t.Errorf("access_type = %q, want online", cfg.AuthParams["access_type"])
+	}
+}
