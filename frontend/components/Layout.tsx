@@ -492,9 +492,13 @@ function ExternalAnchor({href,className,children,...rest}:{href:string;className
 // ажлын мужид биш, хүнд өөрт нь хамаатай хэрэгсэл тул нэг эгнээнд нэг л
 // хэмжээтэй байх ёстой. Дүрс дангаараа: энэ нүдэнд үг багтахгүй, харин title
 // болон aria-label нь нэрийг нь хэлнэ.
+//
+// Идэвхтэй үед дүүрэн цэнхэр. Эхэндээ --gerege-blue-soft байсан ч толгой
+// хэсэг өөрөө бараан тул тэр цайвар өнгө нь идэвхгүй үеийн цагаантай нүдэнд
+// ялгарахгүй байв — хоёр хуудасны зураг ялгаа мэдэгдэхгүй гарсан.
 function ProfileButton({active,label}:{active:boolean;label:string}){
   return <Link href="/profile" title={label} aria-label={label} aria-current={active?"page":undefined}
-    className={`w-10 h-10 rounded-full grid place-items-center border transition shrink-0 ${active?"border-[var(--gerege-blue)] bg-[var(--gerege-blue-soft)] text-[var(--gerege-blue)]":"border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>
+    className={`w-10 h-10 rounded-full grid place-items-center border transition shrink-0 ${active?"border-[var(--gerege-blue)] bg-[var(--gerege-blue)] text-white":"border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>
     <UserRound className="w-5 h-5"/>
   </Link>;
 }
