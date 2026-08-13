@@ -650,6 +650,11 @@ func (s *Server) setupRoutes() {
 		// Google, when this deployment offers it. Same shape as the federated
 		// pair above and public for the same reasons.
 		api.Get("/auth/google/start", s.handleGoogleStart)
+		// Adding Google to an account that already exists. Registered beside
+		// the sign-in routes rather than in the authenticated group because it
+		// is a navigation that ends at Google, and the handler resolves the
+		// session itself — see handleGoogleLinkStart.
+		api.Get("/auth/google/link", s.handleGoogleLinkStart)
 		api.Get("/auth/google/callback", s.handleGoogleCallback)
 
 		// Completing a first sign-in from an external provider by proving a

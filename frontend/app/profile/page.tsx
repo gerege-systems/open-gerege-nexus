@@ -1,9 +1,9 @@
 "use client";
 import {useEffect,useState} from "react";
-import {api} from "@/lib/api";
+import {api,apiBase} from "@/lib/api";
 import {useI18n} from "@/lib/i18n";
 import {Building2,KeyRound,MonitorSmartphone,ShieldCheck,Unlink} from "lucide-react";
-import {ProviderMark} from "@/components/ProviderMark";
+import {ProviderMark,GoogleMark} from "@/components/ProviderMark";
 
 /**
  * Хүний өөрийнх нь тухай бичлэг.
@@ -63,7 +63,12 @@ export default function ProfilePage(){const {t}=useI18n();
   const [open,setOpen]=useState<string>("");
   const [busy,setBusy]=useState<string>("");
 
+  const [canLinkGoogle,setCanLinkGoogle]=useState(false);
+
   useEffect(()=>{void api.profile().then(setProfile).catch((e:any)=>setError(e?.message||"—"))},[]);
+  // Серверээс асууна, таамаглахгүй: Google-ээр нэвтрэх тохируулаагүй
+  // deployment дээр холбох товч гарч ирээд дарахад л бүтэлгүйтэх нь дор.
+  useEffect(()=>{void api.ssoConfig().then(c=>setCanLinkGoogle(!!c.google?.enabled)).catch(()=>{})},[]);
 
   /**
    * Салгах. Асууж байж — буцаах товч байхгүй үйлдэл тул нэг товшилтоор
@@ -80,6 +85,10 @@ export default function ProfilePage(){const {t}=useI18n();
     }catch(e:any){setError(e?.message||"—")}
     finally{setBusy("")}
   }
+
+  // Google аль хэдийн холбогдсон эсэх — issuer-ээр, провайдерын нэрээр биш:
+  // нэр нь дэлгэцийн хэл, issuer нь баримт.
+  const hasGoogle=profile?.identities.some(i=>i.issuer?.includes("accounts.google.com"))??false;
 
   if(error)return <main className="profile"><p className="profile__error">{error}</p></main>;
   if(!profile)return <main className="profile"><p className="profile__muted">{t("profile.loading")}</p></main>;
@@ -152,6 +161,14 @@ export default function ProfilePage(){const {t}=useI18n();
         })}
         {profile.identities.length===0&&<li className="profile__muted">{t("profile.no_identities")}</li>}
       </ul>
+
+      {/* Холбох нь навигаци, fetch биш — Google дээр очиж, зөвшөөрөл асууж,
+          буцаж ирдэг. Аль хэдийн холбогдсон бол харагдахгүй: энэ товч нэг л
+          зүйл хийдэг бөгөөд түүнийг хийчихсэн байна. */}
+      {canLinkGoogle&&!hasGoogle&&<a className="profile__link-provider" href={`${apiBase()}/auth/google/link`}>
+        <GoogleMark/> {t("profile.link_google")}
+      </a>}
+      {canLinkGoogle&&!hasGoogle&&<p className="profile__muted profile__link-note">{t("profile.link_google_note")}</p>}
     </section>
 
     <section className="profile__section">

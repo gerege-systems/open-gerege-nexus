@@ -451,6 +451,12 @@ html[data-theme="dark"] .divide-slate-100 > * { border-color: var(--gerege-borde
 .profile__unlink:hover:not(:disabled){background:#fef3f2}
 .profile__unlink:disabled{opacity:.55;cursor:default}
 .profile__unlink svg{width:15px;height:15px}
+/* Холбох товч. Салгахын эсрэг тал тул хэлбэрээр нь хосолно, гэхдээ саармаг
+   өнгөөр: холбох нь сүйрлийн үйлдэл биш. */
+.profile__link-provider{display:inline-flex;align-items:center;gap:9px;margin-top:12px;border:1px solid #e2e8f0;background:#fff;color:#0f172a;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:600;text-decoration:none}
+.profile__link-provider:hover{background:#f8fafc;border-color:#cbd5e1}
+.profile__link-provider svg{width:18px;height:18px}
+.profile__link-note{margin:8px 0 0;max-width:62ch}
 .profile__icon{display:grid;place-items:center;width:34px;height:34px;border-radius:9px;background:#eef4ff;color:#1d4ed8;flex:none}
 .profile__icon svg{width:18px;height:18px}
 .profile__grow{flex:1;display:grid}

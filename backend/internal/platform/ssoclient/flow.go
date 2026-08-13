@@ -70,6 +70,14 @@ type Flow struct {
 	// Next is where in the app the person was heading. Always a path on this
 	// deployment; see SafeNext.
 	Next string `json:"next"`
+	// Link marks a flow started by somebody who is already signed in and is
+	// adding a provider to the account they are in, rather than using one to
+	// get in. The cookie is not signed, so this is a statement of intent and
+	// not an authorisation: the callback still requires a live session and
+	// attaches the result to *that* session's account. Somebody who forges it
+	// can only connect their own provider account to their own record, which
+	// is the feature.
+	Link bool `json:"link,omitempty"`
 }
 
 // ErrNoFlow means the callback arrived without the cookie that started it —

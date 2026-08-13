@@ -80,6 +80,105 @@ func (s *Server) handleGoogleStart(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, request.URL, http.StatusFound)
 }
 
+// handleGoogleLinkStart adds Google to the account somebody is already in.
+//
+// The same authorisation request as signing in, with one difference in what
+// the answer means: the person's identity is not in question here, so there is
+// nothing for eID to establish. They proved who they are when they signed in;
+// this only records that a particular Google account is also theirs.
+//
+// It is a navigation rather than a fetch because it ends at Google. The
+// session cookie rides along on a same-origin top-level GET, which is what
+// makes the callback able to tell whose account to attach the result to.
+func (s *Server) handleGoogleLinkStart(w http.ResponseWriter, r *http.Request) {
+	if !s.googleLoginEnabled() {
+		httpx.Error(w, http.StatusNotFound, "Google sign-in is not configured on this deployment")
+		return
+	}
+	// A linked Google account is a way in, not merely a label on a profile —
+	// the sign-in path will find it tomorrow. So a deployment that has handed
+	// the question of who somebody is to its provider must not let people cut
+	// themselves a second door from inside, which is the same reason
+	// handleGoogleStart refuses.
+	if !s.localLoginAllowed() {
+		httpx.Error(w, http.StatusForbidden, "this deployment signs in through its SSO provider")
+		return
+	}
+	// Checked before the trip to Google rather than only on the way back. The
+	// callback has to verify it again — a session can end mid-flow — but
+	// sending somebody through a consent screen that cannot possibly succeed
+	// is a worse way to say "you are not signed in".
+	if _, err := s.sessions.Resolve(r.Context(), auth.TokenFromRequest(r)); err != nil {
+		httpx.Error(w, http.StatusUnauthorized, "sign in before linking a provider")
+		return
+	}
+
+	request, err := s.googleLogin.BeginAuthorization(r.Context())
+	if err != nil {
+		slog.Error("could not start a Google link", "error", err)
+		s.failGoogle(w, r, "provider_unreachable")
+		return
+	}
+
+	ssoclient.SetFlowCookie(w, ssoclient.GoogleFlow, ssoclient.Flow{
+		State:        request.State,
+		Nonce:        request.Nonce,
+		CodeVerifier: request.CodeVerifier,
+		Next:         "/profile",
+		Link:         true,
+	})
+	http.Redirect(w, r, request.URL, http.StatusFound)
+}
+
+// linkGoogleToCurrentAccount finishes a flow that began on the profile screen.
+//
+// Split out of the callback because it answers a different question. Signing
+// in asks "whose account is this?", and the answer may be nobody's — which is
+// what sends a first-time arrival to eID. Linking already knows whose account
+// it is and only asks whether this Google account is free to attach.
+func (s *Server) linkGoogleToCurrentAccount(w http.ResponseWriter, r *http.Request, identity *ssoclient.Identity, next string) {
+	// Resolved here rather than read from the context: the callback is a public
+	// route, because Google has to be able to reach it, so nothing upstream has
+	// established who is asking. The session cookie arrives on this navigation
+	// like any other same-origin GET, and it is the only thing that decides
+	// whose account this attaches to.
+	claims, err := s.sessions.Resolve(r.Context(), auth.TokenFromRequest(r))
+	if err != nil {
+		// The session ended somewhere between the profile screen and Google's
+		// answer. Nothing is linked, and saying so is better than silently
+		// turning this into a sign-in for whoever holds the browser.
+		slog.Info("a Google link came back without a live session", "error", err)
+		s.failGoogle(w, r, "session_expired")
+		return
+	}
+
+	issuer := s.googleLogin.Config().Issuer
+
+	// Refuse rather than move. The insert this would otherwise reach reassigns
+	// user_id on conflict, which is right when somebody signs in and wrong
+	// here: it would take a Google account off whoever it belongs to, without
+	// telling them, at the request of somebody else who happens to be able to
+	// authenticate at Google as them.
+	var owner string
+	err = s.db.QueryRow(r.Context(),
+		`SELECT user_id::text FROM user_sso_identities WHERE issuer = $1 AND subject = $2`,
+		issuer, identity.Subject).Scan(&owner)
+	switch {
+	case err == nil && owner != claims.UserID:
+		slog.Info("refused to move a Google identity between accounts",
+			"issuer", issuer, "requested_by", claims.UserID)
+		s.failGoogle(w, r, "already_linked_elsewhere")
+		return
+	case err == nil:
+		// Already theirs. Re-running the flow refreshes what Google says about
+		// them, which is a reasonable thing to want and not an error.
+	}
+
+	s.linkSSOIdentity(r.Context(), claims.UserID, issuer, identity)
+	slog.Info("a person linked Google to their account", "user_id", claims.UserID)
+	http.Redirect(w, r, config.WebOrigin()+next, http.StatusFound)
+}
+
 // handleGoogleCallback is where Google returns the browser.
 func (s *Server) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	if !s.googleLoginEnabled() || !s.localLoginAllowed() {
@@ -127,6 +226,15 @@ func (s *Server) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		slog.Info("refused a Google sign-in from a domain that is not allowed here",
 			"domain", domainOf(identity.Email))
 		s.failGoogle(w, r, "domain_not_allowed")
+		return
+	}
+
+	// Adding a provider to an account rather than using one to reach it. The
+	// verification checks above still applied: an address Google has not
+	// verified is no more usable as a label on somebody's profile than it is
+	// as a way in.
+	if flow.Link {
+		s.linkGoogleToCurrentAccount(w, r, identity, ssoclient.SafeNext(flow.Next, "/profile"))
 		return
 	}
 

@@ -125,6 +125,11 @@ export const auth = {
   },
   "profile.linked_provider": { mn: "Холбогдсон {provider}", en: "{provider}, connected" },
   "profile.verified": { mn: "Баталгаажсан", en: "Verified" },
+  "profile.link_google": { mn: "Google хаягаа холбох", en: "Connect your Google account" },
+  "profile.link_google_note": {
+    mn: "Та хэн болохоо аль хэдийн баталсан тул зөвхөн Google дээрээ зөвшөөрөл өгнө. Дараа нь Google-ээр шууд нэвтэрч болно.",
+    en: "You have already proved who you are, so this only asks Google. Afterwards you can sign in with Google directly.",
+  },
   "profile.unlink": { mn: "Салгах", en: "Unlink" },
   "profile.unlinking": { mn: "Салгаж байна…", en: "Unlinking…" },
   "profile.unlink_confirm": {
