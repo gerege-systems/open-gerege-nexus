@@ -42,6 +42,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/platform/auth"
+	"github.com/gerege-systems/open-gerege-nexus/backend/internal/platform/memo"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/platform/ssoclient"
 )
 
@@ -196,6 +197,11 @@ func newLinkFixture(t *testing.T) *linkFixture {
 			db:          pool,
 			sessions:    auth.NewSessionStore(pool, auth.DefaultSessionTTL),
 			googleLogin: google.client(t, "https://nexus.test.invalid/api/v1/auth/google/callback"),
+			// issueSession asks whether the organisation is suspended before it
+			// will make a session, and that answer is memoised. A zero Server
+			// has no cache to ask, so anything reaching a sign-in panics rather
+			// than failing — which is a fixture hole, not a finding.
+			suspended: memo.New[bool](suspendedTTL),
 		},
 	}
 	fixture.userID, fixture.session = fixture.newSignedInPerson(t)

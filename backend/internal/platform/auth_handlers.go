@@ -528,13 +528,17 @@ func (s *Server) resolveOrProvisionEIDUser(ctx context.Context, identity *eid.EI
 		return "", "", errors.New("eID identity carries neither a civil ID nor a registration number")
 	}
 	personEtsi := eidmongolia.PersonEtsi(subject)
+	// Asked without joining memberships, for the reason firstTenantFor
+	// explains: a citizen whose eID is linked here is the same citizen whether
+	// or not they currently belong to an organisation, and letting the
+	// membership decide made a linked identity read as an unknown one.
 	err = s.db.QueryRow(ctx,
-		`SELECT i.user_id::text, m.tenant_id::text
-		   FROM user_eid_identities i
-		   JOIN memberships m ON m.user_id=i.user_id
-		  WHERE i.person_etsi=$1
-		  ORDER BY m.created_at, m.tenant_id LIMIT 1`, personEtsi).Scan(&userID, &tenantID)
+		`SELECT user_id::text FROM user_eid_identities WHERE person_etsi=$1`, personEtsi).Scan(&userID)
 	if err == nil {
+		tenantID, err = s.firstTenantFor(ctx, userID)
+		if err != nil {
+			return "", "", err
+		}
 		return userID, tenantID, nil
 	}
 	if !errors.Is(err, pgx.ErrNoRows) {

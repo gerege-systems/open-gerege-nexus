@@ -231,6 +231,32 @@ func (s *Server) failSSO(w http.ResponseWriter, r *http.Request, reason string) 
 	http.Redirect(w, r, config.WebOrigin()+"/login?sso_error="+reason, http.StatusFound)
 }
 
+// ErrNoOrganisation means the account is real and the identity is theirs, but
+// they belong to no organisation, so there is nothing to sign in to.
+//
+// Deliberately not a signInError. That type is what the Google callback reads
+// as "nobody here recognises this account", and it answers by parking the
+// identity and asking for eID. Somebody whose provider account is already
+// linked must never be sent down that road again — it is the loop this whole
+// change exists to close, and it would be indistinguishable from the bug.
+var ErrNoOrganisation = errors.New("this account does not belong to any organisation")
+
+// firstTenantFor is the organisation a session for this person opens in.
+//
+// Separate from the identity lookup on purpose: which organisation somebody
+// works in has no bearing on whether the provider account is theirs, and
+// letting it decide is what made a linked identity vanish.
+func (s *Server) firstTenantFor(ctx context.Context, userID string) (string, error) {
+	var tenantID string
+	err := s.db.QueryRow(ctx,
+		`SELECT tenant_id::text FROM memberships WHERE user_id = $1
+		  ORDER BY created_at, tenant_id LIMIT 1`, userID).Scan(&tenantID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", ErrNoOrganisation
+	}
+	return tenantID, err
+}
+
 // resolveOrProvisionSSOUser maps a verified provider identity onto a local
 // account, creating one if the deployment is configured to.
 //
@@ -242,14 +268,26 @@ func (s *Server) failSSO(w http.ResponseWriter, r *http.Request, reason string) 
 func (s *Server) resolveOrProvisionSSOUser(ctx context.Context, cfg ssoclient.Config, identity *ssoclient.Identity) (userID, tenantID string, err error) {
 	issuer := cfg.Issuer
 
+	// Two questions, asked separately. Whether this provider account is known
+	// here is one; which organisation the person it belongs to works in is
+	// another, and answering them in a single join makes the second silently
+	// decide the first.
+	//
+	// It joined memberships once, so somebody with a linked identity and no
+	// membership read as somebody with no linked identity — and was sent
+	// through the first-time flow again, and again, while their profile went on
+	// listing the provider as connected. Being in no organisation is a real
+	// state: an administrator removes the last one, or an account is created
+	// ahead of the membership.
 	err = s.db.QueryRow(ctx,
-		`SELECT i.user_id::text, m.tenant_id::text
-		   FROM user_sso_identities i
-		   JOIN memberships m ON m.user_id = i.user_id
-		  WHERE i.issuer = $1 AND i.subject = $2
-		  ORDER BY m.created_at, m.tenant_id LIMIT 1`, issuer, identity.Subject).Scan(&userID, &tenantID)
+		`SELECT user_id::text FROM user_sso_identities WHERE issuer = $1 AND subject = $2`,
+		issuer, identity.Subject).Scan(&userID)
 	if err == nil {
 		s.touchSSOIdentity(ctx, issuer, identity)
+		tenantID, err = s.firstTenantFor(ctx, userID)
+		if err != nil {
+			return "", "", err
+		}
 		return userID, tenantID, nil
 	}
 	if !errors.Is(err, pgx.ErrNoRows) {
