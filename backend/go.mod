@@ -5,7 +5,7 @@ go 1.26
 toolchain go1.26.6
 
 require (
-	github.com/Masterminds/semver/v3 v3.3.1
+	github.com/Masterminds/semver/v3 v3.5.0
 	github.com/exaring/otelpgx v0.11.1
 	github.com/gerege-systems/open-gerege-core v1.10.0
 	github.com/getsentry/sentry-go v0.48.0
@@ -19,7 +19,7 @@ require (
 	github.com/prometheus/client_model v0.6.2
 	github.com/redis/go-redis/v9 v9.22.0
 	github.com/xuri/excelize/v2 v2.11.0
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.69.0
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.70.0
 	go.opentelemetry.io/otel v1.45.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.45.0
 	go.opentelemetry.io/otel/sdk v1.45.0
