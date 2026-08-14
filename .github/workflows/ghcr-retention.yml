@@ -60,7 +60,7 @@ jobs:
       # which is the behaviour wanted anyway: no tag, no prune.
       - name: Read the deployed image tag
         id: deployed
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.DEPLOY_HOST || 'nexus.gerege.mn' }}
           username: ${{ secrets.DEPLOY_USER || 'deploy' }}
