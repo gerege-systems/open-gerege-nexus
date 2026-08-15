@@ -54,8 +54,8 @@ jobs:
       run:
         working-directory: ${{ inputs.module-directory }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
           go-version-file: ${{ inputs.module-directory }}/go.mod
           cache-dependency-path: ${{ inputs.module-directory }}/go.sum
@@ -74,8 +74,8 @@ jobs:
       run:
         working-directory: ${{ inputs.module-directory }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
           go-version-file: ${{ inputs.module-directory }}/go.mod
           cache-dependency-path: ${{ inputs.module-directory }}/go.sum

@@ -50,8 +50,8 @@ jobs:
       run:
         working-directory: ${{ inputs.module-directory }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
           # The toolchain comes from the module being built, never from a
           # version written here — pinning "1.24" while go.mod requires 1.25
@@ -92,12 +92,12 @@ jobs:
     if: inputs.lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
           go-version-file: ${{ inputs.module-directory }}/go.mod
           cache-dependency-path: ${{ inputs.module-directory }}/go.sum
-      - uses: golangci/golangci-lint-action@v8
+      - uses: golangci/golangci-lint-action@v9
         with:
           version: v2.1.6
           working-directory: ${{ inputs.module-directory }}
