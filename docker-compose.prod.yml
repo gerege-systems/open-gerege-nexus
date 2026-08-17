@@ -344,6 +344,19 @@ services:
       # browser half is NEXT_PUBLIC_SENTRY_DSN and is baked into the bundle at
       # image build time — see frontend/Dockerfile for why it cannot be set
       # here.
+      # Where the shell asks, server-side, what this deployment carries.
+      #
+      # The browser never uses this — it asks its own origin (lib/apiBase.ts).
+      # A server has no origin, which is the whole reason the value exists, and
+      # until now this file never supplied it: every server-side question the
+      # shell asks the API answered `null` on every deployment that uses this
+      # compose file. The storefront was the visible one — an app-store
+      # installation rendered the platform page instead of its catalogue,
+      # which is precisely what lib/storefront.ts says it must not do.
+      #
+      # The default is the service beside it on this compose network, so a
+      # deployment that has never heard of this variable is fixed by upgrading.
+      API_INTERNAL_URL: ${API_INTERNAL_URL:-http://backend:8080/api/v1}
       SENTRY_DSN: ${FRONTEND_SENTRY_DSN:-}
       ENVIRONMENT: ${ENVIRONMENT:-production}
       RELEASE_VERSION: ${IMAGE_TAG:-latest}
