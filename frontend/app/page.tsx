@@ -11,6 +11,7 @@ import Storefront from "@/components/landing/Storefront";
 import Technology from "@/components/landing/Technology";
 import Trust from "@/components/landing/Trust";
 import { firstLinkedSection, landingSectionsFromEnv, type LandingSection } from "@/lib/landing";
+import { localSignInEnabledOnServer } from "@/lib/signIn";
 import { fetchStorefrontOnServer } from "@/lib/storefront";
 
 /**
@@ -58,11 +59,13 @@ import { fetchStorefrontOnServer } from "@/lib/storefront";
  * typecheck here, which is the whole check this pairing needs.
  *
  * A function of the chosen list because the hero's second button points at
- * whatever comes after it, which is not knowable until the list is read.
+ * whatever comes after it, which is not knowable until the list is read — and
+ * of `localSignIn`, because a deployment that hands sign-in to somebody else
+ * must not draw a sign-in card that answers 403.
  */
-function sectionNodes(sections: LandingSection[]): Record<LandingSection, ReactNode> {
+function sectionNodes(sections: LandingSection[], localSignIn: boolean): Record<LandingSection, ReactNode> {
   return {
-    hero: <Hero seeMoreAnchor={firstLinkedSection(sections)} />,
+    hero: <Hero seeMoreAnchor={firstLinkedSection(sections)} localSignIn={localSignIn} />,
     architecture: <Architecture />,
     applications: <Applications />,
     platform: <PlatformDepth />,
@@ -86,11 +89,15 @@ function sectionNodes(sections: LandingSection[]): Record<LandingSection, ReactN
 export const dynamic = "force-dynamic";
 
 export default async function LandingPage() {
-  const apps = await fetchStorefrontOnServer();
+  // Two questions of the same API, asked together: one page render, one wait.
+  const [apps, localSignIn] = await Promise.all([
+    fetchStorefrontOnServer(),
+    localSignInEnabledOnServer(),
+  ]);
   // Read on the server and handed down, for the reason app/layout.tsx reads the
   // brand there: `process.env` in the browser holds only what the build inlined.
   const sections = landingSectionsFromEnv();
-  const nodes = sectionNodes(sections);
+  const nodes = sectionNodes(sections, localSignIn);
 
   return (
     <div className="gp-landing" id="top">
