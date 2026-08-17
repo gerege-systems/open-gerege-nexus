@@ -63,6 +63,20 @@ export type Brand = {
    * cropped rather than silently wrong.
    */
   maskableIconUrl: string;
+  /**
+   * Where this deployment's manual lives — the landing page's last menu item.
+   *
+   * A full URL rather than a route because the documentation is not part of
+   * this application: it ships on its own schedule and a reader following it
+   * is leaving the product. Which is exactly why it belongs to the
+   * deployment: a distribution with its own name, its own modules and its own
+   * screens has its own manual, and sending its readers to the platform's is
+   * sending them to a book about a different product.
+   *
+   * The default is the platform's own, built from the Markdown in this
+   * repository by `docs/site` and served from GitHub Pages.
+   */
+  docsUrl: string;
 };
 
 export const DEFAULT_BRAND: Brand = {
@@ -76,4 +90,5 @@ export const DEFAULT_BRAND: Brand = {
   // one is separate artwork rather than the same file relabelled.
   iconUrl: "",
   maskableIconUrl: "",
+  docsUrl: "https://gerege-systems.github.io/open-gerege-nexus/",
 };

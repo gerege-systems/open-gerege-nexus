@@ -4,10 +4,15 @@
  */
 export const website = {
   // The menu follows the order of the page, so a reader who picks the first
-  // item lands near the top rather than at the bottom.
+  // item lands near the top rather than at the bottom. Which of these appear
+  // depends on which sections the deployment renders — see lib/landing.ts.
   "website.menu.architecture": { mn: "Архитектур", en: "Architecture" },
   "website.menu.applications": { mn: "Аппууд", en: "Applications" },
+  "website.menu.platform": { mn: "Платформын суурь", en: "Platform" },
   "website.menu.trust": { mn: "Аюулгүй байдал", en: "Security" },
+  "website.menu.technology": { mn: "Технологи", en: "Technology" },
+  // The section is `#features`; what it argues is that identity is the floor.
+  "website.menu.identity": { mn: "Нэвтрэлт", en: "Identity" },
   // Leaves the product for the published documentation. The other menu items
   // scroll within this page, so this one is marked as leaving.
   "website.menu.docs": { mn: "Баримт бичиг", en: "Documentation" },
@@ -31,8 +36,18 @@ export const website = {
   // Three numbers that hold still. A count of tests or contributors would drift
   // out of true without anybody noticing; these change only when the platform
   // itself does, and the sections below say the same numbers out loud.
+  //
+  // The figures are keys rather than literals so that a deployment counting
+  // something else can say so: an identity provider shipping four modules does
+  // not have nine business applications, and a number the deployment cannot
+  // correct is a number its landing page states wrongly. Same value in every
+  // language — they are digits — but they go through `t()` so BRAND_COPY can
+  // reach them like any other line.
+  "website.stat.apps_count": { mn: "9", en: "9" },
   "website.stat.apps": { mn: "бэлэн бизнес апп", en: "applications included" },
+  "website.stat.languages_count": { mn: "7", en: "7" },
   "website.stat.languages": { mn: "хэл — монгол + НҮБ-ын 6", en: "languages: Mongolian plus the UN six" },
+  "website.stat.binary_count": { mn: "1", en: "1" },
   "website.stat.binary": { mn: "суулгах бинари", en: "binary to deploy" },
 
   "website.view.features_eyebrow": { mn: "GEREGE IDENTITY LAYER", en: "GEREGE IDENTITY LAYER" },

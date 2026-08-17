@@ -12,8 +12,14 @@ import {useI18n} from "@/lib/i18n";
  * the question a visitor arrives with. The sign-in panel still sits beside it
  * rather than behind the header button: the shortest path from landing to
  * signed-in is worth keeping even when it is no longer the argument.
+ *
+ * `seeMoreAnchor` is where the second button goes — the first section below
+ * this one, decided by the page rather than written in here, because a
+ * deployment may not render the section this used to point at. Absent, there
+ * is nothing below the hero and the button is not drawn: a page whose only
+ * call to action scrolls nowhere is worse than one with a single button.
  */
-export default function Hero() {
+export default function Hero({seeMoreAnchor}: {seeMoreAnchor?: string}) {
   const {t} = useI18n();
 
   return (
@@ -33,21 +39,23 @@ export default function Hero() {
             <a href="#eid-login" className="gp-gold gp-gold--large">
               {t("website.action.eid_sign_in")} <ArrowRight />
             </a>
-            <a href="#architecture" className="gp-outline">
-              {t("website.action.see_features")}
-            </a>
+            {seeMoreAnchor ? (
+              <a href={`#${seeMoreAnchor}`} className="gp-outline">
+                {t("website.action.see_features")}
+              </a>
+            ) : null}
           </div>
           <div className="gp-stats">
             <span>
-              <b>9</b>
+              <b>{t("website.stat.apps_count")}</b>
               {t("website.stat.apps")}
             </span>
             <span>
-              <b>7</b>
+              <b>{t("website.stat.languages_count")}</b>
               {t("website.stat.languages")}
             </span>
             <span>
-              <b>1</b>
+              <b>{t("website.stat.binary_count")}</b>
               {t("website.stat.binary")}
             </span>
           </div>

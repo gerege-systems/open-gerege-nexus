@@ -19,15 +19,9 @@ import {
 
 import type {TranslationKey} from "@/lib/i18n";
 
-/**
- * The published documentation, built from the Markdown in this repository by
- * `docs/site` and served from GitHub Pages.
- *
- * It is a full URL rather than a route because the documentation is not part of
- * this application: it ships on its own schedule, from the same repository, and
- * a reader following it is leaving the product.
- */
-export const DOCS_URL = "https://gerege-systems.github.io/open-gerege-nexus/";
+// The documentation address moved to `lib/brand.ts` as `DEFAULT_BRAND.docsUrl`:
+// a deployment carrying its own name carries its own manual, so the address is
+// part of its identity rather than a constant of this page.
 
 type Icon = typeof Fingerprint;
 

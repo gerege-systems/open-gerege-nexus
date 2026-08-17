@@ -16,6 +16,9 @@ export function brandFromEnv(env: NodeJS.ProcessEnv = process.env): Brand {
     themeColor: hexColour(text(env.BRAND_THEME_COLOR)) || DEFAULT_BRAND.themeColor,
     iconUrl: assetURL(text(env.BRAND_ICON_URL)),
     maskableIconUrl: assetURL(text(env.BRAND_MASKABLE_ICON_URL)),
+    // Falls back to the platform's manual rather than to nothing: a menu item
+    // that leads nowhere is worse than one that leads to the general book.
+    docsUrl: assetURL(text(env.BRAND_DOCS_URL)) || DEFAULT_BRAND.docsUrl,
   };
 }
 

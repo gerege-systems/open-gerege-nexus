@@ -373,6 +373,14 @@ services:
       # file and suits an override of a line or two.
       BRAND_COPY_FILE: ${BRAND_COPY_FILE:-}
       BRAND_COPY: ${BRAND_COPY:-}
+      # Where this deployment's manual lives — the landing page's last menu
+      # item. Empty keeps the platform's own, which is the right answer only
+      # while a deployment has not written one.
+      BRAND_DOCS_URL: ${BRAND_DOCS_URL:-}
+      # Which sections the landing page is built from, in order. Empty renders
+      # all of them, which is what every deployment did before this existed.
+      # See frontend/lib/landing.ts for the names.
+      LANDING_SECTIONS: ${LANDING_SECTIONS:-}
     volumes:
       # Mounted always and usually empty. Copy is configuration a person edits,
       # so it must not need an image rebuild — and it is not something the app
