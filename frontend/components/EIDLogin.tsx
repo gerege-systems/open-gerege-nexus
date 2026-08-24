@@ -5,6 +5,7 @@ import {QRCodeSVG} from "qrcode.react";
 import {api} from "@/lib/api";
 import {useI18n} from "@/lib/i18n";
 import {Fingerprint,RefreshCw,ShieldCheck,Smartphone,X} from "lucide-react";
+import {safeReturnPath} from "@/lib/safeReturnPath.mjs";
 
 type Method="id"|"qr";
 type Phase="idle"|"starting"|"waiting"|"expired"|"refused"|"error"|"success";
@@ -40,6 +41,7 @@ function clock(seconds:number){return `${Math.floor(seconds/60)}:${String(second
  */
 export default function EIDLogin({next="/profile",compact=false,variant="card",binding}:{next?:string;compact?:boolean;variant?:"card"|"signin";binding?:string}){
   const {t}=useI18n();
+  const returnTo=safeReturnPath(next);
   const [method,setMethod]=useState<Method>("id"),[phase,setPhase]=useState<Phase>("idle"),[nationalId,setNationalId]=useState(""),[start,setStart]=useState<Start|null>(null),[error,setError]=useState(""),[left,setLeft]=useState(0);
   // Each attempt takes a ticket. Anything asynchronous compares its ticket
   // before touching state, so a cancelled or superseded attempt cannot revive
@@ -63,7 +65,7 @@ export default function EIDLogin({next="/profile",compact=false,variant="card",b
         const res=binding?await api.bindingEIDPoll(binding,data.session_id,control.signal):await api.pollEID(data.session_id,control.signal);
         if(ticket.current!==mine)return;
         failures=0;
-        if(res.state==="COMPLETE"){ticket.current++;setPhase("success");window.location.assign(next);return}
+        if(res.state==="COMPLETE"){ticket.current++;setPhase("success");window.location.assign(returnTo);return}
         if(res.state==="EXPIRED"){setPhase("expired");return}
         if(res.state==="REFUSED"){setPhase("refused");return}
       }catch(e:any){
@@ -72,7 +74,7 @@ export default function EIDLogin({next="/profile",compact=false,variant="card",b
       }
       await sleep(GAP);
     }
-  },[binding,next,stop,t]);
+  },[binding,returnTo,stop,t]);
 
   const begin=useCallback(async(selected:Method)=>{
     stop();

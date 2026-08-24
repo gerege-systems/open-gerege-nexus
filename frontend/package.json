@@ -6,12 +6,14 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "test": "node --test tests/*.test.mjs",
     "lint": "eslint .",
     "api:check": "node scripts/check-api-boundaries.mjs",
     "i18n:translate": "node scripts/i18n-translate.mjs",
     "i18n:check": "node scripts/i18n-check.mjs",
     "pwa:check": "node scripts/pwa-check.mjs",
     "host:check": "node scripts/check-control-plane-host.mjs",
+    "host:smoke": "node scripts/smoke-control-plane-host.mjs",
     "i18n:export-native": "node scripts/export-native-auth-i18n.mjs",
     "i18n:snapshot": "node scripts/i18n-snapshot.mjs",
     "icons:export": "node scripts/export-lucide-icons.mjs",
@@ -35,10 +37,10 @@
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "autoprefixer": "^10.4.20",
-    "eslint": "^10.8.1",
+    "eslint": "~9.39.5",
     "eslint-config-next": "^16.3.1",
     "postcss": "^8.5.26",
     "tailwindcss": "^3.4.17",
-    "typescript": "^7.0.2"
+    "typescript": "~5.9.3"
   }
 }

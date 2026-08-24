@@ -11,6 +11,7 @@ import {useBrand} from "@/lib/brandContext";
 import type {TranslationKey} from "@/lib/i18n";
 import {ChevronDown,HelpCircle,Lock,Mail,ShieldCheck} from "lucide-react";
 import { GoogleMark } from "@/components/ProviderMark";
+import {safeReturnPath} from "@/lib/safeReturnPath.mjs";
 
 /** Серверийн богино кодыг хүн уншихаар мессеж болгоно. Танихгүй кодыг — жишээ
     нь провайдерийн өөрийнх нь илгээсэн ер бусын алдааг — ерөнхий мэдэгдэл
@@ -29,7 +30,7 @@ export default function LoginPage(){const router=useRouter();const {t}=useI18n()
   // дэлгэц дээр гарах нэрийг хаяг тодорхойлохыг зөвшөөрөхгүй.
   const [asker,setAsker]=useState<{client_name:string}|null>(null);
 
-  useEffect(()=>{const requested=new URLSearchParams(location.search).get("next");if(requested?.startsWith("/")&&!requested.startsWith("//"))setNext(requested);
+  useEffect(()=>{const requested=new URLSearchParams(location.search).get("next");setNext(safeReturnPath(requested));
     const failed=new URLSearchParams(location.search).get("sso_error");if(failed)setError(t(SSO_ERRORS[failed]||"auth.sso.error_generic"));
     // Алдаагаа өөрөө барина: тохиргоо ирэхгүй бол энэ суулгац өөрөө нэвтрүүлдэг
     // гэж үзнэ — эс бөгөөс API-гийн түр саатал нэвтрэх дэлгэцийг хоослоно.

@@ -7,6 +7,7 @@ import {api} from "@/lib/api";
 import {useI18n} from "@/lib/i18n";
 import {useBrand} from "@/lib/brandContext";
 import {ShieldCheck} from "lucide-react";
+import {safeReturnPath} from "@/lib/safeReturnPath.mjs";
 
 /**
  * Гадны провайдераар анх удаа ирсэн хүнийг eID-ээр баталгаажуулах дэлгэц.
@@ -20,14 +21,13 @@ export default function BindPage(){const {t}=useI18n();const brand=useBrand();
   const [info,setInfo]=useState<{provider:string;email:string;name:string;consented:boolean;claims:Record<string,unknown>;eid_claims:string[]}|null>(null);
   const [error,setError]=useState("");
   const [consented,setConsented]=useState(false);
+  const [next,setNext]=useState("/profile");
 
-  useEffect(()=>{const b=new URLSearchParams(location.search).get("b")||"";setBinding(b);
+  useEffect(()=>{const params=new URLSearchParams(location.search);const b=params.get("b")||"";setBinding(b);setNext(safeReturnPath(params.get("next")));
     if(!b){setError(t("auth.bind.expired"));return}
     void api.bindingSession(b).then(s=>{setInfo(s);setConsented(s.consented)}).catch(()=>setError(t("auth.bind.expired")))},[t]);
 
   async function agree(){try{await api.bindingConsent(binding);setConsented(true)}catch(e:any){setError(e?.message||t("auth.bind.expired"))}}
-
-  const next = typeof window !== "undefined" ? (new URLSearchParams(window.location.search).get("next") || "/") : "/";
 
   // Провайдерийн хэлснийг тайлбарлахын оронд шууд үзүүлнэ: хуваалцахыг
   // зөвшөөрч буй хүн тэр зүйлээ харах эрхтэй.
@@ -66,7 +66,7 @@ export default function BindPage(){const {t}=useI18n();const brand=useBrand();
         {info&&consented&&<>
           <div><h1 className="signin-card__title">{t("auth.bind.verify_title")}</h1>
             <p className="signin-card__lede">{t("auth.bind.verify_lede")}</p></div>
-          <EIDLogin next="/profile" variant="signin" binding={binding}/>
+          <EIDLogin next={next} variant="signin" binding={binding}/>
         </>}
       </div>
     </section>

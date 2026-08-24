@@ -159,7 +159,8 @@ func TestReadFlowAlwaysClearsTheCookie(t *testing.T) {
 
 func TestSafeNextRefusesAnythingThatCanLeaveTheSite(t *testing.T) {
 	for _, raw := range []string{
-		"", "https://evil.example", "//evil.example", "/\\evil.example", "evil.example",
+		"", "https://evil.example", "//evil.example", "/\\evil.example",
+		"/safe\\..\\evil.example", "/profile\nLocation: https://evil.example", "evil.example",
 	} {
 		if got := SafeNext(raw, "/apps"); got != "/apps" {
 			t.Errorf("SafeNext(%q) = %q, want the fallback", raw, got)

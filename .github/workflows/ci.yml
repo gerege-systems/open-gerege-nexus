@@ -82,6 +82,9 @@ jobs:
             exit 1
           fi
 
+      - name: Test deployment safety helpers
+        run: python3 -m unittest discover -s deploy/scripts -p 'test_*.py'
+
   test:
     name: Test
     runs-on: ubuntu-latest
@@ -344,6 +347,10 @@ jobs:
         run: npm ci
       - name: Typecheck
         run: npx tsc --noEmit
+      - name: Lint
+        run: npm run lint
+      - name: Run frontend unit tests
+        run: npm test
       # The service worker sits in front of every request the app makes, and
       # this platform's requests carry tenant data. It is written so that /api
       # is never cached; this asserts that rather than trusting a handful of
@@ -379,6 +386,8 @@ jobs:
         run: npm run i18n:check -- --warn
       - name: Build
         run: npm run build
+      - name: Smoke-test the built host boundary
+        run: npm run host:smoke
 
   build:
     name: Build

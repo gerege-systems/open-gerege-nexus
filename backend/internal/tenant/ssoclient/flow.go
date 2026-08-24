@@ -190,7 +190,8 @@ func ClearIDTokenCookie(w http.ResponseWriter) {
 func SafeNext(raw, fallback string) string {
 	raw = strings.TrimSpace(raw)
 	if raw == "" || !strings.HasPrefix(raw, "/") ||
-		strings.HasPrefix(raw, "//") || strings.HasPrefix(raw, "/\\") {
+		strings.HasPrefix(raw, "//") || strings.Contains(raw, "\\") ||
+		strings.IndexFunc(raw, func(r rune) bool { return r < 0x20 || r == 0x7f }) >= 0 {
 		return fallback
 	}
 	return raw
