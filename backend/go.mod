@@ -7,9 +7,9 @@ toolchain go1.26.6
 require (
 	github.com/Masterminds/semver/v3 v3.5.0
 	github.com/exaring/otelpgx v0.11.1
-	github.com/gerege-systems/open-gerege-core v1.10.0
+	github.com/gerege-systems/open-gerege-core v1.10.1
 	github.com/getsentry/sentry-go v0.48.0
-	github.com/go-chi/chi/v5 v5.3.1
+	github.com/go-chi/chi/v5 v5.3.2
 	github.com/go-chi/cors v1.2.2
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.10.0
