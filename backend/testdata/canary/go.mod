@@ -10,7 +10,7 @@ go 1.26
 
 require (
 	github.com/gerege-systems/open-gerege-nexus/backend v0.0.0
-	github.com/go-chi/chi/v5 v5.3.1
+	github.com/go-chi/chi/v5 v5.3.2
 )
 
 require (
