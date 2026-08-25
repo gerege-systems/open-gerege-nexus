@@ -68,8 +68,11 @@ func TestTheAppRailIsOrderedByTheManifests(t *testing.T) {
 		rail = append(rail, entry.id)
 	}
 
+	// Empty since 2026-08-25, when sso_clients left for the App Store and this
+	// repository stopped shipping apps of its own. The rail a deployment
+	// actually draws is whatever its catalogue carries; what is asserted here
+	// is that the core contributes nothing to it.
 	wantRail := []string{
-		"io.gerege.nexus.sso_clients", // order 20
 		// No order declared, so id order among themselves — which is where the
 		// list this replaced also put them, by falling through to 999. egov,
 		// documents and the organisation were here until they moved to

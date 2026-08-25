@@ -15,6 +15,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed — SSO клиентийн апп цөмөөс гарч, App Store-д очлоо
+
+`internal/apps/sso_clients` нь энэ репогийн сүүлчийн апп байв. Одоо
+[appstore-gerege-nexus](https://github.com/gerege-systems/appstore-gerege-nexus)-д
+`modules/ssoclients` болж, каталогоор дамжин **аль ч distribution** түүнийг апп
+стороос татаж суулгана — эхнийх нь `sso-gerege-nexus`.
+
+Үүний дараа `catalog/apps.json` ба `internal/apps` **хоёулаа хоосон**. Энэ нь
+дутуу байдал биш: ECOSYSTEM_GIT_STRATEGY-ийн тавьсан "бизнес апп огт байхгүйгээр
+асдаг платформ" шалгуур ингэж биеллээ. Аппын дэлгэц, migration history нь
+shell-д үлдсэн бөгөөд module-гүйгээ амьгүй (§2.3-ын дүрэм, `contacts`-тай адил)
+— иймд цөмийн frontend image-ийг хуваалцдаг distribution бүр дэлгэцээ хэвээр
+авна.
+
+**Рельс нь цөмийнх хэвээр.** OAuth2 сервер — код олгох, токен солих, id_token
+гарын үсэглэх, клиент хадгалах, redirect шалгах — бүгд
+`internal/tenant/ssoprovider`-т үлдэв. Апп нь тэр рельс рүү хорин экспортолсон
+нэрээр биш, шинэ гэрээгээр хүрнэ.
+
+### Added — `nexus.SSOClientRegistry`
+
+Модулийн SDK-д OAuth2 клиентийн бүртгэлийн гэрээ нэмэгдэв: `SSOClientRegistry`
+interface ба `SSOClient`, `SSOScope`, `SSOClientActivity`, `SSOConsent`,
+`SSOSigningKey` төрлүүд, `ErrSSOClientNotFound` sentinel.
+
+Цөм нь `nexus.Provide[nexus.SSOClientRegistry](ssoprovider.AsClientRegistry(...))`
+гэж нийтэлнэ. Ямар ч distribution `nexus.Capability[nexus.SSOClientRegistry]()`
+гэж асуугаад өөрийн суулгацын провайдерыг администрацлах апп агуулж чадна.
+
+Нууц үгийн digest гэрээгээр гардаггүй: `CreateClient`/`RotateClientSecret` нь
+задгай нууцыг авч, hash-ыг цөм өөрөө хийнэ — модуль тухайн суулгацын hash
+функцийг мэдэх шаардлагагүй.
+
 ### Changed — Консолыг хаягаар хязгаарлах нь зөвхөн платформ ХААЛТТАЙ үед
 
 Консол нь nginx-ийн `deny all` allowlist-ын ард байсан бөгөөд тэр хаалт нь

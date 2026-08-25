@@ -39,18 +39,19 @@ func TestACacheThatDoesNotMatchThisBuildIsNotUsed(t *testing.T) {
 
 	// What the platform passes as Verify: this build's own opinion of what a
 	// catalogue must contain.
-	// An app this build carries. It has been three of them in one day — the
-	// organisation, then reports, both gone to client-gerege-nexus — because
-	// what the check is about is the catalogue being older than the binary, and
-	// any of this binary's own apps answers that.
-	required := "io.gerege.nexus.sso_clients"
+	//
+	// It used to be "carries one of this repository's apps", and it named a
+	// different one every time one left — the organisation, then reports, then
+	// sso_clients. This repository ships none at all since 2026-08-25, so the
+	// same opinion is stated the other way round: a catalogue naming an id from
+	// before the renames is older than this binary whatever else it carries.
 	verify := func(apps []catalog.CatalogApp) error {
 		for _, app := range apps {
-			if app.ID == required {
-				return nil
+			if strings.HasPrefix(app.ID, "io.old.") {
+				return errors.New("catalog names an app this build has never heard of: " + app.ID)
 			}
 		}
-		return errors.New("catalog does not carry the platform's own app " + required)
+		return nil
 	}
 
 	provider := appcatalog.NewProvider(appcatalog.Config{

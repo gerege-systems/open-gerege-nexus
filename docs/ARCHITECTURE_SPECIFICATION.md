@@ -57,7 +57,7 @@ store, middleware, router-ийг босгож хоёр route table-ийг зэр
 | `backend/internal/kernel` | Аль ч урсгалыг import хийдэггүй cache, config, security, telemetry, settings, flags зэрэг суурь primitive |
 | `backend/internal/tenant` | Auth, access, directory, devices, identity, integrations, profile, SSO, app install зэрэг нэг тенантын ажиллагаа |
 | `backend/internal/platform` | Operator session, tenants, approvals, settings, flags, audit, support, metering, backup, catalog, observability |
-| `backend/internal/apps` | Base binary-д compile болсон апп (одоогоор зөвхөн SSO Clients); distribution модуль `pkg/nexus`-ээр тусдаа бүртгэгдэнэ |
+| `backend/internal/apps` | Distribution модулийн угсрах цэг. 2026-08-25-нд SSO Clients App Store руу явсны дараа **хоосон** — апп бүр `pkg/nexus`-ээр бүртгэгдэж каталогоор ирнэ |
 | `backend/pkg/platform` | Хоёр урсгалыг нэг HTTP процесст угсрах public host package |
 | `backend/pkg/nexus` | Гадаад module/distribution-д зориулсан тогтвортой SDK contract |
 

@@ -7,11 +7,14 @@ Gerege Nexus нь Go backend, Next.js web shell, PostgreSQL өгөгдлийн �
 compile-time Go module хэлбэрээр distribution репо нэмдэг. Энэ үндсэн репо нь
 бүх салбарын бэлэн ERP багц биш.
 
-> **Бодит хүрээ (2026-08-25):** [`catalog/apps.json`](catalog/apps.json)-д
-> зөвхөн `io.gerege.nexus.sso_clients` байна. Contacts, products, inventory,
-> billing, documents, government workflow зэрэг аппын migration history эсвэл
-> frontend translation энэ репод үлдсэн байж болох ч тэдгээрийн ажиллах module
-> энэ үндсэн бинарьд байхгүй. Тийм аппын маршрут энэ deployment дээр нээгдэхгүй.
+> **Бодит хүрээ (2026-08-25):** [`catalog/apps.json`](catalog/apps.json) **хоосон**.
+> Сүүлчийн апп болох `io.gerege.nexus.sso_clients` мөн өдөр
+> [appstore-gerege-nexus](https://github.com/gerege-systems/appstore-gerege-nexus)
+> руу гарсан бөгөөд аль ч distribution түүнийг апп стороос татаж авна. Contacts,
+> products, inventory, billing, documents, government workflow, SSO клиент зэрэг
+> аппын migration history эсвэл frontend translation энэ репод үлдсэн байж болох ч
+> тэдгээрийн ажиллах module энэ үндсэн бинарьд байхгүй. Тийм аппын маршрут энэ
+> deployment дээр нээгдэхгүй.
 
 <p>
   <b>Монгол</b>
@@ -40,8 +43,8 @@ compile-time Go module хэлбэрээр distribution репо нэмдэг. Э
 | --- | --- |
 | Tenant plane | Нэвтрэлт, session, tenant membership, RBAC, profile, апп суулгалт/хаалт, integration, AI API, төхөөрөмж, email verification, SSO client/provider, Өртөөний суваг, reporting engine |
 | Platform plane | Тенантын lifecycle, операторын TOTP нэвтрэлт, audit, support, quota/metering, feature flag, runtime settings/credentials, announcement, backup/deploy удирдлага |
-| Built-in апп | `io.gerege.nexus.sso_clients` (`/sso-clients`, `/api/v1/sso-clients/*`) |
-| Web | Public landing, login/setup, profile, app store, settings, control plane, built-in SSO client UI |
+| Built-in апп | Байхгүй. Апп бүр каталогоор ирнэ — 2026-08-25-нд `sso_clients` явсны дараа энэ бинарь нэг ч бизнес апп агуулахгүй |
+| Web | Public landing, login/setup, profile, app store, settings, control plane; аппын дэлгэцүүд (SSO клиент, баримт, харилцагч) module-гүйгээ амьгүй байдлаар shell-д үлдсэн |
 | Native | macOS, iOS/iPadOS, Windows, Android shell; Linux-д PWA |
 | Observability | `/health`, `/ready`, `/metrics`, structured log, optional OTLP/Sentry; тусдаа monitoring compose |
 
@@ -99,7 +102,7 @@ backend/
   internal/kernel/      хоёр plane-д нийтлэг доод түвшний механизм
   internal/platform/    deployment/operator plane
   internal/tenant/      байгууллагын нэрийн өмнөөс ажиллах plane
-  internal/apps/        үндсэн binary-д compile хийдэг аппууд (одоо SSO Clients)
+  internal/apps/        distribution module-ийн угсрах цэг (одоо хоосон)
   pkg/nexus/            distribution module-ийн нийтийн SDK
   pkg/platform/         distribution binary-г асаах нийтийн entry point
 frontend/               Next.js web shell ба control plane UI
@@ -182,9 +185,9 @@ README дахь API жагсаалт бүрэн contract биш. Кодтой х
   [`backend/pkg/platform/testdata/routes.txt`](backend/pkg/platform/testdata/routes.txt)
 - Module SDK public API snapshot:
   [`backend/pkg/nexus/testdata/api.txt`](backend/pkg/nexus/testdata/api.txt)
-- Base catalog: [`catalog/apps.json`](catalog/apps.json)
-- Base app manifest:
-  [`catalog/manifests/sso-clients.json`](catalog/manifests/sso-clients.json)
+- Base catalog: [`catalog/apps.json`](catalog/apps.json) (хоосон)
+- Module SDK-ийн SSO гэрээ:
+  [`backend/pkg/nexus/ssoclients.go`](backend/pkg/nexus/ssoclients.go)
 - Тохиргоо: [`.env.example`](.env.example)
 
 Үндсэн public endpoint-д `/health`, `/ready`, `/metrics`, auth, setup,

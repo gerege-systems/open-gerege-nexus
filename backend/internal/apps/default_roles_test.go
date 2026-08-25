@@ -11,21 +11,18 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gerege-systems/open-gerege-nexus/backend/internal/apps/sso_clients"
 	"github.com/gerege-systems/open-gerege-nexus/backend/pkg/nexus"
 )
 
-var everyModule = map[string]nexus.Module{
-	"sso_clients": (*sso_clients.SSOClientsModule)(nil),
-}
+// Both empty since 2026-08-25: sso_clients was the last module in this
+// repository and its two permissions went with it to the App Store.
+//
+// Өртөө's three were here until 2026-08-23 and are client-gerege-nexus's. The
+// tables stay for the next module that arrives, because a permission that
+// appears with nobody having stated its reach is exactly what this catches.
+var everyModule = map[string]nexus.Module{}
 
-var defaultGrants = map[string]string{
-	"sso_clients.read":   "suffix",
-	"sso_clients.manage": "suffix",
-}
-
-// Өртөө's three permissions were here until 2026-08-23. They are
-// client-gerege-nexus's now, and so is the claim about them.
+var defaultGrants = map[string]string{}
 
 func TestEveryPermissionSaysWhoItReaches(t *testing.T) {
 	seen := map[string]bool{}

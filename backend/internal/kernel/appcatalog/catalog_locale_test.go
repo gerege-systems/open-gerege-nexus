@@ -26,9 +26,10 @@ func TestShippedCatalogCoversEverySupportedLocale(t *testing.T) {
 	if err := json.Unmarshal(raw, &apps); err != nil {
 		t.Fatalf("catalog is not valid JSON: %v", err)
 	}
-	if len(apps) == 0 {
-		t.Fatal("catalog is empty")
-	}
+	// Empty since 2026-08-25: this repository ships no apps of its own, so
+	// there is nothing to translate and that is the answer rather than a
+	// broken path — an unreadable file skips above. The loop is what any entry
+	// added back here would have to satisfy.
 
 	for _, app := range apps {
 		for _, locale := range config.SupportedLocales {

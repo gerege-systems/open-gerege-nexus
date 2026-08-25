@@ -4,18 +4,20 @@ import (
 	"os"
 	"testing"
 
-	"github.com/gerege-systems/open-gerege-nexus/backend/internal/apps/sso_clients"
 	"github.com/gerege-systems/open-gerege-nexus/backend/pkg/nexus"
 )
 
 // What every module compiled into this repository declares to nexus.AccessPolicy.
+//
+// Empty since 2026-08-25, when sso_clients — the last one — left for the App
+// Store. That is the finished state of the split rather than a gap, and the
+// table stays because the next module to arrive here has to be classified
+// before anybody notices it was not.
 var corePolicies = map[string]struct {
 	module         nexus.Module
 	menu, prefix   string
 	whyNoRouteGate string
-}{
-	"sso_clients": {(*sso_clients.SSOClientsModule)(nil), "sso_clients.read", "sso_clients", ""},
-}
+}{}
 
 func TestEveryCoreModuleDeclaresTheAccessPolicyWeThinkItDoes(t *testing.T) {
 	for name, want := range corePolicies {
