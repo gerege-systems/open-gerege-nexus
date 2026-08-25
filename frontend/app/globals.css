@@ -595,7 +595,31 @@ html[data-theme="dark"] .divide-slate-100 > * { border-color: var(--gerege-borde
     box-shadow: 8px 0 28px rgb(15 23 42 / 16%);
     transform: translateX(-100%); transition: transform 0.24s ease;
   }
-  .gerege-sidebar.is-mobile-open { transform: translateX(0); }
+  /* Open, and it has to say so twice.
+     
+     The closed state above is two selectors, and the one that actually matches
+     an open panel — `.gerege-sidebar.is-desktop-open:not(.gerege-workarea
+     .gerege-sidebar)` — weighs four classes, because `:not()` carries the
+     specificity of its argument and that argument is two. A bare
+     `.gerege-sidebar.is-mobile-open` weighs two, so it lost, and the drawer
+     stayed parked at translateX(-100%) with the backdrop up over an empty
+     screen. The class was on the element; the transform was not.
+     
+     It went in on 2026-08-10 with the native shell's workarea exclusions and
+     was invisible for a fortnight: the drawer is the only way to a menu on a
+     phone, but the bottom tab bar still switched apps, so it read as "this app
+     has no menu" rather than as a broken control. It became unmissable on
+     2026-08-25, when the core's catalogue emptied and the tab bar was down to
+     one tile.
+     
+     Both alternatives spelled out rather than `!important`: the rule that has
+     to be beaten is the one written above it, and matching its shape says so.
+     `is-desktop-open` rides along because localStorage sets it on a phone too —
+     nothing there knows the window is narrow. */
+  .gerege-sidebar.is-mobile-open:not(.gerege-workarea .gerege-sidebar),
+  .gerege-sidebar.is-mobile-open.is-desktop-open:not(.gerege-workarea .gerege-sidebar) {
+    transform: translateX(0);
+  }
   .gerege-sidebar:not(.gerege-workarea .gerege-sidebar) > nav { display: none; }
   .gerege-menu-panel:not(.gerege-workarea .gerege-menu-panel),
   .gerege-sidebar.is-desktop-open:not(.gerege-workarea .gerege-sidebar) .gerege-menu-panel {
