@@ -57,7 +57,7 @@ import graph.
 | `backend/internal/kernel` | Plane-neutral cache, config, security, telemetry, settings, flags, and other primitives |
 | `backend/internal/tenant` | Authentication, access, directory, devices, identity, integrations, profile, SSO, and app installation for one tenant |
 | `backend/internal/platform` | Operator sessions, tenants, approvals, settings, flags, audit, support, metering, backup, catalog, and observability |
-| `backend/internal/apps` | Apps compiled into the base binary (currently only SSO Clients); distributions register separate modules through `pkg/nexus` |
+| `backend/internal/apps` | Where a distribution's modules are assembled. Empty since 2026-08-25, when SSO Clients left for the App Store — every app now arrives through `pkg/nexus` and a catalogue |
 | `backend/pkg/platform` | Public host package that assembles both planes into one HTTP process |
 | `backend/pkg/nexus` | Stable SDK contract for external modules and distributions |
 

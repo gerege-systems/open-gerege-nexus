@@ -169,16 +169,56 @@ func (f *gateFixture) install(t *testing.T, appID string) {
 // This was written about the e-Government link, whose routes had been platform
 // routes before it became an app. That module moved to client-gerege-nexus on
 // 2026-08-23; documents, the organisation, Өртөө's task board and the reports
-// app followed it the same day. The claim has now outlived five of its
-// subjects, which is the argument for keeping it: what is being asserted is the
-// gate, not any app in particular. It asks about the assistant and the SSO
-// client register today.
-func TestAnAppsRoutesAreBehindItsInstallationAndAnothersAreNot(t *testing.T) {
-	f := newGateFixture(t)
+// app followed it the same day, and sso_clients left for the App Store on
+// 2026-08-25. The claim has now outlived every one of its subjects, because
+// this repository carries no app at all — which is the argument for keeping it,
+// and the reason it now brings its own.
+//
+// The probe below is a module in the same sense any distribution's is: it
+// registers with nexus, it is mounted by registerAppModuleRoutes, and the gate
+// cannot tell it from the real thing. Asserting the gate through an app that
+// happened to still be here was always incidental; a real one is what is no
+// longer available.
+type gateProbeModule struct{ id, prefix string }
 
-	// Nothing installed yet: sso-clients is refused.
-	if res := f.do(t, http.MethodGet, "/api/v1/sso-clients/apps/", ""); res.Code != http.StatusForbidden {
-		t.Fatalf("sso-clients answered %d without the app installed; expected 403: %s",
+func (m gateProbeModule) ID() string                    { return m.id }
+func (gateProbeModule) Name() string                    { return "Gate probe" }
+func (gateProbeModule) Version() string                 { return "1.0.0" }
+func (gateProbeModule) MenuPermission() string          { return "" }
+func (m gateProbeModule) RoutePermissionPrefix() string { return "" }
+
+func (gateProbeModule) Dependencies() []nexus.Dependency          { return nil }
+func (gateProbeModule) Permissions() []nexus.PermissionDefinition { return nil }
+func (gateProbeModule) Menus() []nexus.MenuDefinition             { return nil }
+
+func (m gateProbeModule) RegisterRoutes(r chi.Router, gate func(http.Handler) http.Handler) {
+	r.Route("/api/v1/"+m.prefix, func(pr chi.Router) {
+		pr.Use(gate)
+		pr.Get("/probe", func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) })
+	})
+}
+
+func TestAnAppsRoutesAreBehindItsInstallationAndAnothersAreNot(t *testing.T) {
+	suffix := strings.ReplaceAll(uuid.NewString(), "-", "")[:12]
+	appID := "io.gerege.test.gate." + suffix
+	slug := "gate-" + suffix
+	// Registered before the fixture, because the fixture is what builds the
+	// router: a module registered after it would never be mounted.
+	nexus.Register(gateProbeModule{id: appID, prefix: slug})
+
+	f := newGateFixture(t)
+	if _, err := f.pool.Exec(context.Background(),
+		`INSERT INTO platform.apps (id, slug, name) VALUES ($1, $2, 'Gate probe')`,
+		appID, slug); err != nil {
+		t.Fatalf("app: %v", err)
+	}
+	t.Cleanup(func() {
+		_, _ = f.pool.Exec(context.Background(), `DELETE FROM platform.apps WHERE id = $1`, appID)
+	})
+
+	// Nothing installed yet: the app's routes are refused.
+	if res := f.do(t, http.MethodGet, "/api/v1/"+slug+"/probe", ""); res.Code != http.StatusForbidden {
+		t.Fatalf("the app answered %d without being installed; expected 403: %s",
 			res.Code, res.Body.String())
 	}
 
@@ -189,13 +229,13 @@ func TestAnAppsRoutesAreBehindItsInstallationAndAnothersAreNot(t *testing.T) {
 	}
 
 	// And with the app installed the gate opens.
-	f.install(t, "io.gerege.nexus.sso_clients")
-	res = f.do(t, http.MethodGet, "/api/v1/sso-clients/apps/", "")
+	f.install(t, appID)
+	res = f.do(t, http.MethodGet, "/api/v1/"+slug+"/probe", "")
 	if res.Code == http.StatusForbidden {
-		t.Fatalf("sso-clients was refused after installation: %s", res.Body.String())
+		t.Fatalf("the app was refused after installation: %s", res.Body.String())
 	}
 	if res.Code == http.StatusNotFound {
-		t.Fatalf("sso-clients answered 404; this test asserts nothing unless the route is served")
+		t.Fatalf("the app answered 404; this test asserts nothing unless the route is served")
 	}
 }
 

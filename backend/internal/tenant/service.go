@@ -247,6 +247,11 @@ func New(deps Deps) (*Service, error) {
 	// could not be compiled anywhere else.
 	nexus.Provide[nexus.StateRegistry](gerege.AsStateRegistry(geregeSvc))
 	nexus.Provide[nexus.AuditReader](audit.AsReader(db))
+	// The authorization server, for whichever app administers it. That app was
+	// internal/apps/sso_clients until 2026-08-25 and reached straight into
+	// ssoprovider for twenty exported names; it is the App Store's now, and
+	// this line is the whole of what it has instead.
+	nexus.Provide[nexus.SSOClientRegistry](ssoprovider.AsClientRegistry(ssoProvider))
 	// The identity rails a module signs with, and the two platform services a
 	// module cannot build for itself: a rate limiter whose budget is shared
 	// across the deployment, and the signature counter, whose registry stays

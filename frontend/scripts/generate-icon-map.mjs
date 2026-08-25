@@ -77,15 +77,28 @@ async function collect(dir, suffixes, pattern) {
  * tree names them any more, so the shell would draw the fallback box on every
  * entry of every screen those apps own.
  *
- * Four names, and the list shrinks to nothing the day that distribution builds
- * its own frontend. Not a general escape hatch: an icon goes here only when
- * this image is the one drawing it for somebody else.
+ * The list shrinks to nothing the day those distributions build their own
+ * frontend. Not a general escape hatch: an icon goes here only when this image
+ * is the one drawing it for somebody else.
+ *
+ * The last six arrived on 2026-08-25 with sso_clients, which left for
+ * appstore-gerege-nexus. Its case is the strongest of the three: its screens
+ * are still in this tree — /sso-clients and /module/sso-clients/* — so this
+ * image is drawing the whole app for whoever carries the module, and the menu
+ * entries that reach those screens would be the only part of it rendering a
+ * fallback box.
  */
 const forDistributionsWithoutAFrontend = [
-  "file-text", // documents
-  "landmark", //  the e-Government link
-  "network", //   the organisation's departments
-  "users", //     its people
+  "file-text", //   documents
+  "landmark", //    the e-Government link
+  "network", //     the organisation's departments
+  "users", //       its people
+  "code-2", //      the SSO client register
+  "key-round", //   its API keys
+  "scroll-text", // its access audit
+  "shield-check", //its OAuth scopes
+  "route", //       its redirect policies
+  "key-square", //  its signing keys
 ];
 
 const declared = new Set([

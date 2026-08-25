@@ -259,6 +259,64 @@
   Rows.Err() error
   Rows.Next() bool
   Rows.Scan(dest ...any) error
+  SSOClient.ClientID string
+  SSOClient.ClientName string
+  SSOClient.ClientType string
+  SSOClient.ClientURI string
+  SSOClient.CreatedAt time.Time
+  SSOClient.Disabled bool
+  SSOClient.GrantTypes []string
+  SSOClient.ID string
+  SSOClient.LastUsedAt *time.Time
+  SSOClient.LogoURI string
+  SSOClient.PostLogoutRedirectURIs []string
+  SSOClient.RedirectURIs []string
+  SSOClient.Scopes []string
+  SSOClient.Secret string
+  SSOClient.SecretRotatedAt *time.Time
+  SSOClient.TenantID string
+  SSOClient.UpdatedAt time.Time
+  SSOClientActivity.ActiveAccess int
+  SSOClientActivity.ActiveRefresh int
+  SSOClientActivity.ClientID string
+  SSOClientActivity.ClientName string
+  SSOClientActivity.ClientType string
+  SSOClientActivity.ConsentedUsers int
+  SSOClientActivity.Disabled bool
+  SSOClientActivity.LastUsedAt *time.Time
+  SSOClientRegistry.AllowedRedirect(raw string) error
+  SSOClientRegistry.ClientActivity(ctx context.Context, tenantID string) ([]SSOClientActivity, error)
+  SSOClientRegistry.Consents(ctx context.Context, tenantID string, limit int) ([]SSOConsent, error)
+  SSOClientRegistry.CreateClient(ctx context.Context, tenantID string, c SSOClient, secret, createdBy string) (SSOClient, error)
+  SSOClientRegistry.DeleteClient(ctx context.Context, tenantID, clientID string) error
+  SSOClientRegistry.GetClient(ctx context.Context, tenantID, clientID string) (SSOClient, error)
+  SSOClientRegistry.IsSupportedScope(name string) bool
+  SSOClientRegistry.Issuer() string
+  SSOClientRegistry.ListClients(ctx context.Context, tenantID string) ([]SSOClient, error)
+  SSOClientRegistry.NewIdentifier(n int) string
+  SSOClientRegistry.RevokeClientTokens(ctx context.Context, tenantID, clientID string) (int64, error)
+  SSOClientRegistry.RotateClientSecret(ctx context.Context, tenantID, clientID, secret string) error
+  SSOClientRegistry.SigningKeys(ctx context.Context) ([]SSOSigningKey, error)
+  SSOClientRegistry.SupportedGrantTypes() []string
+  SSOClientRegistry.SupportedScopes() []SSOScope
+  SSOClientRegistry.UpdateClient(ctx context.Context, tenantID string, c SSOClient) (SSOClient, error)
+  SSOClientRegistry.WithdrawConsent(ctx context.Context, tenantID, clientID, userID string) error
+  SSOConsent.ClientID string
+  SSOConsent.ClientName string
+  SSOConsent.GrantedAt time.Time
+  SSOConsent.Scopes []string
+  SSOConsent.UserEmail string
+  SSOConsent.UserID string
+  SSOConsent.UserName string
+  SSOScope.Description string
+  SSOScope.DescriptionMN string
+  SSOScope.Name string
+  SSOScope.Sensitive bool
+  SSOSigningKey.Active bool
+  SSOSigningKey.Algorithm string
+  SSOSigningKey.CreatedAt time.Time
+  SSOSigningKey.KID string
+  SSOSigningKey.RetiredAt *time.Time
   SignatureCeremony.DeviceLinkURL string
   SignatureCeremony.ExpiresAt string
   SignatureCeremony.SessionID string
@@ -457,6 +515,12 @@ type ReportSink func(Report)
 type RequestCode struct
 type Result struct
 type Rows interface
+type SSOClient struct
+type SSOClientActivity struct
+type SSOClientRegistry interface
+type SSOConsent struct
+type SSOScope struct
+type SSOSigningKey struct
 type SignatureCeremony struct
 type SignatureCounter interface
 type SignatureRequest struct
@@ -482,6 +546,7 @@ var ErrReportGrantExists
 var ErrReportGrantNotFound
 var ErrReportGrantNotPending
 var ErrReportScheduleNotFound
+var ErrSSOClientNotFound
 var ErrSigningUnavailable
 var ErrStaffCredentialRejected
 var ErrTenantMissing

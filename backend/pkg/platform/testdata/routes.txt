@@ -211,27 +211,3 @@ TRACE /api/v1/core/organisation
 TRACE /cp/api
 TRACE /cp/api/*
 TRACE /metrics
-[app] DELETE /api/v1/developer/apps/{clientID}
-[app] DELETE /api/v1/developer/apps/{clientID}/consents/{userID}
-[app] DELETE /api/v1/developer/apps/{clientID}/tokens
-[app] DELETE /api/v1/sso-clients/apps/{clientID}
-[app] DELETE /api/v1/sso-clients/apps/{clientID}/consents/{userID}
-[app] DELETE /api/v1/sso-clients/apps/{clientID}/tokens
-[app] GET /api/v1/developer/apps/
-[app] GET /api/v1/developer/apps/{clientID}
-[app] GET /api/v1/developer/audit
-[app] GET /api/v1/developer/endpoints
-[app] GET /api/v1/developer/scopes
-[app] GET /api/v1/developer/signing-keys
-[app] GET /api/v1/sso-clients/apps/
-[app] GET /api/v1/sso-clients/apps/{clientID}
-[app] GET /api/v1/sso-clients/audit
-[app] GET /api/v1/sso-clients/endpoints
-[app] GET /api/v1/sso-clients/scopes
-[app] GET /api/v1/sso-clients/signing-keys
-[app] POST /api/v1/developer/apps/
-[app] POST /api/v1/developer/apps/{clientID}/rotate-secret
-[app] POST /api/v1/sso-clients/apps/
-[app] POST /api/v1/sso-clients/apps/{clientID}/rotate-secret
-[app] PUT /api/v1/developer/apps/{clientID}
-[app] PUT /api/v1/sso-clients/apps/{clientID}
