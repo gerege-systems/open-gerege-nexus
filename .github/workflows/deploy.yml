@@ -543,7 +543,12 @@ jobs:
               echo "::error::CONTROL_PLANE_ALLOWED_CIDRS is not a fail-closed address list"
               exit 1
             fi
-            CIDR_COUNT=$(grep -c '^allow ' "$ALLOWLIST_TEMP")
+            # `|| true` because grep exits 1 when it counts none, and a
+            # snippet with no `allow` lines is a real answer: it is what
+            # CONTROL_PLANE_ALLOWED_CIDRS=open renders, and the platform decides
+            # per request instead. Without this, `set -e` killed the whole
+            # rollout with no message at all.
+            CIDR_COUNT=$(grep -c '^allow ' "$ALLOWLIST_TEMP" || true)
             sudo install -o root -g root -m 0644 "$ALLOWLIST_TEMP" "$ALLOWLIST"
 
             if ! sudo nginx -t; then
@@ -557,7 +562,11 @@ jobs:
               exit 1
             fi
             sudo systemctl reload nginx
-            echo "control-plane allowlist configured with $CIDR_COUNT CIDR(s)"
+            if [ "$CIDR_COUNT" -eq 0 ]; then
+              echo "control-plane allowlist: no address restriction at the edge"
+            else
+              echo "control-plane allowlist configured with $CIDR_COUNT CIDR(s)"
+            fi
 
       - name: Route the control-plane API to the backend
         if: steps.guard.outputs.ready == 'true'
