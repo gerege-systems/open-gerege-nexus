@@ -145,7 +145,7 @@ func New(db *pgxpool.Pool, deps ConsoleDeps) *Service {
 		TenantChanged: deps.TenantChanged,
 	})
 	observabilityScreen := observability.New(op, observability.Deps{
-		DB: db, Backup: backupScreen,
+		DB: db, Backup: backupScreen, Warnings: deps.Warnings,
 		CatalogStatus: deps.CatalogStatus, PlatformVersion: deps.PlatformVersion,
 	})
 

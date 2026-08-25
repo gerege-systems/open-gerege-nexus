@@ -13,7 +13,14 @@ package observability
 // Both ask the other plane, which is where the answer is.
 func (s *Service) warnings() []string {
 	if s.warningsFrom == nil {
-		return nil
+		// Empty, never nil. A nil slice marshals as `null`, and the console's
+		// front page reads this field as a list — `null.map` is a blank screen
+		// with "This page couldn't load" on it, which is what a deployment
+		// whose callback was never wired up actually saw.
+		return []string{}
 	}
-	return s.warningsFrom()
+	if warnings := s.warningsFrom(); warnings != nil {
+		return warnings
+	}
+	return []string{}
 }

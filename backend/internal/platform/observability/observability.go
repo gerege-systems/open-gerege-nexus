@@ -138,7 +138,42 @@ func (s *Service) Health(ctx context.Context) Overview {
 	overview.Backups = s.backup.StatusOf(ctx)
 	overview.Catalog = s.CatalogStatus(ctx)
 	overview.Version = s.Version(ctx)
-	return overview
+	return overview.withLists()
+}
+
+// withLists makes every list on this screen a list on the wire.
+//
+// A nil slice in Go marshals as `null`, and the console renders each of these
+// with .map. `null.map` is not a smaller table, it is a blank page saying "This
+// page couldn't load" — which is what a deployment saw when one callback above
+// was never wired up and `warnings` came back nil.
+//
+// Done once, here, rather than by asking every builder to remember: they are
+// eight, they are edited separately, and the one that forgets takes the whole
+// screen with it.
+func (o Overview) withLists() Overview {
+	if o.External == nil {
+		o.External = []SystemDot{}
+	}
+	if o.Infra == nil {
+		o.Infra = []Gauge{}
+	}
+	if o.Alerts == nil {
+		o.Alerts = []Alert{}
+	}
+	if o.Background == nil {
+		o.Background = []BackgroundJob{}
+	}
+	if o.Tenants == nil {
+		o.Tenants = []TenantTrouble{}
+	}
+	if o.Warnings == nil {
+		o.Warnings = []string{}
+	}
+	if o.Catalog.Apps == nil {
+		o.Catalog.Apps = []AppInstalled{}
+	}
+	return o
 }
 
 // The queries. Written here rather than in the dashboards' JSON because these
