@@ -13,7 +13,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
+## [1.14.0] - 2026-08-25
+
+### Changed — ⚠️ `PlatformVersion`-ийг стампдах `-X` зам өөрчлөгдөв
+
+`internal/platform/server.go`-д байсан `PlatformVersion` нь v1.13.0-ийн дараа
+`internal/kernel/config`-т нүүсэн (`5471576`). Distribution-ий Dockerfile-ууд
+хуучин замаар стампддаг бол **юу ч болохгүй**: Go нь байхгүй тэмдэгт рүү
+чиглэсэн `-X`-ийг чимээгүй үл тоомсорлодог тул образ өөрийгөө `1.1.0` гэж
+хэлээд, өөрийнхөө каталогийн manifest бүрийг татгалзаж, **асахаа болино**.
+
+    -X .../backend/internal/platform.PlatformVersion=${version}        # үхмэл
+    -X .../backend/internal/kernel/config.PlatformVersion=${version}   # зөв
+
+v1.14.0 бол энэ нь мэдрэгдэх эхний хувилбар. Бумп хийхийн өмнө
+`deploy/Dockerfile`-аа засах хэрэгтэй — appstore-gerege-nexus,
+sso-gerege-nexus хоёр 2026-08-25-нд яг үүнийг хийсэн.
 
 ### Removed — SSO клиентийн апп цөмөөс гарч, App Store-д очлоо
 
