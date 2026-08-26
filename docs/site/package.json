@@ -7,7 +7,7 @@
   "scripts": {
     "build": "node build.mjs",
     "check": "node build.mjs && node check-links.mjs",
-    "serve": "node --run build && node -e \"import('node:http').then(({default:h})=>import('node:fs').then(({default:f})=>h.createServer((q,s)=>{const p='dist'+(q.url==='/'?'/index.html':q.url.split('?')[0]);f.readFile(p,(e,d)=>e?(s.statusCode=404,s.end('not found')):s.end(d))}).listen(4321,()=>console.log('http://localhost:4321'))))\""
+    "serve": "npm run build && node serve.mjs"
   },
   "dependencies": {
     "marked": "18.0.9"
