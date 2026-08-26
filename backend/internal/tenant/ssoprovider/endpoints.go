@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/tenant/auth"
+	"github.com/gerege-systems/open-gerege-nexus/backend/pkg/nexus"
 )
 
 // SessionResolver turns a platform session token into the signed-in user. The
@@ -378,7 +379,16 @@ type oauthError struct {
 // parseConsentQuery validates the subset of the authorization request that the
 // consent screen round-trips.
 func (s *SSOProvider) parseConsentQuery(ctx context.Context, values url.Values) (*authRequest, *oauthError) {
-	client, err := s.store.GetClient(ctx, values.Get("client_id"))
+	// The client is read on the platform path, off the signed-in user's tenant.
+	// A client belongs to the organisation that registered it, and issueAuthCode
+	// below says why that is not the organisation signing in: one tenant's
+	// client signs in another tenant's users, which is what federating a
+	// separate deployment means. /oauth2/auth is unauthenticated and so already
+	// reads it this way; these two endpoints sit behind the session middleware,
+	// where row-level security scopes every read to the caller's tenant and hid
+	// every client but their own — a first consent to somebody else's client
+	// answered "unknown or disabled client" and no sign-in ever completed.
+	client, err := s.store.GetClient(nexus.WithoutTenant(ctx), values.Get("client_id"))
 	if err != nil || client.Disabled {
 		return nil, &oauthError{"unauthorized_client", "unknown or disabled client"}
 	}
