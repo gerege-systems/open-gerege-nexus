@@ -48,6 +48,10 @@ Markdown доторх холбоос нь тухайн файлаасаа хар
 Тиймээс сайт нь өөрөө нийтлээгүй кодоо ч холбож чадна. Markdown болон raw
 HTML холбоос хоёулаа эх файлаасаа яг нэг удаа хөрвүүлэгдэнэ.
 
+Theme stylesheet нь агуулгын SHA-256 hash орсон filename-ээр гарна. Ингэснээр
+GitHub Pages-ийн CDN шинэ HTML-ийг хуучин CSS-тэй хольж өгөхгүй. Хуучин cached
+HTML-д зориулж тогтвортой `assets/theme.css` хувийг давхар хадгална.
+
 ## CI
 
 [`.github/workflows/pages.yml`](../../.github/workflows/pages.yml) нь `main`

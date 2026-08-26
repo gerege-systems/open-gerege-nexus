@@ -20,6 +20,7 @@
  * That last case is why the site can link to code it does not publish.
  */
 import {cpSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync} from "node:fs";
+import {createHash} from "node:crypto";
 import {dirname, join, posix, relative, resolve} from "node:path";
 import {fileURLToPath} from "node:url";
 
@@ -29,6 +30,8 @@ import {BLOB, GITHUB, LANGUAGES, PAGES, TREE} from "./pages.mjs";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..", "..");
 const OUT = join(HERE, "dist");
+const THEME = readFileSync(join(HERE, "theme.css"));
+const THEME_FILE = `theme.${createHash("sha256").update(THEME).digest("hex").slice(0, 12)}.css`;
 
 const bySrc = new Map(PAGES.map((p) => [p.src, p]));
 const esc = (value) =>
@@ -211,7 +214,7 @@ function shell({title, slug, body, toc = "", page}) {
 <meta name="description" content="Gerege Nexus — үйлчилгээ, үйл ажиллагаа, системийн нэгдсэн нээлттэй эхийн платформ.">
 <meta name="theme-color" content="#06336e">
 <link rel="icon" href="assets/icons/flag-mn.png">
-<link rel="stylesheet" href="assets/theme.css">
+<link rel="stylesheet" href="assets/${THEME_FILE}">
 </head>
 <body>
 <a class="skip" href="#content">Агуулга руу шилжих</a>
@@ -288,7 +291,10 @@ cpSync(join(REPO, "docs/assets"), join(OUT, "assets"), {
   recursive: true,
   filter: (src) => !src.endsWith(".md"),
 });
-cpSync(join(HERE, "theme.css"), join(OUT, "assets/theme.css"));
+// The hashed filename makes the HTML and CSS an atomic pair at the CDN edge.
+// Keep the stable name too, so an older cached HTML document never gets a 404.
+writeFileSync(join(OUT, `assets/${THEME_FILE}`), THEME);
+writeFileSync(join(OUT, "assets/theme.css"), THEME);
 // Tells GitHub Pages not to run the output through Jekyll, which would drop
 // any file or directory whose name begins with an underscore.
 writeFileSync(join(OUT, ".nojekyll"), "");
