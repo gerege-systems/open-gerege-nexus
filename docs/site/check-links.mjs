@@ -50,6 +50,9 @@ function decode(value) {
 
 for (const page of pages) {
   const html = readFileSync(resolve(DIST, page), "utf8");
+  if (!/<link rel="stylesheet" href="assets\/theme\.[a-f\d]{12}\.css">/.test(html)) {
+    problems.push(`${page} (stylesheet URL is not content-hashed)`);
+  }
   const ids = [...html.matchAll(/\bid=(['"])(.*?)\1/g)].map((match) => match[2]);
   const seenIds = new Set();
   for (const id of ids) {
