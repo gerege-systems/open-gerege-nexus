@@ -19,103 +19,24 @@
  *
  * That last case is why the site can link to code it does not publish.
  */
-import {cpSync, mkdirSync, readFileSync, rmSync, writeFileSync} from "node:fs";
+import {cpSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync} from "node:fs";
 import {dirname, join, posix, relative, resolve} from "node:path";
 import {fileURLToPath} from "node:url";
 
 import {Marked} from "marked";
+import {BLOB, GITHUB, LANGUAGES, PAGES, TREE} from "./pages.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..", "..");
 const OUT = join(HERE, "dist");
 
-const GITHUB = "https://github.com/gerege-systems/open-gerege-nexus";
-const BLOB = `${GITHUB}/blob/main`;
-
-/* ── What gets published ──────────────────────────────────────────────────── */
-
-/**
- * Every page on the site, in sidebar order. `group` buckets them in the
- * sidebar; `lang` marks the seven translations of the overview so they can be
- * offered as a language row rather than seven sidebar entries.
- *
- * Deliberately absent: APPSTORE_PHASE2_PLAN, APPSTORE_SEPARATION_PLAN and
- * DOCUMENTS_WORKLOG. Those are working notes for a migration in progress, not
- * documentation of what the platform does, and publishing them would date the
- * site the moment the work lands.
- */
-const PAGES = [
-  // The overview is the site's front door. There is no separate showcase page:
-  // the product's own landing page makes that argument, and saying it twice
-  // meant two places to keep true.
-  {src: "README.md", slug: "index", title: "Тойм", group: "Танилцуулга", lang: "mn"},
-  {src: "docs/README_EN.md", slug: "overview-en", title: "Overview", group: "Танилцуулга", lang: "en"},
-  {src: "docs/README_AR.md", slug: "overview-ar", title: "نظرة عامة", group: "Танилцуулга", lang: "ar", rtl: true},
-  {src: "docs/README_ZH.md", slug: "overview-zh", title: "概览", group: "Танилцуулга", lang: "zh"},
-  {src: "docs/README_FR.md", slug: "overview-fr", title: "Aperçu", group: "Танилцуулга", lang: "fr"},
-  {src: "docs/README_RU.md", slug: "overview-ru", title: "Обзор", group: "Танилцуулга", lang: "ru"},
-  {src: "docs/README_ES.md", slug: "overview-es", title: "Resumen", group: "Танилцуулга", lang: "es"},
-
-  {src: "docs/README.md", slug: "documents", title: "Баримтын индекс", group: "Архитектур"},
-  {src: "docs/ARCHITECTURE_SPECIFICATION.md", slug: "architecture", title: "Архитектурын тодорхойлолт", group: "Архитектур"},
-  {src: "docs/ARCHITECTURE_SPECIFICATION_EN.md", slug: "architecture-en", title: "Architecture specification (EN)", group: "Архитектур"},
-
-  {src: "docs/SSO_FEDERATION.md", slug: "sso-federation", title: "SSO холбоос", group: "Архитектур"},
-
-  // The strategy and the decision record. They are published because the ADRs
-  // are what a reader is sent to when they ask why the code is shaped this way,
-  // and because both link to the strategy — a published page linking to an
-  // unpublished one leaves the site.
-  {src: "docs/ECOSYSTEM_GIT_STRATEGY.md", slug: "ecosystem-git-strategy", title: "Экосистемийн git стратеги", group: "Архитектур"},
-  {src: "docs/adr/0001-domain-first.md", slug: "adr-0001-domain-first", title: "ADR 0001 — Домэйн эхэнд", group: "Архитектур"},
-  {src: "docs/adr/0002-one-signing-rail.md", slug: "adr-0002-one-signing-rail", title: "ADR 0002 — Гарын үсгийн зам нэг", group: "Архитектур"},
-  {src: "docs/adr/0003-a-document-carries-what-is-signed.md", slug: "adr-0003-document-carries", title: "ADR 0003 — Баримт файлаа авч явна", group: "Архитектур"},
-  {src: "docs/adr/0004-a-pilot-that-did-not-ship.md", slug: "adr-0004-pilot", title: "ADR 0004 — Гараагүй pilot", group: "Архитектур"},
-  {src: "docs/adr/0005-two-planes-one-origin-each.md", slug: "adr-0005-two-origins", title: "ADR 0005 — Нэг бинарь, хоёр origin", group: "Архитектур"},
-  {src: "docs/TWO_PLANES_REVIEW.md", slug: "two-planes-review", title: "Хоёр урсгалын хэрэгжилтийн шалгалт", group: "Архитектур"},
-
-  {src: "docs/MODULE_AUTHORING_GUIDE.md", slug: "module-authoring", title: "Модуль хөгжүүлэх заавар", group: "Хөгжүүлэлт"},
-  {src: "docs/TRANSLATION_GUIDE.md", slug: "translation", title: "Орчуулгын гарын авлага", group: "Хөгжүүлэлт"},
-  {src: "docs/APPSTORE_OPERATIONS.md", slug: "appstore-operations", title: "Апп сторын ажиллагаа", group: "Хөгжүүлэлт"},
-
-  {src: "docs/GOV_SERVICES_WORKFLOW.md", slug: "gov-services", title: "Төрийн үйлчилгээний урсгал", group: "Модулиуд"},
-  {src: "docs/DOCUMENTS_SIGNING.md", slug: "documents-signing", title: "Цахим гарын үсэг", group: "Модулиуд"},
-  {src: "docs/REPORTS.md", slug: "reports", title: "Тайлангийн хөдөлгүүр", group: "Модулиуд"},
-  {src: "docs/REPORT_SHARING.md", slug: "report-sharing", title: "Тенант дамнасан тайлан", group: "Модулиуд"},
-
-  // Operations. MONITORING and RUNBOOKS are read at different moments — one
-  // when setting the stack up, the other at three in the morning — so they are
-  // two entries rather than one long page. The proposal is here because both
-  // link to it for the reasoning behind what they describe, and a link from a
-  // published page to an unpublished one leaves the site.
-  {src: "docs/MONITORING.md", slug: "monitoring", title: "Мониторинг", group: "Ажиллагаа"},
-  {src: "docs/RUNBOOKS.md", slug: "runbooks", title: "Runbook-ууд", group: "Ажиллагаа"},
-  {src: "docs/CONTROL_PLANE.md", slug: "control-plane", title: "Control plane", group: "Ажиллагаа"},
-  {src: "docs/MONITORING_AND_REPORTING_PROPOSAL.md", slug: "monitoring-proposal", title: "Ажиглалт ба тайлангийн санал", group: "Ажиллагаа"},
-
-  {src: "docs/SHELL_CONTRACT.md", slug: "shell-contract", title: "Bridge гэрээ", group: "Native клиентүүд"},
-  {src: "docs/NATIVE_LOGIN_SPEC.md", slug: "native-login", title: "Native нэвтрэлт", group: "Native клиентүүд"},
-  {src: "docs/NATIVE_SETTINGS_SPEC.md", slug: "native-settings", title: "Native тохиргоо", group: "Native клиентүүд"},
-
-  {src: "CONTRIBUTING.md", slug: "contributing", title: "Хувь нэмэр оруулах", group: "Төслийн журам"},
-  {src: "docs/CONTRIBUTING_EN.md", slug: "contributing-en", title: "Contributing (EN)", group: "Төслийн журам"},
-  {src: "SECURITY.md", slug: "security", title: "Аюулгүй байдал", group: "Төслийн журам"},
-  {src: "docs/SECURITY_EN.md", slug: "security-en", title: "Security policy (EN)", group: "Төслийн журам"},
-  {src: "CODE_OF_CONDUCT.md", slug: "code-of-conduct", title: "Ёс зүйн дүрэм", group: "Төслийн журам"},
-  {src: "docs/CODE_OF_CONDUCT_EN.md", slug: "code-of-conduct-en", title: "Code of conduct (EN)", group: "Төслийн журам"},
-  {src: "CHANGELOG.md", slug: "changelog", title: "Өөрчлөлтийн түүх", group: "Төслийн журам"},
-];
-
 const bySrc = new Map(PAGES.map((p) => [p.src, p]));
-const LANGS = [
-  {lang: "mn", label: "Монгол", flag: "flag-mn.png"},
-  {lang: "ar", label: "العربية", flag: "flag-ar.png"},
-  {lang: "zh", label: "中文", flag: "flag-zh.png"},
-  {lang: "en", label: "English", flag: "flag-en.png"},
-  {lang: "fr", label: "Français", flag: "flag-fr.png"},
-  {lang: "ru", label: "Русский", flag: "flag-ru.png"},
-  {lang: "es", label: "Español", flag: "flag-es.png"},
-];
+const esc = (value) =>
+  String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 
 /* ── Markdown → HTML ──────────────────────────────────────────────────────── */
 
@@ -123,10 +44,17 @@ const slugged = new Map();
 
 /** A stable, collision-free id for a heading, so the sidebar can link into it. */
 function headingId(text) {
+  const decoded = text
+    .replace(/<[^>]+>/g, "")
+    .replace(/&#x([\da-f]+);/gi, (_, value) => String.fromCodePoint(Number.parseInt(value, 16)))
+    .replace(/&#(\d+);/g, (_, value) => String.fromCodePoint(Number.parseInt(value, 10)))
+    .replace(/&(amp|lt|gt|quot|apos|nbsp);/gi, (_, entity) => {
+      return ({amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " "})[entity.toLowerCase()];
+    });
   const base =
-    text
+    decoded
       .toLowerCase()
-      .replace(/<[^>]+>/g, "")
+      .replace(/['’]/g, "")
       .replace(/[^\p{L}\p{N}]+/gu, "-")
       .replace(/^-+|-+$/g, "") || "section";
   const seen = slugged.get(base) ?? 0;
@@ -135,32 +63,57 @@ function headingId(text) {
 }
 
 /**
- * Re-points one href from "relative to this Markdown file" to "correct on this
- * site". Anchors, mailto: and absolute URLs are already right and pass through.
+ * Re-points one URL from "relative to this Markdown file" to "correct on this
+ * site". Published Markdown becomes a local page, assets stay local, source
+ * files open on GitHub, and repository directories use GitHub's tree view.
  */
 function rewrite(href, srcPath) {
-  if (!href || /^(https?:|mailto:|#|data:)/.test(href)) return href;
+  if (!href || /^(?:[a-z][a-z\d+.-]*:|#)/i.test(href)) return href;
 
-  const [pathPart, hash = ""] = href.split("#");
+  const match = href.match(/^([^?#]*)(\?[^#]*)?(#.*)?$/);
+  const [, pathPart, query = "", hash = ""] = match ?? [];
   if (!pathPart) return href;
 
   const repoRel = posix.normalize(posix.join(posix.dirname(srcPath), pathPart)).replace(/^\.\//, "");
-  const anchor = hash ? `#${hash}` : "";
+  const suffix = `${query}${hash}`;
 
   const page = bySrc.get(repoRel);
-  if (page) return `${page.slug}.html${anchor}`;
+  if (page) return `${page.slug}.html${suffix}`;
   // Assets are copied and served; a Markdown file sitting among them is prose,
   // not an asset, and a browser would download it rather than render it — so it
   // goes to GitHub with the rest of the unpublished files.
   if (repoRel.startsWith("docs/assets/") && !repoRel.endsWith(".md")) {
-    return repoRel.slice("docs/".length) + anchor;
+    return repoRel.slice("docs/".length) + suffix;
   }
-  return `${BLOB}/${repoRel}${anchor}`;
+
+  const repositoryTarget = resolve(REPO, repoRel);
+  const repositoryRoot = `${REPO}/`;
+  const isDirectory =
+    repositoryTarget.startsWith(repositoryRoot) &&
+    existsSync(repositoryTarget) &&
+    statSync(repositoryTarget).isDirectory();
+  return `${isDirectory ? TREE : BLOB}/${repoRel}${suffix}`;
 }
 
-function render(markdown, srcPath) {
+/** Rewrite only attributes that came from raw HTML in the Markdown source. */
+function rewriteRawHtml(html, srcPath) {
+  return html.replace(/\b(href|src)=(['"])(.*?)\2/gi, (attribute, name, quote, value) => {
+    return `${name}=${quote}${esc(rewrite(value, srcPath))}${quote}`;
+  });
+}
+
+/** The site supplies its own language bar; the GitHub-only source row is kept out. */
+function withoutEmbeddedLanguageRow(markdown, page) {
+  if (!page.lang) return markdown;
+  return markdown.replace(/<p>[\s\S]*?<\/p>/i, (block) => {
+    return /README_(?:AR|ZH|EN|FR|RU|ES)\.md/.test(block) ? "" : block;
+  });
+}
+
+function render(markdown, page) {
   slugged.clear();
   const headings = [];
+  const srcPath = page.src;
   const md = new Marked({gfm: true, breaks: false});
 
   md.use({
@@ -175,12 +128,17 @@ function render(markdown, srcPath) {
         const text = this.parser.parseInline(tokens);
         const target = rewrite(href, srcPath);
         const external = /^https?:/.test(target);
-        return `<a href="${target}"${title ? ` title="${title}"` : ""}${
+        return `<a href="${esc(target)}"${title ? ` title="${esc(title)}"` : ""}${
           external ? ' target="_blank" rel="noopener"' : ""
         }>${text}</a>`;
       },
       image({href, title, text}) {
-        return `<img src="${rewrite(href, srcPath)}" alt="${text ?? ""}"${title ? ` title="${title}"` : ""}>`;
+        return `<img src="${esc(rewrite(href, srcPath))}" alt="${esc(text ?? "")}"${
+          title ? ` title="${esc(title)}"` : ""
+        }>`;
+      },
+      html({text}) {
+        return rewriteRawHtml(text, srcPath);
       },
       table(token) {
         // Wrapped so a wide table scrolls inside the column instead of pushing
@@ -191,20 +149,12 @@ function render(markdown, srcPath) {
     },
   });
 
-  // Raw HTML in the source (the flag rows) carries hrefs marked has no reason
-  // to touch, so they are rewritten here.
-  let html = md.parse(markdown);
-  html = html.replace(/(<a\s[^>]*href=")([^"]+)(")/g, (m, a, href, b) => a + rewrite(href, srcPath) + b);
-  html = html.replace(/(<img\s[^>]*src=")([^"]+)(")/g, (m, a, src, b) => a + rewrite(src, srcPath) + b);
-
-  return {html, headings};
+  return {html: md.parse(withoutEmbeddedLanguageRow(markdown, page)), headings};
 }
 
 /* ── Page shell ───────────────────────────────────────────────────────────── */
 
-const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-
-function sidebar(current) {
+function navigationSections(current) {
   const groups = new Map();
   for (const p of PAGES) {
     // The seven overview translations collapse to one entry; the rest of the
@@ -213,7 +163,7 @@ function sidebar(current) {
     if (!groups.has(p.group)) groups.set(p.group, []);
     groups.get(p.group).push(p);
   }
-  const sections = [...groups]
+  return [...groups]
     .map(([group, pages]) => {
       const items = pages
         .map((p) => {
@@ -224,12 +174,22 @@ function sidebar(current) {
       return `<div class="nav-group"><h4>${esc(group)}</h4><ul>${items}</ul></div>`;
     })
     .join("");
-  return `<nav class="sidebar" aria-label="Баримтын цэс">${sections}</nav>`;
+}
+
+function sidebar(current, className = "sidebar", label = "Баримтын цэс") {
+  return `<nav class="${className}" aria-label="${label}">${navigationSections(current)}</nav>`;
+}
+
+function mobileNavigation(current, title) {
+  return `<details class="mobile-nav">
+  <summary><span>Баримтын цэс</span><strong>${esc(title)}</strong></summary>
+  ${sidebar(current, "mobile-sidebar", "Мобайл баримтын цэс")}
+</details>`;
 }
 
 function languageRow(page) {
   if (!page?.lang) return "";
-  const links = LANGS.map(({lang, label, flag}) => {
+  const links = LANGUAGES.map(({lang, label, flag}) => {
     const target = PAGES.find((p) => p.lang === lang);
     if (!target) return "";
     const img = `<img src="assets/icons/${flag}" width="18" height="18" alt="">`;
@@ -249,14 +209,15 @@ function shell({title, slug, body, toc = "", page}) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)} · Gerege Nexus</title>
 <meta name="description" content="Gerege Nexus — үйлчилгээ, үйл ажиллагаа, системийн нэгдсэн нээлттэй эхийн платформ.">
+<meta name="theme-color" content="#06336e">
 <link rel="icon" href="assets/icons/flag-mn.png">
 <link rel="stylesheet" href="assets/theme.css">
 </head>
 <body>
 <a class="skip" href="#content">Агуулга руу шилжих</a>
 <header class="topbar">
-  <a class="brand" href="index.html"><span class="mark">GN</span> Gerege Nexus</a>
-  <nav class="topnav">
+  <a class="brand" href="index.html"><span class="mark">GN</span><span class="brand-name">Gerege Nexus</span></a>
+  <nav class="topnav" aria-label="Үндсэн цэс">
     <a href="index.html">Тойм</a>
     <a href="architecture.html">Архитектур</a>
     <a href="module-authoring.html">Хөгжүүлэлт</a>
@@ -268,6 +229,7 @@ function shell({title, slug, body, toc = "", page}) {
   </div>
 </header>
 <div class="layout">
+${mobileNavigation(slug, title)}
 ${sidebar(slug)}
 <main id="content"${rtl}>
 ${page ? languageRow(page) : ""}
@@ -294,12 +256,27 @@ function tocFor(headings) {
 
 /* ── Build ────────────────────────────────────────────────────────────────── */
 
+function validateManifest() {
+  const sources = new Set();
+  const slugs = new Set();
+  for (const page of PAGES) {
+    if (!existsSync(join(REPO, page.src))) throw new Error(`Missing documentation source: ${page.src}`);
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(page.slug)) throw new Error(`Invalid page slug: ${page.slug}`);
+    if (sources.has(page.src)) throw new Error(`Duplicate documentation source: ${page.src}`);
+    if (slugs.has(page.slug)) throw new Error(`Duplicate page slug: ${page.slug}`);
+    sources.add(page.src);
+    slugs.add(page.slug);
+  }
+}
+
+validateManifest();
+
 rmSync(OUT, {recursive: true, force: true});
 mkdirSync(OUT, {recursive: true});
 
 for (const page of PAGES) {
   const markdown = readFileSync(join(REPO, page.src), "utf8");
-  const {html, headings} = render(markdown, page.src);
+  const {html, headings} = render(markdown, page);
   writeFileSync(
     join(OUT, `${page.slug}.html`),
     shell({title: page.title, slug: page.slug, body: html, toc: tocFor(headings), page}),
