@@ -59,6 +59,28 @@ func (h *Handlers) HandleProfile(w http.ResponseWriter, r *http.Request) {
 		memberships = nil
 	}
 
+	// A home is a workspace and not an organisation, so it is answered apart.
+	//
+	// Since migration 00085 this list can hold one of each, and everything on
+	// the profile screen that reads it means the organisations: the count of
+	// places this person works, the list under "the organisations you belong
+	// to". Left mixed in, somebody who belongs to no company was told they
+	// belong to one — and it was shown to them by a slug derived from their own
+	// user id, which reads as a machine name where a company name should be.
+	//
+	// Empty rather than null: the screen counts this list, and a null would
+	// have to be handled by every reader of it.
+	organisations := make([]auth.TenantOption, 0, len(memberships))
+	var home *auth.TenantOption
+	for _, one := range memberships {
+		if one.Kind == "personal" {
+			owned := one
+			home = &owned
+			continue
+		}
+		organisations = append(organisations, one)
+	}
+
 	identities := h.identity.LinkedIdentities(ctx, claims.UserID)
 
 	// How many other places this account is signed in. Not the tokens — those
@@ -71,13 +93,16 @@ func (h *Handlers) HandleProfile(w http.ResponseWriter, r *http.Request) {
 		claims.UserID).Scan(&activeSessions)
 
 	httpx.JSON(w, http.StatusOK, map[string]any{
-		"id":              claims.UserID,
-		"name":            name,
-		"email":           email,
-		"created_at":      createdAt,
-		"is_admin":        claims.IsAdmin,
-		"current_tenant":  claims.WorkspaceID,
-		"organisations":   memberships,
+		"id":             claims.UserID,
+		"name":           name,
+		"email":          email,
+		"created_at":     createdAt,
+		"is_admin":       claims.IsAdmin,
+		"current_tenant": claims.WorkspaceID,
+		"organisations":  organisations,
+		// Present only for somebody who has one, so a screen can say "your own
+		// space" rather than printing a slug nobody can read.
+		"home":            home,
 		"identities":      identities,
 		"active_sessions": activeSessions,
 	})

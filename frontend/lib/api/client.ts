@@ -222,6 +222,10 @@ export const coreApi = {
     request<{
       id: string; name: string; email: string; created_at: string; is_admin: boolean;
       organisations: Array<{ id: string; name: string; slug: string }>;
+      // The person's own workspace, apart from the organisations because it is
+      // not one — see backend/internal/workspace/profile/person.go. Absent for
+      // somebody who has never needed one.
+      home?: { id: string; name: string; slug: string } | null;
       identities: Array<{
         kind: string; provider: string; subject: string;
         email?: string; name?: string; surname?: string;
