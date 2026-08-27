@@ -782,6 +782,11 @@ func (s *Service) Routes(r chi.Router) {
 			// group and answering only for the caller — see profile_handlers.go.
 			pr.Get("/profile", s.profile.HandleProfile)
 			pr.Post("/profile/identities/unlink", s.identity.HandleUnlinkIdentity)
+			// Linking an eID to the account already signed in. The start half
+			// stays on the public /auth/eid/start — starting a session proves
+			// nothing — and only the finish needs to know who is asking.
+			pr.With(security.SharedRateLimitMiddleware(s.pollLimiter, s.sharedPoll)).
+				Post("/profile/identities/eid", s.identity.HandleLinkEID)
 			// What the signed-in person prefers, wherever they are. No
 			// permission: these are the caller's own settings, and a person who
 			// cannot read their own language preference has nothing to be

@@ -240,6 +240,15 @@ export const coreApi = {
   // profile() is: the body names a provider and an account there, never a
   // person. The answer is the list that remains, so the screen never has to
   // guess which buttons should still exist.
+  // Нэвтэрсэн данс дээрээ eID-ээ холбох. Эхлүүлэх нь нийтийн
+  // `/auth/eid/start` хэвээр — session эхлүүлэх нь юу ч нотлохгүй; зөвхөн
+  // дуусгах нь хэн асууж байгааг мэдэх ёстой.
+  linkEID: (sessionID: string, signal?: AbortSignal) =>
+    request<{ state: string; identities?: unknown[] }>("/profile/identities/eid", {
+      method: "POST",
+      body: JSON.stringify({ session_id: sessionID }),
+      signal,
+    }),
   unlinkIdentity: (body: { kind: string; issuer?: string; subject: string }) =>
     request<{
       identities: Array<{

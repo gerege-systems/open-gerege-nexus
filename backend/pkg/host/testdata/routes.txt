@@ -148,6 +148,7 @@ POST /api/v1/devices/telemetry
 POST /api/v1/devices/token/rotate
 POST /api/v1/me/join-requests
 POST /api/v1/oauth2/consent
+POST /api/v1/profile/identities/eid
 POST /api/v1/profile/identities/unlink
 POST /api/v1/push-tokens
 POST /api/v1/setup/complete

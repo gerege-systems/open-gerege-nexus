@@ -39,7 +39,16 @@ function clock(seconds:number){return `${Math.floor(seconds/60)}:${String(second
  * signin-card дээр аль хэдийн байгаа тул давхарлах нь утгагүй. Логик нь адилхан:
  * зөвхөн юу зурагдах нь өөр.
  */
-export default function EIDLogin({next="/profile",compact=false,variant="card",binding}:{next?:string;compact?:boolean;variant?:"card"|"signin";binding?:string}){
+/**
+ * `link` нь гурав дахь горим.
+ *
+ * Нэвтрэх (`binding` хоосон), парклагдсан таних тэмдгийг батлах (`binding`),
+ * ба **аль хэдийн нэвтэрсэн данс дээрээ eID нэмэх** (`link`). Гуравт нь
+ * эхлүүлэх алхам нь ижил — eID-ийн session эхлүүлэх нь юу ч нотлохгүй —
+ * зөвхөн дуусгах нь өөр: хариу нь session-ий эзэнд бичигдэнэ, шинэ session
+ * нээхгүй. Тиймээс энд ялгаа нь ганц мөр, нэг бүрэн component биш.
+ */
+export default function EIDLogin({next="/profile",compact=false,variant="card",binding,link=false,onLinked}:{next?:string;compact?:boolean;variant?:"card"|"signin";binding?:string;link?:boolean;onLinked?:()=>void}){
   const {t}=useI18n();
   const returnTo=safeReturnPath(next);
   const [method,setMethod]=useState<Method>("id"),[phase,setPhase]=useState<Phase>("idle"),[nationalId,setNationalId]=useState(""),[start,setStart]=useState<Start|null>(null),[error,setError]=useState(""),[left,setLeft]=useState(0);
@@ -62,10 +71,13 @@ export default function EIDLogin({next="/profile",compact=false,variant="card",b
       const control=new AbortController();
       inflight.current=control;
       try{
-        const res=binding?await api.bindingEIDPoll(binding,data.session_id,control.signal):await api.pollEID(data.session_id,control.signal);
+        const res=link?await api.linkEID(data.session_id,control.signal):binding?await api.bindingEIDPoll(binding,data.session_id,control.signal):await api.pollEID(data.session_id,control.signal);
         if(ticket.current!==mine)return;
         failures=0;
-        if(res.state==="COMPLETE"){ticket.current++;setPhase("success");window.location.assign(returnTo);return}
+        // Холбох горимд хуудас солигдохгүй: хүн профайл дээрээ байсаар,
+        // жагсаалт нь шинэчлэгдэнэ. Нэвтрэх горимд эсрэгээрээ — session
+        // үүссэн тул тэр хүн хаа нэгтээ очих ёстой.
+        if(res.state==="COMPLETE"){ticket.current++;setPhase("success");if(link)onLinked?.();else window.location.assign(returnTo);return}
         if(res.state==="EXPIRED"){setPhase("expired");return}
         if(res.state==="REFUSED"){setPhase("refused");return}
       }catch(e:any){
@@ -74,7 +86,7 @@ export default function EIDLogin({next="/profile",compact=false,variant="card",b
       }
       await sleep(GAP);
     }
-  },[binding,returnTo,stop,t]);
+  },[binding,link,onLinked,returnTo,stop,t]);
 
   const begin=useCallback(async(selected:Method)=>{
     stop();

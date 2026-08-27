@@ -29,6 +29,7 @@ import (
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/identity/eidmongolia"
 	"github.com/gerege-systems/open-gerege-nexus/backend/pkg/nexus"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 	"golang.org/x/time/rate"
 )
@@ -499,15 +500,39 @@ func eidLinkingDigest(linkingKey, subject string) string {
 // and failing the login because a convenience row could not be written would
 // trade a working session for a missing one.
 func (h *Handlers) LinkEIDIdentity(ctx context.Context, userID string, identity *eid.EIDIdentity) {
+	if err := h.LinkEIDIdentityStrict(ctx, userID, identity); err != nil {
+		slog.Warn("could not link the eID identity to the platform account",
+			"user_id", userID, "error", err)
+	}
+}
+
+// ErrEIDBelongsToSomebodyElse is this citizen's eID already being an account
+// here, and not this one.
+//
+// One eID is one person. The unique index on person_etsi says so, and this is
+// what that refusal reads as by the time somebody sees it: not "database
+// error" but "this identity is already somebody's here", which is a thing they
+// can act on — by signing in as that account instead.
+var ErrEIDBelongsToSomebodyElse = errors.New("that eID identity is already linked to another account")
+
+// LinkEIDIdentityStrict is the same write, for a caller who needs to know.
+//
+// The wrapper above is deliberately best-effort: it runs after a sign-in has
+// already succeeded, and failing the login because a convenience row could not
+// be written would trade a working session for a missing one. Somebody who
+// pressed "link my eID" on their profile is in the opposite position — the
+// write is the entire point of what they asked for, and silence would leave
+// them looking at a screen that never changes.
+func (h *Handlers) LinkEIDIdentityStrict(ctx context.Context, userID string, identity *eid.EIDIdentity) error {
 	if identity == nil {
-		return
+		return errors.New("no eID identity to link")
 	}
 	subject := strings.TrimSpace(identity.CivilID)
 	if subject == "" {
 		subject = strings.TrimSpace(identity.RegNumber)
 	}
 	if subject == "" {
-		return
+		return errors.New("the eID identity carries neither a civil ID nor a registration number")
 	}
 	personEtsi := eidmongolia.PersonEtsi(subject)
 
@@ -536,13 +561,21 @@ func (h *Handlers) LinkEIDIdentity(ctx context.Context, userID string, identity 
 		     last_seen_at = NOW()`,
 		userID, identity.CivilID, identity.RegNumber, personEtsi,
 		identity.FirstName, identity.LastName, claims); err != nil {
-		slog.Warn("could not link the eID identity to the platform account",
-			"user_id", userID, "error", err)
+		// The unique index on person_etsi, arriving as words. ON CONFLICT
+		// names user_id, so a row held by a different account is not updated —
+		// it collides, which is the schema refusing to split one citizen's
+		// history across two accounts.
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return ErrEIDBelongsToSomebodyElse
+		}
+		return fmt.Errorf("link the eID identity: %w", err)
 	}
 	// The Gerege number goes on the account itself, not only into the claims
 	// blob beside it: it is what the OIDC provider hands downstream and what a
 	// second sign-in finds this citizen by, and neither can read a JSON column.
 	h.rememberGeID(ctx, userID, identity)
+	return nil
 }
 
 // ResolveOrProvisionEIDUser links an eID subject to a stable, non-PII local
