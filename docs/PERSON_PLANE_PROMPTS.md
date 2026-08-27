@@ -1,18 +1,27 @@
 # Иргэний урсгал — хэрэгжүүлэлтийн prompt-ууд
 
-**Статус: САНАЛ. P0–P2 хэрэгжээгүй; урьдчилсан нөхцөл нь 2026-08-27-нд
-хэрэгжсэн.** Эдгээр нь хийгдсэн ажлын түүх биш, хийх ажлын заавар. Шийдвэрийн
+**Статус: P2a ба P3 хэрэгжсэн (2026-08-27); P2b ба P4 санал хэвээр.**
+P2a нь `00086_person_items.sql`, `pkg/nexus.PersonFeed`,
+`internal/workspace/home`; P3 нь `frontend/app/me`. P2b нь энэ репод биш —
+модуль `Publish` дуудна. Доорх prompt-ууд нь хийгдсэн ажлын түүх биш, хийх
+ажлын заавар; Шийдвэрийн
 үндэслэл нь [`adr/0006-a-person-owns-a-space.md`](adr/0006-a-person-owns-a-space.md),
 дизайн нь [`WORKSPACE_NAMING_PROPOSAL.md`](WORKSPACE_NAMING_PROPOSAL.md) §4.9.
 
-Үе шат бүр **нэг session, нэг branch, нэг PR**. Дараалал заавал: P1 нь P0-гийн
-модноос, P2 нь P1-ийн role-оос, P3 нь P2-ийн query-гээс хамаарна.
+Үе шат бүр **нэг session, нэг branch, нэг PR**.
+
+**P3 хэрэгжихдээ нэг зүйлээр өөр байсан.** Тэр нь `app/me/layout.tsx` —
+өөрийн бүрхүүл — гэж заасан ч ийм болоогүй: иргэний бусад дэлгэц (профайл,
+төхөөрөмж, харагдац) бүгд одоо байгаа бүрхүүлд байдаг тул хоёр дахь бүрхүүл
+эхний товшилт дээрээ задарна. Оронд нь бүрхүүл өөрөө мужийн төрлөөр шийднэ
+(`frontend/lib/workspaceKind.mjs`): байгууллагад гэрийн дэлгэц харагдахгүй,
+гэрт байгууллагын гурван дэлгэц харагдахгүй.
 
 ---
 
-## Гурван засвар — 2026-08-27
+## Дөрвөн засвар — 2026-08-27
 
-Эдгээр prompt-ыг кодтой тулгаж хэмжихэд гурван зүйл буруу байсан. Prompt-уудыг
+Эдгээр prompt-ыг кодтой тулгаж хэмжихэд дөрвөн зүйл буруу байсан. Prompt-уудыг
 доор нь засав; юу яагаад өөрчлөгдсөнийг энд нэг дор бичив, учир нь эхнийх нь
 Үе P2-ыг бүхэлд нь өөр репо руу зөөж байна.
 
@@ -68,24 +77,56 @@ role, шинэ бодлого, `dbguard`-ийн өөрчлөлт, `sessions.tena
 болгох — эдгээрийн **нэг нь ч** байхгүй. Хоёр багана: `registry.tenants.kind`
 ба `owner_user_id`.
 
+### 4. Проекц — §1-ийн нээлттэй асуултын хариу, P0 ба P1-ийн төгсгөл
+
+§1 нээлттэй асуулт үлдээсэн: *«Модуль хэрхэн `gerege_nexus_person` role дээр
+ажиллах вэ?»* Хариулт нь: **ажиллахгүй, ажиллах ч шаардлагагүй.**
+
+§3-ын дүгнэлтийг цааш нь татвал гарч ирнэ. Гэр бол муж мөр учраас иргэний
+session-д `app.current_tenant` **үргэлж** тавигдана. Тэгвэл иргэний «миний
+хүсэлтүүд» нь **гэрийн мужид харьяалагдах хүснэгт** байж болно — ердийн
+`tenant_isolation`, ердийн `gerege_nexus_tenant`. Байгууллага дамнасан уншилт
+огт үүсэхгүй.
+
+Модуль өөрийн мужид, өөрийн role дээрээ үлдэж, төлөв өөрчлөгдөх агшинд гэр рүү
+**проекц бичнэ**. Бичилт нь өөр мужид хүрэх тул `00034_core_organisation`-ий
+аль хэдийн тогтоосон хэлбэрээр — нэг нарийн `SECURITY DEFINER` функцээр —
+явна: *«SECURITY DEFINER because the insert would otherwise be judged by the
+RLS policy below, which refuses a row for any tenant other than the bound one.»*
+
+Үүнээс хасагдаж байгаа зүйлс:
+
+| Хасагдав | Яагаад |
+| --- | --- |
+| **Үе P0** — `internal/person` plane | Гурав дахь урсгал байхгүй. Код нь `internal/workspace/home` |
+| **Үе P1** — `gerege_nexus_person`, `dbguard.AsPerson`, `app.current_person` | Иргэн аль хэдийн зөв мужид байна |
+| `nexus.PersonScope` | Муж дамнасан уншилт байхгүй тул SDK-д гадаргуу нэмэхгүй |
+| Модулийн хүснэгт дээр policy/багана grant | Модуль өөрийн хүснэгтээ хэвээр эзэмшинэ |
+
+Аюулгүй байдлын гадаргуу нь **нэг функц** болж хураагдав. Дэлгэрэнгүйг
+[`WORKSPACE_NAMING_PROPOSAL.md`](WORKSPACE_NAMING_PROPOSAL.md) §4.9, татгалзсан
+дөрөв дэх schema/role хувилбарыг §4.9.6-аас үз.
+
 Prompt бүрийг `### PROMPT` мөрнөөс доош бүтнээр нь хуулж өгнө.
 
 | Үе | Юу | Репо | Өгөгдөл хөндөх үү | Эрсдэл |
 | --- | --- | --- | --- | --- |
-| **C1-lite** | Гэр: `tenants.kind`, `owner_user_id`, залхуу үүсгэлт | цөм | ✅ | Бага — **✅ хэрэгжсэн 00085** |
-| P0 | `internal/person` араг яс, `Sessions` порт, нэг хоосон route | цөм | ❌ | Байхгүй |
-| P1 | `gerege_nexus_person` role, `dbguard.AsPerson`, SDK-гийн гадаргуу | цөм | ❌ | Бага — §1-ийн нээлттэй асуулт нээлттэй |
-| P2 | `applicant_user_id`, policy, эхний нэрлэсэн statement | **`client-gerege-nexus/modules/urtuu`** | ✅ | **Өндөр** |
-| P3 | `/me` дэлгэц, өөрийн layout | цөм (frontend) | ❌ | Бага |
+| **C1-lite** | Гэр: `tenants.kind`, `owner_user_id`, залхуу үүсгэлт | цөм | ✅ | **✅ хэрэгжсэн 00085** |
+| ~~P0~~ | ~~`internal/person` plane~~ | — | — | **Хасагдав — §4** |
+| ~~P1~~ | ~~`gerege_nexus_person` role~~ | — | — | **Хасагдав — §4** |
+| **P3** | `/me` дэлгэц, гэрийн layout | цөм (frontend) | ❌ | Бага — **одоо эхлэж болно** |
+| **P2a** | `person_items` проекц, `publish_person_item`, `PersonFeed` | цөм | ✅ | **Дунд** — `SECURITY DEFINER` |
+| **P2b** | Модуль `Publish` дуудна | `client-gerege-nexus/modules/urtuu` | ✅ | Бага |
+| **P4** | `registry.service_directory` — лавлах | цөм | ✅ | Бага |
 
-**Дарааллын утга:** P0 ба P1 нь нэг ч мөр өгөгдөл уншихгүй. Хоосон plane ба
-түүний DB role-ыг **өгөгдөл урсахаас өмнө** барих нь энэ дарааллын бүх учир.
-P2 бол цорын ганц эмзэг үе; P0/P1-ийг алгасаад P2 хийх нь тэр эмзэг байдлыг
-хилгүй, role-гүй хийнэ гэсэн үг.
+**Дараалал.** P3 нь C1-lite дээр тогтдог тул **өнөөдөр эхэлж болно** —
+гэртээ буусан иргэнд харуулах хоосон дэлгэц бол бүрэн дэлгэц. P2a нь P3-гүйгээр
+ч утгатай, гэхдээ P2b нь P2a-гүйгээр байхгүй (дуудах функц нь байхгүй).
+P4 нь бусдаас хамааралгүй.
 
-**P3 нь энэ гинжинд байхгүй.** Тэр нь C1-lite дээр тогтдог болохоос P2 дээр
-биш: гэртээ буусан иргэнд харуулах хоосон дэлгэц бол бүрэн дэлгэц, дараа нь
-P2 түүнийг дүүргэнэ. Одоо хийж болно.
+**Эрсдлийн төвлөрөл.** Урьд нь эрсдэл нь P2 дээр байсан бөгөөд түүнийг
+хилгүй хийхээс сэргийлж P0/P1 байсан. Одоо эрсдэл нь **нэг `SECURITY DEFINER`
+функц** дээр төвлөрсөн: P2a-гийн бүх шалгалт түүн дээр очно.
 
 ---
 
@@ -104,13 +145,16 @@ Prompt бүрд давтагдаж орсон, энд нэг удаа:
   `backend/db/migrations/ownership_test.go`,
   `backend/internal/planes_test.go`-ийн толгойноос ав — эхлээд уншиж жишээ ав.
 * **`pkg/nexus`-ийн API өөрчлөгдвөл** `api.txt`-ийн diff-ийг PR-ийн тайлбарт
-  үгээр тайлбарла. Энэ ажилд SDK өөрчлөх шаардлага **байх ёсгүй**; өөрчлөх
-  шаардлагатай болвол зогсоод асуу — тэр нь дизайн буруу байсны шинж.
+  үгээр тайлбарла. Энэ цувралд SDK-д зөвшөөрөгдсөн **ганц** нэмэлт нь
+  `PersonFeed` (P2a-гийн 4-р зүйл): гэрээ нэмэгдэнэ, байгаа гарын үсэг
+  өөрчлөгдөхгүй. Өөр өөрчлөлт шаардлагатай болвол зогсоод асуу — тэр нь
+  дизайн буруу байсны шинж.
 * **Байгаа зан төлөвийг өөрчлөхгүй.** Алдаа олдвол засахгүй — PR-ийн тайлбарт
   бичиж, тусад нь issue болго.
-* **Хоёр зүйлийг хэзээ ч бүү хий:** `internal/person`-оос `internal/workspace`
-  эсвэл `internal/operator` руу импорт; person-ийн хүсэлтийг `login` role дээр
-  ажиллуулах.
+* **Гурван зүйлийг хэзээ ч бүү хий:** `internal/person` гэсэн шинэ урсгал
+  үүсгэх (§4 — код нь `internal/workspace/home`); иргэнд `workspace`-ийн бусад
+  мужийн мөр уншуулах; `SECURITY DEFINER` функцийг `PUBLIC`-т нээлттэй
+  үлдээх.
 * **Нэрийн тэмдэглэл.** Эдгээр prompt дэх Go нэрс Үе F (`tenantID` →
   `workspaceID`)-ийн **дараах** байдлаар бичигдсэн: `nexus.WithWorkspaceID`,
   `nexus.AllowedWorkspaces`, `UserClaims.WorkspaceID`. SQL дэх GUC нэр
@@ -119,255 +163,159 @@ Prompt бүрд давтагдаж орсон, энд нэг удаа:
 
 ---
 
-## Үе P0 — Хоосон урсгал
+## Хасагдсан: Үе P0 ба P1
 
-Нэг ч query байхгүй. Мод, порт, нэг route.
+Тэдгээрийн prompt энд байсан. §4-ийн шалтгаанаар хасагдав: гурав дахь урсгал,
+дөрөв дэх role, `dbguard`-ийн салаа гурвуулаа **байхгүй асуудлыг** шийдэж
+байсан. Иргэн гэртээ, зөв мужид, зөв role дээр аль хэдийн байна.
+
+Тэднээс үлдсэн ганц санаа нь **дараалал**: хил, гэрээ хоёрыг өгөгдөл урсахаас
+өмнө барих. Тэр санаа P2a дотор амьд — функц ба түүний шалгалт нь эхний
+дуудлагаас өмнө бичигдэнэ.
+
+---
+
+## Үе P2a — Проекцийн хүснэгт, функц, гэрээ
+
+Эрсдэл энд төвлөрсөн. Нэг `SECURITY DEFINER` функц бичих бөгөөд түүний
+**нарийн байдал нь бүх хамгаалалт**.
 
 ### PROMPT (эндээс доошхыг хуулна)
 
-Чи Gerege Nexus репод ажиллаж байна. `git checkout -b person/p0-skeleton`.
+Чи Gerege Nexus репод ажиллаж байна. `git checkout -b person/p2a-projection`.
 
-**Заавал эхлээд унш** (эдгээрийг уншилгүйгээр бүү эхэл):
+**Заавал эхлээд унш:**
 
-- `docs/WORKSPACE_NAMING_PROPOSAL.md` §4.9 — энэ ажлын эх сурвалж;
-- `docs/adr/0006-a-person-owns-a-space.md` «Гурав дахь plane бий» хэсэг;
-- `backend/internal/planes_test.go` — толгойн тайлбар ба `planes` хувьсагч.
-  Дүрэм аль хэдийн бичигдсэн, `internal/person` байхгүй тул одоо ногоон байгаа;
-- `backend/internal/workspace/service.go` — plane-ийн `Service`/`Deps`/`Routes`
-  хэлбэр. Чи үүнийг **хуулбарлахгүй**, хэлбэрийг нь дагана;
-- `backend/pkg/host/server.go`, ялангуяа `newRouter` — plane-ууд хаана
-  угсрагддаг;
-- `backend/internal/workspace/auth/auth.go` (`type UserClaims = nexus.UserClaims`)
-  ба `session.go`-гийн `TokenFromRequest`, `SessionStore.Resolve`.
+- `docs/WORKSPACE_NAMING_PROPOSAL.md` §4.9 — **бүтнээр нь**, энэ ажлын эх
+  сурвалж. Ялангуяа §4.9.3-ын дөрвөн дүрэм ба §4.9.6-гийн татгалзсан хувилбар;
+- `backend/db/migrations/00034_core_organisation.sql` — `create_tenant_profile`
+  ба түүний `SECURITY DEFINER` тайлбар. Чи яг тэр хэлбэрийг дагана;
+- `backend/db/migrations/00085_personal_workspace.sql` — `kind`,
+  `owner_user_id`, `tenants_one_home_per_person`;
+- `backend/db/migrations/00080_search_path_has_no_public.sql` ба `00083`-ын
+  `ALTER FUNCTION … SET search_path` мөрүүд — шинэ функц тэр журамд орно;
+- `backend/pkg/nexus/capability.go` — `Provide` / `Capability`, ба яагаад хагас
+  capability нь capability биш болох тухай `MeetingBooker`-ийн түүх;
+- `backend/db/migrations/ownership_test.go`, `policy_shape_test.go`,
+  `qualification_test.go`.
 
 **Хийх ажил.**
 
-1. `backend/internal/person/sessions.go` — порт:
+1. Миграц: `workspace.person_items` — **гэрийн мужид харьяалагдах** хүснэгт.
+
+   ```sql
+   CREATE TABLE workspace.person_items (
+       id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+       tenant_id  UUID NOT NULL REFERENCES registry.tenants(id) ON DELETE CASCADE,
+       source_app TEXT NOT NULL,   -- аль модуль нийтлэв
+       source_ref TEXT NOT NULL,   -- түүний дотоод id
+       code       TEXT NOT NULL,
+       status     TEXT NOT NULL,
+       answer     TEXT NOT NULL DEFAULT '',
+       …
+       UNIQUE (tenant_id, source_app, source_ref)
+   );
+   ```
+
+   Багануудыг өөрөө шийд. Дүрэм нь: **төлөв, агуулга биш.** Баримт, нотолгоо,
+   хувийн мэдээлэл энд орохгүй — тэдгээр нь нийлүүлэгчийн эх бичлэг. Энэ
+   шийдвэрийг тайлбарт бич, X-Road-ын «superdatabase»-ээс татгалзсан
+   шалтгааныг иш татаж (§4.9.7).
+
+2. RLS: `tenant_isolation`, **байгаа хэлбэрээрээ**. Шинэ хэлбэр зохиохгүй —
+   `00073`-аас хуул. `policy_shape_test.go`-д бичигдэнэ.
+
+   Grant: `SELECT` **зөвхөн**. `gerege_nexus_tenant` энэ хүснэгт рүү INSERT
+   хийхгүй; бичилт нь дараагийн зүйлийнх.
+
+3. `registry.publish_person_item(...)` — `SECURITY DEFINER`, `search_path`
+   пиннэсэн. Дөрвөн дүрэм, тус бүр нь тестээр баригдана:
+
+   - зөвхөн `kind='personal'` муж руу бичнэ, түүний `owner_user_id`-ийн
+     `ge_id` нь дамжуулсан `p_ge_id`-тэй **таарч байвал**. Таарахгүй бол
+     алдаа — чимээгүй өнгөрөхгүй;
+   - зөвхөн `workspace.person_items`, зөвхөн нэрлэсэн багана;
+   - `UPDATE`/`DELETE` байхгүй, зөвхөн
+     `ON CONFLICT (tenant_id, source_app, source_ref) DO UPDATE`;
+   - `REVOKE ALL ON FUNCTION … FROM PUBLIC`, дараа нь
+     `GRANT EXECUTE … TO gerege_nexus_tenant` — өөр хэн ч дуудахгүй.
+
+   Гэр байхгүй бол юу болох вэ гэдгийг шийдэж тайлбарт бич. Санал: **алдаа**,
+   учир нь гэр залхуугаар үүсдэг (00085) бөгөөд нийтлэх агшин нь түүнийг
+   үүсгэх агшин биш.
+
+4. `pkg/nexus`-д contract:
 
    ```go
-   // Sessions answers one question: who is making this request.
-   //
-   // An interface rather than an import, and the reason is the whole shape of
-   // this plane: workspace/auth already resolves sessions, so the import writes
-   // itself — and arrives carrying every query in that package, each one
-   // written for somebody acting inside an organisation, now reachable from a
-   // request that belongs to somebody who is in none of them.
-   type Sessions interface {
-       Resolve(ctx context.Context, token string) (nexus.UserClaims, error)
+   type PersonFeed interface {
+       Publish(ctx context.Context, geID int64, item PersonItem) error
    }
    ```
 
-   Тайлбарыг өөрөө бич, дээрхийг үг үсгээр нь бүү хуул — гэхдээ **яагаад порт
-   болохыг** заавал бич.
+   Цөм `nexus.Provide`-аар нийлүүлнэ; модуль `nexus.Capability`-гээр авна.
+   Хэрэгжилт нь **дуудагчийн гүйлгээнд** функцийг дуудна — модуль өөрийн
+   audit-тайгаа нэг transaction-д.
 
-   **Хэлбэрийн тэмдэглэл.** Энэ баримтын анхны хувилбар
-   `Person(r *http.Request)` гэж бичсэн бөгөөд §4.9 нь `Resolve(ctx, token)`
-   гэж бичсэн — хоёр өөр хил. `Resolve` нь зөв: `workspace/auth.SessionStore`
-   түүнийг аль хэдийн яг ийм гарын үсгээр хангадаг тул адаптер үнэхээр гурван
-   мөр болно, мөн порт нь HTTP-ийн тухай юу ч мэдэхгүй байх нь ADR 0001-ийн
-   адаптер/домэйн дүрэмтэй нийцнэ. Token-ыг задлах нь middleware-ийн ажил
-   (`auth.TokenFromRequest`), портынх биш.
+   `api.txt` өөрчлөгдөнө: `go test ./pkg/nexus -update`, diff-ийг PR-ийн
+   тайлбарт үгээр тайлбарла. Энэ бол цувралын «SDK өөрчлөхгүй» дүрмээс
+   **зөвшөөрөгдсөн ганц хазайлт**: гэрээ нэмэгдэж байна, байгаа гарын үсэг
+   өөрчлөгдөхгүй.
 
-2. `backend/internal/person/service.go` — `Deps{DB *pgxpool.Pool, Sessions Sessions}`,
-   `New(Deps) (*Service, error)`, `Routes(r chi.Router)`. `DB`-г одоо
-   ашиглахгүй ч талбар нь байг: P2-т орно.
+5. Бичигчийг **хийсвэр** байлга. Өнөөдөр локал дуудлага; маргааш ижил мөрүүд
+   Өртөөний дугтуйгаар ирж, **ижил функцийг** дуудна. `Publish`-ийн хэрэгжилт
+   «хаанаас ирснийг» мэдэх ёсгүй. Энэ шаардлагыг тайлбарт бич — тэр нь энэ
+   шийдвэрийг эргэлт буцалтгүй биш болгож байгаа цорын ганц зүйл (§4.9.8).
 
-3. `backend/internal/person/middleware.go` — `auth.TokenFromRequest`-ийн
-   хэлбэрээр token-ыг задалж `Sessions.Resolve(ctx, token)` дуудна,
-   алдвал `401`, амжвал `nexus.WithUser(ctx, claims)`.
-   **Муж огт тавихгүй** — `nexus.WithWorkspaceID` энэ файлд гарч болохгүй.
-
-4. Нэг route: `GET /api/v1/me/requests` → `[]` (хоосон массив), middleware-ийн
-   ард. Өгөгдлийн сан хөндөхгүй.
-
-5. `backend/pkg/host/server.go` — person plane-ыг угсарч `Routes(r)`-ыг
-   mount хий. Портын адаптерыг **энд** бич (жижиг struct, `auth.TokenFromRequest`
-   + `sessions.Resolve` хоёрыг холбоно): энэ файл бол хоёроос олон plane нэрлэх
-   эрхтэй цорын ганц газар, өөрийн тайлбар нь ч тэгж хэлсэн.
-
-6. `backend/internal/person/service_test.go` — нэвтрээгүй хүсэлт `401` авдаг;
-   fake `Sessions`-той нэвтэрсэн хүсэлт `200` ба `[]` авдаг. Fake нь гурван мөр
-   байх ёстой — байхгүй бол порт хэтэрхий том.
-
-7. Golden route table-ыг репогийн журмаар шинэчил
-   (`backend/pkg/host/routes_golden_test.go`-г эхлээд уншиж яаж шинэчлэхийг ол).
-
-**Дуусахад биелэх ёстой.**
-
-- `go test ./internal/` ногоон, `TestPersonDoesNotImportAnotherPlane` ба
-  `TestNoPlaneImportsPerson` одоо **бодитоор хэмжиж** эхэлсэн (өмнө нь
-  «does not exist yet» гэж логлодог байсан);
-- `pkg/host/testdata/routes.txt` дээр яг шинэ route-ууд л нэмэгдсэн;
-- `internal/person` доторх нэг ч файл `internal/workspace` эсвэл
-  `internal/operator` импортлоогүй;
-- `internal/person` дотор `SELECT`, `INSERT` гэсэн үг **байхгүй**.
-
-**Бүү хий.** Миграц бичих; `dbguard` хөндөх; frontend хөндөх; `/me` дэлгэц хийх.
-
----
-
-## Үе P1 — Урсгалын өөрийн role
-
-Query байхгүй хэвээр. Зөвхөн холболтын binding ба хаагдах тал руугаа унах дүрэм.
-
-> **Эхлэхээс өмнө:** §1-ийн нээлттэй асуултыг хариул. Энэ role-ыг ашиглах query
-> нь өөр репогийн модульд байх тул role үүсгэсэн ч түүнд хүрэх зам байхгүй бол
-> хийсэн ажил ажиллахгүй тавиур дээр үлдэнэ. Хариулт нь `pkg/nexus`-д гадаргуу
-> нэмэх бол энэ цувралын дүрмийг зөрчиж байгаа тул тусад нь шийдвэр.
-
-### PROMPT (эндээс доошхыг хуулна)
-
-Чи Gerege Nexus репод ажиллаж байна. `git checkout -b person/p1-role`.
-
-**Заавал эхлээд унш:**
-
-- `backend/internal/kernel/dbguard/dbguard.go` — **бүтнээр нь**, ялангуяа
-  package-ийн толгой, `TenantRole`, `OperatorRole`, `AsOperator`,
-  `bindStatement`, `Guard.Install`/`Probe`/`Enable`;
-- `backend/db/migrations/00049_control_plane.sql` — операторын role яаж
-  үүсдэг, юуг grant авдаг. Чи үүнийг дуурайна;
-- `docs/WORKSPACE_NAMING_PROPOSAL.md` §4.9 «Аюулгүй байдлын ганц гол дүрэм».
-
-**Хийх ажил.**
-
-1. Шинэ миграц `backend/db/migrations/00085_person_role.sql` (дараагийн сул
-   дугаарыг өөрөө шалга):
-   - `CREATE ROLE gerege_nexus_person NOLOGIN NOSUPERUSER NOCREATEDB
-     NOCREATEROLE NOINHERIT NOBYPASSRLS` — 00049-ийн мөртэй яг ижил шинжүүд,
-     ялангуяа `NOBYPASSRLS`;
-   - `GRANT USAGE ON SCHEMA workspace, registry` — **хүснэгтийн grant өгөхгүй**;
-   - `Down` нь role-ыг буцаана.
-
-   Тайлбарт: энэ role одоо **юу ч уншиж чадахгүй**, тэр нь зориуд. Хүснэгт
-   бүрийн grant P2-оос эхлээд нэг нэгээр нэмэгдэнэ.
-
-2. `dbguard`:
-   - `PersonRole = "gerege_nexus_person"` const, яагаад login role биш
-     болохыг `OperatorRole`-ийн тайлбарын хэлбэрээр бич;
-   - `AsPerson(ctx, userID)` + `IsPerson(ctx)`, `AsOperator`-ийн хэлбэрээр;
-   - `bindStatement`-д дөрөв дэх `set_config('app.current_person', $4, false)`;
-   - `Guard.Install`-ийн `PrepareConn` доторх switch-д **гурав дахь case**:
-     `case IsPerson(ctx):`. Түүнийг `case IsOperator(ctx):`-ийн яг хажууд,
-     мужийн case-ээс **өмнө** тавь. `personReady atomic.Bool` нь
-     `operatorReady`-гийн яг тэр шалтгаанаар: 00085 хүрээгүй суулгац хэвийн
-     ажиллаж, иргэний урсгал нь тэнд байхгүй байна.
-
-   Энэ switch-ийн `default` нь `"none"` буюу **login role** гэдгийг санаж бай:
-   case нэмэхгүй бол иргэний хүсэлт чимээгүйхэн бүх policy-гийн гадна гарна.
-   Операторын case дээрх татгалзлын тайлбарыг уншаад ижил өнгө аясаар бич.
-
-3. **Fail-closed.** Person plane-ийн route нь `AsPerson`-гүйгээр өгөгдлийн санд
-   хүрч чадахгүй байх ёстой. `internal/person`-д DB handle-ыг ороосон жижиг
-   давхарга хий: `IsPerson(ctx)` худал бол query явуулахгүй, алдаа буцаана.
-
-   Шалтгааныг тайлбарт бич, `dbguard`-ийн өөрийнх нь өгүүлбэрийг иш тат:
-   tenant байхгүй context нь `login` role руу унадаг бөгөөд тэр нь бүх
-   policy-гийн гадна, юу ч бичиж чадна.
-
-4. P0-гийн middleware-т `AsPerson(ctx, claims.UserID)` нэмэгдэнэ.
-
-**Дуусахад биелэх ёстой.**
-
-- `AsPerson`-гүй context-оор person plane-ийн query оролдоход **алдаа** гарна,
-  `login` role дээр ажиллахгүй — үүнийг барих тест байна;
-- `DATABASE_URL`-тэй үед `gerege_nexus_person` нь `workspace.urtuu_tasks`-аас
-  `SELECT` хийхийг оролдоод **permission denied** авна (grant хараахан алга) —
-  энэ тестийг бич, энэ нь P2-ын хамгаалалтын суурь;
-- 00085-ийн up/down хоёулаа ажиллана;
-- Байгаа tenant/operator зан төлөв **өөрчлөгдөөгүй**: `go test -race ./...`.
-
-**Бүү хий.** Хүснэгтэд `GRANT` өгөх; policy бичих; `applicant_user_id` нэмэх.
-
----
-
-## Үе P2 — Эхний бодит уншилт
-
-Энэ бол цорын ганц эмзэг үе. Бусад бүх үе үүнийг аюулгүй болгохын тулд байсан.
-
-> **⚠ Энэ үе энэ репод хийгдэхгүй.** `urtuu_tasks` нь 00078-аас хойш цөмийнх
-> биш — Өртөөгийн апп схемээ өөрөө үүрч
-> `client-gerege-nexus/modules/urtuu/migrations/00001_urtuu.sql` руу явсан.
-> Миграц, policy, багана бүгд тэр репод, `nexus.Migrations`-аар. Доорх prompt
-> түүнд хүчинтэй хэвээр — зөвхөн салбар нь өөр репод үүснэ, мөн уншиж эхлэх
-> файлуудын замууд `client-gerege-nexus`-ийн харьцангуй байдлаар өөрчлөгдөнө.
-> §1-ийг эхлээд унш.
-
-### PROMPT (эндээс доошхыг хуулна)
-
-Чи Gerege Nexus репод ажиллаж байна. `git checkout -b person/p2-own-requests`.
-
-**Заавал эхлээд унш:**
-
-- `backend/db/migrations/00065_urtuu_two_lines.sql` — `line='service'`,
-  `applicant` JSONB, `urtuu_tasks_service_has_applicant`,
-  `idx_urtuu_tasks_applicant`. Тайлбарыг бүтнээр нь унш;
-- `backend/db/migrations/00073_urtuu_reads_across_organisations.sql` — policy-ийн
-  хэлбэр ба `TO gerege_nexus_app`;
-- `backend/db/migrations/policy_shape_test.go` ба `ownership_test.go`;
-- `backend/internal/operator/tenants/tenants.go`-ийн толгой — «a handful of
-  statements, each written for one screen, each selecting named columns». Чи
-  яг тэр хэв маягаар бичнэ;
-- `docs/WORKSPACE_NAMING_PROPOSAL.md` §3.5 ба §4.9.
-
-**Хийх ажил.**
-
-1. Миграц: `workspace.urtuu_tasks`-д `applicant_user_id UUID` багана
-   (`REFERENCES registry.users(id) ON DELETE SET NULL`), NULL зөвшөөрнө.
-
-   Тайлбарт заавал: `applicant` JSONB **хэвээр үлдэнэ**. Тэр бол нийлүүлэгчийн
-   ажилладаг агшны хуулбар; нийлүүлэгч иргэний бүртгэл рүү query явуулах ёсгүй.
-   Шинэ багана нь «миний хүсэлтүүд»-ийг мөр таарах биш query болгох цорын ганц
-   зорилготой. Байгаа мөрүүд NULL хэвээр — тэдгээр нь хэнд ч харагдахгүй, тэр
-   нь зөв анхдагч.
-
-2. Хэсэгчилсэн индекс: `WHERE applicant_user_id IS NOT NULL`.
-
-3. Policy:
-
-   ```sql
-   CREATE POLICY person_own_rows ON workspace.urtuu_tasks
-       TO gerege_nexus_person
-       USING (applicant_user_id = NULLIF(current_setting('app.current_person', true), '')::uuid);
-   ```
-
-   `TO <role>` тул байгаа `tenant_isolation`-д хүрэхгүй. `NULLIF(..., true)`
-   хэлбэрийг 00073-аас ав — тохируулаагүй GUC нь алдаа биш, хоосон байх ёстой.
-
-4. **Баганын түвшний grant** — энэ бол «нэрлэсэн багана» дүрмийг DB дээр
-   суулгаж байгаа хэрэг, кодын сахилга биш:
-
-   ```sql
-   GRANT SELECT (id, code, line, status, created_at, updated_at, answer)
-       ON workspace.urtuu_tasks TO gerege_nexus_person;
-   ```
-
-   Яг аль багана болохыг өөрөө шийд, гэхдээ нийлүүлэгчийн дотоод талбар
-   (хариуцагч, дотоод тэмдэглэл) орж болохгүй. Шийдвэрээ тайлбарт бич.
-
-5. `urtuu_task_events`-д **юу ч өгөхгүй.** Тэр хүснэгтэд `applicant_user_id`
-   байхгүй; join-тэй policy бичих нь үнэтэй бөгөөд иргэнд хэрэггүй. Иргэн
-   «хаана явна, хэзээ дуусах вэ» гэдгийг мэдэх ёстой, «хэн дээр хэвтэж байна»
-   гэдгийг биш. Энэ шийдвэрийг миграцын тайлбарт бич.
-
-6. `internal/person/requests.go` — **нэг** statement, нэрлэсэн баганатай,
-   `applicant_user_id = $1`. P0-гийн хоосон route үүгээр дүүрнэ.
-
-7. `ownership_test.go`, `policy_shape_test.go`-г шинэ policy ба grant-аар
-   шинэчил.
+6. `internal/workspace/home/` — шинэ дэд пакет. Нэг statement,
+   `workspace.person_items`-ээс, `/api/v1/me/items`. Тусдаа plane **биш**:
+   `internal/person` үүсгэхгүй.
 
 **Дуусахад биелэх ёстой** (DB integration тест, `DATABASE_URL`-тэй):
 
-- Хоёр иргэн, хоёр нийлүүлэгч. Иргэн A нь зөвхөн өөрийн мөрөө хардаг,
-  нийлүүлэгч хэд ч байсан хамаагүй;
-- Иргэн A нь нийлүүлэгчийн бусад мөрийг **уншиж чадахгүй** — энэ үеийн гол
-  тест, бусад нь хоёрдогч;
-- Grant аваагүй багана руу хандахад алдаа гарна;
-- `app.current_person` тохируулаагүй үед мөр **буцахгүй** (хоосон, алдаа биш);
-- Байгаа tenant-ын зан төлөв өөрчлөгдөөгүй: `urtuu_tasks` дээрх
-  `tenant_isolation` тестүүд хэвээр ногоон.
+- Хоёр иргэн, хоёр гэр. A нь зөвхөн өөрийн мөрөө хардаг — `tenant_isolation`
+  ажиллаж байгааг батал;
+- `gerege_nexus_tenant` нь `person_items` руу **INSERT хийж чадахгүй**;
+- `publish_person_item` нь `kind='organisation'` муж руу бичихийг **татгалзана**;
+- `publish_person_item` нь буруу `ge_id`-тай дуудахад **татгалзана**;
+- функцийг `gerege_nexus_operator` дуудаж **чадахгүй**;
+- давтан `Publish` нь хоёр дахь мөр үүсгэхгүй (upsert);
+- `go test -race ./...` — байгаа зан төлөв өөрчлөгдөөгүй.
 
-**Бүү хий.** `allowed_tenants`-ыг өргөтгөх — энэ бол хамгийн том занга, §3.5-д
-яагаад болохгүйг бичсэн. Frontend хөндөх.
+**Бүү хий.** `internal/person` үүсгэх; шинэ role, шинэ GUC нэмэх; модулийн
+хүснэгт хөндөх; `person_items`-д файл, баримт, хувийн мэдээлэл хадгалах;
+функцийг `PUBLIC`-т нээлттэй үлдээх.
+
+---
+
+## Үе P2b — Модулийн тал
+
+**Репо: `client-gerege-nexus`**, `modules/urtuu`.
+
+### PROMPT (эндээс доошхыг хуулна)
+
+Чи `client-gerege-nexus` репод ажиллаж байна.
+
+**Заавал эхлээд унш:** `open-gerege-nexus/docs/WORKSPACE_NAMING_PROPOSAL.md`
+§4.9.4; өөрийн модулийн `migrations/00001_urtuu.sql`; тэр модулийн даалгаврын
+төлөв өөрчилдөг бүх зам.
+
+**Хийх ажил.**
+
+1. `nexus.Capability[nexus.PersonFeed]()`-ийг ав. Байхгүй бол **чимээгүй
+   өнгөр** — цөм нь тэр гэрээг нийлүүлээгүй хуучин суулгац дээр модуль
+   ажиллах ёстой.
+2. Даалгаврын төлөв өөрчлөгдөх **бүх** цэгээс `Publish` дууд — үүсэх,
+   хүлээн авах, шилжүүлэх, дуусах. Өөрийн гүйлгээндээ.
+3. Иргэнийг `ge_id`-гээр таних. Модуль дээр `applicant`-ийн JSONB хэвээр
+   үлдэнэ — тэр бол нийлүүлэгчийн ажилладаг агшны хуулбар. `ge_id` нь
+   **нэмэлт** талбар, орлуулагч биш.
+
+**Дуусахад биелэх ёстой.** `PersonFeed`-гүй суулгац дээр модуль урьдын адил
+ажиллана; байгаа үед иргэн гэртээ төлөвөө хардаг. Модулийн audit нь Publish
+хийсэн бүрд мөртэй.
+
+**Бүү хий.** Цөмийн хүснэгт рүү шууд бичих; `ge_id`-гээр `registry.users`
+руу query явуулах — модуль иргэний бүртгэлийг уншихгүй.
 
 ---
 
@@ -423,16 +371,56 @@ Query байхгүй хэвээр. Зөвхөн холболтын binding ба 
 
 ---
 
+## Үе P4 — Лавлах
+
+Бусад үеэс **хамааралгүй**; дангаараа merge хийгдэнэ.
+
+### PROMPT (эндээс доошхыг хуулна)
+
+Чи Gerege Nexus репод ажиллаж байна. `git checkout -b person/p4-directory`.
+
+**Заавал эхлээд унш:** `docs/WORKSPACE_NAMING_PROPOSAL.md` §3.5 ба §4.9.5;
+`backend/db/migrations/00062_urtuu_request_codes.sql` — ялангуяа `local.`
+угтварын `CHECK` ба түүний тайлбар. Кодын толь ба ring импортлогч 2026-08-27-нд
+энэ репогоос гарсан: `client-gerege-nexus`-ийн `docs/RING_STANDARD.md`,
+`modules/urtuu/channel/codes.go`, `ring.go` ба тэр репогийн
+`modules/urtuu/migrations/00002_the_channel_is_ours.sql`.
+
+**Хийх ажил.**
+
+1. `registry.service_directory` — код → түүнийг нээсэн мужууд. `registry`-д
+   байх шалтгаан нь тэр schema-гийн зарлагдсан зорилго: *«суурилуулалтын
+   бүртгэл… юу байна»*. Гэр бүрд хуулбарлах нь утгагүй.
+2. **Нийтлэх нь opt-in.** Байгууллага код нээсэн болгон лавлахад гарахгүй;
+   тусад нь «нийтлэх» шийдвэр байна. Тайлбарт яагаад гэдгийг бич: нээлттэй
+   код бол дотоод зохион байгуулалт, лавлах бол олон нийтэд өгсөн амлалт.
+3. **`local.` угтвартай код хэзээ ч орохгүй.** Схемийн `CHECK` дээр бас барь,
+   Go-гийн шалгалтад найдахгүй — 00062-ын өөрийнх нь дүрэм: *«Код бүрийг
+   шалгадаг Go функц нэг өдөр мартагдана; CHECK мартагдахгүй.»*
+4. **Эрэмбийн дүрэм зориудаар.** Цагаан толгой, харьяалал, эсвэл санамсаргүй —
+   аль нэгийг сонгож тайлбарт бич. Дүрэмгүй үлдээвэл санамсаргүйгээр зар
+   сурталчилгааны талбар бүтээнэ.
+
+**Дуусахад биелэх ёстой.** Нийтлээгүй нийлүүлэгч лавлахад гарахгүй тест;
+`local.` угтвартай код гарахгүй тест; хоёр role аль аль нь уншиж чадна
+(`registry` дээр USAGE аль хэдийн бий).
+
+**Бүү хий.** Нийлүүлэгчийн ачаалал, гүйцэтгэлийн тоог тэдний зөвшөөрөлгүй
+нийтлэх; `workspace.urtuu_request_codes`-ыг гэрийн session-ээс шууд унших.
+
+---
+
 ## Хийхээс өмнө шийдэх нээлттэй асуулт
 
-**Audit хэнийх вэ.** Иргэн нийлүүлэгчийн мужид мөр үүсгэхэд тэр байгууллагын
-audit бичих ёстой — өөрөөр хэлбэл person plane нь байгууллагын audit хүснэгтэд
-бичнэ. Энэ бол хил дамнасан бичилт бөгөөд P2 нь **уншилт** тул тэр асуултыг
-хойшлуулж болно. Иргэн хүсэлт **үүсгэдэг** болох өдөр (P4) энэ хариултгүйгээр
-эхэлж болохгүй.
+**Audit хэнийх вэ.** Проекц нь **модулийн гүйлгээнд** бичигдэх тул нийтлэлийг
+модулийн өөрийн audit бүртгэнэ — P2a/P2b нь энэ асуултыг шийдчихсэн. Үлдсэн нь
+эсрэг чиглэл: иргэн хүсэлт **үүсгэдэг** болох өдөр (ирээдүйн үе) нийлүүлэгчийн
+мужид мөр үүснэ. Тэр бичилт нь модулийн өгсөн capability (`ServiceIntake`)-аар,
+**модулийн role дээр** явах ёстой; иргэний session тэнд шууд бичихгүй. Тэр
+өдрөөс өмнө энэ өгүүлбэрийг гэрээ болгож бичих ёстой.
 
-**Модуль муж дамнан яаж уншдаг вэ.** §1-д бичсэн. Энэ нь audit-ийн асуултаас
-өмнө хариулагдана: түүнгүйгээр P2 бичигдэх газаргүй.
+**Модуль муж дамнан яаж уншдаг вэ.** ~~§1-д нээлттэй үлдсэн.~~ **Хариулагдав:**
+уншихгүй — §4-ийн проекц. Модуль өөрийн мужид, өөрийн role дээрээ үлдэнэ.
 
 **Гэрийн metering.** 00085 нь гишүүнчлэлгүй хүн бүрд муж үүсгэдэг болсон тул
 `registry.tenants`-ийн мөрийн тоо хүн амаар өсөж болно. Хэрэглээний тооллого
