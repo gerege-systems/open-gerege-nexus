@@ -92,9 +92,14 @@ var demoTenants = []struct {
 	// binary carries. The same failure the note above describes, arriving for
 	// the fifth time in one day, which is what a list of app slugs in the
 	// platform is for.
-	{demoTenantID, "demo", "Demo Corporation", demoRoleID, []string{"ai", "integrations"}},
-	// The two tenants keep different sets: without the connectors, this one's
-	// sidebar is still visibly not the first one's.
+	// "integrations" left this list on 2026-08-27 with the connectors app, for
+	// the sixth time and the same reason: a slug here that names nothing this
+	// binary carries is a warning per app per boot, and a seed that routinely
+	// fails is a seed nobody reads.
+	{demoTenantID, "demo", "Demo Corporation", demoRoleID, []string{"ai"}},
+	// The two tenants used to keep different sets so that switching visibly
+	// changed the sidebar. There is one app left to differ by, so they no
+	// longer do.
 	{secondTenantID, "demo-trade", "Demo Trade LLC", secondRoleID, []string{"ai"}},
 }
 

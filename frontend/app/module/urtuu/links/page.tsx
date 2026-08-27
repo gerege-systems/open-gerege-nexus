@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Settings → Өртөө.
+ * Өртөө → Холбоосууд.
  *
  * Two things on one screen, because they are two halves of one subject: the
  * links this organisation has to the installations above and below it, and the
@@ -13,9 +13,13 @@
  * signature scheme rests on that being the right key — so it is the first thing
  * on the page rather than something to go looking for.
  *
- * The task board itself is not here. It is the Өртөө app, installed per tenant;
- * this screen is the channel underneath it, which is platform configuration and
- * has to outlive any app being removed.
+ * This lived at /settings/urtuu while the channel was the platform's, on the
+ * argument that a link an administrator established has to outlive any app
+ * being uninstalled. The channel left for client-gerege-nexus with the app it
+ * was carrying for — its only caller in three months — so the screen is the
+ * app's own, under the app's menu and behind urtuu.manage rather than behind
+ * "is an administrator". A deployment without the app installed reaches
+ * nothing here, which is the honest answer rather than an empty screen.
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";

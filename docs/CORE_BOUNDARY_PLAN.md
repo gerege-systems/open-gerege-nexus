@@ -238,9 +238,24 @@ session өөр байгууллагын Өртөө мөрийг харахгүй
 | 2 | **Хэний өмнөөс** | tenant context, `dbguard`, RLS, тенантын хуулийн профайл |
 | 3 | **Юу хийж болох** | RBAC, `permissions`, app gate, `nexus.AccessPolicy` |
 | 4 | **Юу суусан** | каталог, manifest, chronicle, суулгагч, цэс, kill switch |
-| 5 | **Ганц байх рельсүүд** | гарын үсгийн рельс (eID/HSM/PAdES), Өртөө ring, audit, observability, resilience, cache bus, quota/metering |
+| 5 | **Ганц байх рельсүүд** | гарын үсгийн рельс (eID/HSM/PAdES), audit, observability, resilience, cache bus, quota/metering |
 
-Түүнчлэн SDK: `pkg/nexus`, `pkg/catalog`, `pkg/urtuu`, `pkg/platform`.
+Түүнчлэн SDK: `pkg/nexus`, `pkg/catalog`, `pkg/host`.
+
+> **Залруулга — 2026-08-27.** Дээрх 5-р мөрөнд «Өртөө ring» бичигдсэн байсан ба
+> шалгуурыг зөв давсан: нэг суулгац дотор хоёр outbox, хоёр гарын үсгийн
+> түлхүүр байж болохгүй. Гэвч шалгуур нь **бүрэн бус** байсныг тэр мөр
+> харуулав: «хоёр байж болохгүй» гэдэг нь «цөмд байх ёстой» гэсэн үг биш —
+> хэрэв хэрэглэгч нь ганц апп бол «ганц байх» гэдэг нь **тэр аппын дотор**
+> ганц байна гэсэн үг. Гурван сарын турш `nexus.Link`, `nexus.PeerDirectory`
+> хоёрын дуудагч нь Өртөөгийн самбар ганцаараа байв. Тиймээс суваг нь 08-27-нд
+> аппынхаа хамт `client-gerege-nexus` руу явж, `pkg/urtuu` ба хоёр гэрээ
+> цөмөөс хасагдав (миграц `00087`).
+>
+> Шалгуурт нэмэгдэх хоёр дахь асуулт: **хоёр өөр бүтээгдэхүүн үүнийг өнөөдөр
+> дуудаж байна уу?** Үгүй бол рельс биш, тэр аппын эрхтэн. Энэ асуултыг
+> `MeetingBooker` мөн унасан — гэрээ бий, адаптер бий, дуудагч нэг ч жил
+> байсангүй.
 
 ### 4.2 Шалгуурын дүн: цөм биш
 
@@ -248,10 +263,10 @@ session өөр байгууллагын Өртөө мөрийг харахгүй
 | --- | --- | --- |
 | `internal/platform/ai/*`, `ai_handlers.go` | copilot, chat, STT/TTS, орчуулга, prompt/knowledge админ, `stock-forecast` | Апп. Өгөгдөл рүү хандахаа чадвараар эргүүлнэ |
 | `server.go` `/devices/shifts/*`, `/devices/staff/pin`, `app/pos` | POS-ийн ээлж, staff PIN | commerce / pos distribution |
-| `internal/platform/integration` | Zoom/Teams/OAuth холбогчийн CRUD дэлгэц | Апп. Рельс нь `MeetingBooker` болж SDK-д үлдэнэ |
+| `internal/workspace/integration` | холбогчийн CRUD, OAuth, webhook илгээлт, экспорт | ✅ `client-gerege-nexus` (2026-08-27) — бүхэлдээ. Цөмд зөвхөн шифр үлдэв (`nexus.SecretSealer`) |
 | `internal/platform/emailverify` админ дэлгэц | "хэнд бичсэн" тойм | Апп. Илгээх рельс нь цөмд |
 | `internal/apps/documents` | батлах гинж, загвар, хадгалалтын бодлого, дэлгэц | Апп. **Гарын үсгийн рельс цөмд үлдэнэ** (§6-г үз) |
-| `internal/apps/urtuu` | даалгаврын амьдралын мөчлөг | Distribution болж чадна **өнөөдөр** |
+| `internal/apps/urtuu` + `internal/workspace/urtuu` + `pkg/urtuu` | даалгаврын амьдралын мөчлөг **ба суваг** | ✅ `client-gerege-nexus` (самбар 08-23, суваг 08-27) |
 | `internal/apps/organisation` | хэлтэс, ажилтан (HR-lite) | Distribution болж чадна **өнөөдөр** |
 | `internal/apps/egov` | ХУР/eID/ДАН-ы хэрэглэгчийн урсгал | `gerege-gov` distribution. Клиентүүд (`gerege`, `eid`, `dan`) рельс болж үлдэнэ |
 | `internal/apps/reports` | тайлангийн дэлгэц | Апп. Хөдөлгүүр (`platform/reporting`) цөмд |
@@ -418,9 +433,17 @@ lucide нэрээр динамик lookup; `APP_ORDER` устгах — дара
    өмнө нь явсан. PIN нь өөр газраар татагдав: `nexus.StaffCredential` —
    credential нь аппынх, session нээх нь платформынх, учир нь тэр маршрут
    төхөөрөмжийн токентой ирдэг бөгөөд session нээх SDK гэрээ байхгүй.
-4. ✅ **`integration`** — `MeetingBooker` рельс SDK-д хэвээр, админ CRUD нь
-   `internal/apps/integrations` болов. OAuth-ийн буцах хаяг аппынх боловч
-   хаалганаас гадуур: провайдер хөтчийг session-гүйгээр буцаадаг.
+4. ✅ **`integration`** — эхлээд админ CRUD нь апп болж, `MeetingBooker` рельс
+   SDK-д үлдсэн (2026-08-23). 2026-08-27-нд үлдсэн нь мөн явав: менежер,
+   провайдерын бүртгэл, OAuth солилцоо, webhook илгээлт, гурван хүснэгт бүгд
+   `client-gerege-nexus/modules/integrations` болов (миграц `00088`).
+   `MeetingBooker` гэрээ **устлаа** — нэг ч дуудагчгүй байсан нь §4.1-ийн
+   залруулгад бичигдсэн хоёр дахь асуултын хариу. Гарын үсэг зурсан баримтыг
+   гадагш илгээх нь мөн цөмөөс хасагдав (`POST /esign/documents/{id}/export`):
+   түүний ганц дуудагч нь рельс өөрөө байсан бөгөөд үлдээхийн тулд цөм
+   «холбогч суулгагдсан уу» гэж бүртгэлээс асуух хэрэгтэй болох байв. Цөмд
+   үлдсэн нь шифр — `INTEGRATION_ENCRYPTION_KEY`, `nexus.SecretSealer` — учир
+   нь нэг суулгацад нэг л түлхүүр байх ёстой.
 5. ✅ **`installer.go:342,355` засах** — §3.4(B). `gov.*` мөрүүдийг устгаад
    `PermissionDefinition`-д `DefaultRoles []string` талбар нэмэх: апп өөрийн
    анхдагч олголтоо зарлана. Энэ бол **аюулгүй байдлын засвар** — одоо

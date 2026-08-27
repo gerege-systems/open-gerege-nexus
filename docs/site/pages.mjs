@@ -28,6 +28,7 @@ export const PAGES = [
   {src: "docs/adr/0003-a-document-carries-what-is-signed.md", slug: "adr-0003-document-carries", title: "ADR 0003 — Баримт файлаа авч явна", group: "Архитектур"},
   {src: "docs/adr/0004-a-pilot-that-did-not-ship.md", slug: "adr-0004-pilot", title: "ADR 0004 — Гараагүй pilot", group: "Архитектур"},
   {src: "docs/adr/0005-two-planes-one-origin-each.md", slug: "adr-0005-two-origins", title: "ADR 0005 — Нэг бинарь, хоёр origin", group: "Архитектур"},
+  {src: "docs/adr/0007-a-rail-needs-a-second-caller.md", slug: "adr-0007-a-rail-needs-a-second-caller", title: "ADR 0007 — Рельс болохын тулд хоёр дахь дуудагч", group: "Архитектур"},
   {src: "docs/TWO_PLANES_REVIEW.md", slug: "two-planes-review", title: "Хоёр урсгалын хэрэгжилтийн шалгалт", group: "Архитектур"},
 
   {src: "docs/MODULE_AUTHORING_GUIDE.md", slug: "module-authoring", title: "Модуль хөгжүүлэх заавар", group: "Хөгжүүлэлт"},
@@ -39,8 +40,6 @@ export const PAGES = [
   {src: "docs/DOCUMENTS_SIGNING.md", slug: "documents-signing", title: "Цахим гарын үсэг", group: "Модулиуд"},
   {src: "docs/REPORTS.md", slug: "reports", title: "Тайлангийн хөдөлгүүр", group: "Модулиуд"},
   {src: "docs/REPORT_SHARING.md", slug: "report-sharing", title: "Тенант дамнасан тайлан", group: "Модулиуд"},
-  {src: "docs/URTUU.md", slug: "urtuu", title: "Өртөө", group: "Модулиуд"},
-  {src: "docs/RING_STANDARD.md", slug: "ring-standard", title: "Үйлчилгээний ring стандарт", group: "Модулиуд"},
 
   {src: "docs/MONITORING.md", slug: "monitoring", title: "Мониторинг", group: "Ажиллагаа"},
   {src: "docs/RUNBOOKS.md", slug: "runbooks", title: "Runbook-ууд", group: "Ажиллагаа"},

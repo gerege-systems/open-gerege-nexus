@@ -212,10 +212,6 @@ func (m *Rails) signDocumentHandler(w http.ResponseWriter, r *http.Request) {
 		"page_number": page, "provider": ProviderHSM,
 	})
 
-	// File the signed PDF with whatever the tenant has connected. The signature
-	// is already stored, so this must not be able to fail the response.
-	m.exportSignedDocument(r.Context(), tenantID, id, title, signed)
-
 	nexus.JSON(w, http.StatusOK, map[string]any{
 		"status":      StatusSigned,
 		"document_id": id,

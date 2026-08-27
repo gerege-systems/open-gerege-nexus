@@ -31,7 +31,6 @@
 package signing
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -42,29 +41,28 @@ import (
 
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/identity/eidmongolia"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/identity/gerege"
-	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/integration"
 	"github.com/gerege-systems/open-gerege-nexus/backend/pkg/nexus"
 	"github.com/go-chi/chi/v5"
 )
 
-// FileExporter is the part of the integration manager this module needs: a way
-// to put a finished document somewhere outside the platform.
+// Filing a signed PDF outside the platform was here until 2026-08-27.
 //
-// It is an interface rather than the concrete manager so a test can sign a
-// document without a Google account, and so the dependency reads as what esign
-// actually wants — somewhere to file a PDF — rather than as "integrations".
-type FileExporter interface {
-	ExportFileToAll(ctx context.Context, tenantID, filename string, content []byte, reference string) []integration.ExportResult
-	ExportFile(ctx context.Context, tenantID, integrationID, filename string, content []byte, reference string) (*integration.ExportResult, error)
-}
+// A FileExporter interface, a field on Rails, a call after every ceremony and
+// POST /esign/documents/{id}/export. All four are gone with the connectors they
+// reached — Google Drive and Dropbox are an app now
+// (client-gerege-nexus, modules/integrations), and this rail is not going to
+// ask a capability registry whether somebody installed it.
+//
+// What the rail still does is the whole of what it is for: make the signature,
+// keep the signed PDF, and answer /esign/documents/{id}/download with it.
+// Anything that wants that PDF somewhere else fetches it and puts it there.
 
 type Rails struct {
-	db      nexus.DB
-	store   *store
-	hsm     *gerege.EsignService
-	eid     *eidmongolia.Service
-	perms   nexus.PermissionStore
-	exports FileExporter
+	db    nexus.DB
+	store *store
+	hsm   *gerege.EsignService
+	eid   *eidmongolia.Service
+	perms nexus.PermissionStore
 }
 
 // New builds the PDF rails. It does not register a module, and that is the
@@ -82,15 +80,14 @@ type Rails struct {
 // /api/v1/esign, the tables, the HSM and eID ceremonies and the signature log
 // are all what they were, because none of them was ever the reason there were
 // two apps.
-func New(p nexus.Platform, hsm *gerege.EsignService, eid *eidmongolia.Service, exports FileExporter) *Rails {
+func New(p nexus.Platform, hsm *gerege.EsignService, eid *eidmongolia.Service) *Rails {
 	db := p.DB()
 	m := &Rails{
-		db:      db,
-		store:   &store{db: db},
-		hsm:     hsm,
-		eid:     eid,
-		perms:   p.Permissions(),
-		exports: exports,
+		db:    db,
+		store: &store{db: db},
+		hsm:   hsm,
+		eid:   eid,
+		perms: p.Permissions(),
 	}
 	registerReports()
 	return m
@@ -107,7 +104,6 @@ func (m *Rails) Mount(r chi.Router, tenantAuthMiddleware func(http.Handler) http
 		er.Get("/documents/{id}", m.getDocumentHandler)
 		er.Delete("/documents/{id}", m.deleteDocumentHandler)
 		er.Get("/documents/{id}/download", m.downloadDocumentHandler)
-		er.Post("/documents/{id}/export", m.exportDocumentHandler)
 
 		// HSM rail
 		er.Post("/cert/check", m.checkCertHandler)

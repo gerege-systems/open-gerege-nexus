@@ -331,15 +331,6 @@ func (m *Rails) settle(r *http.Request, tenantID string, actor Actor, session *S
 			nexus.Audit(r.Context(), tenantID, actor.UserID, "esign.document_signed", "esign", map[string]any{
 				"session_id": session.ID, "document_id": session.DocumentID, "provider": ProviderEID,
 			})
-			// The qualified rail files the finished document the same way the
-			// HSM rail does. It is guarded by `won` so that two pollers
-			// completing the same ceremony cannot upload it twice.
-			if session.DocumentID != "" {
-				// The session carries the uploaded filename, which is the name
-				// the operator already knows this document by.
-				m.exportSignedDocument(r.Context(), tenantID, session.DocumentID,
-					session.FileName, signed.PDF)
-			}
 		}
 
 	default:

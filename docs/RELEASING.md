@@ -81,13 +81,18 @@ native клиент, гадны SSO клиент бүр хуучин талба�
 
 | Юу | Оронд нь | Хэзээ устах |
 | --- | --- | --- |
-| `nexus.UseLink` | `nexus.Provide[nexus.Link]` | **v2.0.0** |
+| ~~`nexus.UseLink`~~ | — | **устсан** (2026-08-27: `nexus.Link` өөрөө явсан) |
 | `nexus.UseDocumentFiler` | `nexus.Provide[nexus.DocumentFiler]` | **v2.0.0** |
 | `nexus.UseAuditSink` | `nexus.Provide[nexus.AuditSink]` | **v2.0.0** |
 | `nexus.UseReportSink` | `nexus.Provide[nexus.ReportSink]` | **v2.0.0** |
 | Эрхийн `.read`/`.manage` дагаврын дүрэм | `PermissionDefinition.DefaultRoles` | **v2.0.0** |
 
-Тавуулаа 2026-08-21-нд v1.x дотор deprecated болсон. v2.0.0 гарах өдөр
+Тавуулаа 2026-08-21-нд v1.x дотор deprecated болсон. Эхнийх нь 2026-08-27-нд
+хугацаанаасаа өмнө устав: `UseLink` нь `nexus.Link`-ийг суулгах хос бөгөөд
+`Link` өөрөө Өртөөгийн хамт цөмөөс гарсан тул орлуулах юм үлдсэнгүй (ADR 0007).
+Тэр өдөр `nexus.PeerDirectory`, `pkg/urtuu`, `nexus.MeetingBooker` мөн адил
+устсан — дөрвүүлээ **эвдэрсэн өөрчлөлт** бөгөөд дараагийн tag major байх
+шалтгаан. v2.0.0 гарах өдөр
 тодорхойгүй бөгөөд энэ жагсаалт нь тэр өдрийн ажлын жагсаалт: v2-ын tag
 гаргахын өмнө эдгээр устаж, `api.txt` дахин бичигдэнэ. v1 дотор бүгд бүрэн
 ажиллана — устгах нь major-ын ажил, minor-ынх биш.

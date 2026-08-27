@@ -251,7 +251,6 @@ export const cp = {
   // Өртөө: the console sees two numbers about the channel — how much is queued
   // for another installation and how many links have gone quiet — and never
   // what was actually said. See migration 00064.
-  "cp.job.urtuu_relay": { mn: "Өртөө — платформ хоорондын суваг", en: "Urtuu relay" },
 
   "cp.state.ok": { mn: "Хэвийн", en: "Healthy" },
   "cp.state.failing": { mn: "Алдаатай", en: "Failing" },

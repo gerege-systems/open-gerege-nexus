@@ -24,7 +24,8 @@
  *   ai            components/AICopilot.tsx, mounted in the shell header on
  *                 every page (components/Layout.tsx:359, :399)
  *   documents     contract/inbox screens bundled for the client distribution
- *   urtuu         app/settings/urtuu/page.tsx — a platform settings route
+ *   urtuu         app/module/urtuu/links — the channel's own screen
+ *   integrations  app/module/integrations/connectors, and app/line's tile
  *   storefront    components/landing/Storefront.tsx — the signed-out page
  *
  * Registering from the route would leave each of those rendering English while
@@ -46,6 +47,7 @@
  */
 
 import "./sso_clients";
+import "./integrations";
 import "./documents";
 import "./storefront";
 import "./urtuu";

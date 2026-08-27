@@ -14,7 +14,6 @@ import { core } from "./addons/core";
 import { cp } from "./addons/cp";
 import { emailverify } from "./addons/emailverify";
 import { ai } from "./addons/ai";
-import { integrations } from "./addons/integrations";
 import { modules } from "./addons/modules";
 import { setup } from "./addons/setup";
 import { website } from "./addons/website";
@@ -25,7 +24,7 @@ import { website } from "./addons/website";
  * `base` and `web` are the shared ones: a term that more than one screen shows
  * belongs there, never duplicated per screen. The rest are the platform's areas
  * — signing in, access control, the app store, the control plane, appearance,
- * email verification, integrations, the module chrome and the public site.
+ * email verification, the module chrome and the public site.
  *
  * Keys read `<module>.<kind>.<term>`, where kind classifies the term the way
  * Odoo does — field (a data label), action (a button), menu, state (a selection
@@ -50,7 +49,6 @@ export const coreDictionary = {
   ...core,
   ...emailverify,
   ...ai,
-  ...integrations,
   ...modules,
   ...setup,
   ...website,

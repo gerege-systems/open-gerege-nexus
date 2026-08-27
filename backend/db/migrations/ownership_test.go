@@ -22,12 +22,14 @@
  * counting the routes first — the core served none of those apps' endpoints,
  * so nothing here could read the tables anyway.
  *
- * Sixty-six remain, and this test is what keeps that true. That sentence said
- * sixty-nine until now — 108, less the twenty-eight and the eleven — and the
- * arithmetic was right on the day it was written. Migration 00078 has run
- * since, taking urtuu_tasks, urtuu_task_events and urtuu_numbers to the Өртөө
- * module. A count kept in a comment is only true until the next migration, so
- * this one was counted from the list below rather than carried forward.
+ * The list below is what remains, and this test is what keeps that true. A
+ * count kept in a comment is only true until the next migration — this one has
+ * said sixty-nine and then sixty-six, and both were right on the day they were
+ * written — so the number lives in schema_split_test.go, where a migration that
+ * changes it has to change it. Migration 00078 took urtuu_tasks,
+ * urtuu_task_events and urtuu_numbers to the Өртөө module; 00087 took the
+ * channel's remaining six the same way, and with them the last row in this file
+ * that named Өртөө.
  *
  * Which plane a table belongs to.
  *
@@ -148,9 +150,6 @@ var platformTables = map[string]table{
 	"esign_sign_sessions":        {"workspace", "signing rail"},
 	"esign_signature_logs":       {"workspace", "signing rail"},
 	"installation_events":        {"workspace", "app store"},
-	"integration_deliveries":     {"workspace", "integrations"},
-	"integration_oauth_states":   {"workspace", "integrations"},
-	"integrations":               {"workspace", "integrations"},
 	"membership_roles":           {"workspace", "access control"},
 	"memberships":                {"workspace", "access control"},
 	"oauth2_access_tokens":       {"workspace", "OAuth2 provider"},
@@ -158,20 +157,18 @@ var platformTables = map[string]table{
 	"oauth2_clients":             {"workspace", "OAuth2 provider"},
 	"oauth2_consents":            {"workspace", "OAuth2 provider"},
 	"oauth2_tokens":              {"workspace", "OAuth2 provider"},
-	"push_tokens":                {"workspace", "devices"},
-	"report_grants":              {"workspace", "report sharing"},
-	"report_schedules":           {"workspace", "reports"},
-	"role_permissions":           {"workspace", "access control"},
-	"roles":                      {"workspace", "access control"},
-	"sessions":                   {"workspace", "auth"},
-	"staff_pin_credentials":      {"workspace", "devices"},
-	"tenant_profiles":            {"workspace", "tenants"},
-	"urtuu_deliveries":           {"workspace", "Өртөө"},
-	"urtuu_inbox":                {"workspace", "Өртөө"},
-	"urtuu_outbox":               {"workspace", "Өртөө"},
-	"urtuu_peer_codes":           {"workspace", "Өртөө"},
-	"urtuu_peers":                {"workspace", "Өртөө"},
-	"urtuu_request_codes":        {"workspace", "Өртөө"},
+	// A projection of somebody else's row, written into this workspace by
+	// registry.publish_person_item. The workspace plane by §2.1 and not a
+	// borderline case: the row exists for one home and no other, which is
+	// exactly what the rule asks. Migration 00086.
+	"push_tokens":           {"workspace", "devices"},
+	"report_grants":         {"workspace", "report sharing"},
+	"report_schedules":      {"workspace", "reports"},
+	"role_permissions":      {"workspace", "access control"},
+	"roles":                 {"workspace", "access control"},
+	"sessions":              {"workspace", "auth"},
+	"staff_pin_credentials": {"workspace", "devices"},
+	"tenant_profiles":       {"workspace", "tenants"},
 }
 
 // The seven the workspace plane may not reach at all.

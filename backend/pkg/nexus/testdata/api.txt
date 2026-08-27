@@ -85,28 +85,6 @@
   FiledDocument.Status string
   FiledDocument.Title string
   FiledDocument.Type string
-  Link.Deliver(kind string, reader LinkReader)
-  Link.Enabled() bool
-  Link.Enqueue(ctx context.Context, workspaceID, kind string, payload any, peerIDs ...string) (string, error)
-  Link.EnqueueTx(ctx context.Context, tx pgx.Tx, workspaceID, kind string, payload any, peerIDs ...string) (string, error)
-  Link.InstallationID() string
-  LinkMessage.CreatedAt time.Time
-  LinkMessage.Kind string
-  LinkMessage.MessageID string
-  LinkMessage.Payload []byte
-  LinkMessage.PeerID string
-  LinkMessage.PeerName string
-  LinkMessage.WorkspaceID string
-  Meeting.ExternalID string
-  Meeting.IntegrationID string
-  Meeting.IntegrationName string
-  Meeting.JoinURL string
-  Meeting.Provider string
-  MeetingBooker.CreateMeeting(ctx context.Context, workspaceID, integrationID, title string, startsAt time.Time, duration time.Duration, reference string) (*Meeting, error)
-  MeetingBooker.FirstMeetingConnector(ctx context.Context, workspaceID string) (*MeetingConnector, error)
-  MeetingConnector.ID string
-  MeetingConnector.Name string
-  MeetingConnector.Provider string
   MenuDefinition.AppChrome bool
   MenuDefinition.AppID string
   MenuDefinition.AppName string
@@ -139,22 +117,6 @@
   ParamSpec.OptionsQuery string
   ParamSpec.Required bool
   ParamSpec.Titles map[string]string
-  Peer.ID string
-  Peer.LastError string
-  Peer.LastSeenAt *time.Time
-  Peer.Name string
-  Peer.Role string
-  Peer.Status string
-  Peer.Undelivered int
-  PeerDirectory.CodeOpenOn(ctx context.Context, workspaceID, peerID, code string) (bool, error)
-  PeerDirectory.DeliveryLoad(ctx context.Context, workspaceID string, from, to time.Time) ([]PeerLoad, error)
-  PeerDirectory.Peers(ctx context.Context, workspaceID string) ([]Peer, error)
-  PeerDirectory.RequestCode(ctx context.Context, workspaceID, code string) (RequestCode, bool, error)
-  PeerLoad.Delivered int64
-  PeerLoad.Envelopes int64
-  PeerLoad.PeerID string
-  PeerLoad.Pending int64
-  PeerLoad.Retries int64
   PermissionDefinition.AdminOnly bool
   PermissionDefinition.Code string
   PermissionDefinition.DefaultRoles []string
@@ -245,12 +207,6 @@
   ReportSchedules.Delete(ctx context.Context, workspaceID, id string) (reportKey string, err error)
   ReportSchedules.List(ctx context.Context, workspaceID string) ([]ReportSchedule, error)
   ReportSchedules.Update(ctx context.Context, workspaceID, id string, schedule ReportSchedule) (bool, error)
-  RequestCode.Active bool
-  RequestCode.Code string
-  RequestCode.Line string
-  RequestCode.Names map[string]string
-  RequestCode.SLA *int64
-  RequestCode.Source string
   Result.Columns []ColumnSpec
   Result.Notes []Note
   Result.Rows []map[string]any
@@ -317,6 +273,9 @@
   SSOSigningKey.CreatedAt time.Time
   SSOSigningKey.KID string
   SSOSigningKey.RetiredAt *time.Time
+  SecretSealer.Configured() bool
+  SecretSealer.Open(ciphertext []byte) ([]byte, error)
+  SecretSealer.Seal(plaintext []byte) ([]byte, error)
   SignatureCeremony.DeviceLinkURL string
   SignatureCeremony.ExpiresAt string
   SignatureCeremony.SessionID string
@@ -416,14 +375,12 @@ func List() []Module
 func LocaleFromRequest(r *http.Request) string
 func LocalizedTitle(titles map[string]string, locale, fallback string) string
 func Location() *time.Location
-func Meetings() (MeetingBooker, error)
 func MenuPermissionOf(m Module) string
 func Migrations(moduleID string, fsys fs.FS)
 func MigrationsOf(moduleID string) (fs.FS, bool)
 func NewParams(values map[string]any, locale string) Params
 func NewPlatform(db DB, permissions PermissionStore) Platform
 func Now() time.Time
-func Peers(ctx context.Context, workspaceID string) ([]Peer, error)
 func People() (Directory, error)
 func ProvideAssistant(moduleID string, source AssistantSource)
 func Provide[T any](impl T)
@@ -435,15 +392,14 @@ func RegisterReport(report Report)
 func Reports() (ReportEngine, error)
 func RequirePermission(store PermissionStore, permissionCode string) func(http.Handler) http.Handler
 func RequireWorkspace(w http.ResponseWriter, r *http.Request) (string, bool)
-func Ring() (Link, error)
 func RoutePermissionPrefixOf(m Module) string
+func Secrets() (SecretSealer, error)
 func SigningRailsOf() (SigningRails, error)
 func StateRegistryOf() (StateRegistry, error)
 func TimezoneName() string
 func Today() time.Time
 func UseAuditSink(sink AuditSink)
 func UseDocumentFiler(filer DocumentFiler)
-func UseLink(l Link)
 func UseReportSink(sink func(Report))
 func UserFromContext(ctx context.Context) (UserClaims, error)
 func VerifyModuleExists(id string) error
@@ -478,12 +434,6 @@ type DocumentSignatureRequest struct
 type EIDSigner interface
 type FiledDocument struct
 type InstalledApps func(ctx context.Context, workspaceID string) (map[string]bool, error)
-type Link interface
-type LinkMessage struct
-type LinkReader func(ctx context.Context, message LinkMessage) error
-type Meeting struct
-type MeetingBooker interface
-type MeetingConnector struct
 type MenuDefinition struct
 type Module interface
 type Note struct
@@ -491,9 +441,6 @@ type ParamKind string
 type ParamOption struct
 type ParamSpec struct
 type Params struct
-type Peer struct
-type PeerDirectory interface
-type PeerLoad struct
 type PermissionDefinition struct
 type PermissionStore interface
 type Platform interface
@@ -512,7 +459,6 @@ type ReportRun struct
 type ReportSchedule struct
 type ReportSchedules interface
 type ReportSink func(Report)
-type RequestCode struct
 type Result struct
 type Rows interface
 type SSOClient struct
@@ -521,6 +467,7 @@ type SSOClientRegistry interface
 type SSOConsent struct
 type SSOScope struct
 type SSOSigningKey struct
+type SecretSealer interface
 type SignatureCeremony struct
 type SignatureCounter interface
 type SignatureRequest struct
@@ -539,7 +486,7 @@ type UserClaims struct
 var ErrForbidden
 var ErrIdentityRailUnavailable
 var ErrNoDocumentFiler
-var ErrNoLink
+var ErrNoSecretKey
 var ErrOrganisationNotFound
 var ErrPDFSigningUnavailable
 var ErrReportGrantExists

@@ -28,17 +28,19 @@ name: Deploy to Production (nexus.gerege.mn)
 #   EID_RP_UUID                 eID Mongolia relying-party UUID
 #   EID_RP_SECRET               eID Mongolia relying-party secret
 #   ESIGN_TOKEN                 Gerege eSign HSM credential (optional)
-#   INTEGRATION_ENCRYPTION_KEY  seals connector credentials at rest; without it
-#                               Drive/Dropbox/Meet cannot be saved at all
-#   GOOGLE_OAUTH_CLIENT_ID      OAuth client for the Drive and Meet connectors
-#   GOOGLE_OAUTH_CLIENT_SECRET  (optional: absent, they report unavailable)
+#   INTEGRATION_ENCRYPTION_KEY  the deployment's one cipher for credentials at
+#                               rest (nexus.SecretSealer). Named for the
+#                               connectors, which were its first caller and are
+#                               now an app elsewhere; the key stays here because
+#                               a deployment must have exactly one
 #   GOOGLE_LOGIN_CLIENT_ID      OAuth client for the "sign in with Google"
 #   GOOGLE_LOGIN_CLIENT_SECRET  button (optional: absent, it is not offered).
-#                               Separate from the pair above on purpose — see
-#                               .env.example; a document connector must not be
-#                               able to open a sign-in path by itself.
-#   DROPBOX_OAUTH_CLIENT_ID     OAuth client for the Dropbox connector
-#   DROPBOX_OAUTH_CLIENT_SECRET (optional: absent, it reports unavailable)
+#                               There used to be a second Google pair here, for
+#                               the Drive and Meet connectors, kept separate on
+#                               purpose so that a document connector could not
+#                               open a sign-in path by itself. The connectors
+#                               are an app in client-gerege-nexus now and took
+#                               their pair, and Dropbox's, with them.
 #   EID_SIGN_SIGNER_CERT_PEM    server Document-Signer certificate, PEM (optional)
 #   EID_SIGN_SIGNER_KEY_PEM     its ECDSA private key, PEM (optional)
 #
@@ -215,14 +217,10 @@ jobs:
           # document unchanged as mock mode did.
           ESIGN_TOKEN: ${{ secrets.ESIGN_TOKEN }}
           INTEGRATION_ENCRYPTION_KEY: ${{ secrets.INTEGRATION_ENCRYPTION_KEY }}
-          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
-          GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
           GOOGLE_LOGIN_CLIENT_ID: ${{ secrets.GOOGLE_LOGIN_CLIENT_ID }}
           GOOGLE_LOGIN_CLIENT_SECRET: ${{ secrets.GOOGLE_LOGIN_CLIENT_SECRET }}
           GOOGLE_LOGIN_TENANT: ${{ vars.GOOGLE_LOGIN_TENANT }}
           GOOGLE_LOGIN_ALLOWED_DOMAINS: ${{ vars.GOOGLE_LOGIN_ALLOWED_DOMAINS }}
-          DROPBOX_OAUTH_CLIENT_ID: ${{ secrets.DROPBOX_OAUTH_CLIENT_ID }}
-          DROPBOX_OAUTH_CLIENT_SECRET: ${{ secrets.DROPBOX_OAUTH_CLIENT_SECRET }}
           # Server Document-Signer for the PAdES fallback. Optional: signing
           # works without it, only the stamp-outage fallback does not.
           EID_SIGN_SIGNER_CERT_PEM: ${{ secrets.EID_SIGN_SIGNER_CERT_PEM }}
@@ -232,15 +230,6 @@ jobs:
           # bundled file, which is what this deployment has always used.
           APP_CATALOG_URL: ${{ vars.APP_CATALOG_URL }}
           APPSTORE_PUBLIC_KEY: ${{ secrets.APPSTORE_PUBLIC_KEY }}
-          # «Өртөө» — this installation's own signing key, and the state
-          # register it takes request codes from. All four are optional: with
-          # the key unset the channel is off and the platform runs exactly as
-          # it did, which is every deployment until somebody establishes a
-          # link. See docs/URTUU.md and docs/RING_STANDARD.md.
-          URTUU_SIGNING_KEY: ${{ secrets.URTUU_SIGNING_KEY }}
-          RING_BASE_URL: ${{ secrets.RING_BASE_URL }}
-          RING_API_KEY: ${{ secrets.RING_API_KEY }}
-          RING_PUBLIC_KEY: ${{ secrets.RING_PUBLIC_KEY }}
           CATALOG_SYNC_INTERVAL: ${{ vars.CATALOG_SYNC_INTERVAL || '1h' }}
           CONSOLE_ORIGIN: ${{ vars.CONSOLE_ORIGIN }}
           # The operator console. Empty means this deployment has none: the
@@ -271,7 +260,7 @@ jobs:
           username: ${{ secrets.DEPLOY_USER || 'deploy' }}
           port: ${{ secrets.DEPLOY_PORT || 22 }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
-          envs: IMAGE_TAG,REGISTRY_USER,REGISTRY_TOKEN,REPO,REDIS_URL,POSTGRES_PASSWORD,SSO_DEFAULT_CLIENT_SECRET,GEMINI_API_KEY,EID_RP_UUID,EID_RP_SECRET,EID_BASE_URL,ESIGN_TOKEN,EID_SIGN_SIGNER_CERT_PEM,EID_SIGN_SIGNER_KEY_PEM,PUBLIC_ORIGIN,DEMO_MODE,EID_MOCK_MODE,INTEGRATION_ENCRYPTION_KEY,GOOGLE_OAUTH_CLIENT_ID,GOOGLE_OAUTH_CLIENT_SECRET,GOOGLE_LOGIN_CLIENT_ID,GOOGLE_LOGIN_CLIENT_SECRET,GOOGLE_LOGIN_TENANT,GOOGLE_LOGIN_ALLOWED_DOMAINS,DROPBOX_OAUTH_CLIENT_ID,DROPBOX_OAUTH_CLIENT_SECRET,APP_CATALOG_URL,APPSTORE_PUBLIC_KEY,CATALOG_SYNC_INTERVAL,CONSOLE_ORIGIN,CONTROL_PLANE_HOST,CONTROL_PLANE_ALLOWED_CIDRS,PROMETHEUS_URL,ALERTMANAGER_URL,GRAFANA_URL,GITHUB_DEPLOY_TOKEN,URTUU_SIGNING_KEY,RING_BASE_URL,RING_API_KEY,RING_PUBLIC_KEY
+          envs: IMAGE_TAG,REGISTRY_USER,REGISTRY_TOKEN,REPO,REDIS_URL,POSTGRES_PASSWORD,SSO_DEFAULT_CLIENT_SECRET,GEMINI_API_KEY,EID_RP_UUID,EID_RP_SECRET,EID_BASE_URL,ESIGN_TOKEN,EID_SIGN_SIGNER_CERT_PEM,EID_SIGN_SIGNER_KEY_PEM,PUBLIC_ORIGIN,DEMO_MODE,EID_MOCK_MODE,INTEGRATION_ENCRYPTION_KEY,GOOGLE_LOGIN_CLIENT_ID,GOOGLE_LOGIN_CLIENT_SECRET,GOOGLE_LOGIN_TENANT,GOOGLE_LOGIN_ALLOWED_DOMAINS,APP_CATALOG_URL,APPSTORE_PUBLIC_KEY,CATALOG_SYNC_INTERVAL,CONSOLE_ORIGIN,CONTROL_PLANE_HOST,CONTROL_PLANE_ALLOWED_CIDRS,PROMETHEUS_URL,ALERTMANAGER_URL,GRAFANA_URL,GITHUB_DEPLOY_TOKEN
           script: |
             set -euo pipefail
             APP_DIR=/opt/open-gerege-nexus
@@ -300,20 +289,12 @@ jobs:
             EID_MOCK_MODE=${EID_MOCK_MODE}
             REDIS_URL=${REDIS_URL}
             INTEGRATION_ENCRYPTION_KEY=${INTEGRATION_ENCRYPTION_KEY}
-            GOOGLE_OAUTH_CLIENT_ID=${GOOGLE_OAUTH_CLIENT_ID}
-            GOOGLE_OAUTH_CLIENT_SECRET=${GOOGLE_OAUTH_CLIENT_SECRET}
             GOOGLE_LOGIN_CLIENT_ID=${GOOGLE_LOGIN_CLIENT_ID}
             GOOGLE_LOGIN_CLIENT_SECRET=${GOOGLE_LOGIN_CLIENT_SECRET}
             GOOGLE_LOGIN_TENANT=${GOOGLE_LOGIN_TENANT}
             GOOGLE_LOGIN_ALLOWED_DOMAINS=${GOOGLE_LOGIN_ALLOWED_DOMAINS}
-            DROPBOX_OAUTH_CLIENT_ID=${DROPBOX_OAUTH_CLIENT_ID}
-            DROPBOX_OAUTH_CLIENT_SECRET=${DROPBOX_OAUTH_CLIENT_SECRET}
             APP_CATALOG_URL=${APP_CATALOG_URL}
             APPSTORE_PUBLIC_KEY=${APPSTORE_PUBLIC_KEY}
-            URTUU_SIGNING_KEY=${URTUU_SIGNING_KEY}
-            RING_BASE_URL=${RING_BASE_URL}
-            RING_API_KEY=${RING_API_KEY}
-            RING_PUBLIC_KEY=${RING_PUBLIC_KEY}
             CATALOG_SYNC_INTERVAL=${CATALOG_SYNC_INTERVAL}
             CONSOLE_ORIGIN=${CONSOLE_ORIGIN}
             CONTROL_PLANE_HOST=${CONTROL_PLANE_HOST}
@@ -484,15 +465,6 @@ jobs:
             # API, and HTML if this is still hitting the frontend.
             if curl -fsS https://nexus.gerege.mn/.well-known/openid-configuration | head -c 1 | grep -q '{'; then
               echo "OIDC discovery is served by the API"
-              # And the Өртөө identity, on the same proof. A JSON body means the
-              # API answered — 404 included, which is what an installation with
-              # no signing key correctly says. HTML means this is still the
-              # frontend, so the snippet on the server is older than the repo's.
-              URTUU_TYPE=$(curl -s -o /dev/null -w '%{content_type}' https://nexus.gerege.mn/.well-known/urtuu.json)
-              case "$URTUU_TYPE" in
-                application/json*) echo "the Өртөө identity endpoint is served by the API" ;;
-                *) echo "::warning::/.well-known/urtuu.json answered $URTUU_TYPE, not JSON; the deployed snippet is stale" ;;
-              esac
             else
               echo "::error::/.well-known/openid-configuration is still not the API"
               exit 1
