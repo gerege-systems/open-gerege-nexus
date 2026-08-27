@@ -20,7 +20,7 @@ Gerege Nexus нь Go + Next.js + PostgreSQL дээрх **модульт моно
 `cmd/api` бинарь, нэг image, нэг deploy дотор хоёр бие даасан хүсэлтийн урсгал
 ажиллана:
 
-| | Тенантын урсгал | Платформын урсгал |
+| | Тенантын урсгал | Операторын урсгал |
 | --- | --- | --- |
 | Хариуцах зүйл | Нэг байгууллага доторх хэрэглэгчийн ажил | Бүх deployment-ийг оператор удирдах |
 | Origin | `nexus.gerege.mn` | `cp.nexus.gerege.mn` |
@@ -83,7 +83,7 @@ middleware-ийг хуваалцана. `/health`, `/ready`, `/metrics` нь а�
 4. PostgreSQL RLS ба `tenant_id` тухайн байгууллагын мөрөөр хязгаарлана.
 5. Module route бол `tenant.app_installations` ба kill switch-ийг шалгана.
 
-### 3.3 Платформын хүсэлт
+### 3.3 Операторын хүсэлт
 
 1. `HostGate` зөвхөн `CONTROL_PLANE_HOST` origin-ыг нэвтрүүлнэ.
 2. `cp_session`-ийг шалгаж, нууц үг + TOTP, богино idle timeout болон
@@ -125,7 +125,7 @@ flag overrides, operator impersonations, tenant quotas, usage events гэсэн
 
 Core нь business app-ийн хүснэгт, handler-ийг эзэмшихгүй. Distribution нь
 module code, manifest, migration-аа нийлүүлж, Nexus SDK contract-аар бүртгэнэ.
-Платформ каталогийг татаж `platform.apps` metadata-г синк хийнэ; тенантын
+Операторын урсгал каталогийг татаж `platform.apps` metadata-г синк хийнэ; тенантын
 суулгалт, хувилбар, төлөв `tenant.app_installations`-д хадгалагдана.
 
 AI stock forecast endpoint ч built-in inventory table ашиглахгүй. Идэвхтэй

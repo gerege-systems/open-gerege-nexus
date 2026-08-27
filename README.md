@@ -42,7 +42,7 @@ compile-time Go module хэлбэрээр distribution репо нэмдэг. Э
 | Хэсэг | Одоогийн хэрэгжилт |
 | --- | --- |
 | Tenant plane | Нэвтрэлт, session, tenant membership, RBAC, profile, апп суулгалт/хаалт, integration, AI API, төхөөрөмж, email verification, SSO client/provider, Өртөөний суваг, reporting engine |
-| Platform plane | Тенантын lifecycle, операторын TOTP нэвтрэлт, audit, support, quota/metering, feature flag, runtime settings/credentials, announcement, backup/deploy удирдлага |
+| Operator plane | Тенантын lifecycle, операторын TOTP нэвтрэлт, audit, support, quota/metering, feature flag, runtime settings/credentials, announcement, backup/deploy удирдлага |
 | Built-in апп | Байхгүй. Апп бүр каталогоор ирнэ — 2026-08-25-нд `sso_clients` явсны дараа энэ бинарь нэг ч бизнес апп агуулахгүй |
 | Web | Public landing, login/setup, profile, app store, settings, control plane; аппын дэлгэцүүд (SSO клиент, баримт, харилцагч) module-гүйгээ амьгүй байдлаар shell-д үлдсэн |
 | Native | macOS, iOS/iPadOS, Windows, Android shell; Linux-д PWA |

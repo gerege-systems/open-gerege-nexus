@@ -20,7 +20,7 @@ Gerege Nexus is a **modular monolith** built with Go, Next.js, and PostgreSQL.
 One `cmd/api` binary, image, and deployment serve two independent request
 planes:
 
-| | Tenant plane | Platform plane |
+| | Tenant plane | Operator plane |
 | --- | --- | --- |
 | Responsibility | A user's work inside one organisation | Operating the entire deployment |
 | Origin | `nexus.gerege.mn` | `cp.nexus.gerege.mn` |
@@ -83,7 +83,7 @@ endpoints owned by neither plane.
 4. Let PostgreSQL RLS and `tenant_id` constrain rows to that organisation.
 5. For module routes, check `tenant.app_installations` and the kill switch.
 
-### 3.3 Platform request
+### 3.3 Operator request
 
 1. `HostGate` admits only the `CONTROL_PLANE_HOST` origin.
 2. Resolve `cp_session`; password plus TOTP, short idle timeout, and step-up
@@ -127,7 +127,7 @@ the `pkg/nexus` contract.
 
 Core does not own a business app's tables or handlers. A distribution supplies
 module code, a manifest, and migrations, then registers them through the Nexus
-SDK contract. The platform fetches the catalog and reconciles metadata in
+SDK contract. The operator plane fetches the catalog and reconciles metadata in
 `platform.apps`; tenant installation, version, and state live in
 `tenant.app_installations`.
 
