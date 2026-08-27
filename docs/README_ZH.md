@@ -84,7 +84,7 @@
 
 ### 3. 国家数字基础设施集成
 
-- **XYP 国家信息交换系统**（`internal/tenant/identity/gerege/xyp.go`）：公民户籍登记
+- **XYP 国家信息交换系统**（`internal/workspace/identity/gerege/xyp.go`）：公民户籍登记
   （`WS100101`）与法人主体核验（`WS100201`）。
 - **国家 E-ID 与 DAN**（[`developer.gerege.mn`](https://developer.gerege.mn)、
   [`eidmongolia.mn`](https://eidmongolia.mn)）—— PKI 数字签名、手机 OTP、
@@ -92,7 +92,7 @@
 - **内置 OAuth2 / OIDC 提供方**
   （`/.well-known/openid-configuration`），为第三方系统签发 client credentials
   令牌。
-- **电子邮件验证**（`internal/tenant/emailverify`）——统一的地址验证流程，平台内所有应用
+- **电子邮件验证**（`internal/workspace/emailverify`）——统一的地址验证流程，平台内所有应用
   模块在进程内直接调用。邮件由托管服务（`enigma.mn`）发送，因此平台不保存任何
   邮箱凭据、也不拥有发件地址；用户回到平台时记录验证，且该回访仅可使用一次。可在
   “设置 → 电子邮件验证”中查看。
@@ -102,8 +102,8 @@
 
 ### 4. AI 助手与业务分析
 
-- **AI 助手**（`internal/tenant/ai/copilot.go`）—— 连接租户实时数据的意图分类对话。
-- **库存预测端点**（`internal/tenant/ai/handlers.go`）——委托给已启用
+- **AI 助手**（`internal/workspace/ai/copilot.go`）—— 连接租户实时数据的意图分类对话。
+- **库存预测端点**（`internal/workspace/ai/handlers.go`）——委托给已启用
   distribution 的 `stock_forecast` capability；没有提供方时返回 `404`。
 
 ---

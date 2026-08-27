@@ -144,7 +144,7 @@ type MenuDefinition struct {
 	// another app's group — and this is how a module says which of its own two
 	// it means. Before it existed, that answer lived in a table inside the
 	// platform keyed by app id, which no module outside this repository could
-	// add to; internal/tenant/menu/blueprints.go was that table.
+	// add to; internal/workspace/menu/blueprints.go was that table.
 	Group string `json:"-"`
 
 	// AppOrder and AppChrome describe the *app* this entry belongs to rather

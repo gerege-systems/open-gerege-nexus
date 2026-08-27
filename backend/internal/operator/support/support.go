@@ -93,7 +93,7 @@ func (s *Service) FindPeople(ctx context.Context, query string) ([]Person, error
 
 	rows, err := s.db.Query(ctx,
 		`SELECT u.id::text, u.email, u.name, u.locked_until, u.failed_login_attempts,
-		        (SELECT count(*) FROM tenant.sessions s
+		        (SELECT count(*) FROM workspace.sessions s
 		          WHERE s.user_id = u.id AND s.revoked_at IS NULL AND s.expires_at > NOW())
 		   FROM registry.users u
 		  WHERE u.email ILIKE '%' || $1 || '%' OR u.name ILIKE '%' || $1 || '%'
@@ -141,10 +141,10 @@ func (s *Service) membershipsFor(ctx context.Context, userIDs []string) (map[str
 	rows, err := s.db.Query(ctx,
 		`SELECT m.user_id::text, t.id::text, t.name, t.slug, t.suspended_at IS NOT NULL,
 		        COALESCE(ARRAY_AGG(r.code ORDER BY r.code) FILTER (WHERE r.code IS NOT NULL), '{}')
-		   FROM tenant.memberships m
+		   FROM workspace.memberships m
 		   JOIN registry.tenants t ON t.id = m.tenant_id
-		   LEFT JOIN tenant.membership_roles mr ON mr.membership_id = m.id
-		   LEFT JOIN tenant.roles r ON r.id = mr.role_id AND r.tenant_id = m.tenant_id
+		   LEFT JOIN workspace.membership_roles mr ON mr.membership_id = m.id
+		   LEFT JOIN workspace.roles r ON r.id = mr.role_id AND r.tenant_id = m.tenant_id
 		  WHERE m.user_id = ANY($1::uuid[])
 		  GROUP BY m.user_id, t.id, t.name, t.slug, t.suspended_at
 		  ORDER BY t.name`, userIDs)
@@ -227,7 +227,7 @@ func (s *Service) RevokeSessions(ctx context.Context, sess operator.Session, use
 		Before:     map[string]any{"email": before.Email},
 	}, func(ctx context.Context, tx pgx.Tx) error {
 		tag, err := tx.Exec(ctx,
-			`UPDATE tenant.sessions SET revoked_at = NOW()
+			`UPDATE workspace.sessions SET revoked_at = NOW()
 			  WHERE user_id = $1::uuid AND revoked_at IS NULL AND expires_at > NOW()`, userID)
 		if err != nil {
 			return fmt.Errorf("end the sessions: %w", err)

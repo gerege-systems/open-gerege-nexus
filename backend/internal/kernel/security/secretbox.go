@@ -23,7 +23,7 @@ import (
 // Sealing a credential so that a database backup is not a list of other
 // people's passwords.
 //
-// This was internal/tenant/integration's, where the first credentials a
+// This was internal/workspace/integration's, where the first credentials a
 // deployment held were a connector's OAuth tokens. The platform plane now holds
 // some too — the keys an operator sets from the console — and the two planes do
 // not import each other, so the cipher moved here rather than being written a
@@ -152,7 +152,7 @@ func mode(key []byte) (cipher.AEAD, error) {
 // Exported, and only ever called from a test. The key resolves once per
 // process, which is right in production and wrong in a test that changes the
 // environment between cases — and the test that needs it is in another package
-// (internal/tenant/integration has had one since the cipher lived there), which
+// (internal/workspace/integration has had one since the cipher lived there), which
 // is what an unexported helper in a _test file cannot serve.
 func ResetEncryptionKeyForTest() {
 	keyOnce = sync.Once{}

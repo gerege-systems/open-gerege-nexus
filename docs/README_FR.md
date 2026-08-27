@@ -92,7 +92,7 @@ d'exploitation des microservices.
 
 ### 3. Infrastructure numérique nationale
 
-- **XYP — échange d'informations de l'État** (`internal/tenant/identity/gerege/xyp.go`) :
+- **XYP — échange d'informations de l'État** (`internal/workspace/identity/gerege/xyp.go`) :
   registre civil des citoyens (`WS100101`) et vérification des personnes
   morales (`WS100201`).
 - **E-ID national et DAN** ([`developer.gerege.mn`](https://developer.gerege.mn),
@@ -101,7 +101,7 @@ d'exploitation des microservices.
 - **Fournisseur OAuth2 / OIDC intégré**
   (`/.well-known/openid-configuration`) délivrant des jetons
   client-credentials à des systèmes tiers.
-- **Vérification d'e-mail** (`internal/tenant/emailverify`) — un flux partagé pour
+- **Vérification d'e-mail** (`internal/workspace/emailverify`) — un flux partagé pour
   prouver une adresse, appelé en interne par chaque module applicatif. L'e-mail
   est envoyé par le service hébergé (`enigma.mn`) : la plateforme ne détient
   aucune information d'authentification de messagerie et ne possède pas
@@ -116,9 +116,9 @@ d'exploitation des microservices.
 
 ### 4. Copilote IA et analytique
 
-- **Assistant IA** (`internal/tenant/ai/copilot.go`) — conversation classée par
+- **Assistant IA** (`internal/workspace/ai/copilot.go`) — conversation classée par
   intention, branchée sur les données réelles du locataire.
-- **Prévision du stock** (`internal/tenant/ai/handlers.go`) — délègue à la
+- **Prévision du stock** (`internal/workspace/ai/handlers.go`) — délègue à la
   capacité `stock_forecast` d'une distribution activée et renvoie `404` si
   aucun module ne la fournit.
 

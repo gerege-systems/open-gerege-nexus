@@ -27,7 +27,7 @@
  *   - the shell's own search index                (`icon:"..."`)
  *
  * A distribution runs this in its own frontend build and gets its own apps'
- * icons; nobody edits a list. backend/internal/tenant/menu/icons_test.go is
+ * icons; nobody edits a list. backend/internal/workspace/menu/icons_test.go is
  * the other half — it holds every name declared in Go to the set lucide can
  * actually draw.
  */

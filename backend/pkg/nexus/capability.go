@@ -32,7 +32,7 @@ import (
 //
 //   - MeetingBooker. The contract was declared in meetings.go on 2026-08-15,
 //     the adapter that satisfies it was written the same day in
-//     internal/tenant/integration, and no way to *get* one was ever added.
+//     internal/workspace/integration, and no way to *get* one was ever added.
 //     Six days later AsMeetingBooker still had no callers, because there was
 //     nothing a module could call. Half a capability is none.
 //

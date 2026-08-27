@@ -376,7 +376,7 @@ func TenantOf(ctx context.Context) string {
 // them it supports.
 //
 // ReportScopeFull was declared and its twin was not, which left half the
-// vocabulary inside internal/tenant/reporting: a module could say "full" and
+// vocabulary inside internal/workspace/reporting: a module could say "full" and
 // could not say "counterparty", and could not say "not counterparty" either.
 // Declaring an interface in internal types makes it an internal interface
 // however carefully it was inverted (see meetings.go); declaring half its

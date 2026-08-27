@@ -32,7 +32,7 @@ import (
 // open from boot until somebody happens to walk through it.
 
 // MinAdminPasswordLength is the rule somebody choosing their own password is
-// held to. It repeats internal/tenant/access's rather than sharing it: the two
+// held to. It repeats internal/workspace/access's rather than sharing it: the two
 // planes do not import each other (internal/operator/service.go).
 //
 // Exported so the command that asks for the password can say the rule before
@@ -160,7 +160,7 @@ func bootstrapTx(ctx context.Context, tx pgx.Tx, p first) (string, string, error
 	// database made a microsecond earlier.
 	if p.legalName != "" || p.registrationNumber != "" {
 		if _, err := tx.Exec(ctx,
-			`INSERT INTO tenant.tenant_profiles (tenant_id, legal_name, registration_number)
+			`INSERT INTO workspace.tenant_profiles (tenant_id, legal_name, registration_number)
 			 VALUES ($1::uuid, $2, $3)
 			 ON CONFLICT (tenant_id) DO UPDATE
 			    SET legal_name = EXCLUDED.legal_name,

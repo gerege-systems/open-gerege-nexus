@@ -38,21 +38,21 @@
  * sentence (docs/TWO_PLANES_PROPOSAL.md §2.1):
  *
  *	A row that exists once per deployment is the operator plane. A row that
- *	exists separately for each tenant is the tenant plane.
+ *	exists separately for each tenant is the workspace plane.
  *
  * There is no third value. Code both planes need is not a third plane, it is
  * the floor underneath them, and it owns no table.
  *
  * The operator plane's tables sit in two schemas, and that is a different cut.
  * Migration 00083 asked a narrower question of the same twenty-seven tables —
- * which of them may the tenant plane reach at all — and moved the seven it may
+ * which of them may the workspace plane reach at all — and moved the seven it may
  * not into `operator`, leaving twenty in `registry`. operatorOnlyTables below
  * is that answer. A plane is who a row is held for; a schema is who may name
  * it. The five boundary tables show why both are needed: they are the operator
  * plane's and they are in registry, because a tenant reads its own rows.
  *
- * A tenant_id column is the usual sign of the tenant plane but not the rule.
- * Six tenant tables have none — esign_batch_items, membership_roles,
+ * A tenant_id column is the usual sign of the workspace plane but not the rule.
+ * Six workspace tables have none — esign_batch_items, membership_roles,
  * role_permissions, installation_events, oauth2_access_tokens, report_grants —
  * because they hang off a parent row that does. Five go the other way:
  * announcements, feature_flag_overrides, operator_impersonations,
@@ -80,7 +80,7 @@ import (
 // A table, and the two things a review needs to know about it: whose behalf
 // its rows are held on, and what it is for.
 type table struct {
-	plane   string // "tenant" or "operator" — the §2.1 rule, nothing else
+	plane   string // "workspace" or "operator" — the §2.1 rule, nothing else
 	purpose string
 }
 
@@ -130,51 +130,51 @@ var platformTables = map[string]table{
 	"user_sso_identities": {"operator", "identity"},
 	"users":               {"operator", "users"},
 
-	// ------------------------------------------------------ the tenant plane
+	// --------------------------------------------------- the workspace plane
 	// One row per organisation, and no organisation reads another's.
-	"access_change_events":       {"tenant", "access control"},
-	"ai_knowledge":               {"tenant", "assistant"},
-	"ai_prompts":                 {"tenant", "assistant"},
-	"app_installations":          {"tenant", "app store"},
-	"audit_events":               {"tenant", "audit"},
-	"device_enrollment_codes":    {"tenant", "devices"},
-	"device_telemetry":           {"tenant", "devices"},
-	"devices":                    {"tenant", "devices"},
-	"email_verifications":        {"tenant", "email verification"},
-	"esign_batch_items":          {"tenant", "signing rail"},
-	"esign_batches":              {"tenant", "signing rail"},
-	"esign_documents":            {"tenant", "signing rail"},
-	"esign_settings":             {"tenant", "signing rail"},
-	"esign_sign_sessions":        {"tenant", "signing rail"},
-	"esign_signature_logs":       {"tenant", "signing rail"},
-	"installation_events":        {"tenant", "app store"},
-	"integration_deliveries":     {"tenant", "integrations"},
-	"integration_oauth_states":   {"tenant", "integrations"},
-	"integrations":               {"tenant", "integrations"},
-	"membership_roles":           {"tenant", "access control"},
-	"memberships":                {"tenant", "access control"},
-	"oauth2_access_tokens":       {"tenant", "OAuth2 provider"},
-	"oauth2_authorization_codes": {"tenant", "OAuth2 provider"},
-	"oauth2_clients":             {"tenant", "OAuth2 provider"},
-	"oauth2_consents":            {"tenant", "OAuth2 provider"},
-	"oauth2_tokens":              {"tenant", "OAuth2 provider"},
-	"push_tokens":                {"tenant", "devices"},
-	"report_grants":              {"tenant", "report sharing"},
-	"report_schedules":           {"tenant", "reports"},
-	"role_permissions":           {"tenant", "access control"},
-	"roles":                      {"tenant", "access control"},
-	"sessions":                   {"tenant", "auth"},
-	"staff_pin_credentials":      {"tenant", "devices"},
-	"tenant_profiles":            {"tenant", "tenants"},
-	"urtuu_deliveries":           {"tenant", "Өртөө"},
-	"urtuu_inbox":                {"tenant", "Өртөө"},
-	"urtuu_outbox":               {"tenant", "Өртөө"},
-	"urtuu_peer_codes":           {"tenant", "Өртөө"},
-	"urtuu_peers":                {"tenant", "Өртөө"},
-	"urtuu_request_codes":        {"tenant", "Өртөө"},
+	"access_change_events":       {"workspace", "access control"},
+	"ai_knowledge":               {"workspace", "assistant"},
+	"ai_prompts":                 {"workspace", "assistant"},
+	"app_installations":          {"workspace", "app store"},
+	"audit_events":               {"workspace", "audit"},
+	"device_enrollment_codes":    {"workspace", "devices"},
+	"device_telemetry":           {"workspace", "devices"},
+	"devices":                    {"workspace", "devices"},
+	"email_verifications":        {"workspace", "email verification"},
+	"esign_batch_items":          {"workspace", "signing rail"},
+	"esign_batches":              {"workspace", "signing rail"},
+	"esign_documents":            {"workspace", "signing rail"},
+	"esign_settings":             {"workspace", "signing rail"},
+	"esign_sign_sessions":        {"workspace", "signing rail"},
+	"esign_signature_logs":       {"workspace", "signing rail"},
+	"installation_events":        {"workspace", "app store"},
+	"integration_deliveries":     {"workspace", "integrations"},
+	"integration_oauth_states":   {"workspace", "integrations"},
+	"integrations":               {"workspace", "integrations"},
+	"membership_roles":           {"workspace", "access control"},
+	"memberships":                {"workspace", "access control"},
+	"oauth2_access_tokens":       {"workspace", "OAuth2 provider"},
+	"oauth2_authorization_codes": {"workspace", "OAuth2 provider"},
+	"oauth2_clients":             {"workspace", "OAuth2 provider"},
+	"oauth2_consents":            {"workspace", "OAuth2 provider"},
+	"oauth2_tokens":              {"workspace", "OAuth2 provider"},
+	"push_tokens":                {"workspace", "devices"},
+	"report_grants":              {"workspace", "report sharing"},
+	"report_schedules":           {"workspace", "reports"},
+	"role_permissions":           {"workspace", "access control"},
+	"roles":                      {"workspace", "access control"},
+	"sessions":                   {"workspace", "auth"},
+	"staff_pin_credentials":      {"workspace", "devices"},
+	"tenant_profiles":            {"workspace", "tenants"},
+	"urtuu_deliveries":           {"workspace", "Өртөө"},
+	"urtuu_inbox":                {"workspace", "Өртөө"},
+	"urtuu_outbox":               {"workspace", "Өртөө"},
+	"urtuu_peer_codes":           {"workspace", "Өртөө"},
+	"urtuu_peers":                {"workspace", "Өртөө"},
+	"urtuu_request_codes":        {"workspace", "Өртөө"},
 }
 
-// The seven the tenant plane may not reach at all.
+// The seven the workspace plane may not reach at all.
 //
 // Migration 00083 split the operator plane's twenty-seven tables into two
 // schemas. The line was not drawn by taste: four of these seven — the operator
@@ -206,8 +206,8 @@ var operatorOnlyTables = map[string]bool{
 
 // schemaOf is the schema a table must be in once 00083 has run.
 func schemaOf(name string) string {
-	if platformTables[name].plane == "tenant" {
-		return "tenant"
+	if platformTables[name].plane == "workspace" {
+		return "workspace"
 	}
 	if operatorOnlyTables[name] {
 		return "operator"
@@ -216,8 +216,8 @@ func schemaOf(name string) string {
 }
 
 var (
-	createTable = regexp.MustCompile(`(?i)CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:(?:public|platform|registry|operator|tenant)\.)?([a-z0-9_]+)`)
-	dropTable   = regexp.MustCompile(`(?i)DROP\s+TABLE\s+(?:IF\s+EXISTS\s+)?(?:(?:public|platform|registry|operator|tenant)\.)?([a-z0-9_]+)`)
+	createTable = regexp.MustCompile(`(?i)CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:(?:public|platform|registry|operator|tenant|workspace)\.)?([a-z0-9_]+)`)
+	dropTable   = regexp.MustCompile(`(?i)DROP\s+TABLE\s+(?:IF\s+EXISTS\s+)?(?:(?:public|platform|registry|operator|tenant|workspace)\.)?([a-z0-9_]+)`)
 	// Comments are stripped first. These files explain themselves at length,
 	// and a comment quoting `CREATE TABLE IF NOT EXISTS` was read as a table
 	// called "if".
@@ -286,7 +286,7 @@ db/migrations/ownership_test.go with a word for what it is for and the plane it
 belongs to:
 
 	a row that exists once per deployment is the operator plane; a row that
-	exists separately for each tenant is the tenant plane
+	exists separately for each tenant is the workspace plane
 
 That line is the decision, and a review can disagree with it.`,
 			len(unlisted), strings.Join(unlisted, "\n\t"))
@@ -316,7 +316,7 @@ That line is the decision, and a review can disagree with it.`,
 func TestEveryTableDeclaresAPlane(t *testing.T) {
 	var undecided []string
 	for name, entry := range platformTables {
-		if entry.plane != "tenant" && entry.plane != "operator" {
+		if entry.plane != "workspace" && entry.plane != "operator" {
 			undecided = append(undecided, name+" ("+entry.plane+")")
 		}
 	}
@@ -325,7 +325,7 @@ func TestEveryTableDeclaresAPlane(t *testing.T) {
 		t.Errorf(`%s is on neither plane.
 
 A row that exists once per deployment is the operator plane; a row that exists
-separately for each tenant is the tenant plane. There is no third value: shared
+separately for each tenant is the workspace plane. There is no third value: shared
 code is the floor underneath both planes and owns no table, so a table that
 seems to want one is a table whose owner has not been decided.
 
@@ -363,7 +363,7 @@ policy_shape_test.go calls it %q: the platform writes it, the console shows it
 and a tenant reads only its own rows through a FOR SELECT policy. That is the
 operator plane by §2.1 — the row is the deployment's statement about a tenant,
 not the tenant's own row — and a schema move or a grant written from the other
-answer would hand the tenant plane something it may only read.`,
+answer would hand the workspace plane something it may only read.`,
 				name, plane, consoleRead)
 		}
 	}

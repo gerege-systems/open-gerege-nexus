@@ -145,7 +145,7 @@ build-ийг унагахгүй, харин тоог тайлагнана; orpha
 
 Дараах зүйлс dictionary-д **байхгүй** — эдгээрийг сервер орчуулна:
 
-- **Цэсний шошго** — `backend/internal/tenant/menu/menu.go` дахь blueprint ба
+- **Цэсний шошго** — `backend/internal/workspace/menu/menu.go` дахь blueprint ба
   модулийн `Menus()` дотор `Labels: map[string]string{"mn": ...}` талбараар.
   Хүсэлтийн `Accept-Language` header-ээр сонгогдоно.
 - **Апп дэлгүүрийн тайлбар** — app catalog-ийн manifest дотор.

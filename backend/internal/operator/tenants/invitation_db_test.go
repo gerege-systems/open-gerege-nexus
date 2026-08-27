@@ -78,9 +78,9 @@ func TestAnInvitationStillWorksWhileThePlatformIsPrivate(t *testing.T) {
 	if err := pool.QueryRow(ctx,
 		`SELECT EXISTS (
 		    SELECT 1 FROM registry.users u
-		      JOIN tenant.memberships m ON m.user_id = u.id AND m.tenant_id = $2::uuid
-		      JOIN tenant.membership_roles mr ON mr.membership_id = m.id
-		      JOIN tenant.roles r ON r.id = mr.role_id AND r.code = 'admin'
+		      JOIN workspace.memberships m ON m.user_id = u.id AND m.tenant_id = $2::uuid
+		      JOIN workspace.membership_roles mr ON mr.membership_id = m.id
+		      JOIN workspace.roles r ON r.id = mr.role_id AND r.code = 'admin'
 		     WHERE u.email = $1)`, email, created.ID).Scan(&admin); err != nil {
 		t.Fatalf("look for the administrator: %v", err)
 	}

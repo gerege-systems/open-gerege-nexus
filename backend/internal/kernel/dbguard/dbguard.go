@@ -195,7 +195,7 @@ func (g *Guard) Probe(ctx context.Context, pool *pgxpool.Pool) error {
 	err := pool.QueryRow(ctx, `
 		SELECT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = $1),
 		       EXISTS (SELECT 1 FROM pg_policies
-		                WHERE schemaname = 'tenant' AND policyname = 'tenant_isolation')`,
+		                WHERE schemaname = 'workspace' AND policyname = 'tenant_isolation')`,
 		TenantRole).Scan(&roleExists, &policiesExist)
 	if err != nil {
 		return fmt.Errorf("dbguard: could not inspect the database: %w", err)

@@ -134,26 +134,26 @@ var queries = map[string]string{
 	// to whoever is paying for one.
 	usage.ActiveUsers: `
 		SELECT tenant_id, count(DISTINCT user_id)
-		  FROM tenant.sessions
+		  FROM workspace.sessions
 		 WHERE last_seen_at::date = $1::timestamptz::date
 		 GROUP BY tenant_id`,
 
 	usage.Actions: `
 		SELECT tenant_id, count(*)
-		  FROM tenant.audit_events
+		  FROM workspace.audit_events
 		 WHERE created_at::date = $1::timestamptz::date AND tenant_id IS NOT NULL
 		 GROUP BY tenant_id`,
 
 	usage.AICalls: `
 		SELECT tenant_id, count(*)
-		  FROM tenant.audit_events
+		  FROM workspace.audit_events
 		 WHERE created_at::date = $1::timestamptz::date AND tenant_id IS NOT NULL
 		   AND action LIKE 'ai.%'
 		 GROUP BY tenant_id`,
 
 	usage.ReportsSent: `
 		SELECT tenant_id, count(*)
-		  FROM tenant.audit_events
+		  FROM workspace.audit_events
 		 WHERE created_at::date = $1::timestamptz::date AND tenant_id IS NOT NULL
 		   AND action LIKE 'reports.%'
 		 GROUP BY tenant_id`,
@@ -168,7 +168,7 @@ var queries = map[string]string{
 	// which matters on a table whose rows are megabytes each.
 	usage.StorageMB: `
 		SELECT tenant_id, ceil(sum(byte_size) / 1048576.0)::bigint
-		  FROM tenant.esign_documents
+		  FROM workspace.esign_documents
 		 GROUP BY tenant_id`,
 }
 

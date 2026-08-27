@@ -179,7 +179,7 @@ func Person(t *testing.T, pool *pgxpool.Pool, tenantID string) (userID, email st
 		t.Fatalf("create a test person: %v", err)
 	}
 	if _, err := pool.Exec(ctx,
-		`INSERT INTO tenant.memberships (tenant_id, user_id) VALUES ($1::uuid, $2::uuid)`,
+		`INSERT INTO workspace.memberships (tenant_id, user_id) VALUES ($1::uuid, $2::uuid)`,
 		tenantID, userID); err != nil {
 		t.Fatalf("add the person to the organisation: %v", err)
 	}

@@ -66,7 +66,7 @@ func (s *Service) GetQuota(ctx context.Context, tenantID string) (Quota, error) 
 		`SELECT COALESCE(q.max_users, -1), COALESCE(q.max_storage_mb, -1),
 		        COALESCE(q.max_ai_calls_monthly, -1),
 		        COALESCE(q.enforcement, 'soft'), COALESCE(q.updated_at, NOW()),
-		        (SELECT count(*) FROM tenant.memberships m WHERE m.tenant_id = t.id)
+		        (SELECT count(*) FROM workspace.memberships m WHERE m.tenant_id = t.id)
 		   FROM registry.tenants t
 		   LEFT JOIN registry.tenant_quotas q ON q.tenant_id = t.id
 		  WHERE t.id = $1::uuid`, tenantID).

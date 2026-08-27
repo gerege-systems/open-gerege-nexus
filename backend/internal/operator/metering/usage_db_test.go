@@ -31,13 +31,13 @@ func TestUsageIsCountedFromTheDatabase(t *testing.T) {
 	// Two acts and one AI call today, and a session that was used today.
 	for _, action := range []string{"contacts.create", "ai.chat"} {
 		if _, err := pool.Exec(ctx,
-			`INSERT INTO tenant.audit_events (tenant_id, user_id, action, resource)
+			`INSERT INTO workspace.audit_events (tenant_id, user_id, action, resource)
 			 VALUES ($1::uuid, $2, $3, 'test')`, tenantID, userID, action); err != nil {
 			t.Fatalf("write an audit row: %v", err)
 		}
 	}
 	if _, err := pool.Exec(ctx,
-		`INSERT INTO tenant.sessions (token_hash, user_id, tenant_id, expires_at, last_seen_at)
+		`INSERT INTO workspace.sessions (token_hash, user_id, tenant_id, expires_at, last_seen_at)
 		 VALUES (repeat('b', 64), $1::uuid, $2::uuid, NOW() + INTERVAL '1 hour', NOW())`,
 		userID, tenantID); err != nil {
 		t.Fatalf("write a session: %v", err)
@@ -211,7 +211,7 @@ func TestUsageBelongsToADayOnThePlatformsClock(t *testing.T) {
 	ctx := context.Background()
 
 	if _, err := pool.Exec(ctx,
-		`INSERT INTO tenant.audit_events (tenant_id, user_id, action, resource)
+		`INSERT INTO workspace.audit_events (tenant_id, user_id, action, resource)
 		 VALUES ($1::uuid, $2, 'contacts.create', 'test')`, tenantID, userID); err != nil {
 		t.Fatalf("write an audit row: %v", err)
 	}

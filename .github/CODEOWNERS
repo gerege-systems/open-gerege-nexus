@@ -67,7 +67,7 @@
 # What a tenant gets when it installs an app: which permissions exist and which
 # system roles they reach by default (12 commits). A line here changes who can
 # do what, in every deployment, and no test failure looks like it.
-/backend/internal/tenant/appinstall/ @erdenebatt
+/backend/internal/workspace/appinstall/ @erdenebatt
 
 # The platform's schema. 104 tables, and the row-level policies that are the
 # whole of tenant isolation. An app's table added here is an app's table the

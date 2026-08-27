@@ -35,13 +35,13 @@ func schemaPool(t *testing.T) *pgxpool.Pool {
 
 	var migrated bool
 	if err := pool.QueryRow(context.Background(), `
-		SELECT EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'tenant')
+		SELECT EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'workspace')
 		   AND EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'registry')
 		   AND EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'operator')`).Scan(&migrated); err != nil {
 		t.Fatal(err)
 	}
 	if !migrated {
-		t.Skip("the database is not migrated through 00083_registry_and_operator")
+		t.Skip("the database is not migrated through 00084_workspace_schema")
 	}
 	return pool
 }
@@ -55,7 +55,7 @@ func TestEveryPlatformMigrationTableLandsOnItsDeclaredSchema(t *testing.T) {
 	rows, err := pool.Query(context.Background(), `
 		SELECT schemaname, tablename
 		  FROM pg_tables
-		 WHERE schemaname IN ('tenant', 'registry', 'operator')`)
+		 WHERE schemaname IN ('workspace', 'registry', 'operator')`)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -79,7 +79,7 @@ func TestEveryPlatformMigrationTableLandsOnItsDeclaredSchema(t *testing.T) {
 	for name := range platformTables {
 		actual, exists := found[name]
 		if !exists {
-			t.Errorf("%s is in none of the tenant, registry and operator schemas", name)
+			t.Errorf("%s is in none of the workspace, registry and operator schemas", name)
 			continue
 		}
 		counts[actual]++
@@ -92,9 +92,9 @@ func TestEveryPlatformMigrationTableLandsOnItsDeclaredSchema(t *testing.T) {
 	// stays legible: twenty of the operator plane's tables are ones a tenant may
 	// also read and seven are not. A number edited alongside a migration is a
 	// number somebody looked at.
-	if counts["tenant"] != 40 || counts["registry"] != 20 || counts["operator"] != 7 {
-		t.Errorf("schema counts: tenant=%d registry=%d operator=%d; want 40, 20 and 7",
-			counts["tenant"], counts["registry"], counts["operator"])
+	if counts["workspace"] != 40 || counts["registry"] != 20 || counts["operator"] != 7 {
+		t.Errorf("schema counts: workspace=%d registry=%d operator=%d; want 40, 20 and 7",
+			counts["workspace"], counts["registry"], counts["operator"])
 	}
 }
 
@@ -257,7 +257,7 @@ func TestLoginPathSearchesBothPlanes(t *testing.T) {
 	if err := pool.QueryRow(context.Background(), `SHOW search_path`).Scan(&path); err != nil {
 		t.Fatal(err)
 	}
-	if path != "tenant, registry, operator" {
-		t.Errorf("login role search_path = %q, want tenant, registry, operator", path)
+	if path != "workspace, registry, operator" {
+		t.Errorf("login role search_path = %q, want workspace, registry, operator", path)
 	}
 }

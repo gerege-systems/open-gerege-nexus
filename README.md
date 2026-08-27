@@ -82,7 +82,7 @@ compile-time Go module хэлбэрээр distribution репо нэмдэг. Э
   manual/background sync.
 - Password, eID, ДАН, Google болон upstream OIDC нэвтрэлт; мөн OAuth2/OIDC
   provider.
-- PostgreSQL-ийн `tenant`, `registry`, `operator` schema, RLS/role хамгаалалт.
+- PostgreSQL-ийн `workspace`, `registry`, `operator` schema, RLS/role хамгаалалт.
 - Redis тохируулсан үед replica хооронд cache invalidation ба shared rate
   limit; тохируулаагүй үед single-process fallback.
 - Зэрэг хүсэлтийн load shedding. Гадаад client бүр өөрийн timeout/retry
@@ -101,7 +101,7 @@ backend/
   db/migrations/        үндсэн PostgreSQL migration-ууд
   internal/kernel/      хоёр plane-д нийтлэг доод түвшний механизм
   internal/operator/    deployment/operator plane
-  internal/tenant/      байгууллагын нэрийн өмнөөс ажиллах plane
+  internal/workspace/   байгууллагын нэрийн өмнөөс ажиллах plane
   internal/apps/        distribution module-ийн угсрах цэг (одоо хоосон)
   pkg/nexus/            distribution module-ийн нийтийн SDK
   pkg/host/             distribution binary-г асаах нийтийн entry point

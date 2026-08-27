@@ -116,7 +116,7 @@ func (s *Service) exportableTables(ctx context.Context) ([]string, error) {
 		   FROM information_schema.columns c
 		   JOIN information_schema.tables t
 		     ON t.table_schema = c.table_schema AND t.table_name = c.table_name
-		  WHERE c.table_schema = 'tenant'
+		  WHERE c.table_schema = 'workspace'
 		    AND c.column_name = 'tenant_id'
 		    AND t.table_type = 'BASE TABLE'
 		  ORDER BY c.table_name`)

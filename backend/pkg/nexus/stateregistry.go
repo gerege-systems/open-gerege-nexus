@@ -74,7 +74,7 @@ type AuditEntry struct {
 //
 // Audit has been writable from a module since the SDK existed and readable from
 // one never, which left an app that shows "what have we looked up" reaching
-// into tenant.audit_events with its own SQL — a cross-repository dependency on a
+// into workspace.audit_events with its own SQL — a cross-repository dependency on a
 // platform table, invisible to any compiler. This is the read half.
 //
 // Scoped by action prefix rather than by app id: an app that was renamed still

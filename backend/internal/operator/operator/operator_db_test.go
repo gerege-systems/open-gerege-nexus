@@ -244,7 +244,7 @@ func TestOperatorRoleReadsButCannotWrite(t *testing.T) {
 		t.Fatalf("the operator role cannot read organisations: %v", err)
 	}
 	var memberships int
-	if err := pool.QueryRow(ctx, `SELECT count(*) FROM tenant.memberships`).Scan(&memberships); err != nil {
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM workspace.memberships`).Scan(&memberships); err != nil {
 		t.Fatalf("the operator role cannot read memberships: %v", err)
 	}
 

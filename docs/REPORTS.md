@@ -3,7 +3,7 @@
 `io.gerege.nexus.reports`: суулгасан апп бүрийн тайланг нэг дэлгэцээс
 ажиллуулах, график харах, Excel/CSV болгон гаргах, товлосон хугацаанд илгээх.
 
-Тайлангийн engine нь цөмийн `internal/tenant/reporting`-д, reports UI module нь
+Тайлангийн engine нь цөмийн `internal/workspace/reporting`-д, reports UI module нь
 `client-gerege-nexus` distribution-д байна. Гаднын module engine-ийн internal
 package-ийг импортлохгүй; тайлангаа нийтийн `pkg/nexus` SDK-аар бүртгэнэ.
 

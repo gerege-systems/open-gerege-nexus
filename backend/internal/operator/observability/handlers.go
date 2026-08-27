@@ -54,7 +54,7 @@ func (s *Service) backgroundJobs(ctx context.Context) []BackgroundJob {
 		`SELECT max(last_run_at),
 		        count(*) FILTER (WHERE last_status NOT IN ('', 'ok') AND active),
 		        count(*) FILTER (WHERE last_run_at IS NULL AND active)
-		   FROM tenant.report_schedules`).Scan(&lastRun, &failures, &pending); err != nil {
+		   FROM workspace.report_schedules`).Scan(&lastRun, &failures, &pending); err != nil {
 		slog.Warn("control plane: could not read the scheduled reports", "error", err)
 	} else {
 		detail := ""
@@ -89,8 +89,8 @@ func (s *Service) backgroundJobs(ctx context.Context) []BackgroundJob {
 	// attempts.
 	var undelivered, silent int
 	if err := s.db.QueryRow(ctx, `
-		SELECT (SELECT count(*) FROM tenant.urtuu_deliveries WHERE delivered_at IS NULL),
-		       (SELECT count(*) FROM tenant.urtuu_peers
+		SELECT (SELECT count(*) FROM workspace.urtuu_deliveries WHERE delivered_at IS NULL),
+		       (SELECT count(*) FROM workspace.urtuu_peers
 		         WHERE status = 'active' AND revoked_at IS NULL
 		           AND coalesce(last_seen_at, created_at) < NOW() - INTERVAL '1 hour')`).
 		Scan(&undelivered, &silent); err != nil {
@@ -132,7 +132,7 @@ type TenantTrouble struct {
 
 // tenantTrouble is the per-organisation error view §E asks for.
 //
-// It comes from tenant.audit_events rather than from Prometheus, and that is a
+// It comes from workspace.audit_events rather than from Prometheus, and that is a
 // consequence of a decision made in the very first phase: **no tenant label on
 // any metric**, because a label whose values are customers is a series count
 // that only grows. The trade is that this question has to be answered from the
@@ -142,7 +142,7 @@ type TenantTrouble struct {
 func (s *Service) tenantTrouble(ctx context.Context) []TenantTrouble {
 	rows, err := s.db.Query(operator.Scoped(ctx),
 		`SELECT a.tenant_id::text, COALESCE(t.name, ''), count(*), min(a.action)
-		   FROM tenant.audit_events a
+		   FROM workspace.audit_events a
 		   LEFT JOIN registry.tenants t ON t.id = a.tenant_id
 		  WHERE a.created_at > NOW() - INTERVAL '24 hours'
 		    AND a.tenant_id IS NOT NULL
@@ -202,7 +202,7 @@ func (s *Service) CatalogStatus(ctx context.Context) CatalogStatus {
 	// telephones about a feature that is missing.
 	rows, err := s.db.Query(operator.Scoped(ctx),
 		`SELECT i.app_id, COALESCE(a.name, i.app_id), i.installed_version, count(*)
-		   FROM tenant.app_installations i
+		   FROM workspace.app_installations i
 		   LEFT JOIN registry.apps a ON a.id = i.app_id
 		  WHERE i.enabled AND i.status = 'installed'
 		  GROUP BY i.app_id, a.name, i.installed_version

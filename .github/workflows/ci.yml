@@ -167,7 +167,7 @@ jobs:
         # UPDATE, and a skipped test is how that stops being true without
         # anybody noticing.
         run: |
-          go test -run 'TestAReturnIsGoodExactlyOnce' -v ./internal/tenant/emailverify/... \
+          go test -run 'TestAReturnIsGoodExactlyOnce' -v ./internal/workspace/emailverify/... \
             | tee /tmp/emailverify.log
           if grep -q -- '--- SKIP' /tmp/emailverify.log; then
             echo "::error::email verification integration tests skipped — EMAILVERIFY_TEST_DATABASE_URL is not reaching the test"
@@ -181,7 +181,7 @@ jobs:
         # reports green having asserted nothing.
         run: |
           go test -run 'TestAuthorizationCodeCannotBeUsedTwice|TestRefreshTokenRotation|TestConcurrentRefreshRevokesFamily' -v \
-            ./internal/tenant/ssoprovider/... | tee /tmp/oauth.log
+            ./internal/workspace/ssoprovider/... | tee /tmp/oauth.log
           if grep -q -- '--- SKIP' /tmp/oauth.log; then
             echo "::error::OAuth2 flow tests skipped — OAUTH_TEST_DATABASE_URL is not reaching the test"
             exit 1
@@ -229,7 +229,7 @@ jobs:
         # back, and they need the real server to be built to run at all.
         run: |
           go test -run 'TestTheServerProvidesEverythingBootstrapAsksFor|TestABuiltServerProvidesTheBookingCapability' -v \
-            ./internal/tenant/ | tee /tmp/capabilities.log
+            ./internal/workspace/ | tee /tmp/capabilities.log
           if grep -q -- '--- SKIP' /tmp/capabilities.log; then
             echo "::error::capability wiring tests skipped — AUTH_TEST_DATABASE_URL is not reaching the test"
             exit 1
@@ -241,7 +241,7 @@ jobs:
         # without a database.
         run: |
           go test -run 'TestLapsedLockoutDoesNotRelockOnASingleFailure' -v \
-            ./internal/tenant/ | tee /tmp/lockout.log
+            ./internal/workspace/ | tee /tmp/lockout.log
           if grep -q -- '--- SKIP' /tmp/lockout.log; then
             echo "::error::login lockout tests skipped — AUTH_TEST_DATABASE_URL is not reaching the test"
             exit 1
@@ -264,7 +264,7 @@ jobs:
         # the mechanism ships with no evidence it works.
         run: |
           go test -run 'TestAModuleBringsItsOwnSchemaAndItsOwnHistory' -v \
-            ./internal/tenant/appinstall/ | tee /tmp/modmigrate.log
+            ./internal/workspace/appinstall/ | tee /tmp/modmigrate.log
           if grep -q -- '--- SKIP' /tmp/modmigrate.log; then
             echo "::error::module migration tests skipped — TEST_DATABASE_URL is not reaching the test"
             exit 1
@@ -288,7 +288,7 @@ jobs:
         # rows — and it proves it only if a database is actually there.
         run: |
           go test -run 'TestAReportThatForgetsTheTenantClauseSeesNothingElse' -v \
-            ./internal/tenant/reporting/... | tee /tmp/reporting.log
+            ./internal/workspace/reporting/... | tee /tmp/reporting.log
           if grep -q -- '--- SKIP' /tmp/reporting.log; then
             echo "::error::reporting isolation tests skipped — REPORTING_TEST_DATABASE_URL is not reaching the test"
             exit 1
@@ -300,7 +300,7 @@ jobs:
         # whole mechanism could be inert and every other test would be green.
         run: |
           go test -run 'TestConsolidatedShowsNothingWithoutAGrant|TestRevokingAGrantClosesItAtOnce|TestCounterpartyScopeExcludesAnotherMinesRows|TestConsolidatedRunIsAuditedOnBothSides' -v \
-            ./internal/tenant/reporting/... | tee /tmp/sharing.log
+            ./internal/workspace/reporting/... | tee /tmp/sharing.log
           if grep -q -- '--- SKIP' /tmp/sharing.log; then
             echo "::error::report sharing tests skipped — REPORTING_TEST_DATABASE_URL is not reaching the test"
             exit 1
@@ -312,7 +312,7 @@ jobs:
         # skipped they report green having asserted that two servers can start.
         run: |
           go test -run 'TestAnInvitationIsSpentOnce|TestWorkTravelsDownAndAnAnswerComesBack|TestARevokedLinkStopsAnswering' -v \
-            ./internal/tenant/urtuu/... | tee /tmp/urtuu.log
+            ./internal/workspace/urtuu/... | tee /tmp/urtuu.log
           if grep -q -- '--- SKIP' /tmp/urtuu.log; then
             echo "::error::Өртөө channel tests skipped — URTUU_TEST_DATABASE_URL is not reaching the test"
             exit 1

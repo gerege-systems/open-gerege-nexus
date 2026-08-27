@@ -17,7 +17,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/kernel/config"
-	"github.com/gerege-systems/open-gerege-nexus/backend/internal/tenant/auth"
+	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/auth"
 )
 
 // resolveCatalogPath locates catalog/apps.json.
@@ -191,14 +191,14 @@ func ensureDemoUser(ctx context.Context, db *pgxpool.Pool) (string, error) {
 // on the primary key, which is not the conflict the ON CONFLICT below covers.
 func ensureDemoMembership(ctx context.Context, db *pgxpool.Pool, tenantID, userID, roleID string) {
 	if _, err := db.Exec(ctx,
-		`INSERT INTO tenant.memberships (tenant_id, user_id) VALUES ($1, $2)
+		`INSERT INTO workspace.memberships (tenant_id, user_id) VALUES ($1, $2)
 		 ON CONFLICT (tenant_id, user_id) DO NOTHING`, tenantID, userID); err != nil {
 		slog.Error("failed to seed membership", "error", err)
 		return
 	}
 
 	if _, err := db.Exec(ctx,
-		`INSERT INTO tenant.roles (id, tenant_id, code, name) VALUES ($1, $2, 'admin', 'Tenant Admin')
+		`INSERT INTO workspace.roles (id, tenant_id, code, name) VALUES ($1, $2, 'admin', 'Tenant Admin')
 		 ON CONFLICT (tenant_id, code) DO NOTHING`, roleID, tenantID); err != nil {
 		slog.Error("failed to seed admin role", "error", err)
 		return
@@ -206,17 +206,17 @@ func ensureDemoMembership(ctx context.Context, db *pgxpool.Pool, tenantID, userI
 
 	var membershipID, adminRoleID string
 	if err := db.QueryRow(ctx,
-		`SELECT id::text FROM tenant.memberships WHERE tenant_id = $1 AND user_id = $2`,
+		`SELECT id::text FROM workspace.memberships WHERE tenant_id = $1 AND user_id = $2`,
 		tenantID, userID).Scan(&membershipID); err != nil {
 		return
 	}
 	if err := db.QueryRow(ctx,
-		`SELECT id::text FROM tenant.roles WHERE tenant_id = $1 AND code = 'admin'`, tenantID).Scan(&adminRoleID); err != nil {
+		`SELECT id::text FROM workspace.roles WHERE tenant_id = $1 AND code = 'admin'`, tenantID).Scan(&adminRoleID); err != nil {
 		return
 	}
 
 	if _, err := db.Exec(ctx,
-		`INSERT INTO tenant.membership_roles (membership_id, role_id) VALUES ($1, $2)
+		`INSERT INTO workspace.membership_roles (membership_id, role_id) VALUES ($1, $2)
 		 ON CONFLICT DO NOTHING`, membershipID, adminRoleID); err != nil {
 		slog.Error("failed to grant admin role", "error", err)
 	}

@@ -35,7 +35,7 @@ import (
 //
 // There is a second lesson, learned from this very file. Declaring the
 // interface is half the work: the adapter satisfying it was written the same
-// day in internal/tenant/integration, and for the six days after that
+// day in internal/workspace/integration, and for the six days after that
 // AsMeetingBooker had no callers — not because nobody wanted a booking, but
 // because there was no way to ask for one. A contract with no way to reach an
 // implementation is a contract nobody can use. Meetings, below, is that way.

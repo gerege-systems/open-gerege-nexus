@@ -133,7 +133,7 @@ func (s *Service) CreateTenant(ctx context.Context, sess operator.Session, param
 		}
 		if params.LegalName != "" || params.RegistrationNumber != "" {
 			if _, err := tx.Exec(ctx,
-				`INSERT INTO tenant.tenant_profiles (tenant_id, legal_name, registration_number)
+				`INSERT INTO workspace.tenant_profiles (tenant_id, legal_name, registration_number)
 				 VALUES ($1::uuid, $2, $3)
 				 ON CONFLICT (tenant_id) DO UPDATE
 				    SET legal_name = EXCLUDED.legal_name,
@@ -213,24 +213,24 @@ func ensureAdmin(ctx context.Context, tx pgx.Tx, tenantID, email, name, password
 	}
 
 	membershipID, err := insertOrSelect(ctx, tx,
-		`INSERT INTO tenant.memberships (tenant_id, user_id) VALUES ($1::uuid, $2::uuid)
+		`INSERT INTO workspace.memberships (tenant_id, user_id) VALUES ($1::uuid, $2::uuid)
 		 ON CONFLICT (tenant_id, user_id) DO NOTHING RETURNING id::text`,
-		`SELECT id::text FROM tenant.memberships WHERE tenant_id = $1::uuid AND user_id = $2::uuid`,
+		`SELECT id::text FROM workspace.memberships WHERE tenant_id = $1::uuid AND user_id = $2::uuid`,
 		[]any{tenantID, userID}, []any{tenantID, userID})
 	if err != nil {
 		return "", fmt.Errorf("add the administrator to the organisation: %w", err)
 	}
 
 	roleID, err := insertOrSelect(ctx, tx,
-		`INSERT INTO tenant.roles (tenant_id, code, name) VALUES ($1::uuid, 'admin', 'Tenant Admin')
+		`INSERT INTO workspace.roles (tenant_id, code, name) VALUES ($1::uuid, 'admin', 'Tenant Admin')
 		 ON CONFLICT (tenant_id, code) DO NOTHING RETURNING id::text`,
-		`SELECT id::text FROM tenant.roles WHERE tenant_id = $1::uuid AND code = 'admin'`,
+		`SELECT id::text FROM workspace.roles WHERE tenant_id = $1::uuid AND code = 'admin'`,
 		[]any{tenantID}, []any{tenantID})
 	if err != nil {
 		return "", fmt.Errorf("create the administrator role: %w", err)
 	}
 	if _, err := tx.Exec(ctx,
-		`INSERT INTO tenant.membership_roles (membership_id, role_id) VALUES ($1::uuid, $2::uuid)
+		`INSERT INTO workspace.membership_roles (membership_id, role_id) VALUES ($1::uuid, $2::uuid)
 		 ON CONFLICT DO NOTHING`, membershipID, roleID); err != nil {
 		return "", fmt.Errorf("grant the administrator role: %w", err)
 	}
@@ -321,7 +321,7 @@ func (s *Service) Suspend(ctx context.Context, sess operator.Session, tenantID, 
 		// would only stop the next sign-in, and everybody already signed in
 		// would keep working until their session expired hours later.
 		if _, err := tx.Exec(ctx,
-			`UPDATE tenant.sessions SET revoked_at = NOW()
+			`UPDATE workspace.sessions SET revoked_at = NOW()
 			  WHERE tenant_id = $1::uuid AND revoked_at IS NULL AND expires_at > NOW()`,
 			tenantID); err != nil {
 			return fmt.Errorf("end the organisation's sessions: %w", err)

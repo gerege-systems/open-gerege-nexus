@@ -67,8 +67,8 @@ func TestANewTenantsDefaultGrantsAreUnchanged(t *testing.T) {
 
 	granted := func(role string) map[string]bool {
 		rows, err := pool.Query(ctx, `
-			SELECT p.code FROM tenant.role_permissions rp
-			  JOIN tenant.roles r ON r.id = rp.role_id
+			SELECT p.code FROM workspace.role_permissions rp
+			  JOIN workspace.roles r ON r.id = rp.role_id
 			  JOIN registry.permissions p ON p.id = rp.permission_id
 			 WHERE r.tenant_id = $1 AND r.code = $2 AND p.code = ANY($3)`,
 			tenantID, role, []string{"zz_probe.read", "zz_probe.manage", "gov.process"})

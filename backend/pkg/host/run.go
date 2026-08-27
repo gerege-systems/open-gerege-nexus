@@ -50,10 +50,10 @@ import (
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/kernel/config"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/kernel/dbguard"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/kernel/telemetry"
-	"github.com/gerege-systems/open-gerege-nexus/backend/internal/tenant"
-	"github.com/gerege-systems/open-gerege-nexus/backend/internal/tenant/audit"
-	"github.com/gerege-systems/open-gerege-nexus/backend/internal/tenant/identity/eid"
-	"github.com/gerege-systems/open-gerege-nexus/backend/internal/tenant/reporting"
+	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace"
+	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/audit"
+	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/identity/eid"
+	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/reporting"
 	"github.com/gerege-systems/open-gerege-nexus/backend/pkg/nexus"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -93,7 +93,7 @@ type Options struct {
 	// DefaultApps are installed for every organisation without anybody asking.
 	//
 	// A distribution's decision, not the platform's. The list used to be a
-	// package variable in internal/tenant/appinstall naming this
+	// package variable in internal/workspace/appinstall naming this
 	// repository's own apps; when the first of them moved out
 	// (client-gerege-nexus, 2026-08-23) the behaviour moved with it and had
 	// nowhere to be declared — a deployment could carry an app that every
@@ -192,7 +192,7 @@ func Run(opts Options) error {
 	// and gone with the container.
 	audit.UseDatabase(db)
 	// And the same recorder for anything written against the public SDK. An
-	// app module cannot import internal/tenant/audit, so it calls
+	// app module cannot import internal/workspace/audit, so it calls
 	// nexus.Audit; without this line those events would be logged and dropped
 	// while the platform's own reached the table, which is the worst of the
 	// three possible states because the trail would look complete.
@@ -240,9 +240,9 @@ func Run(opts Options) error {
 	// Before the server is built: NewServer checks the catalogue against this
 	// list and refuses to start when an id has no module behind it, which is
 	// the check that catches a stale catalogue.
-	tenant.SetDefaultApps(opts.DefaultApps)
+	workspace.SetDefaultApps(opts.DefaultApps)
 
-	srv, err := newServer(db, catalogPath, bus, tenant.ExtraModules(opts.Modules))
+	srv, err := newServer(db, catalogPath, bus, workspace.ExtraModules(opts.Modules))
 	if err != nil {
 		return fmt.Errorf("failed to initialize platform server: %w", err)
 	}
@@ -255,7 +255,7 @@ func Run(opts Options) error {
 	// those tenants, and an installation row references the apps table, which
 	// NewServer is what fills from the catalogue file.
 	if databaseReachable {
-		seedInitialData(ctx, db, srv.tenant)
+		seedInitialData(ctx, db, srv.workspace)
 		// Says, once, how to get in — the wizard's address with its token, and
 		// the command that does the same thing from a terminal. Silent on a
 		// deployment that already has an organisation.

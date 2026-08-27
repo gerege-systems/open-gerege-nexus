@@ -25,7 +25,7 @@ func TestSuspendEndsTheSessionsAndResumeRestores(t *testing.T) {
 
 	ctx := context.Background()
 	if _, err := pool.Exec(ctx,
-		`INSERT INTO tenant.sessions (token_hash, user_id, tenant_id, expires_at)
+		`INSERT INTO workspace.sessions (token_hash, user_id, tenant_id, expires_at)
 		 VALUES (repeat('a', 64), $1::uuid, $2::uuid, NOW() + INTERVAL '1 hour')`,
 		userID, tenantID); err != nil {
 		t.Fatalf("give the person a session: %v", err)
@@ -50,7 +50,7 @@ func TestSuspendEndsTheSessionsAndResumeRestores(t *testing.T) {
 	// would have expired.
 	var live int
 	if err := pool.QueryRow(ctx,
-		`SELECT count(*) FROM tenant.sessions
+		`SELECT count(*) FROM workspace.sessions
 		  WHERE tenant_id = $1::uuid AND revoked_at IS NULL AND expires_at > NOW()`,
 		tenantID).Scan(&live); err != nil {
 		t.Fatalf("count the sessions: %v", err)
@@ -133,7 +133,7 @@ func TestImpersonationRecordsBothSides(t *testing.T) {
 	// answerable by them rather than by us.
 	var theirs int
 	if err := pool.QueryRow(ctx,
-		`SELECT count(*) FROM tenant.audit_events
+		`SELECT count(*) FROM workspace.audit_events
 		  WHERE tenant_id = $1::uuid AND action = 'security.impersonation.requested'`,
 		tenantID).Scan(&theirs); err != nil {
 		t.Fatalf("read the organisation's trail: %v", err)

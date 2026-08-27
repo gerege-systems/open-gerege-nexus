@@ -17,7 +17,7 @@
  * an envelope is down to the byte, and a type they cannot import is a type they
  * will each reinvent slightly differently.
  *
- * The transport that carries these lives in internal/tenant/urtuu; the task
+ * The transport that carries these lives in internal/workspace/urtuu; the task
  * lifecycle built on them is the Өртөө app, internal/apps/urtuu.
  */
 package urtuu
@@ -60,7 +60,7 @@ const (
 	// but only for as long as that row is kept; past that the record is pruned
 	// and a captured envelope would be new again. So the window an envelope is
 	// accepted in is bounded here, and the inbox is kept longer than it (see
-	// internal/tenant/urtuu/housekeeping.go). Seven days is generous for a
+	// internal/workspace/urtuu/housekeeping.go). Seven days is generous for a
 	// child that was switched off for a week and still less than the retention
 	// it is measured against.
 	MaxAge = 7 * 24 * time.Hour

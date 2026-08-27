@@ -57,7 +57,7 @@ func TestBootstrapMakesAnAdministratorWhoCanSignIn(t *testing.T) {
 	// defaults rather than colliding with them.
 	var registration string
 	if err := tx.QueryRow(ctx,
-		`SELECT registration_number FROM tenant.tenant_profiles WHERE tenant_id = $1::uuid`,
+		`SELECT registration_number FROM workspace.tenant_profiles WHERE tenant_id = $1::uuid`,
 		tenantID).Scan(&registration); err != nil {
 		t.Fatalf("read the organisation's details: %v", err)
 	}
@@ -71,9 +71,9 @@ func TestBootstrapMakesAnAdministratorWhoCanSignIn(t *testing.T) {
 	var admin bool
 	if err := tx.QueryRow(ctx,
 		`SELECT EXISTS (
-		   SELECT 1 FROM tenant.membership_roles mr
-		     JOIN tenant.memberships m ON m.id = mr.membership_id
-		     JOIN tenant.roles r ON r.id = mr.role_id
+		   SELECT 1 FROM workspace.membership_roles mr
+		     JOIN workspace.memberships m ON m.id = mr.membership_id
+		     JOIN workspace.roles r ON r.id = mr.role_id
 		    WHERE m.tenant_id = $1::uuid AND m.user_id = $2::uuid AND r.code = 'admin')`,
 		tenantID, userID).Scan(&admin); err != nil {
 		t.Fatalf("read the grant: %v", err)

@@ -77,13 +77,13 @@ func (s *Service) ListTenants(ctx context.Context, search string) ([]TenantSumma
 		`SELECT t.id::text, t.slug, t.name,
 		        COALESCE(p.registration_number, ''),
 		        t.created_at,
-		        (SELECT count(*) FROM tenant.memberships m WHERE m.tenant_id = t.id),
-		        (SELECT count(*) FROM tenant.app_installations i
+		        (SELECT count(*) FROM workspace.memberships m WHERE m.tenant_id = t.id),
+		        (SELECT count(*) FROM workspace.app_installations i
 		          WHERE i.tenant_id = t.id AND i.enabled AND i.status = 'installed'),
-		        (SELECT max(s.last_seen_at) FROM tenant.sessions s WHERE s.tenant_id = t.id),
+		        (SELECT max(s.last_seen_at) FROM workspace.sessions s WHERE s.tenant_id = t.id),
 		        t.suspended_at, t.suspension_reason, t.deletion_scheduled_at, t.maintenance_at
 		   FROM registry.tenants t
-		   LEFT JOIN tenant.tenant_profiles p ON p.tenant_id = t.id
+		   LEFT JOIN workspace.tenant_profiles p ON p.tenant_id = t.id
 		  WHERE $1 = ''
 		     OR t.name ILIKE '%' || $1 || '%'
 		     OR t.slug ILIKE '%' || $1 || '%'
@@ -176,13 +176,13 @@ func (s *Service) GetTenant(ctx context.Context, tenantID string) (TenantDetail,
 		`SELECT t.id::text, t.slug, t.name,
 		        COALESCE(p.registration_number, ''), COALESCE(p.legal_name, ''), COALESCE(p.tax_number, ''),
 		        t.created_at,
-		        (SELECT count(*) FROM tenant.memberships m WHERE m.tenant_id = t.id),
-		        (SELECT count(*) FROM tenant.app_installations i
+		        (SELECT count(*) FROM workspace.memberships m WHERE m.tenant_id = t.id),
+		        (SELECT count(*) FROM workspace.app_installations i
 		          WHERE i.tenant_id = t.id AND i.enabled AND i.status = 'installed'),
-		        (SELECT max(s.last_seen_at) FROM tenant.sessions s WHERE s.tenant_id = t.id),
+		        (SELECT max(s.last_seen_at) FROM workspace.sessions s WHERE s.tenant_id = t.id),
 		        t.suspended_at, t.suspension_reason, t.deletion_scheduled_at, t.maintenance_at
 		   FROM registry.tenants t
-		   LEFT JOIN tenant.tenant_profiles p ON p.tenant_id = t.id
+		   LEFT JOIN workspace.tenant_profiles p ON p.tenant_id = t.id
 		  WHERE t.id = $1::uuid`, tenantID).
 		Scan(&detail.ID, &detail.Slug, &detail.Name, &detail.RegistrationNumber,
 			&detail.LegalName, &detail.TaxNumber, &detail.CreatedAt,
@@ -220,7 +220,7 @@ func (s *Service) GetTenant(ctx context.Context, tenantID string) (TenantDetail,
 func (s *Service) tenantApps(ctx context.Context, tenantID string) ([]TenantApp, error) {
 	rows, err := s.db.Query(ctx,
 		`SELECT i.app_id, COALESCE(a.name, i.app_id), i.installed_version, i.status, i.enabled, i.installed_at
-		   FROM tenant.app_installations i
+		   FROM workspace.app_installations i
 		   LEFT JOIN registry.apps a ON a.id = i.app_id
 		  WHERE i.tenant_id = $1::uuid
 		  ORDER BY COALESCE(a.name, i.app_id)`, tenantID)
@@ -247,10 +247,10 @@ func (s *Service) tenantMembers(ctx context.Context, tenantID string) ([]TenantM
 	rows, err := s.db.Query(ctx,
 		`SELECT u.id::text, u.email, u.name,
 		        COALESCE(ARRAY_AGG(r.code ORDER BY r.code) FILTER (WHERE r.code IS NOT NULL), '{}') AS roles
-		   FROM tenant.memberships m
+		   FROM workspace.memberships m
 		   JOIN registry.users u ON u.id = m.user_id
-		   LEFT JOIN tenant.membership_roles mr ON mr.membership_id = m.id
-		   LEFT JOIN tenant.roles r ON r.id = mr.role_id AND r.tenant_id = m.tenant_id
+		   LEFT JOIN workspace.membership_roles mr ON mr.membership_id = m.id
+		   LEFT JOIN workspace.roles r ON r.id = mr.role_id AND r.tenant_id = m.tenant_id
 		  WHERE m.tenant_id = $1::uuid
 		  GROUP BY u.id, u.email, u.name
 		  ORDER BY u.email`, tenantID)
@@ -273,7 +273,7 @@ func (s *Service) tenantMembers(ctx context.Context, tenantID string) ([]TenantM
 func (s *Service) tenantActivity(ctx context.Context, tenantID string) ([]TenantActivity, error) {
 	rows, err := s.db.Query(ctx,
 		`SELECT action, resource, COALESCE(user_id, ''), created_at
-		   FROM tenant.audit_events
+		   FROM workspace.audit_events
 		  WHERE tenant_id = $1::uuid
 		  ORDER BY created_at DESC
 		  LIMIT $2`, tenantID, activityPageSize)

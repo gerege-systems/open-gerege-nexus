@@ -28,7 +28,7 @@ Gerege Nexus нь Go + Next.js + PostgreSQL дээрх **модульт моно
 | Session cookie | `session_token` | `cp_session` |
 | Бүртгэл | `registry.users` + `tenant.memberships` | `operator.operator_accounts` |
 | DB role | `gerege_nexus_tenant` | `gerege_nexus_operator` |
-| Go package | `internal/tenant/*` | `internal/operator/*` |
+| Go package | `internal/workspace/*` | `internal/operator/*` |
 
 Операторын бүртгэл нь хэрэглэгчийн бүртгэл биш. Нэг хүн хоёр урсгалд зэрэг
 нэвтэрч болох ч тусдаа identity, cookie, эрх, audit ашиглана. Оператор тенантын
@@ -36,7 +36,7 @@ Gerege Nexus нь Go + Next.js + PostgreSQL дээрх **модульт моно
 ашиглана.
 
 ```text
-tenant origin ─┐                         ┌─ internal/tenant/* ─ tenant schema
+tenant origin ─┐                         ┌─ internal/workspace/* ─ workspace schema
                ├─ pkg/host/server.go ┤
 control origin ┘   shared middleware     └─ internal/operator/* ─ operator + registry
                           │
@@ -55,7 +55,7 @@ store, middleware, router-ийг босгож хоёр route table-ийг зэр
 | Байршил | Хариуцлага |
 | --- | --- |
 | `backend/internal/kernel` | Аль ч урсгалыг import хийдэггүй cache, config, security, telemetry, settings, flags зэрэг суурь primitive |
-| `backend/internal/tenant` | Auth, access, directory, devices, identity, integrations, profile, SSO, app install зэрэг нэг тенантын ажиллагаа |
+| `backend/internal/workspace` | Auth, access, directory, devices, identity, integrations, profile, SSO, app install зэрэг нэг тенантын ажиллагаа |
 | `backend/internal/operator` | Operator session, tenants, approvals, settings, flags, audit, support, metering, backup, catalog, observability |
 | `backend/internal/apps` | Distribution модулийн угсрах цэг. 2026-08-25-нд SSO Clients App Store руу явсны дараа **хоосон** — апп бүр `pkg/nexus`-ээр бүртгэгдэж каталогоор ирнэ |
 | `backend/pkg/host` | Хоёр урсгалыг нэг HTTP процесст угсрах public host package |
@@ -63,7 +63,7 @@ store, middleware, router-ийг босгож хоёр route table-ийг зэр
 
 Plane-ийн үндсэн package нь зөвхөн дэд package-уудаа угсарна. Handler, store,
 бизнес логик шинэчлэгдэхдээ зохих домэйн дэд package-д орно. Одоогийн
-`internal/tenant/service.go` нь дараагийн задралын ажил хэвээр; энэ нь хоёр
+`internal/workspace/service.go` нь дараагийн задралын ажил хэвээр; энэ нь хоёр
 урсгалын import/schema хилийг сулруулах зөвшөөрөл биш.
 
 ## 3. Хүсэлтийн урсгал
@@ -99,17 +99,17 @@ origin, session, DB role, audit нь тус тусдаа хамгаалалты�
 
 Миграц `00079_two_schemas.sql` хүснэгтүүдийг `platform` ба `tenant` schema-д
 салгаж, `00080_search_path_has_no_public.sql` runtime замаас `public`-ийг
-хассан. `00083_registry_and_operator.sql` нь `platform`-ийг хоёр болгож
-хуваасан.
+хассан. `00083_registry_and_operator.sql` нь `platform`-ийг хоёр болгож хуваасан;
+`00084_workspace_schema.sql` нь `tenant`-ийг `workspace` болгосон.
 
 | Schema | Эзэмшдэг өгөгдөл |
 | --- | --- |
 | `registry` | tenants, users, identity, apps, permissions, quota, flags, announcements, usage, тохиргооны одоогийн утга |
 | `operator` | operator account/session/audit, approvals, backup metadata, тохиргооны өөрчлөлтийн түүх, битүүмжилсэн credential |
-| `tenant` | memberships, roles, sessions, app installations, profile/directory/device/integration/SSO/audit өгөгдөл |
+| `workspace` | memberships, roles, sessions, app installations, profile/directory/device/integration/SSO/audit өгөгдөл |
 | `public` | goose migration ledger болон зориуд үлдээсэн `SECURITY DEFINER` function |
 
-Одоогийн migration inventory нь 20 registry, 7 operator, 40 tenant хүснэгттэй.
+Одоогийн migration inventory нь 20 registry, 7 operator, 40 workspace хүснэгттэй.
 Энэ тоо дангаараа contract биш; `backend/db/migrations/ownership_test.go`-д нэр
 бүрийн эзэмшлийг зарласан бөгөөд `schema_split_test.go` бодит DB-тэй тулгана.
 

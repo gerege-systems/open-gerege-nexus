@@ -203,25 +203,25 @@ func TestPlatformWideRowsStayReadableAndCannotBeForged(t *testing.T) {
 	key := "guardtest-" + strings.ReplaceAll(uuid.NewString(), "-", "")[:10]
 
 	if _, err := pool.Exec(context.Background(),
-		`INSERT INTO tenant.ai_prompts (tenant_id, prompt_key, content, active) VALUES (NULL,$1,'shared',true)`,
+		`INSERT INTO workspace.ai_prompts (tenant_id, prompt_key, content, active) VALUES (NULL,$1,'shared',true)`,
 		key); err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() {
-		_, _ = pool.Exec(context.Background(), `DELETE FROM tenant.ai_prompts WHERE prompt_key=$1`, key)
+		_, _ = pool.Exec(context.Background(), `DELETE FROM workspace.ai_prompts WHERE prompt_key=$1`, key)
 	})
 
 	ctx := nexus.WithTenantID(context.Background(), first)
 	var content string
 	if err := pool.QueryRow(ctx,
-		`SELECT content FROM tenant.ai_prompts WHERE prompt_key=$1 AND tenant_id IS NULL`, key).Scan(&content); err != nil {
+		`SELECT content FROM workspace.ai_prompts WHERE prompt_key=$1 AND tenant_id IS NULL`, key).Scan(&content); err != nil {
 		t.Fatalf("a tenant could not read the shared prompt: %v", err)
 	}
 
 	// Readable, but not writable: a tenant that could create a NULL-tenant row
 	// would be publishing a system prompt to every other tenant.
 	if _, err := pool.Exec(ctx,
-		`INSERT INTO tenant.ai_prompts (tenant_id, prompt_key, content, active) VALUES (NULL,$1,'planted',true)`,
+		`INSERT INTO workspace.ai_prompts (tenant_id, prompt_key, content, active) VALUES (NULL,$1,'planted',true)`,
 		key+"-forged"); err == nil {
 		t.Error("a tenant created a platform-wide prompt")
 	}

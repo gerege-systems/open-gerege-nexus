@@ -10,7 +10,7 @@
 // a tenant, reads the audit trail of every tenant, changes a setting every
 // tenant is served under, counts what all of them used — work done on behalf of
 // the deployment rather than on anybody's behalf inside it. The other plane,
-// internal/tenant, is the opposite of that, and neither imports the other.
+// internal/workspace, is the opposite of that, and neither imports the other.
 //
 // The distinction the design rests on (docs/CONTROL_PLANE.md §1) is the one
 // every multi-tenant platform eventually draws: the data plane is where

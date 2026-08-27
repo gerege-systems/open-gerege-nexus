@@ -1,14 +1,15 @@
 # 0006 — Хүн муж эзэмшинэ, муж хүнийг эзэмшихгүй
 
 - **Огноо:** 2026-08-27
-- **Байдал:** Нэршлийн хэсэг хэрэгжсэн (`internal/operator`, `pkg/host` —
-  2026-08-27). Хувийн муж, `workspace`/`registry` нэрс хэрэгжээгүй.
+- **Байдал:** Нэршил бүрэн хэрэгжсэн (2026-08-27): `internal/operator`,
+  `pkg/host`, `registry` + `operator` schema, `internal/workspace` ба
+  `workspace` schema. Хувийн муж (гэр) хэрэгжээгүй.
 - **Холбоотой:** [`WORKSPACE_NAMING_PROPOSAL.md`](../WORKSPACE_NAMING_PROPOSAL.md);
   [`adr/0001-domain-first.md`](0001-domain-first.md);
   [`adr/0005-two-planes-one-origin-each.md`](0005-two-planes-one-origin-each.md);
-  `backend/internal/tenant/auth/tenants.go` (`FirstTenantFor`),
-  `backend/internal/tenant/auth/accessmode.go`,
-  `backend/internal/tenant/auth/handlers.go` (`EID_JIT_TENANT_SLUG`),
+  `backend/internal/workspace/auth/tenants.go` (`FirstTenantFor`),
+  `backend/internal/workspace/auth/accessmode.go`,
+  `backend/internal/workspace/auth/handlers.go` (`EID_JIT_TENANT_SLUG`),
   `backend/db/migrations/00082_users_ge_id.sql`
 
 ## Асуулт
@@ -71,7 +72,7 @@ var ErrNoOrganisation = errors.New("this account does not belong to any organisa
 | `internal/platform/*` | Операторын урсгал | **Импортлохыг хориглосон** (`internal/planes_test.go`) |
 | `platform` schema | `users`, `tenants`, `apps`, quota, flags | **Заавал уншина** (нэрлэсэн 5 хүснэгт) |
 | `pkg/platform` | HTTP composition root | Импортлодог |
-| Прозод «платформ» | Бүтээгдэхүүн бүхэлдээ | `PlatformIsPublic()` нь `internal/tenant/auth`-д сууна |
+| Прозод «платформ» | Бүтээгдэхүүн бүхэлдээ | `PlatformIsPublic()` нь `internal/workspace/auth`-д сууна |
 
 Эхний хоёр мөр бие биенийхээ эсрэг дүрэм үүрч байна. Энэ бол гоо зүйн
 дутагдал биш: хилийг хамгаалдаг тестийн нэр өөрөө хилийг бүдгэрүүлж байна.

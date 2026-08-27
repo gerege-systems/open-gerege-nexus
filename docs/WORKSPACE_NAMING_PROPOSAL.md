@@ -10,7 +10,7 @@
 Иргэн нэвтэрсний дараа байгууллага руу биш, **`/me` — өөрийн гэр** рүү буух ба
 100 нийлүүлэгчээс өөрөө сонгож үйлчилгээ хүсдэг болно.
 
-Огноо: 2026-08-27 · Статус: **Үе A, B хэрэгжсэн (2026-08-27); Үе C–G санал** ·
+Огноо: 2026-08-27 · Статус: **Үе A, B, E, G хэрэгжсэн (2026-08-27); Үе C, D, F санал** ·
 Хамрах хүрээ: `backend/`, `frontend/`, `docs/`, `catalog/`
 
 Шийдвэрийн товч нь [`adr/0006-a-person-owns-a-space.md`](adr/0006-a-person-owns-a-space.md).
@@ -29,7 +29,7 @@
 | `internal/platform/*` | Операторын урсгал | **Импорт хориотой** — `internal/planes_test.go` |
 | `platform` schema | `users`, `tenants`, `apps`, quota, flags, announcements | **Заавал уншина** — нэрлэсэн 5 boundary хүснэгт |
 | `pkg/platform` | Хоёр урсгалыг угсрах HTTP host package | Импортлодог |
-| Прозод «платформ» | Бүтээгдэхүүн бүхэлдээ | `PlatformIsPublic()` нь `internal/tenant/auth`-д |
+| Прозод «платформ» | Бүтээгдэхүүн бүхэлдээ | `PlatformIsPublic()` нь `internal/workspace/auth`-д |
 
 Эхний хоёр мөр эсрэг дүрэм үүрч байна: нэг `platform` руу хандаж болохгүй,
 нөгөө `platform` руу заавал ханддаг. Архитектурын тодорхойлолт өөрөө үүнийг
@@ -560,9 +560,18 @@ RLS-ийн тусгаарлалт хоёр гэрийн хооронд ажил�
 
 Manifest талбар, анхдагч `organisation`, app store шүүлт.
 
-### Үе E — `tenant` → `workspace` дотоод rename
+### Үе E — `tenant` → `workspace` дотоод rename ✅ хэрэгжсэн
 
 `internal/`, `frontend/`, шинэ код. SDK-д хүрэхгүй.
+
+**Хэрэгжсэн байдал.** `internal/tenant` → `internal/workspace`, ба Go-д 450
+schema-тай ишлэл `workspace.<хүснэгт>` болов. Хоёр газар schema нэрийг
+шууд бичсэн байсныг зассан: `internal/operator/tenants/export.go`-ийн
+`information_schema` асуулт, `internal/kernel/dbguard`-ийн RLS шалгалт.
+Хөндөөгүй нь `tenant_id` багана, `tenants`/`tenant_profiles`/`tenant_quotas`
+хүснэгтийн нэр, `gerege_nexus_tenant` role, `tenant_isolation` бодлогын нэр,
+`app.current_tenant` GUC — тэдгээрийн эхнийх нь Үе F-ийн `pkg/nexus`-тай
+хосолсон, бусад нь schema биш.
 
 ### Үе F — `pkg/nexus`: `tenantID` → `workspaceID`
 
@@ -570,15 +579,25 @@ Manifest талбар, анхдагч `organisation`, app store шүүлт.
 `api.txt` snapshot байгаа нь азтай: рефакторыг механикаар шалгана — diff нь
 яг 57 мөр байх ёстой.
 
-### Үе G — Schema rename (эсвэл огт хийхгүй)
+### Үе G — Schema rename ✅ хэрэгжсэн, гэхдээ санаснаас өөрөөр
 
-`ALTER SCHEMA platform RENAME TO registry`, `tenant RENAME TO workspace`,
-grant/RLS/`search_path` нэг миграцад. 82 хуучин миграц хуучин нэрээрээ
-replay хийгдэх тул шинэ DB босгоход эмх замбараагүй болохгүй.
+Санал нь `platform RENAME TO registry` гэж бичсэн. Бодит байдалд `platform`
+нь **хуваагдсан**: 00083 нь хорин хүснэгтийг `registry`, долоог `operator`
+руу нүүлгэсэн. Шугамыг таамгаар биш, тенантын role-ын grant болон кодын
+ишлэлээр тогтоосон.
 
-**Энэ үеийг хийхгүй байх нь бүрэн зөвшөөрөгдөнө.** Schema нэр бол дотоод;
-ашиг нь хамгийн бага, эрсдэл нь хамгийн өндөр. Үе A–F-гүйгээр G утгагүй;
-G-гүйгээр A–F бүрэн утгатай.
+Тэр ялгаа нь ашгийг өөрчилсөн. Зүгээр нэрлэсэн бол *«ашиг нь хамгийн бага»*
+гэсэн энэ хэсгийн үнэлгээ зөв байх байлаа. Хуваалт харин 00079 хийж чадаагүй
+зүйлийг хийв: тенантын role одоо `operator` schema дээр USAGE огт авахгүй тул
+хамгаалалт нэг давхраас хоёр болов.
+
+`tenant RENAME TO workspace` нь 00084 — нэг мөр. `ALTER SCHEMA … RENAME` нь
+хүснэгт, index, RLS бодлого, grant, USAGE, бүр `ALTER DEFAULT PRIVILEGES`-ийн
+бичлэгийг хүртэл OID-ээрээ дагуулдгийг хоосон DB дээр туршиж баталсан.
+
+83 хуучин миграц хуучин нэрээрээ replay хийгдэнэ: `00079` `platform` ба
+`tenant`-ийг үүсгэж, `00083`/`00084` тэднийг нэрлэнэ. Шинэ DB босгоход
+дараалал нь зөв.
 
 ---
 

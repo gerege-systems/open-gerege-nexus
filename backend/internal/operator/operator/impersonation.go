@@ -93,7 +93,7 @@ func (c *Console) BeginImpersonation(ctx context.Context, sess Session, tenantID
 	var email string
 	err = c.db.QueryRow(Scoped(ctx),
 		`SELECT u.email FROM registry.users u
-		   JOIN tenant.memberships m ON m.user_id = u.id AND m.tenant_id = $2::uuid
+		   JOIN workspace.memberships m ON m.user_id = u.id AND m.tenant_id = $2::uuid
 		  WHERE u.id = $1::uuid`, userID, tenantID).Scan(&email)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return "", ErrNotAMember
@@ -136,7 +136,7 @@ func (c *Console) BeginImpersonation(ctx context.Context, sess Session, tenantID
 		// already read, beside their own people's actions, without anybody
 		// having to be told to look somewhere new.
 		if _, err := tx.Exec(ctx,
-			`INSERT INTO tenant.audit_events (tenant_id, user_id, action, resource, details)
+			`INSERT INTO workspace.audit_events (tenant_id, user_id, action, resource, details)
 			 VALUES ($1::uuid, $2, 'security.impersonation.requested', $3, $4)`,
 			tenantID, "operator:"+sess.ID, email,
 			map[string]any{

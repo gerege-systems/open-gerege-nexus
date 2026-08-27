@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gerege-systems/open-gerege-nexus/backend/internal/tenant/identity/eid"
+	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/identity/eid"
 )
 
 // /auth/eid/poll blocks for eid.PollWindow while the citizen decides. A write

@@ -293,7 +293,7 @@ func execute(ctx context.Context, tx pgx.Tx, action ApprovalAction, targetID str
 		// leaves an operator one more button to press, which is the right way
 		// round — resuming is a decision, not a side effect.
 		if _, err := tx.Exec(ctx,
-			`UPDATE tenant.sessions SET revoked_at = NOW()
+			`UPDATE workspace.sessions SET revoked_at = NOW()
 			  WHERE tenant_id = $1::uuid AND revoked_at IS NULL AND expires_at > NOW()`,
 			targetID); err != nil {
 			return fmt.Errorf("end the organisation's sessions: %w", err)

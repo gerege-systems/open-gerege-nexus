@@ -5,7 +5,7 @@
  *
  * Where the two planes become one process.
  *
- * internal/tenant acts for one organisation and internal/operator acts for the
+ * internal/workspace acts for one organisation and internal/operator acts for the
  * deployment; neither imports the other, and neither owns the router. This
  * does: it builds what they share, hands the same values to both, mounts them
  * side by side, and answers the three routes that belong to the process rather
@@ -37,7 +37,7 @@ import (
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/kernel/telemetry"
 	core "github.com/gerege-systems/open-gerege-nexus/backend/internal/operator"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/operator/setup"
-	"github.com/gerege-systems/open-gerege-nexus/backend/internal/tenant"
+	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace"
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -56,7 +56,7 @@ const (
 // server is the assembled process: both planes and the router they share.
 type server struct {
 	router      *chi.Mux
-	tenant      *tenant.Service
+	workspace   *workspace.Service
 	platform    *core.Service
 	settings    *settings.Store
 	flags       *flags.Store
@@ -74,7 +74,7 @@ type server struct {
 // before either plane is given one, the tenant plane exists before the console
 // can borrow the installer and the mail rail from it, and the router exists
 // last because mounting is the only thing left to do.
-func newServer(db *pgxpool.Pool, catalogPath string, bus *cache.Bus, extra ...tenant.ExtraModules) (*server, error) {
+func newServer(db *pgxpool.Pool, catalogPath string, bus *cache.Bus, extra ...workspace.ExtraModules) (*server, error) {
 	// What the console edits and the request path reads. One copy, handed to
 	// both planes: a second would mean a setting changed in the console is felt
 	// by half the process.
@@ -85,7 +85,7 @@ func newServer(db *pgxpool.Pool, catalogPath string, bus *cache.Bus, extra ...te
 	// code rather than in a comment.
 	credentialStore := credentials.NewStore(db)
 
-	tenantPlane, err := tenant.New(tenant.Deps{
+	tenantPlane, err := workspace.New(workspace.Deps{
 		DB: db, Bus: bus, Settings: settingsStore, Flags: flagsStore,
 		CatalogPath: catalogPath, Modules: extra,
 	})
@@ -146,7 +146,7 @@ func newServer(db *pgxpool.Pool, catalogPath string, bus *cache.Bus, extra ...te
 
 	return &server{
 		router:      newRouter(db, tenantPlane, platformPlane, setupWizard),
-		tenant:      tenantPlane,
+		workspace:   tenantPlane,
 		platform:    platformPlane,
 		settings:    settingsStore,
 		flags:       flagsStore,
@@ -157,7 +157,7 @@ func newServer(db *pgxpool.Pool, catalogPath string, bus *cache.Bus, extra ...te
 
 // newRouter is the process's HTTP surface: what every request passes through,
 // the three routes that belong to no plane, and then the planes themselves.
-func newRouter(db *pgxpool.Pool, tenantPlane *tenant.Service, platformPlane *core.Service, wizard *setup.Service) *chi.Mux {
+func newRouter(db *pgxpool.Pool, tenantPlane *workspace.Service, platformPlane *core.Service, wizard *setup.Service) *chi.Mux {
 	r := chi.NewRouter()
 
 	// First, so everything below it — the access log, every slog line a handler
@@ -237,6 +237,6 @@ func (s *server) StartBackgroundJobs(ctx context.Context) {
 	s.settings.StartRefresh(ctx)
 	s.flags.StartRefresh(ctx)
 	s.credentials.StartRefresh(ctx)
-	s.tenant.StartBackgroundJobs(ctx)
+	s.workspace.StartBackgroundJobs(ctx)
 	s.platform.StartBackgroundJobs(ctx)
 }

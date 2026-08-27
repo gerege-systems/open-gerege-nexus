@@ -5,7 +5,7 @@
  *
  * Asking somebody for a link, from either plane.
  *
- * The rail itself belongs to the tenant plane — internal/tenant/emailverify
+ * The rail itself belongs to the tenant plane — internal/workspace/emailverify
  * owns the table, the provider call and the page a click lands on. What is here
  * is only what both planes have to name: the console invites the first
  * administrator of an organisation it has just created, and it cannot import a

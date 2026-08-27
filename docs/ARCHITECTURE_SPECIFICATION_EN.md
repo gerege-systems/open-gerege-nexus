@@ -28,7 +28,7 @@ planes:
 | Session cookie | `session_token` | `cp_session` |
 | Account | `registry.users` + `tenant.memberships` | `operator.operator_accounts` |
 | Database role | `gerege_nexus_tenant` | `gerege_nexus_operator` |
-| Go package | `internal/tenant/*` | `internal/operator/*` |
+| Go package | `internal/workspace/*` | `internal/operator/*` |
 
 An operator account is not a user account. A person may be signed into both
 planes, but each has a distinct identity, cookie, privilege set, and audit
@@ -36,7 +36,7 @@ trail. When an operator needs a tenant's view, they use the reason-bound,
 30-minute impersonation flow.
 
 ```text
-tenant origin ─┐                         ┌─ internal/tenant/* ─ tenant schema
+tenant origin ─┐                         ┌─ internal/workspace/* ─ workspace schema
                ├─ pkg/host/server.go ┤
 control origin ┘   shared middleware     └─ internal/operator/* ─ operator + registry
                           │
@@ -55,7 +55,7 @@ import graph.
 | Location | Responsibility |
 | --- | --- |
 | `backend/internal/kernel` | Plane-neutral cache, config, security, telemetry, settings, flags, and other primitives |
-| `backend/internal/tenant` | Authentication, access, directory, devices, identity, integrations, profile, SSO, and app installation for one tenant |
+| `backend/internal/workspace` | Authentication, access, directory, devices, identity, integrations, profile, SSO, and app installation for one tenant |
 | `backend/internal/operator` | Operator sessions, tenants, approvals, settings, flags, audit, support, metering, backup, catalog, and observability |
 | `backend/internal/apps` | Where a distribution's modules are assembled. Empty since 2026-08-25, when SSO Clients left for the App Store — every app now arrives through `pkg/nexus` and a catalogue |
 | `backend/pkg/host` | Public host package that assembles both planes into one HTTP process |
@@ -63,7 +63,7 @@ import graph.
 
 A plane's root package only composes its subpackages. Handlers, stores, and
 business logic belong in a domain subpackage. The current
-`internal/tenant/service.go` remains a future decomposition task; it does not
+`internal/workspace/service.go` remains a future decomposition task; it does not
 relax the import or schema boundary.
 
 ## 3. Request paths
@@ -99,17 +99,18 @@ database role, and audit are independent layers.
 
 Migration `00079_two_schemas.sql` split tables into `platform` and `tenant`;
 `00080_search_path_has_no_public.sql` removed `public` from runtime search
-paths. `00083_registry_and_operator.sql` split `platform` in two.
+paths. `00083_registry_and_operator.sql` split `platform` in two, and
+`00084_workspace_schema.sql` renamed `tenant` to `workspace`.
 
 | Schema | Owned data |
 | --- | --- |
 | `registry` | Tenants, users, identity, apps, permissions, quotas, flags, announcements, usage, current setting values |
 | `operator` | Operator accounts/sessions/audit, approvals, backup metadata, setting change history, sealed credentials |
-| `tenant` | Memberships, roles, sessions, app installations, profile, directory, device, integration, SSO, and tenant audit data |
+| `workspace` | Memberships, roles, sessions, app installations, profile, directory, device, integration, SSO, and workspace audit data |
 | `public` | Goose migration ledgers and deliberately retained `SECURITY DEFINER` functions |
 
-The current migration inventory contains 20 registry, 7 operator and 40 tenant
-tables. Counts are not the contract: `backend/db/migrations/ownership_test.go`
+The current migration inventory contains 20 registry, 7 operator and 40
+workspace tables. Counts are not the contract: `backend/db/migrations/ownership_test.go`
 declares ownership by name, and `schema_split_test.go` compares that
 declaration with a real database.
 
