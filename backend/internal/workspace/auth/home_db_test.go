@@ -132,31 +132,53 @@ func TestASecondSignInFindsTheSameHome(t *testing.T) {
 	}
 }
 
-// Somebody who works somewhere opens at work.
+// Somebody who works somewhere still opens at home.
 //
-// A home is a place to stand for people who have none, not a lobby everybody
-// walks through. Getting this backwards would move every existing user's
-// landing screen on the day 00085 was deployed.
-func TestAnOrganisationComesBeforeTheHome(t *testing.T) {
+// The rule was the other way round for a day and this test asserted that. It
+// is written out in FirstTenantFor at length; briefly, a person is not their
+// employer's, and the switcher is where work lives. The cost is a click every
+// morning for people signing in to do a job, and it is deliberate.
+func TestEvenAMemberOfAnOrganisationOpensAtHome(t *testing.T) {
 	pool := openPool(t)
 	h := handlersFor(pool)
 	ctx := context.Background()
 	userID, orgID := seedMember(t, pool)
 
-	// The home exists first, and is still not the answer.
-	home, err := h.HomeFor(ctx, userID)
-	if err != nil {
-		t.Fatal(err)
-	}
 	opened, err := h.FirstTenantFor(ctx, userID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if opened == home {
-		t.Error("a member of an organisation was signed into their home instead")
+	if opened == orgID {
+		t.Error("a member of an organisation was signed into the organisation")
 	}
-	if opened != orgID {
-		t.Errorf("signed into %s, want the organisation %s", opened, orgID)
+
+	var kind, owner string
+	if err := pool.QueryRow(ctx,
+		`SELECT kind, COALESCE(owner_user_id::text, '') FROM registry.tenants WHERE id = $1::uuid`,
+		opened).Scan(&kind, &owner); err != nil {
+		t.Fatal(err)
+	}
+	if kind != "personal" || owner != userID {
+		t.Errorf("the sign-in opened a %q workspace owned by %q", kind, owner)
+	}
+
+	// And work is still reachable: it is a row in the switcher, which is the
+	// half of this trade that has to keep working.
+	options, err := auth.NewSessionStore(pool, time.Hour).TenantsForUser(ctx, userID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var sawOrg bool
+	for _, one := range options {
+		if one.ID == orgID {
+			sawOrg = true
+		}
+	}
+	if !sawOrg {
+		t.Error("the organisation is not in the switcher, so there is no way back to work")
+	}
+	if len(options) < 2 {
+		t.Errorf("the switcher offers %d workspace(s); it is hidden below two", len(options))
 	}
 }
 

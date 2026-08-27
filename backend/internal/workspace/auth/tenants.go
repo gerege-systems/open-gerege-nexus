@@ -31,29 +31,29 @@ var ErrNoOrganisation = errors.New("this account does not belong to any organisa
 
 // FirstTenantFor is the workspace a session for this person opens in.
 //
-// An organisation if they are in one, and their own home if they are not.
-// Nobody is turned away: the schema has held people at the deployment's level
-// since users became global, and this is the sign-in path finally agreeing
-// with it. What used to happen instead was EID_JIT_TENANT_SLUG — a citizen
-// signing in with eID was made a *member* of whichever organisation an
-// environment variable named, counted against its quota and listed in its
-// directory, because somebody had to be somewhere.
+// Their own home, always.
 //
-// Organisations come first when there are both. Somebody who works at a
-// company and also has a home opens at work; the home is a row in the switcher
-// rather than a door they have to walk back out of every morning.
+// This was the other way round for a day: an organisation if they belonged to
+// one, the home only as a fallback, on the reasoning that somebody who works at
+// a company should not have to walk out of a lobby every morning. Two things
+// were wrong with it.
 //
-// Separate from the identity lookup on purpose: which workspace somebody works
-// in has no bearing on whether the provider account is theirs, and letting it
-// decide is what made a linked identity vanish.
+// The smaller one is that a home was then made only for people who had no
+// organisation, so an employee had none at all — and the workspace switcher
+// appears only when there is more than one place to go, which meant the whole
+// personal side of the platform was unreachable from any account with a job.
+//
+// The larger one is whose account this is. A person is not their employer's;
+// the schema has said so since users became global, and eID says so every time
+// somebody signs in with the credential the state issued to them rather than
+// one an administrator issued on a company's behalf. Opening in the company
+// made the platform answer "you are an employee" to a question nobody asked.
+//
+// So the door opens on the person, and work is one click away in the switcher
+// rather than the other way about. What this costs is a click for everybody who
+// signs in to do their job, every morning — the thing the first version was
+// avoiding — and that is the trade this is deliberately making.
 func (h *Handlers) FirstTenantFor(ctx context.Context, userID string) (string, error) {
-	tenantID, err := h.FirstOrganisationFor(ctx, userID)
-	if err == nil {
-		return tenantID, nil
-	}
-	if !errors.Is(err, ErrNoOrganisation) {
-		return "", err
-	}
 	return h.HomeFor(ctx, userID)
 }
 
@@ -93,7 +93,15 @@ func (h *Handlers) HomeFor(ctx context.Context, userID string) (string, error) {
 		`SELECT id::text FROM registry.tenants WHERE owner_user_id = $1::uuid AND kind = 'personal'`,
 		userID).Scan(&tenantID)
 	if err == nil {
-		return tenantID, nil
+		// Found, and the membership is checked anyway.
+		//
+		// Owning a workspace and being a member of it are two rows, and
+		// everything downstream reads the second: a home whose membership went
+		// missing — removed by an administrator's sweep, or by a test — locks
+		// its owner out of their own space with no way back, because nothing
+		// else in the platform will ever make it again. Cheap to assert, and
+		// the failure it prevents has no other repair.
+		return tenantID, h.ensureHomeMembership(ctx, tenantID, userID)
 	}
 	if !errors.Is(err, pgx.ErrNoRows) {
 		return "", err
@@ -133,20 +141,26 @@ func (h *Handlers) HomeFor(ctx context.Context, userID string) (string, error) {
 		return "", fmt.Errorf("make this person a home: %w", err)
 	}
 
-	// The membership is what the rest of the platform reads; the owner column
-	// is only how the home is found. Both, or a person owns a workspace they
-	// are not a member of and every screen refuses them.
-	if _, err = tx.Exec(ctx,
+	if err = tx.Commit(ctx); err != nil {
+		return "", err
+	}
+	return tenantID, h.ensureHomeMembership(ctx, tenantID, userID)
+}
+
+// ensureHomeMembership is the second row a home needs.
+//
+// The membership is what the rest of the platform reads; the owner column is
+// only how the home is found. Both, or a person owns a workspace they are not
+// a member of and every screen refuses them — including the sign-in that was
+// trying to open it.
+func (h *Handlers) ensureHomeMembership(ctx context.Context, tenantID, userID string) error {
+	if _, err := h.db.Exec(ctx,
 		`INSERT INTO workspace.memberships (tenant_id, user_id)
 		 SELECT $1::uuid, $2::uuid
 		  WHERE NOT EXISTS (SELECT 1 FROM workspace.memberships
 		                     WHERE tenant_id = $1::uuid AND user_id = $2::uuid)`,
 		tenantID, userID); err != nil {
-		return "", fmt.Errorf("make this person a member of their own home: %w", err)
+		return fmt.Errorf("make this person a member of their own home: %w", err)
 	}
-
-	if err = tx.Commit(ctx); err != nil {
-		return "", err
-	}
-	return tenantID, nil
+	return nil
 }
