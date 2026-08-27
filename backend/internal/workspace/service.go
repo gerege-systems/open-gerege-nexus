@@ -507,25 +507,6 @@ func (s *Service) StartBackgroundJobs(ctx context.Context) {
 	for _, module := range s.backgroundApps {
 		module.StartHousekeeping(ctx)
 	}
-	// The same for a module this repository has never heard of.
-	//
-	// apps.Bootstrap is the platform's own list and it is empty; a
-	// distribution's modules arrive through pkg/host.Options.Modules and had
-	// nowhere to say that they have work of their own to run. Nothing said so
-	// while every module was a screen over a request — the first one that was
-	// not is the Өртөө channel, whose exchange loop is the entire product:
-	// without it a child installation never asks its parent for anything, and
-	// what is broken is a queue that stays full rather than a route that
-	// answers 500.
-	//
-	// An optional interface rather than a seventh method on Module: a module
-	// with no background work should not have to declare an empty one, and a
-	// method every implementation stubs out is a method nobody reads.
-	for _, module := range nexus.List() {
-		if background, ok := module.(interface{ StartHousekeeping(context.Context) }); ok {
-			background.StartHousekeeping(ctx)
-		}
-	}
 	s.eidMN.StartHousekeeping(ctx)
 	// The schedule sweep. It ran because the reports app happened to start it
 	// until 2026-08-23, which made a screen responsible for a deployment's
@@ -591,6 +572,36 @@ func (s *Service) StartBackgroundJobs(ctx context.Context) {
 	sweepCtx, cancelSweep := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancelSweep()
 	s.appinstall.ApplyCatalogToInstallations(sweepCtx)
+
+	// And only now, the periodic work a module carried in from another
+	// repository.
+	//
+	// apps.Bootstrap is this repository's own list and it is empty; a
+	// distribution's modules arrive through pkg/host.Options.Modules and had
+	// nowhere to say that they have work of their own to run. Nothing said so
+	// while every module was a screen over a request — the first one that was
+	// not is the Өртөө channel, whose exchange loop is the entire product:
+	// without it a child installation never asks its parent for anything, and
+	// what is broken is a queue that stays full rather than a route that
+	// answers 500.
+	//
+	// After the sweep above rather than beside the platform's own jobs, and
+	// that ordering is the whole of this block. The sweep is what applies a
+	// module's migrations, so a module whose tables arrived with this release
+	// has none of them until it returns. Started first, the Өртөө channel spent
+	// its first pass reporting `relation "urtuu_peers" does not exist` six
+	// times — accurate, self-healing on the next tick, and indistinguishable in
+	// a log from the deployment having failed. client.gerege.mn's v1.15.0
+	// rollout is where that was read.
+	//
+	// An optional interface rather than a seventh method on Module: a module
+	// with no background work should not have to declare an empty one, and a
+	// method every implementation stubs out is a method nobody reads.
+	for _, module := range nexus.List() {
+		if background, ok := module.(interface{ StartHousekeeping(context.Context) }); ok {
+			background.StartHousekeeping(ctx)
+		}
+	}
 }
 
 // CatalogStatus is when the app catalogue was last fetched, whether it worked,
