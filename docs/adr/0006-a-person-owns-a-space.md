@@ -3,7 +3,11 @@
 - **Огноо:** 2026-08-27
 - **Байдал:** Нэршил бүрэн хэрэгжсэн (2026-08-27): `internal/operator`,
   `pkg/host`, `registry` + `operator` schema, `internal/workspace` ба
-  `workspace` schema. Хувийн муж (гэр) хэрэгжээгүй.
+  `workspace` schema, `pkg/nexus`-ийн `workspaceID`.
+  **Гэр хэрэгжсэн** (`00085_personal_workspace.sql`): гишүүнчлэлгүй хүн
+  өөрийн мужид нэвтэрнэ, `EID_JIT_TENANT_SLUG` устсан. Хэрэгжээгүй нь
+  иргэний уншилтын зам (`internal/person`, §«Гурав дахь plane бий») — түүний
+  унших хүснэгт өөр репод байгаа, [`PERSON_PLANE_PROMPTS.md`](../PERSON_PLANE_PROMPTS.md) §1.
 - **Холбоотой:** [`WORKSPACE_NAMING_PROPOSAL.md`](../WORKSPACE_NAMING_PROPOSAL.md);
   [`adr/0001-domain-first.md`](0001-domain-first.md);
   [`adr/0005-two-planes-one-origin-each.md`](0005-two-planes-one-origin-each.md);
@@ -146,7 +150,7 @@ ADR 0001-ийн дүрэм:
 Дараалал, өртөг, эрсдэлийг [`WORKSPACE_NAMING_PROPOSAL.md`](../WORKSPACE_NAMING_PROPOSAL.md)-д
 бичсэн: нэршил §2, гэр §3.4, эрэлтийн тал §3.5, буулт §4, үе шатууд §5.
 
-## Яагаад гурав дахь plane биш вэ
+## Яагаад хувийн муж гурав дахь plane биш вэ
 
 ADR 0005-ийн хэлбэрийг дагавал хувийн урсгал өөрийн origin, cookie, schema,
 DB role-той байх ёстой мэт санагдана. Гурван шалтгаанаар үгүй:
@@ -162,6 +166,47 @@ DB role-той байх ёстой мэт санагдана. Гурван ша�
 3. **RLS аль хэдийн зөв ажиллана.** Хувийн муж нь `tenant_id`-тай бол
    тусгаарлалт нь ажиллаж байгаа тэр л бодлого. Шинэ хилийг шинээр
    баталгаажуулах шаардлагагүй.
+
+## Гурав дахь plane бий — гэхдээ өөр зүйлийнх
+
+Дээрх хэсэг **хувийн мужийн** тухай: гэр бол муж мөр, өөрийн schema, RLS, SDK
+шаардахгүй. Тэр хэвээр.
+
+Гэвч түүнээс тусдаа асуулт бий: **иргэн 100 нийлүүлэгчийг дамжин уншихад
+тэр код хаана суух вэ.** Хариулт нь `internal/person` — гэхдээ энэ нь гэрийн
+plane биш, **уншилтын замын** plane.
+
+Иргэний session хоёр горимтой бөгөөд зөвхөн хоёр дахь нь шинэ:
+
+| Горим | DB role | Хаана |
+| --- | --- | --- |
+| Гэрийн дотор — өөрийн баримт, төхөөрөмж, профайл | `gerege_nexus_tenant` | `internal/workspace`, өөрчлөлтгүй |
+| Гэрээс гадагш — «миний хүсэлтүүд» | `gerege_nexus_person` | `internal/person` |
+
+Тиймээс `internal/person` нь **бага**: хэдхэн нэрлэсэн statement, өөрийн store
+байхгүй, workspace-ыг импортлохгүй. Тэр 500 мөрөөс хэтэрвэл хил буруу газраа
+татагдсаны шинж.
+
+Plane болох эрхийг нь **DB role** өгч байна, origin биш. Гурван plane, гурван
+тэнхлэг:
+
+| Plane | Role | Юуг хардаг |
+| --- | --- | --- |
+| `workspace` | `gerege_nexus_tenant` | Нэг байгууллагын бүх мөр |
+| `operator` | `gerege_nexus_operator` | Бүх байгууллагын нэрлэсэн багана |
+| `person` | `gerege_nexus_person` | Бүх байгууллагын надад хамаатай мөр |
+
+Импортын хамаарал байхгүй: `UserClaims` нь `pkg/nexus`-ийн alias тул хэн
+нэвтэрснийг хоёр plane аль аль нь SDK-гээс уншина; token тайлах ганц хамаарал
+нь порт болж, `pkg/host` холбоно.
+
+`internal/planes_test.go`-гийн дүрэм өөрчлөгдөөгүй — тэр анхнаасаа plane тоолдоггүй:
+*«a plane must not import another plane.»* Нэмэгдсэн нь `planes` жагсаалт ба
+хоёр нэрлэсэн тест, `internal/person` үүсэхээс өмнө.
+
+Дэлгэрэнгүйг [`WORKSPACE_NAMING_PROPOSAL.md`](../WORKSPACE_NAMING_PROPOSAL.md)
+§4.9, хэрэгжүүлэлтийг
+[`PERSON_PLANE_PROMPTS.md`](../PERSON_PLANE_PROMPTS.md)-д бичсэн.
 
 ## Энэ шийдвэр юу гэж хэлээгүй вэ
 
@@ -185,6 +230,9 @@ DB role-той байх ёстой мэт санагдана. Гурван ша�
   Үгсийн сан (`urtuu_request_codes`, ring), шугамын ялгаа (`line='service'`),
   хүсэгчийн индекс аль хэдийн байна. Дутуу нь нийтийн лавлах ба хүсэгчийг
   бүртгэл болгох хоёр.
+- **«`internal/person` нь хувийн мужийн код» гэж хэлээгүй.** Иргэний кодын
+  дийлэнх нь `internal/workspace`-д үлдэнэ — гэр бол муж, иргэн түүн дотроо
+  ердийн гишүүн. `internal/person` нь зөвхөн байгууллага дамнасан уншилтын зам.
 
 ## Татгалзсан хувилбарууд
 

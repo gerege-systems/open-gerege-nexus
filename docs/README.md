@@ -90,7 +90,7 @@ ADR нь кодын одоогийн хэлбэрийг **яагаад** сон�
 | [`adr/0003-a-document-carries-what-is-signed.md`](adr/0003-a-document-carries-what-is-signed.md) | MN | Баримт файлаа авч явна: pades, detached, approval |
 | [`adr/0004-a-pilot-that-did-not-ship.md`](adr/0004-a-pilot-that-did-not-ship.md) | MN | Өртөөний distribution pilot яагаад гараагүй вэ |
 | [`adr/0005-two-planes-one-origin-each.md`](adr/0005-two-planes-one-origin-each.md) | MN | Нэг бинарь, хоёр origin: тенант ба операторын хаалга |
-| [`adr/0006-a-person-owns-a-space.md`](adr/0006-a-person-owns-a-space.md) | MN | Хүн муж эзэмшинэ: `workspace`/`operator`/`registry` нэршил, гэр ба байгууллага, иргэний буулт (нэршил хэрэгжсэн; хувийн муж **санал**) |
+| [`adr/0006-a-person-owns-a-space.md`](adr/0006-a-person-owns-a-space.md) | MN | Хүн муж эзэмшинэ: `workspace`/`operator`/`registry` нэршил, гэр ба байгууллага, иргэний буулт (нэршил ба гэр хэрэгжсэн; хувийн муж **санал**) |
 
 ## Санал, төлөвлөгөө, ажлын түүх — Historical design records
 
@@ -102,7 +102,7 @@ ADR нь кодын одоогийн хэлбэрийг **яагаад** сон�
 | --- | --- | --- |
 | [`CORE_BOUNDARY_PLAN.md`](CORE_BOUNDARY_PLAN.md) | MN | Цөмийн хилийн хэмжилт ба хэрэгжсэн салгалтын төлөвлөгөө |
 | [`TWO_PLANES_PROPOSAL.md`](TWO_PLANES_PROPOSAL.md) | MN | `tenant`/`platform`/`kernel`, хоёр schema-ийн анхны санал |
-| [`WORKSPACE_NAMING_PROPOSAL.md`](WORKSPACE_NAMING_PROPOSAL.md) | MN | Нэршлийн засвар, хувийн орон зай, эрэлтийн тал (100 нийлүүлэгч), иргэний `/me` буулт — үе A–G (**A, B, E, G хэрэгжсэн**) |
+| [`WORKSPACE_NAMING_PROPOSAL.md`](WORKSPACE_NAMING_PROPOSAL.md) | MN | Нэршлийн засвар, хувийн орон зай, эрэлтийн тал (100 нийлүүлэгч), иргэний `/me` буулт — үе A–G (**A, B, C1-lite, E, F, G хэрэгжсэн**) |
 | [`MONITORING_AND_REPORTING_PROPOSAL.md`](MONITORING_AND_REPORTING_PROPOSAL.md) | MN | Ажиглалт ба тайлангийн дизайны санал |
 | [`URTUU_PROPOSAL.md`](URTUU_PROPOSAL.md) | MN | «Өртөө» сувгийн дизайны санал ба үе шатууд |
 | [`CONTROL_PLANE_PLAN.md`](CONTROL_PLANE_PLAN.md) | MN | Операторын консолын анхны дизайн ба үе шатууд |
@@ -124,6 +124,7 @@ prompt-ын төлөвлөгөө ба эцэст нь хэрэгжсэн зүй�
 | [`DOMAIN_FIRST_PROMPT.md`](DOMAIN_FIRST_PROMPT.md) | MN | Домэйн давхаргыг салгах prompt — үр дүн нь [`adr/0001-domain-first.md`](adr/0001-domain-first.md) |
 | [`CORE_BOUNDARY_PROMPTS.md`](CORE_BOUNDARY_PROMPTS.md) | MN | [`CORE_BOUNDARY_PLAN.md`](CORE_BOUNDARY_PLAN.md)-ыг хэрэгжүүлэх үе шат бүрийн prompt — арваулаа хэрэгжсэн, үр дүнгийн хүснэгттэй |
 | [`TWO_PLANES_PROMPTS.md`](TWO_PLANES_PROMPTS.md) | MN | [`TWO_PLANES_PROPOSAL.md`](TWO_PLANES_PROPOSAL.md)-ыг хэрэгжүүлэх Үе A–H-ийн prompt |
+| [`PERSON_PLANE_PROMPTS.md`](PERSON_PLANE_PROMPTS.md) | MN | Иргэний урсгал (`internal/person`) — P0–P3-ийн prompt: порт, `gerege_nexus_person` role, policy, `/me` (**хэрэгжээгүй**; §«Гурван засвар» — P2 нь модулийн репод) |
 
 ## Төслийн журам — Project governance
 
