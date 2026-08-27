@@ -154,6 +154,17 @@ export const auth = {
   "me.field.status": { mn: "Төлөв", en: "Status" },
   "me.field.answer": { mn: "Хариу", en: "Answer" },
   "me.field.updated": { mn: "Шинэчлэгдсэн", en: "Updated" },
+
+  // Байгууллагад орох хүсэлт. Иргэн өөрөө эхлүүлнэ — 00089 хүртэл орох ганц
+  // зам нь урилга байсан.
+  "me.view.ask_title": { mn: "Байгууллагад нэгдэх", en: "Join an organisation" },
+  "me.view.ask_subtitle": {
+    mn: "Байгууллагын нэрийг (хаяган дахь богино нэр) бичээд хүсэлт илгээнэ. Тэдний админ хариулна.",
+    en: "Give the organisation's short name — the one in its address — and ask. Their administrator answers.",
+  },
+  "me.field.slug_placeholder": { mn: "байгууллагын богино нэр", en: "organisation short name" },
+  "me.field.message_placeholder": { mn: "Хэн болохоо танилцуулна уу (заавал биш)", en: "Say who you are (optional)" },
+  "me.action.ask": { mn: "Хүсэлт илгээх", en: "Ask" },
   "profile.stat.organisations": { mn: "Байгууллага", en: "Organisations" },
   "profile.stat.identities": { mn: "Таних тэмдэг", en: "Identities" },
   "profile.stat.sessions": { mn: "Нээлттэй session", en: "Open sessions" },

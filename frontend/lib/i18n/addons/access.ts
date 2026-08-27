@@ -7,6 +7,20 @@ export const access = {
   "access.view.subtitle": { mn: "Role бүрийн нэмэгдэх эрх болон хэрэглэгчийн role оноолтыг удирдана.", en: "Manage the additive rights of each role and who holds them." },
   "access.view.tab_roles": { mn: "Role ба эрх", en: "Roles and rights" },
   "access.view.tab_members": { mn: "Хэрэглэгчид", en: "Members" },
+  // Хаалган дээр хүлээж байгаа хүмүүс. «Гишүүд» табтай зэрэгцээ: нэг нь
+  // дотор байгаа хүмүүс, нөгөө нь орохыг хүсэж байгаа хүмүүс.
+  "access.view.tab_requests": { mn: "Хүсэлт", en: "Requests" },
+  "access.view.requests_title": { mn: "Нэгдэх хүсэлтүүд", en: "Requests to join" },
+  "access.view.requests_hint": {
+    mn: "Эдгээр хүн танай байгууллагад нэгдэхийг хүссэн. Зөвшөөрвөл гишүүн болж, анхдагч эрхээ авна.",
+    en: "These people asked to join your organisation. Accepting makes them a member with the default role.",
+  },
+  "access.message.no_requests": { mn: "Хүлээгдэж буй хүсэлт алга.", en: "Nobody is waiting." },
+  "access.action.accept": { mn: "Зөвшөөрөх", en: "Accept" },
+  "access.action.decline": { mn: "Татгалзах", en: "Decline" },
+  "access.message.request_accepted": { mn: "{name} гишүүн боллоо.", en: "{name} is now a member." },
+  "access.message.request_declined": { mn: "{name}-ийн хүсэлтээс татгалзлаа.", en: "{name}'s request was declined." },
+  "access.message.error_decide": { mn: "Хүсэлтэд хариулж чадсангүй.", en: "Could not answer the request." },
   "access.view.create_role": { mn: "Шинэ role", en: "New role" },
   "access.view.members_title": { mn: "Хэрэглэгчийн role оноолт", en: "Role assignment" },
   "access.view.members_hint": { mn: "Олон role-ийн эрх нийлж үйлчилнэ. Өөрчлөлт шууд хадгалагдана.", en: "Rights from several roles add up. Changes save immediately." },
