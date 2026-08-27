@@ -43,19 +43,19 @@ func installedApp(t *testing.T, pool *pgxpool.Pool) (tenantID, userID, appID, in
 	suffix := uuid.NewString()[:8]
 
 	if err := pool.QueryRow(ctx,
-		`INSERT INTO platform.tenants (name, slug) VALUES ($1, $2) RETURNING id::text`,
+		`INSERT INTO registry.tenants (name, slug) VALUES ($1, $2) RETURNING id::text`,
 		"History Probe "+suffix, "history-"+suffix).Scan(&tenantID); err != nil {
 		t.Fatalf("tenant: %v", err)
 	}
 	if err := pool.QueryRow(ctx,
-		`INSERT INTO platform.users (email, password_hash, name) VALUES ($1,'x',$2) RETURNING id::text`,
+		`INSERT INTO registry.users (email, password_hash, name) VALUES ($1,'x',$2) RETURNING id::text`,
 		"history+"+suffix+"@identity.invalid", "Ноён Түүх").Scan(&userID); err != nil {
 		t.Fatalf("user: %v", err)
 	}
 
 	appID = "io.test.history." + suffix
 	if _, err := pool.Exec(ctx,
-		`INSERT INTO platform.apps (id, slug, name) VALUES ($1, $2, $3)`,
+		`INSERT INTO registry.apps (id, slug, name) VALUES ($1, $2, $3)`,
 		appID, "history-"+suffix, "History Probe"); err != nil {
 		t.Fatalf("app: %v", err)
 	}
@@ -83,7 +83,7 @@ func installedApp(t *testing.T, pool *pgxpool.Pool) (tenantID, userID, appID, in
 		notes   bool
 	}{{"1.0.0", false}, {"1.1.0", true}} {
 		if _, err := pool.Exec(ctx,
-			`INSERT INTO platform.app_versions (app_id, version, manifest) VALUES ($1,$2,$3)`,
+			`INSERT INTO registry.app_versions (app_id, version, manifest) VALUES ($1,$2,$3)`,
 			appID, v.version, manifest(v.version, "Шинэ зүйл", "Something new", v.notes)); err != nil {
 			t.Fatalf("version %s: %v", v.version, err)
 		}
@@ -97,9 +97,9 @@ func installedApp(t *testing.T, pool *pgxpool.Pool) (tenantID, userID, appID, in
 
 	t.Cleanup(func() {
 		bg := context.Background()
-		_, _ = pool.Exec(bg, `DELETE FROM platform.apps WHERE id=$1`, appID)
-		_, _ = pool.Exec(bg, `DELETE FROM platform.tenants WHERE id=$1`, tenantID)
-		_, _ = pool.Exec(bg, `DELETE FROM platform.users WHERE id=$1`, userID)
+		_, _ = pool.Exec(bg, `DELETE FROM registry.apps WHERE id=$1`, appID)
+		_, _ = pool.Exec(bg, `DELETE FROM registry.tenants WHERE id=$1`, tenantID)
+		_, _ = pool.Exec(bg, `DELETE FROM registry.users WHERE id=$1`, userID)
 	})
 	return tenantID, userID, appID, installID
 }

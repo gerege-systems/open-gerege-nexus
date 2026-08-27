@@ -47,11 +47,11 @@ func newTenant(t *testing.T, pool *pgxpool.Pool) string {
 	id := uuid.NewString()
 	slug := "itest-" + id[:8]
 	if _, err := pool.Exec(ctx,
-		`INSERT INTO platform.tenants (id, slug, name) VALUES ($1, $2, $3)`, id, slug, "Integration test"); err != nil {
+		`INSERT INTO registry.tenants (id, slug, name) VALUES ($1, $2, $3)`, id, slug, "Integration test"); err != nil {
 		t.Fatalf("create tenant: %v", err)
 	}
 	t.Cleanup(func() {
-		_, _ = pool.Exec(context.Background(), `DELETE FROM platform.tenants WHERE id = $1`, id)
+		_, _ = pool.Exec(context.Background(), `DELETE FROM registry.tenants WHERE id = $1`, id)
 	})
 	return id
 }

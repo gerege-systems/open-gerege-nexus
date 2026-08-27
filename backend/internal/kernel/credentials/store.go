@@ -88,7 +88,7 @@ func (s *Store) stored(name string) string {
 // other credentials — and the environment fallback for this one — are still
 // good. Failing the whole load would take the working ones down with it.
 func (s *Store) Load(ctx context.Context) error {
-	rows, err := s.db.Query(ctx, `SELECT name, ciphertext, hint FROM platform.platform_credentials`)
+	rows, err := s.db.Query(ctx, `SELECT name, ciphertext, hint FROM operator.platform_credentials`)
 	if err != nil {
 		return fmt.Errorf("credentials: read the stored values: %w", err)
 	}
@@ -172,7 +172,7 @@ func (s *Store) Set(ctx context.Context, tx pgx.Tx, name, value, operatorID stri
 		return err
 	}
 	if _, err := tx.Exec(ctx,
-		`INSERT INTO platform.platform_credentials (name, ciphertext, hint, updated_by, updated_at)
+		`INSERT INTO operator.platform_credentials (name, ciphertext, hint, updated_by, updated_at)
 		 VALUES ($1, $2, $3, $4::uuid, NOW())
 		 ON CONFLICT (name) DO UPDATE
 		    SET ciphertext = EXCLUDED.ciphertext, hint = EXCLUDED.hint,
@@ -191,7 +191,7 @@ func (s *Store) Clear(ctx context.Context, tx pgx.Tx, name, operatorID string) e
 	}
 	_ = operatorID // the audit row carries who; the table keeps no tombstone
 	if _, err := tx.Exec(ctx,
-		`DELETE FROM platform.platform_credentials WHERE name = $1`, name); err != nil {
+		`DELETE FROM operator.platform_credentials WHERE name = $1`, name); err != nil {
 		return fmt.Errorf("credentials: clear the value: %w", err)
 	}
 	return nil
@@ -222,7 +222,7 @@ func (s *Store) List(ctx context.Context) ([]Status, error) {
 	}
 	stored := map[string]row{}
 	rows, err := s.db.Query(ctx,
-		`SELECT name, updated_at, updated_by::text FROM platform.platform_credentials`)
+		`SELECT name, updated_at, updated_by::text FROM operator.platform_credentials`)
 	if err != nil {
 		return nil, fmt.Errorf("credentials: read the stored values: %w", err)
 	}

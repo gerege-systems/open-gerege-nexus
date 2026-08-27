@@ -236,7 +236,7 @@ func (h *Handlers) HandleListInstalledApps(w http.ResponseWriter, r *http.Reques
 		                   WHERE e.installation_id = ai.id AND e.event_type = 'held'
 		                   ORDER BY e.created_at DESC LIMIT 1), '')
 		 FROM tenant.app_installations ai
-		 JOIN platform.apps a ON a.id = ai.app_id
+		 JOIN registry.apps a ON a.id = ai.app_id
 		 WHERE ai.tenant_id = $1`, tenantID)
 	if err != nil {
 		httpx.Error(w, http.StatusInternalServerError, "database error")

@@ -55,8 +55,9 @@ func TestCoreSQLQualifiesEveryOwnedTable(t *testing.T) {
 	for _, offence := range offences {
 		t.Errorf(`%s
 
-Core SQL must say tenant.<table> or platform.<table>. search_path remains only
-for module SQL compiled from other repositories; relying on it here would make
-a query's plane invisible in review and let a same-named table redirect it.`, offence)
+Core SQL must name its schema: tenant.<table>, registry.<table> or
+operator.<table>. search_path remains only for module SQL compiled from other
+repositories; relying on it here would make a query's plane invisible in review
+and let a same-named table redirect it.`, offence)
 	}
 }

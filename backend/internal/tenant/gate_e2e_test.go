@@ -79,24 +79,24 @@ func newGateFixture(t *testing.T) *gateFixture {
 
 	f := &gateFixture{server: server, pool: pool}
 	if err := pool.QueryRow(ctx,
-		`INSERT INTO platform.tenants (slug, name) VALUES ('gate-' || substr(gen_random_uuid()::text, 1, 8), 'Gate test')
+		`INSERT INTO registry.tenants (slug, name) VALUES ('gate-' || substr(gen_random_uuid()::text, 1, 8), 'Gate test')
 		 RETURNING id::text`).Scan(&f.tenantID); err != nil {
 		t.Fatalf("tenant: %v", err)
 	}
 	t.Cleanup(func() {
-		_, _ = pool.Exec(context.Background(), `DELETE FROM platform.tenants WHERE id = $1`, f.tenantID)
+		_, _ = pool.Exec(context.Background(), `DELETE FROM registry.tenants WHERE id = $1`, f.tenantID)
 	})
 
 	// An administrator, so nothing below is refused for want of a permission —
 	// what is under test is the installation check, and a 403 that could be
 	// either would prove nothing.
 	if err := pool.QueryRow(ctx,
-		`INSERT INTO platform.users (email, password_hash, name, is_admin)
+		`INSERT INTO registry.users (email, password_hash, name, is_admin)
 		 VALUES ('gate-' || substr(gen_random_uuid()::text, 1, 8) || '@example.com', 'x', 'Gate Admin', TRUE)
 		 RETURNING id::text`).Scan(&f.userID); err != nil {
 		t.Fatalf("user: %v", err)
 	}
-	t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM platform.users WHERE id = $1`, f.userID) })
+	t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM registry.users WHERE id = $1`, f.userID) })
 
 	if err := pool.QueryRow(ctx,
 		`INSERT INTO tenant.memberships (tenant_id, user_id) VALUES ($1, $2) RETURNING id::text`,
@@ -208,12 +208,12 @@ func TestAnAppsRoutesAreBehindItsInstallationAndAnothersAreNot(t *testing.T) {
 
 	f := newGateFixture(t)
 	if _, err := f.pool.Exec(context.Background(),
-		`INSERT INTO platform.apps (id, slug, name) VALUES ($1, $2, 'Gate probe')`,
+		`INSERT INTO registry.apps (id, slug, name) VALUES ($1, $2, 'Gate probe')`,
 		appID, slug); err != nil {
 		t.Fatalf("app: %v", err)
 	}
 	t.Cleanup(func() {
-		_, _ = f.pool.Exec(context.Background(), `DELETE FROM platform.apps WHERE id = $1`, appID)
+		_, _ = f.pool.Exec(context.Background(), `DELETE FROM registry.apps WHERE id = $1`, appID)
 	})
 
 	// Nothing installed yet: the app's routes are refused.
@@ -257,17 +257,17 @@ func TestARequestUsesCachedControlDecisionsWhenTheirTablesAreUnavailable(t *test
 		Description: "test-only control/data dependency probe",
 	})
 	if _, err := f.pool.Exec(ctx,
-		`INSERT INTO platform.platform_settings (key, value) VALUES ($1, 'cached')`, settingKey); err != nil {
+		`INSERT INTO registry.platform_settings (key, value) VALUES ($1, 'cached')`, settingKey); err != nil {
 		t.Fatalf("setting: %v", err)
 	}
 	if _, err := f.pool.Exec(ctx,
-		`INSERT INTO platform.feature_flags (key, description, owner, kind, enabled, rollout)
+		`INSERT INTO registry.feature_flags (key, description, owner, kind, enabled, rollout)
 		 VALUES ($1, 'test-only control/data dependency probe', 'test', 'kill_switch', FALSE, 100)`,
 		flags.ModuleKillSwitch(appID)); err != nil {
 		t.Fatalf("flag: %v", err)
 	}
 	if _, err := f.pool.Exec(ctx,
-		`INSERT INTO platform.apps (id, slug, name) VALUES ($1, $2, 'Dependency probe')`,
+		`INSERT INTO registry.apps (id, slug, name) VALUES ($1, $2, 'Dependency probe')`,
 		appID, "dependency-"+suffix); err != nil {
 		t.Fatalf("app: %v", err)
 	}
@@ -287,7 +287,7 @@ func TestARequestUsesCachedControlDecisionsWhenTheirTablesAreUnavailable(t *test
 		t.Fatalf("role: %v", err)
 	}
 	if _, err := f.pool.Exec(ctx,
-		`INSERT INTO platform.permissions (code, name) VALUES ($1, 'Dependency probe')`, permission); err != nil {
+		`INSERT INTO registry.permissions (code, name) VALUES ($1, 'Dependency probe')`, permission); err != nil {
 		t.Fatalf("permission: %v", err)
 	}
 	if _, err := f.pool.Exec(ctx,
@@ -297,15 +297,15 @@ func TestARequestUsesCachedControlDecisionsWhenTheirTablesAreUnavailable(t *test
 	}
 	if _, err := f.pool.Exec(ctx,
 		`INSERT INTO tenant.role_permissions (role_id, permission_id)
-		 SELECT $1, id FROM platform.permissions WHERE code = $2`, roleID, permission); err != nil {
+		 SELECT $1, id FROM registry.permissions WHERE code = $2`, roleID, permission); err != nil {
 		t.Fatalf("role permission: %v", err)
 	}
 	t.Cleanup(func() {
 		_, _ = f.pool.Exec(context.Background(), `DELETE FROM tenant.roles WHERE id = $1`, roleID)
-		_, _ = f.pool.Exec(context.Background(), `DELETE FROM platform.permissions WHERE code = $1`, permission)
-		_, _ = f.pool.Exec(context.Background(), `DELETE FROM platform.feature_flags WHERE key = $1`, flags.ModuleKillSwitch(appID))
-		_, _ = f.pool.Exec(context.Background(), `DELETE FROM platform.platform_settings WHERE key = $1`, settingKey)
-		_, _ = f.pool.Exec(context.Background(), `DELETE FROM platform.apps WHERE id = $1`, appID)
+		_, _ = f.pool.Exec(context.Background(), `DELETE FROM registry.permissions WHERE code = $1`, permission)
+		_, _ = f.pool.Exec(context.Background(), `DELETE FROM registry.feature_flags WHERE key = $1`, flags.ModuleKillSwitch(appID))
+		_, _ = f.pool.Exec(context.Background(), `DELETE FROM registry.platform_settings WHERE key = $1`, settingKey)
+		_, _ = f.pool.Exec(context.Background(), `DELETE FROM registry.apps WHERE id = $1`, appID)
 	})
 
 	oldSettings, oldFlags := settings.Default, flags.Default
@@ -338,13 +338,13 @@ func TestARequestUsesCachedControlDecisionsWhenTheirTablesAreUnavailable(t *test
 	}
 	t.Cleanup(func() { _ = blocker.Rollback(context.Background()) })
 	if _, err := blocker.Exec(ctx, `LOCK TABLE
-		platform.platform_settings,
-		platform.feature_flags,
-		platform.feature_flag_overrides,
-		platform.tenants,
+		registry.platform_settings,
+		registry.feature_flags,
+		registry.feature_flag_overrides,
+		registry.tenants,
 		tenant.app_installations,
 		tenant.role_permissions,
-		platform.permissions
+		registry.permissions
 		IN ACCESS EXCLUSIVE MODE`); err != nil {
 		t.Fatalf("lock control tables: %v", err)
 	}
@@ -352,7 +352,7 @@ func TestARequestUsesCachedControlDecisionsWhenTheirTablesAreUnavailable(t *test
 	// Prove the tables really are unavailable from the pool used by handlers.
 	probeCtx, cancelProbe := context.WithTimeout(ctx, 100*time.Millisecond)
 	defer cancelProbe()
-	if _, err := f.pool.Exec(probeCtx, `SELECT 1 FROM platform.platform_settings LIMIT 1`); err == nil {
+	if _, err := f.pool.Exec(probeCtx, `SELECT 1 FROM registry.platform_settings LIMIT 1`); err == nil {
 		t.Fatal("control table remained readable while the blocker held its lock")
 	}
 

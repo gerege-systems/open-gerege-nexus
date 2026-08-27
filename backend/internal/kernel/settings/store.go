@@ -125,7 +125,7 @@ func (s *Store) stored(key string) (string, bool) {
 
 // Load reads every stored value.
 func (s *Store) Load(ctx context.Context) error {
-	rows, err := s.db.Query(ctx, `SELECT key, value FROM platform.platform_settings`)
+	rows, err := s.db.Query(ctx, `SELECT key, value FROM registry.platform_settings`)
 	if err != nil {
 		return fmt.Errorf("settings: read the stored values: %w", err)
 	}
@@ -195,13 +195,13 @@ func (s *Store) Set(ctx context.Context, tx pgx.Tx, key, value, operatorID, reas
 
 	var previous *string
 	if err := tx.QueryRow(ctx,
-		`SELECT value FROM platform.platform_settings WHERE key = $1`, key).Scan(&previous); err != nil &&
+		`SELECT value FROM registry.platform_settings WHERE key = $1`, key).Scan(&previous); err != nil &&
 		!errors.Is(err, pgx.ErrNoRows) {
 		return fmt.Errorf("settings: read the current value: %w", err)
 	}
 
 	if _, err := tx.Exec(ctx,
-		`INSERT INTO platform.platform_settings (key, value, updated_by, updated_at)
+		`INSERT INTO registry.platform_settings (key, value, updated_by, updated_at)
 		 VALUES ($1, $2, $3::uuid, NOW())
 		 ON CONFLICT (key) DO UPDATE
 		    SET value = EXCLUDED.value, updated_by = EXCLUDED.updated_by, updated_at = NOW()`,
@@ -209,7 +209,7 @@ func (s *Store) Set(ctx context.Context, tx pgx.Tx, key, value, operatorID, reas
 		return fmt.Errorf("settings: write the value: %w", err)
 	}
 	if _, err := tx.Exec(ctx,
-		`INSERT INTO platform.platform_settings_history (key, previous_value, new_value, reason, changed_by)
+		`INSERT INTO operator.platform_settings_history (key, previous_value, new_value, reason, changed_by)
 		 VALUES ($1, $2, $3, $4, $5::uuid)`,
 		key, previous, value, reason, operatorID); err != nil {
 		return fmt.Errorf("settings: record the change: %w", err)
@@ -232,7 +232,7 @@ type Value struct {
 // List returns every registered setting with its current value.
 func (s *Store) List(ctx context.Context) ([]Value, error) {
 	updated := map[string]time.Time{}
-	rows, err := s.db.Query(ctx, `SELECT key, updated_at FROM platform.platform_settings`)
+	rows, err := s.db.Query(ctx, `SELECT key, updated_at FROM registry.platform_settings`)
 	if err != nil {
 		return nil, fmt.Errorf("settings: read the stored values: %w", err)
 	}
@@ -281,8 +281,8 @@ func (s *Store) History(ctx context.Context, key string) ([]Change, error) {
 	rows, err := s.db.Query(ctx,
 		`SELECT h.id::text, h.key, h.previous_value, h.new_value, h.reason,
 		        COALESCE(o.email, ''), h.changed_at
-		   FROM platform.platform_settings_history h
-		   LEFT JOIN platform.operator_accounts o ON o.id = h.changed_by
+		   FROM operator.platform_settings_history h
+		   LEFT JOIN operator.operator_accounts o ON o.id = h.changed_by
 		  WHERE ($1 = '' OR h.key = $1)
 		  ORDER BY h.changed_at DESC
 		  LIMIT 100`, key)

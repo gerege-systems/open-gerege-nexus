@@ -25,7 +25,7 @@ func TestUnlockIsAllTheConsoleMayWriteToAnAccount(t *testing.T) {
 	ctx := context.Background()
 
 	if _, err := pool.Exec(ctx,
-		`UPDATE platform.users SET failed_login_attempts = 5, locked_until = NOW() + INTERVAL '15 minutes'
+		`UPDATE registry.users SET failed_login_attempts = 5, locked_until = NOW() + INTERVAL '15 minutes'
 		  WHERE id = $1::uuid`, userID); err != nil {
 		t.Fatalf("lock the account: %v", err)
 	}
@@ -35,7 +35,7 @@ func TestUnlockIsAllTheConsoleMayWriteToAnAccount(t *testing.T) {
 	}
 	var locked bool
 	if err := pool.QueryRow(ctx,
-		`SELECT locked_until IS NOT NULL FROM platform.users WHERE id = $1::uuid`, userID).Scan(&locked); err != nil {
+		`SELECT locked_until IS NOT NULL FROM registry.users WHERE id = $1::uuid`, userID).Scan(&locked); err != nil {
 		t.Fatalf("read the account: %v", err)
 	}
 	if locked {
@@ -46,16 +46,16 @@ func TestUnlockIsAllTheConsoleMayWriteToAnAccount(t *testing.T) {
 	// can set somebody's password, and every claim made in support.go about
 	// what it cannot do is false.
 	if _, err := pool.Exec(operator.Scoped(ctx),
-		`UPDATE platform.users SET password_hash = 'x' WHERE id = $1::uuid`, userID); err == nil {
+		`UPDATE registry.users SET password_hash = 'x' WHERE id = $1::uuid`, userID); err == nil {
 		t.Fatal("the operator role changed a password")
 	}
 	if _, err := pool.Exec(operator.Scoped(ctx),
-		`UPDATE platform.users SET email = 'taken@example.test' WHERE id = $1::uuid`, userID); err == nil {
+		`UPDATE registry.users SET email = 'taken@example.test' WHERE id = $1::uuid`, userID); err == nil {
 		t.Fatal("the operator role changed an address")
 	}
 	// And it cannot delete an organisation, which is what makes the grace
 	// period a guarantee rather than a habit.
-	if _, err := pool.Exec(operator.Scoped(ctx), `DELETE FROM platform.tenants WHERE id = $1::uuid`, tenantID); err == nil {
+	if _, err := pool.Exec(operator.Scoped(ctx), `DELETE FROM registry.tenants WHERE id = $1::uuid`, tenantID); err == nil {
 		t.Fatal("the operator role deleted an organisation")
 	}
 }

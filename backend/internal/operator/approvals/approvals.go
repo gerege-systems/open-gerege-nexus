@@ -111,7 +111,7 @@ func (s *Service) RequestDeletion(ctx context.Context, sess operator.Session, te
 		var open bool
 		if err := tx.QueryRow(ctx,
 			`SELECT EXISTS (
-			    SELECT 1 FROM platform.pending_approvals
+			    SELECT 1 FROM operator.pending_approvals
 			     WHERE action = $1 AND target_id = $2
 			       AND approved_at IS NULL AND rejected_at IS NULL AND expires_at > NOW())`,
 			string(ActionTenantDelete), tenantID).Scan(&open); err != nil {
@@ -122,7 +122,7 @@ func (s *Service) RequestDeletion(ctx context.Context, sess operator.Session, te
 		}
 
 		return tx.QueryRow(ctx,
-			`INSERT INTO platform.pending_approvals
+			`INSERT INTO operator.pending_approvals
 			     (action, target_type, target_id, payload, requested_by, requested_reason, expires_at)
 			 VALUES ($1, 'tenant', $2, $3, $4::uuid, $5, NOW() + $6::interval)
 			 RETURNING id::text`,
@@ -143,9 +143,9 @@ func (s *Service) ListApprovals(ctx context.Context) ([]Approval, error) {
 		        COALESCE(t.name, ''), a.payload,
 		        a.requested_by::text, COALESCE(o.name, o.email, ''),
 		        a.requested_reason, a.requested_at, a.expires_at
-		   FROM platform.pending_approvals a
-		   LEFT JOIN platform.tenants t ON a.target_type = 'tenant' AND t.id = a.target_id::uuid
-		   LEFT JOIN platform.operator_accounts o ON o.id = a.requested_by
+		   FROM operator.pending_approvals a
+		   LEFT JOIN registry.tenants t ON a.target_type = 'tenant' AND t.id = a.target_id::uuid
+		   LEFT JOIN operator.operator_accounts o ON o.id = a.requested_by
 		  WHERE a.approved_at IS NULL AND a.rejected_at IS NULL AND a.expires_at > NOW()
 		  ORDER BY a.requested_at DESC`)
 	if err != nil {
@@ -183,7 +183,7 @@ func (s *Service) Approve(ctx context.Context, sess operator.Session, approvalID
 		var action ApprovalAction
 		var targetID, requestedBy string
 		err := tx.QueryRow(ctx,
-			`UPDATE platform.pending_approvals
+			`UPDATE operator.pending_approvals
 			    SET approved_by = $2::uuid, approved_at = NOW(), executed_at = NOW()
 			  WHERE id = $1::uuid
 			    AND approved_at IS NULL AND rejected_at IS NULL AND expires_at > NOW()
@@ -197,7 +197,7 @@ func (s *Service) Approve(ctx context.Context, sess operator.Session, approvalID
 			// rather than as no rows, so this ordering is safe either way.
 			var requester string
 			if err := tx.QueryRow(ctx,
-				`SELECT requested_by::text FROM platform.pending_approvals WHERE id = $1::uuid`,
+				`SELECT requested_by::text FROM operator.pending_approvals WHERE id = $1::uuid`,
 				approvalID).Scan(&requester); err == nil && requester == sess.ID {
 				return ErrSelfApproval
 			}
@@ -240,7 +240,7 @@ func (s *Service) Reject(ctx context.Context, sess operator.Session, approvalID,
 		Reason:     reason,
 	}, func(ctx context.Context, tx pgx.Tx) error {
 		tag, err := tx.Exec(ctx,
-			`UPDATE platform.pending_approvals
+			`UPDATE operator.pending_approvals
 			    SET rejected_by = $2::uuid, rejected_at = NOW(), rejected_reason = $3
 			  WHERE id = $1::uuid
 			    AND approved_at IS NULL AND rejected_at IS NULL AND expires_at > NOW()`,
@@ -278,7 +278,7 @@ func execute(ctx context.Context, tx pgx.Tx, action ApprovalAction, targetID str
 		// exactly where it is for the next thirty days, the console shows it
 		// counting down, and one button cancels it.
 		if _, err := tx.Exec(ctx,
-			`UPDATE platform.tenants
+			`UPDATE registry.tenants
 			    SET deletion_scheduled_at = NOW() + $2::interval,
 			        suspended_at = COALESCE(suspended_at, NOW()),
 			        suspension_reason = CASE WHEN suspended_at IS NULL

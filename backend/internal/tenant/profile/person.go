@@ -43,7 +43,7 @@ func (h *Handlers) HandleProfile(w http.ResponseWriter, r *http.Request) {
 	var name, email string
 	var createdAt time.Time
 	if err := h.db.QueryRow(ctx,
-		`SELECT name, email, created_at FROM platform.users WHERE id = $1`, claims.UserID).
+		`SELECT name, email, created_at FROM registry.users WHERE id = $1`, claims.UserID).
 		Scan(&name, &email, &createdAt); err != nil {
 		slog.Error("could not read a profile", "error", err, "user_id", claims.UserID)
 		httpx.Error(w, http.StatusInternalServerError, "could not load the profile")

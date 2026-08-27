@@ -79,7 +79,7 @@ func TestOperatorRosterIncludesDisabledLifecycleState(t *testing.T) {
 	ctx := context.Background()
 
 	if _, err := pool.Exec(ctx,
-		`UPDATE platform.operator_accounts
+		`UPDATE operator.operator_accounts
 		    SET disabled_at = NOW(), last_login_at = NOW()
 		  WHERE id = $1::uuid`, account.ID); err != nil {
 		t.Fatalf("set lifecycle state: %v", err)

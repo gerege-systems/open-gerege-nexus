@@ -21,7 +21,7 @@ func TestBothTheAddressAndTheGeregeNumberReachTheRelyingParty(t *testing.T) {
 
 	const geID = int64(910000042)
 	if _, err := f.pool.Exec(ctx,
-		`UPDATE platform.users SET ge_id = $2 WHERE id = $1::uuid`, f.userID, geID); err != nil {
+		`UPDATE registry.users SET ge_id = $2 WHERE id = $1::uuid`, f.userID, geID); err != nil {
 		t.Fatalf("give the account a Gerege number: %v", err)
 	}
 

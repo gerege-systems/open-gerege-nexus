@@ -46,30 +46,30 @@ func TestANewTenantsDefaultGrantsAreUnchanged(t *testing.T) {
 	}
 	for code := range probes {
 		if _, err := pool.Exec(ctx,
-			`INSERT INTO platform.permissions (id, code, name, description) VALUES ($1,$2,$3,$4)
+			`INSERT INTO registry.permissions (id, code, name, description) VALUES ($1,$2,$3,$4)
 			 ON CONFLICT (code) DO NOTHING`, uuid.New().String(), code, code, code); err != nil {
 			t.Fatalf("insert the probe permission %s: %v", code, err)
 		}
 	}
 	t.Cleanup(func() {
 		for code := range probes {
-			_, _ = pool.Exec(ctx, `DELETE FROM platform.permissions WHERE code = $1`, code)
+			_, _ = pool.Exec(ctx, `DELETE FROM registry.permissions WHERE code = $1`, code)
 		}
 	})
 
 	tenantID := uuid.New().String()
 	if _, err := pool.Exec(ctx,
-		`INSERT INTO platform.tenants (id, slug, name) VALUES ($1, $2, $2)`,
+		`INSERT INTO registry.tenants (id, slug, name) VALUES ($1, $2, $2)`,
 		tenantID, "zz-probe-"+tenantID[:8]); err != nil {
 		t.Fatalf("create the tenant: %v", err)
 	}
-	t.Cleanup(func() { _, _ = pool.Exec(ctx, `DELETE FROM platform.tenants WHERE id = $1`, tenantID) })
+	t.Cleanup(func() { _, _ = pool.Exec(ctx, `DELETE FROM registry.tenants WHERE id = $1`, tenantID) })
 
 	granted := func(role string) map[string]bool {
 		rows, err := pool.Query(ctx, `
 			SELECT p.code FROM tenant.role_permissions rp
 			  JOIN tenant.roles r ON r.id = rp.role_id
-			  JOIN platform.permissions p ON p.id = rp.permission_id
+			  JOIN registry.permissions p ON p.id = rp.permission_id
 			 WHERE r.tenant_id = $1 AND r.code = $2 AND p.code = ANY($3)`,
 			tenantID, role, []string{"zz_probe.read", "zz_probe.manage", "gov.process"})
 		if err != nil {

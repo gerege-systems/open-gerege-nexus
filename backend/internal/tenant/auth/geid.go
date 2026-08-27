@@ -62,7 +62,7 @@ func (h *Handlers) rememberGeID(ctx context.Context, userID string, identity *ei
 		return
 	}
 	if _, err := h.db.Exec(ctx,
-		`UPDATE platform.users
+		`UPDATE registry.users
 		    SET ge_id = $2,
 		        email = CASE WHEN $3 THEN $4 ELSE email END
 		  WHERE id = $1::uuid
@@ -79,7 +79,7 @@ func (h *Handlers) rememberGeID(ctx context.Context, userID string, identity *ei
 func isInventedAddressOf(ctx context.Context, h *Handlers, userID string) bool {
 	var email string
 	if err := h.db.QueryRow(ctx,
-		`SELECT email FROM platform.users WHERE id = $1::uuid`, userID).Scan(&email); err != nil {
+		`SELECT email FROM registry.users WHERE id = $1::uuid`, userID).Scan(&email); err != nil {
 		return false
 	}
 	return isInventedAddress(email)

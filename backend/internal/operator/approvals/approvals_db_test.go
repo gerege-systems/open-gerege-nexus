@@ -40,7 +40,7 @@ func TestDeletionNeedsTwoPeopleAndThirtyDays(t *testing.T) {
 	// Nothing has happened to the organisation yet.
 	var scheduled *time.Time
 	if err := pool.QueryRow(ctx,
-		`SELECT deletion_scheduled_at FROM platform.tenants WHERE id = $1::uuid`, tenantID).
+		`SELECT deletion_scheduled_at FROM registry.tenants WHERE id = $1::uuid`, tenantID).
 		Scan(&scheduled); err != nil {
 		t.Fatalf("read the organisation: %v", err)
 	}
@@ -59,7 +59,7 @@ func TestDeletionNeedsTwoPeopleAndThirtyDays(t *testing.T) {
 
 	var suspended bool
 	if err := pool.QueryRow(ctx,
-		`SELECT deletion_scheduled_at, suspended_at IS NOT NULL FROM platform.tenants WHERE id = $1::uuid`,
+		`SELECT deletion_scheduled_at, suspended_at IS NOT NULL FROM registry.tenants WHERE id = $1::uuid`,
 		tenantID).Scan(&scheduled, &suspended); err != nil {
 		t.Fatalf("read the organisation: %v", err)
 	}
@@ -79,7 +79,7 @@ func TestDeletionNeedsTwoPeopleAndThirtyDays(t *testing.T) {
 	// agreed.
 	organisations.SweepDeletions(ctx)
 	var alive bool
-	if err := pool.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM platform.tenants WHERE id = $1::uuid)`, tenantID).
+	if err := pool.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM registry.tenants WHERE id = $1::uuid)`, tenantID).
 		Scan(&alive); err != nil {
 		t.Fatalf("look for the organisation: %v", err)
 	}
@@ -92,7 +92,7 @@ func TestDeletionNeedsTwoPeopleAndThirtyDays(t *testing.T) {
 		t.Fatalf("cancel the deletion: %v", err)
 	}
 	if err := pool.QueryRow(ctx,
-		`SELECT deletion_scheduled_at FROM platform.tenants WHERE id = $1::uuid`, tenantID).Scan(&scheduled); err != nil {
+		`SELECT deletion_scheduled_at FROM registry.tenants WHERE id = $1::uuid`, tenantID).Scan(&scheduled); err != nil {
 		t.Fatalf("read the organisation: %v", err)
 	}
 	if scheduled != nil {

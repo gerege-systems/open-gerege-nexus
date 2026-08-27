@@ -56,7 +56,7 @@ func (h *Handlers) HandleAccessOverview(w http.ResponseWriter, r *http.Request) 
 		       COALESCE(array_agg(p.code ORDER BY p.code) FILTER (WHERE p.code IS NOT NULL),'{}')
 		FROM tenant.roles r
 		LEFT JOIN tenant.role_permissions rp ON rp.role_id=r.id
-		LEFT JOIN platform.permissions p ON p.id=rp.permission_id
+		LEFT JOIN registry.permissions p ON p.id=rp.permission_id
 		WHERE r.tenant_id=$1 GROUP BY r.id ORDER BY r.is_system DESC,r.name`, tenantID)
 	if err != nil {
 		httpx.Error(w, 500, "failed to load roles")
@@ -82,7 +82,7 @@ func (h *Handlers) HandleAccessOverview(w http.ResponseWriter, r *http.Request) 
 	}
 
 	permissions := make([]accessPermission, 0)
-	rows, err = h.db.Query(r.Context(), `SELECT code,name,description,split_part(code,'.',1) FROM platform.permissions ORDER BY split_part(code,'.',1),code`)
+	rows, err = h.db.Query(r.Context(), `SELECT code,name,description,split_part(code,'.',1) FROM registry.permissions ORDER BY split_part(code,'.',1),code`)
 	if err != nil {
 		httpx.Error(w, 500, "failed to load permissions")
 		return
@@ -108,7 +108,7 @@ func (h *Handlers) HandleAccessOverview(w http.ResponseWriter, r *http.Request) 
 		       EXISTS (SELECT 1 FROM tenant.membership_roles amr JOIN tenant.roles ar ON ar.id=amr.role_id
 		               WHERE amr.membership_id=m.id AND ar.tenant_id=m.tenant_id AND ar.code='admin' AND ar.active),
 		       COALESCE(array_agg(r.id::text ORDER BY r.name) FILTER (WHERE r.id IS NOT NULL),'{}')
-		FROM tenant.memberships m JOIN platform.users u ON u.id=m.user_id
+		FROM tenant.memberships m JOIN registry.users u ON u.id=m.user_id
 		LEFT JOIN tenant.membership_roles mr ON mr.membership_id=m.id
 		LEFT JOIN tenant.roles r ON r.id=mr.role_id AND r.tenant_id=m.tenant_id
 		WHERE m.tenant_id=$1 GROUP BY m.id,u.id ORDER BY u.name,u.email`, tenantID)
@@ -255,12 +255,12 @@ func (h *Handlers) HandleSetRolePermissions(w http.ResponseWriter, r *http.Reque
 	defer func() { _ = tx.Rollback(r.Context()) }()
 	var valid int
 	if len(clean) > 0 {
-		if err = tx.QueryRow(r.Context(), `SELECT count(*) FROM platform.permissions WHERE code=ANY($1)`, clean).Scan(&valid); err != nil || valid != len(clean) {
+		if err = tx.QueryRow(r.Context(), `SELECT count(*) FROM registry.permissions WHERE code=ANY($1)`, clean).Scan(&valid); err != nil || valid != len(clean) {
 			httpx.Error(w, 400, "one or more permissions are unknown")
 			return
 		}
 	}
-	before, err := collectStrings(r.Context(), tx, `SELECT p.code FROM tenant.role_permissions rp JOIN platform.permissions p ON p.id=rp.permission_id WHERE rp.role_id=$1 ORDER BY p.code`, id)
+	before, err := collectStrings(r.Context(), tx, `SELECT p.code FROM tenant.role_permissions rp JOIN registry.permissions p ON p.id=rp.permission_id WHERE rp.role_id=$1 ORDER BY p.code`, id)
 	if err != nil {
 		httpx.Error(w, 500, "failed to read the current permissions")
 		return
@@ -270,7 +270,7 @@ func (h *Handlers) HandleSetRolePermissions(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	if len(clean) > 0 {
-		_, err = tx.Exec(r.Context(), `INSERT INTO tenant.role_permissions(role_id,permission_id) SELECT $1,id FROM platform.permissions WHERE code=ANY($2)`, id, clean)
+		_, err = tx.Exec(r.Context(), `INSERT INTO tenant.role_permissions(role_id,permission_id) SELECT $1,id FROM registry.permissions WHERE code=ANY($2)`, id, clean)
 	}
 	if err != nil || tx.Commit(r.Context()) != nil {
 		httpx.Error(w, 500, "failed to save permissions")

@@ -63,7 +63,7 @@ func (h *Handlers) TenantSuspended(ctx context.Context, tenantID string) (bool, 
 	err := h.db.QueryRow(ctx,
 		`SELECT suspended_at IS NOT NULL OR deletion_scheduled_at IS NOT NULL,
 		        suspension_reason
-		   FROM platform.tenants WHERE id = $1::uuid`, tenantID).Scan(&suspended, &reason)
+		   FROM registry.tenants WHERE id = $1::uuid`, tenantID).Scan(&suspended, &reason)
 	if errors.Is(err, pgx.ErrNoRows) {
 		// An organisation that is not there is not one anybody may act in.
 		// This is the state a session held across a completed deletion is in.
@@ -90,7 +90,7 @@ func (h *Handlers) suspensionReason(ctx context.Context, tenantID string, suspen
 		return ""
 	}
 	var reason string
-	_ = h.db.QueryRow(ctx, `SELECT suspension_reason FROM platform.tenants WHERE id = $1::uuid`,
+	_ = h.db.QueryRow(ctx, `SELECT suspension_reason FROM registry.tenants WHERE id = $1::uuid`,
 		tenantID).Scan(&reason)
 	return reason
 }
@@ -138,8 +138,8 @@ func (h *Handlers) CheckUserQuota(ctx context.Context, tenantID string) error {
 	err := h.db.QueryRow(ctx,
 		`SELECT COALESCE(q.max_users, -1), COALESCE(q.enforcement, 'soft'),
 		        (SELECT count(*) FROM tenant.memberships m WHERE m.tenant_id = $1::uuid)
-		   FROM platform.tenants t
-		   LEFT JOIN platform.tenant_quotas q ON q.tenant_id = t.id
+		   FROM registry.tenants t
+		   LEFT JOIN registry.tenant_quotas q ON q.tenant_id = t.id
 		  WHERE t.id = $1::uuid`, tenantID).Scan(&limit, &enforcement, &current)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -194,7 +194,7 @@ func (q QuotaRail) Gate(kind string) func(http.Handler) http.Handler {
 // gate on this platform does — the seventh handler is written by somebody who
 // has not read the other six.
 //
-// The count comes from platform.usage_events, which is rewritten a few times a day, so
+// The count comes from registry.usage_events, which is rewritten a few times a day, so
 // an organisation can cross its limit by however many calls it makes between
 // two collections. That is deliberate: the alternative is a counter written on
 // every request, and an AI limit is a commercial boundary rather than a
@@ -216,7 +216,7 @@ func aiQuota(db *pgxpool.Pool) func(http.Handler) http.Handler {
 			var enforcement string
 			if err := db.QueryRow(r.Context(),
 				`SELECT COALESCE(max_ai_calls_monthly, -1), enforcement
-				   FROM platform.tenant_quotas WHERE tenant_id = $1::uuid`, tenantID).
+				   FROM registry.tenant_quotas WHERE tenant_id = $1::uuid`, tenantID).
 				Scan(&limit, &enforcement); err != nil {
 				// No row is the ordinary case: an organisation nobody has set a
 				// limit for has no limit.

@@ -57,7 +57,7 @@ func newBindFixture(t *testing.T) *bindFixture {
 	// at whoever the mock provider will say they are, so the flow resolves to
 	// them rather than provisioning somebody new.
 	if _, err := f.pool.Exec(context.Background(),
-		`UPDATE platform.user_eid_identities SET person_etsi = $2 WHERE user_id = $1`,
+		`UPDATE registry.user_eid_identities SET person_etsi = $2 WHERE user_id = $1`,
 		f.userID, eidmongolia.PersonEtsi("CID-AA90010111")); err != nil {
 		t.Fatalf("point the eID identity at the mock: %v", err)
 	}
@@ -156,7 +156,7 @@ func TestAFirstGoogleSignInIsBoundByEID(t *testing.T) {
 	// and subject, because that is how the next sign-in will look for it.
 	var userID string
 	if err := f.pool.QueryRow(context.Background(),
-		`SELECT user_id::text FROM platform.user_sso_identities WHERE issuer = $1 AND subject = $2`,
+		`SELECT user_id::text FROM registry.user_sso_identities WHERE issuer = $1 AND subject = $2`,
 		f.google.server.URL, f.google.subject).Scan(&userID); err != nil {
 		t.Fatalf("the Google identity was not written down: %v", err)
 	}
@@ -196,7 +196,7 @@ func TestASecondGoogleSignInDoesNotAskForEIDAgain(t *testing.T) {
 	}
 	var userID string
 	if err := f.pool.QueryRow(context.Background(),
-		`SELECT user_id::text FROM platform.user_sso_identities WHERE issuer = $1 AND subject = $2`,
+		`SELECT user_id::text FROM registry.user_sso_identities WHERE issuer = $1 AND subject = $2`,
 		f.google.server.URL, f.google.subject).Scan(&userID); err != nil {
 		t.Fatalf("the first sign-in linked nothing: %v", err)
 	}
@@ -213,7 +213,7 @@ func TestASecondGoogleSignInDoesNotAskForEIDAgain(t *testing.T) {
 	// And it did not quietly make a second account.
 	var accounts int
 	if err := f.pool.QueryRow(context.Background(),
-		`SELECT count(*) FROM platform.user_sso_identities WHERE subject = $1`, f.google.subject).Scan(&accounts); err != nil {
+		`SELECT count(*) FROM registry.user_sso_identities WHERE subject = $1`, f.google.subject).Scan(&accounts); err != nil {
 		t.Fatalf("count identities: %v", err)
 	}
 	if accounts != 1 {

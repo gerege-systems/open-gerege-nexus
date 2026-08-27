@@ -86,10 +86,10 @@ func storageLimit(ctx context.Context, db nexus.DB, tenantID string) (Limit, err
 	var used int64
 	err := db.QueryRow(ctx,
 		`SELECT COALESCE(q.max_storage_mb, -1), COALESCE(q.enforcement, 'soft'),
-		        COALESCE((SELECT value FROM platform.usage_events u
+		        COALESCE((SELECT value FROM registry.usage_events u
 		                   WHERE u.tenant_id = q.tenant_id AND u.metric = 'storage_mb'
 		                   ORDER BY u.day DESC LIMIT 1), 0)
-		   FROM platform.tenant_quotas q
+		   FROM registry.tenant_quotas q
 		  WHERE q.tenant_id = $1::uuid`, tenantID).Scan(&maximum, &enforcement, &used)
 	if errors.Is(err, pgx.ErrNoRows) {
 		// No row is the ordinary case: an organisation nobody has set a limit

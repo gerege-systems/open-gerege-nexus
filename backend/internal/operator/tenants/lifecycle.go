@@ -118,7 +118,7 @@ func (s *Service) CreateTenant(ctx context.Context, sess operator.Session, param
 		},
 	}, func(ctx context.Context, tx pgx.Tx) error {
 		var taken bool
-		if err := tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM platform.tenants WHERE slug = $1)`, slug).
+		if err := tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM registry.tenants WHERE slug = $1)`, slug).
 			Scan(&taken); err != nil {
 			return fmt.Errorf("check the slug: %w", err)
 		}
@@ -127,7 +127,7 @@ func (s *Service) CreateTenant(ctx context.Context, sess operator.Session, param
 		}
 
 		if err := tx.QueryRow(ctx,
-			`INSERT INTO platform.tenants (slug, name) VALUES ($1, $2) RETURNING id::text`,
+			`INSERT INTO registry.tenants (slug, name) VALUES ($1, $2) RETURNING id::text`,
 			slug, name).Scan(&created.ID); err != nil {
 			return fmt.Errorf("create the organisation: %w", err)
 		}
@@ -203,10 +203,10 @@ func ensureAdmin(ctx context.Context, tx pgx.Tx, tenantID, email, name, password
 	// problem with it. The conflict is a real case here: 00008's trigger
 	// creates an `admin` role the moment the organisation row lands.
 	userID, err := insertOrSelect(ctx, tx,
-		`INSERT INTO platform.users (email, password_hash, name, is_admin)
+		`INSERT INTO registry.users (email, password_hash, name, is_admin)
 		 VALUES ($1, $2, $3, FALSE) ON CONFLICT (email) DO NOTHING
 		 RETURNING id::text`,
-		`SELECT id::text FROM platform.users WHERE email = $1`,
+		`SELECT id::text FROM registry.users WHERE email = $1`,
 		[]any{email, passwordHash, name}, []any{email})
 	if err != nil {
 		return "", fmt.Errorf("create the administrator's account: %w", err)
@@ -313,7 +313,7 @@ func (s *Service) Suspend(ctx context.Context, sess operator.Session, tenantID, 
 		After:      map[string]any{"suspended": true, "reason": reason},
 	}, func(ctx context.Context, tx pgx.Tx) error {
 		if _, err := tx.Exec(ctx,
-			`UPDATE platform.tenants SET suspended_at = NOW(), suspension_reason = $2 WHERE id = $1::uuid`,
+			`UPDATE registry.tenants SET suspended_at = NOW(), suspension_reason = $2 WHERE id = $1::uuid`,
 			tenantID, reason); err != nil {
 			return fmt.Errorf("suspend the organisation: %w", err)
 		}
@@ -349,7 +349,7 @@ func (s *Service) Resume(ctx context.Context, sess operator.Session, tenantID, r
 		After:      map[string]any{"suspended": false},
 	}, func(ctx context.Context, tx pgx.Tx) error {
 		_, err := tx.Exec(ctx,
-			`UPDATE platform.tenants SET suspended_at = NULL, suspension_reason = '' WHERE id = $1::uuid`,
+			`UPDATE registry.tenants SET suspended_at = NULL, suspension_reason = '' WHERE id = $1::uuid`,
 			tenantID)
 		return err
 	})
@@ -374,7 +374,7 @@ func (s *Service) CancelDeletion(ctx context.Context, sess operator.Session, ten
 		Before:     before,
 	}, func(ctx context.Context, tx pgx.Tx) error {
 		_, err := tx.Exec(ctx,
-			`UPDATE platform.tenants SET deletion_scheduled_at = NULL WHERE id = $1::uuid`, tenantID)
+			`UPDATE registry.tenants SET deletion_scheduled_at = NULL WHERE id = $1::uuid`, tenantID)
 		return err
 	})
 }
@@ -411,7 +411,7 @@ func (s *Service) SweepDeletions(ctx context.Context) {
 	defer cancel()
 
 	rows, err := s.db.Query(sweepCtx,
-		`SELECT id::text, slug FROM platform.tenants
+		`SELECT id::text, slug FROM registry.tenants
 		  WHERE deletion_scheduled_at IS NOT NULL AND deletion_scheduled_at <= NOW()`)
 	if err != nil {
 		slog.Warn("control plane: could not look for organisations to delete", "error", err)
@@ -439,7 +439,7 @@ func (s *Service) SweepDeletions(ctx context.Context) {
 		// SELECT above: a cancellation that landed in between must win, and it
 		// would not if this deleted by id alone.
 		tag, err := s.db.Exec(sweepCtx,
-			`DELETE FROM platform.tenants
+			`DELETE FROM registry.tenants
 			  WHERE id = $1::uuid AND deletion_scheduled_at IS NOT NULL
 			    AND deletion_scheduled_at <= NOW()`, row.id)
 		if err != nil {
@@ -467,7 +467,7 @@ func (s *Service) SweepDeletions(ctx context.Context) {
 func (s *Service) TenantsAwaitingDeletion(ctx context.Context) ([]operator.TenantState, error) {
 	rows, err := s.db.Query(operator.Scoped(ctx),
 		`SELECT id::text, slug, name, suspended_at, suspension_reason, deletion_scheduled_at
-		   FROM platform.tenants WHERE deletion_scheduled_at IS NOT NULL
+		   FROM registry.tenants WHERE deletion_scheduled_at IS NOT NULL
 		  ORDER BY deletion_scheduled_at`)
 	if err != nil {
 		return nil, fmt.Errorf("control plane: list the organisations awaiting deletion: %w", err)

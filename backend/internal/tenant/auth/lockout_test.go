@@ -42,12 +42,12 @@ func lockoutUser(t *testing.T, pool *pgxpool.Pool) string {
 	email := "lockout+" + uuid.NewString() + "@identity.invalid"
 	var id string
 	if err := pool.QueryRow(ctx,
-		`INSERT INTO platform.users(email, password_hash, name) VALUES($1, 'x', 'lockout probe') RETURNING id::text`,
+		`INSERT INTO registry.users(email, password_hash, name) VALUES($1, 'x', 'lockout probe') RETURNING id::text`,
 		email).Scan(&id); err != nil {
 		t.Fatalf("insert user: %v", err)
 	}
 	t.Cleanup(func() {
-		_, _ = pool.Exec(context.Background(), `DELETE FROM platform.users WHERE id=$1`, id)
+		_, _ = pool.Exec(context.Background(), `DELETE FROM registry.users WHERE id=$1`, id)
 	})
 	return id
 }
@@ -56,7 +56,7 @@ func lockoutUser(t *testing.T, pool *pgxpool.Pool) string {
 func lockoutState(t *testing.T, pool *pgxpool.Pool, userID string) (attempts int, locked bool) {
 	t.Helper()
 	if err := pool.QueryRow(context.Background(),
-		`SELECT failed_login_attempts, COALESCE(locked_until > NOW(), FALSE) FROM platform.users WHERE id=$1`,
+		`SELECT failed_login_attempts, COALESCE(locked_until > NOW(), FALSE) FROM registry.users WHERE id=$1`,
 		userID).Scan(&attempts, &locked); err != nil {
 		t.Fatalf("read lockout state: %v", err)
 	}
@@ -98,7 +98,7 @@ func TestLapsedLockoutDoesNotRelockOnASingleFailure(t *testing.T) {
 
 	// An account that reached the threshold and whose window has since passed.
 	if _, err := pool.Exec(context.Background(),
-		`UPDATE platform.users SET failed_login_attempts=$2, locked_until=NOW() - INTERVAL '1 second' WHERE id=$1`,
+		`UPDATE registry.users SET failed_login_attempts=$2, locked_until=NOW() - INTERVAL '1 second' WHERE id=$1`,
 		userID, maxLoginFailures); err != nil {
 		t.Fatalf("arrange a lapsed lockout: %v", err)
 	}
@@ -122,7 +122,7 @@ func TestLockoutStillEngagesAfterALapse(t *testing.T) {
 	userID := lockoutUser(t, pool)
 
 	if _, err := pool.Exec(context.Background(),
-		`UPDATE platform.users SET failed_login_attempts=$2, locked_until=NOW() - INTERVAL '1 second' WHERE id=$1`,
+		`UPDATE registry.users SET failed_login_attempts=$2, locked_until=NOW() - INTERVAL '1 second' WHERE id=$1`,
 		userID, maxLoginFailures); err != nil {
 		t.Fatalf("arrange a lapsed lockout: %v", err)
 	}

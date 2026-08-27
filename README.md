@@ -82,7 +82,7 @@ compile-time Go module хэлбэрээр distribution репо нэмдэг. Э
   manual/background sync.
 - Password, eID, ДАН, Google болон upstream OIDC нэвтрэлт; мөн OAuth2/OIDC
   provider.
-- PostgreSQL-ийн `tenant` ба `platform` schema, RLS/role хамгаалалт.
+- PostgreSQL-ийн `tenant`, `registry`, `operator` schema, RLS/role хамгаалалт.
 - Redis тохируулсан үед replica хооронд cache invalidation ба shared rate
   limit; тохируулаагүй үед single-process fallback.
 - Зэрэг хүсэлтийн load shedding. Гадаад client бүр өөрийн timeout/retry
@@ -105,7 +105,6 @@ backend/
   internal/apps/        distribution module-ийн угсрах цэг (одоо хоосон)
   pkg/nexus/            distribution module-ийн нийтийн SDK
   pkg/host/             distribution binary-г асаах нийтийн entry point
-  pkg/platform/         түүний хуучин нэр, дараагийн major хүртэл дамжуулна
 frontend/               Next.js web shell ба control plane UI
 catalog/                үндсэн catalog, manifest, chronicle
 native-apps/            macOS, iOS/iPadOS, Windows, Android client

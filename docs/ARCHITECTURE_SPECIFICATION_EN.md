@@ -26,7 +26,7 @@ planes:
 | Origin | `nexus.gerege.mn` | `cp.nexus.gerege.mn` |
 | API | `/api/v1/*` | `/api/platform/v1/*` |
 | Session cookie | `session_token` | `cp_session` |
-| Account | `platform.users` + `tenant.memberships` | `platform.operator_accounts` |
+| Account | `registry.users` + `tenant.memberships` | `operator.operator_accounts` |
 | Database role | `gerege_nexus_tenant` | `gerege_nexus_operator` |
 | Go package | `internal/tenant/*` | `internal/operator/*` |
 
@@ -38,7 +38,7 @@ trail. When an operator needs a tenant's view, they use the reason-bound,
 ```text
 tenant origin ─┐                         ┌─ internal/tenant/* ─ tenant schema
                ├─ pkg/host/server.go ┤
-control origin ┘   shared middleware     └─ internal/operator/* ─ platform schema
+control origin ┘   shared middleware     └─ internal/operator/* ─ operator + registry
                           │
                     internal/kernel/*
                           │
@@ -89,7 +89,7 @@ endpoints owned by neither plane.
 2. Resolve `cp_session`; password plus TOTP, short idle timeout, and step-up
    apply.
 3. Run every query as `gerege_nexus_operator`.
-4. Commit each write with its `platform.operator_audit` row in the same
+4. Commit each write with its `operator.operator_audit` row in the same
    transaction. A write without audit cannot report success.
 
 In production, nginx's CIDR allowlist runs before HostGate. Origin, session,
@@ -99,25 +99,33 @@ database role, and audit are independent layers.
 
 Migration `00079_two_schemas.sql` split tables into `platform` and `tenant`;
 `00080_search_path_has_no_public.sql` removed `public` from runtime search
-paths.
+paths. `00083_registry_and_operator.sql` split `platform` in two.
 
 | Schema | Owned data |
 | --- | --- |
-| `platform` | Tenants, users, apps, operator accounts/sessions/audit, approvals, settings, flags, announcements, quotas, usage, backup metadata |
+| `registry` | Tenants, users, identity, apps, permissions, quotas, flags, announcements, usage, current setting values |
+| `operator` | Operator accounts/sessions/audit, approvals, backup metadata, setting change history, sealed credentials |
 | `tenant` | Memberships, roles, sessions, app installations, profile, directory, device, integration, SSO, and tenant audit data |
 | `public` | Goose migration ledgers and deliberately retained `SECURITY DEFINER` functions |
 
-The current migration inventory contains 27 platform and 40 tenant tables.
-Counts are not the contract: `backend/db/migrations/ownership_test.go` declares
-ownership by name, and `schema_split_test.go` compares that declaration with a
-real database.
+The current migration inventory contains 20 registry, 7 operator and 40 tenant
+tables. Counts are not the contract: `backend/db/migrations/ownership_test.go`
+declares ownership by name, and `schema_split_test.go` compares that
+declaration with a real database.
 
-The tenant role needs `USAGE` on the platform schema to resolve five explicit
-boundary tables: announcements, feature flag overrides, operator
-impersonations, tenant quotas, and usage events. The effective boundary is
-therefore the **table-level grant**, not schema usage. A database integration
-test proves that a newly created platform table is closed to the tenant role by
-default.
+Two planes have three schemas because of the boundary tables. The tenant role
+must resolve five of them by name — announcements, feature flag overrides,
+operator impersonations, tenant quotas, usage events — so `USAGE` on whichever
+schema holds them cannot be revoked from it. Until 00083 that schema held all
+twenty-seven tables, and the boundary rested on the **table-level grant**
+alone.
+
+Now the five boundary tables are in `registry` and the seven the tenant plane
+never reaches are in `operator`. The tenant role holds no `USAGE` on
+`operator`, so `operator.operator_audit` is not even a name to it. The boundary
+is two locks: the schema hides the name, the table grant opens the row. A
+database integration test proves that a newly created registry table is closed
+to the tenant role by default.
 
 All DDL enters through goose migrations in `backend/db/migrations/`. Runtime
 DDL is forbidden. Distribution modules provide their own migrations through
@@ -128,7 +136,7 @@ the `pkg/nexus` contract.
 Core does not own a business app's tables or handlers. A distribution supplies
 module code, a manifest, and migrations, then registers them through the Nexus
 SDK contract. The operator plane fetches the catalog and reconciles metadata in
-`platform.apps`; tenant installation, version, and state live in
+`registry.apps`; tenant installation, version, and state live in
 `tenant.app_installations`.
 
 The AI stock forecast endpoint does not depend on a built-in inventory table.

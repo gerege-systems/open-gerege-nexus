@@ -21,7 +21,7 @@ func seedTenant(t *testing.T, pool *pgxpool.Pool, userID string, member bool) st
 
 	var tenantID string
 	if err := pool.QueryRow(ctx,
-		`INSERT INTO platform.tenants (name, slug) VALUES ($1,$1) RETURNING id::text`,
+		`INSERT INTO registry.tenants (name, slug) VALUES ($1,$1) RETURNING id::text`,
 		"switchtest-"+suffix).Scan(&tenantID); err != nil {
 		t.Fatal(err)
 	}
@@ -32,7 +32,7 @@ func seedTenant(t *testing.T, pool *pgxpool.Pool, userID string, member bool) st
 		}
 	}
 	t.Cleanup(func() {
-		_, _ = pool.Exec(context.Background(), `DELETE FROM platform.tenants WHERE id=$1`, tenantID)
+		_, _ = pool.Exec(context.Background(), `DELETE FROM registry.tenants WHERE id=$1`, tenantID)
 	})
 	return tenantID
 }

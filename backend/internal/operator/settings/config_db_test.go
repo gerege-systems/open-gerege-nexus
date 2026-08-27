@@ -49,9 +49,9 @@ func TestASettingChangesAndRollsBack(t *testing.T) {
 	// previous run's rows are cleared before counting this one's.
 	clear := func() {
 		_, _ = pool.Exec(context.Background(),
-			`DELETE FROM platform.platform_settings WHERE key = $1`, settings.SessionIdleTimeout)
+			`DELETE FROM registry.platform_settings WHERE key = $1`, settings.SessionIdleTimeout)
 		_, _ = pool.Exec(context.Background(),
-			`DELETE FROM platform.platform_settings_history WHERE key = $1`, settings.SessionIdleTimeout)
+			`DELETE FROM operator.platform_settings_history WHERE key = $1`, settings.SessionIdleTimeout)
 	}
 	clear()
 	t.Cleanup(clear)

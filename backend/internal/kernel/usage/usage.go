@@ -54,7 +54,7 @@ const (
 func MonthToDate(ctx context.Context, db *pgxpool.Pool, tenantID, metric string) (int64, error) {
 	var total int64
 	if err := db.QueryRow(ctx,
-		`SELECT COALESCE(sum(value), 0) FROM platform.usage_events
+		`SELECT COALESCE(sum(value), 0) FROM registry.usage_events
 		  WHERE tenant_id = $1::uuid AND metric = $2
 		    AND day >= date_trunc('month', CURRENT_DATE)`,
 		tenantID, metric).Scan(&total); err != nil {

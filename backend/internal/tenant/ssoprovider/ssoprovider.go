@@ -183,7 +183,7 @@ func (s *SSOProvider) EnsureDefaultClient(ctx context.Context) {
 
 	var tenantID string
 	if err := s.store.db.QueryRow(ctx,
-		`SELECT id::text FROM platform.tenants WHERE slug = $1`, slug).Scan(&tenantID); err != nil {
+		`SELECT id::text FROM registry.tenants WHERE slug = $1`, slug).Scan(&tenantID); err != nil {
 		slog.Info("skipping the built-in SSO client: its owning tenant does not exist",
 			"tenant_slug", slug)
 		return
@@ -253,7 +253,7 @@ func (s *SSOProvider) EnsureConsoleClient(ctx context.Context) {
 	}
 	var tenantID string
 	if err := s.store.db.QueryRow(ctx,
-		`SELECT id::text FROM platform.tenants WHERE slug = $1`, slug).Scan(&tenantID); err != nil {
+		`SELECT id::text FROM registry.tenants WHERE slug = $1`, slug).Scan(&tenantID); err != nil {
 		slog.Info("skipping the developer console client: its owning tenant does not exist",
 			"tenant_slug", slug)
 		return

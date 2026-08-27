@@ -149,7 +149,7 @@ func bucket(key, tenantID string) int {
 func (s *Store) Load(ctx context.Context) error {
 	rows, err := s.db.Query(ctx,
 		`SELECT key, description, owner, kind, enabled, rollout, expires_at, updated_at
-		   FROM platform.feature_flags`)
+		   FROM registry.feature_flags`)
 	if err != nil {
 		return err
 	}
@@ -170,7 +170,7 @@ func (s *Store) Load(ctx context.Context) error {
 	}
 
 	overrides, err := s.db.Query(ctx,
-		`SELECT flag_key, tenant_id::text, enabled FROM platform.feature_flag_overrides`)
+		`SELECT flag_key, tenant_id::text, enabled FROM registry.feature_flag_overrides`)
 	if err != nil {
 		return err
 	}

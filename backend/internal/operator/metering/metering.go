@@ -189,7 +189,7 @@ func (c *Collector) collect(ctx context.Context, metric, query string, day time.
 	// row into Go to write it straight back, which is a round trip per
 	// organisation for no reason.
 	_, err := c.db.Exec(ctx, fmt.Sprintf(`
-		INSERT INTO platform.usage_events (tenant_id, day, metric, value, recorded_at)
+		INSERT INTO registry.usage_events (tenant_id, day, metric, value, recorded_at)
 		SELECT tenant_id, $1::timestamptz::date, $2, value, NOW() FROM (%s) AS counted(tenant_id, value)
 		ON CONFLICT (tenant_id, day, metric)
 		DO UPDATE SET value = EXCLUDED.value, recorded_at = NOW()`, query),

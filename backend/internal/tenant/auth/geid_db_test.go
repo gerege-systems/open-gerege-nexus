@@ -23,11 +23,11 @@ func TestAnInventedAddressIsUpgradedToTheGeregeNumber(t *testing.T) {
 	old := "eid+" + uuid.NewString()[:32] + "@identity.invalid"
 	var userID string
 	if err := pool.QueryRow(ctx,
-		`INSERT INTO platform.users(email, password_hash, name) VALUES($1, 'x', 'Иргэн') RETURNING id::text`,
+		`INSERT INTO registry.users(email, password_hash, name) VALUES($1, 'x', 'Иргэн') RETURNING id::text`,
 		old).Scan(&userID); err != nil {
 		t.Fatalf("seed the account: %v", err)
 	}
-	t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM platform.users WHERE id=$1::uuid`, userID) })
+	t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM registry.users WHERE id=$1::uuid`, userID) })
 
 	// A number no other row in the shared test database can be holding.
 	geID := int64(900000000) + int64(uuid.New().ID()%1000000)
@@ -36,7 +36,7 @@ func TestAnInventedAddressIsUpgradedToTheGeregeNumber(t *testing.T) {
 	var email string
 	var stored *int64
 	if err := pool.QueryRow(ctx,
-		`SELECT email, ge_id FROM platform.users WHERE id=$1::uuid`, userID).Scan(&email, &stored); err != nil {
+		`SELECT email, ge_id FROM registry.users WHERE id=$1::uuid`, userID).Scan(&email, &stored); err != nil {
 		t.Fatalf("read it back: %v", err)
 	}
 	if stored == nil || *stored != geID {
@@ -55,11 +55,11 @@ func TestAPersonsOwnAddressSurvivesTheirEID(t *testing.T) {
 	theirs := "person-" + uuid.NewString()[:8] + "@example.mn"
 	var userID string
 	if err := pool.QueryRow(ctx,
-		`INSERT INTO platform.users(email, password_hash, name) VALUES($1, 'x', 'Иргэн') RETURNING id::text`,
+		`INSERT INTO registry.users(email, password_hash, name) VALUES($1, 'x', 'Иргэн') RETURNING id::text`,
 		theirs).Scan(&userID); err != nil {
 		t.Fatalf("seed the account: %v", err)
 	}
-	t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM platform.users WHERE id=$1::uuid`, userID) })
+	t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM registry.users WHERE id=$1::uuid`, userID) })
 
 	geID := int64(900000000) + int64(uuid.New().ID()%1000000)
 	server.rememberGeID(ctx, userID, &eid.EIDIdentity{RegNumber: "AA00112233", GeID: geID})
@@ -67,7 +67,7 @@ func TestAPersonsOwnAddressSurvivesTheirEID(t *testing.T) {
 	var email string
 	var stored *int64
 	if err := pool.QueryRow(ctx,
-		`SELECT email, ge_id FROM platform.users WHERE id=$1::uuid`, userID).Scan(&email, &stored); err != nil {
+		`SELECT email, ge_id FROM registry.users WHERE id=$1::uuid`, userID).Scan(&email, &stored); err != nil {
 		t.Fatalf("read it back: %v", err)
 	}
 	// The number is recorded — that is what it is for — and the address they

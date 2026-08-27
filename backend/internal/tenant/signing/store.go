@@ -684,7 +684,7 @@ func (s *store) eidIdentityFor(ctx context.Context, userID string) (*eidIdentity
 	err := s.db.QueryRow(ctx,
 		`SELECT COALESCE(civil_id, ''), COALESCE(reg_number, ''), person_etsi,
 		        COALESCE(document_number, ''), COALESCE(given_name, ''), COALESCE(surname, '')
-		   FROM platform.user_eid_identities WHERE user_id = $1`, userID).
+		   FROM registry.user_eid_identities WHERE user_id = $1`, userID).
 		Scan(&id.CivilID, &id.RegNumber, &id.PersonEtsi, &id.DocumentNumber, &id.GivenName, &id.Surname)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil

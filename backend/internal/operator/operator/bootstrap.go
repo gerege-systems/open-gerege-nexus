@@ -98,7 +98,7 @@ func CreateOperator(ctx context.Context, db *pgxpool.Pool, params NewOperator) (
 
 	var taken bool
 	if err := tx.QueryRow(ctx,
-		`SELECT EXISTS (SELECT 1 FROM platform.operator_accounts WHERE lower(email) = $1)`, email).
+		`SELECT EXISTS (SELECT 1 FROM operator.operator_accounts WHERE lower(email) = $1)`, email).
 		Scan(&taken); err != nil {
 		return Operator{}, Enrolment{}, fmt.Errorf("check for an existing operator: %w", err)
 	}
@@ -108,7 +108,7 @@ func CreateOperator(ctx context.Context, db *pgxpool.Pool, params NewOperator) (
 
 	operator := Operator{Email: email, Name: name, Role: params.Role}
 	if err := tx.QueryRow(ctx,
-		`INSERT INTO platform.operator_accounts (email, name, role, password_hash, totp_secret, break_glass)
+		`INSERT INTO operator.operator_accounts (email, name, role, password_hash, totp_secret, break_glass)
 		 VALUES ($1, $2, $3, $4, $5, $6) RETURNING id::text`,
 		email, name, string(params.Role), hash, secret, params.BreakGlass).Scan(&operator.ID); err != nil {
 		return Operator{}, Enrolment{}, fmt.Errorf("create the operator: %w", err)
@@ -142,7 +142,7 @@ func CreateOperator(ctx context.Context, db *pgxpool.Pool, params NewOperator) (
 func PendingEnrolment(ctx context.Context, db *pgxpool.Pool, email string) (string, error) {
 	var id string
 	err := db.QueryRow(ctx,
-		`SELECT id::text FROM platform.operator_accounts
+		`SELECT id::text FROM operator.operator_accounts
 		  WHERE lower(email) = lower($1) AND totp_confirmed_at IS NULL`, email).Scan(&id)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return "", errors.New("no such operator is waiting to confirm an authenticator")
@@ -165,7 +165,7 @@ func ConfirmSecondFactor(ctx context.Context, db *pgxpool.Pool, operatorID, code
 	var secret string
 	var confirmed bool
 	err := db.QueryRow(ctx,
-		`SELECT totp_secret, totp_confirmed_at IS NOT NULL FROM platform.operator_accounts WHERE id = $1::uuid`,
+		`SELECT totp_secret, totp_confirmed_at IS NOT NULL FROM operator.operator_accounts WHERE id = $1::uuid`,
 		operatorID).Scan(&secret, &confirmed)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return errors.New("no such operator")
@@ -182,7 +182,7 @@ func ConfirmSecondFactor(ctx context.Context, db *pgxpool.Pool, operatorID, code
 		return errors.New("that code was not right")
 	}
 	if _, err := db.Exec(ctx,
-		`UPDATE platform.operator_accounts
+		`UPDATE operator.operator_accounts
 		    SET totp_confirmed_at = NOW(), totp_last_step = $2, updated_at = NOW()
 		  WHERE id = $1::uuid`, operatorID, step); err != nil {
 		return fmt.Errorf("confirm the second factor: %w", err)

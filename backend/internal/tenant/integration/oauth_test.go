@@ -24,7 +24,7 @@ func newUser(t *testing.T, pool *pgxpool.Pool, tenantID string) string {
 	t.Helper()
 	id := uuid.NewString()
 	if _, err := pool.Exec(context.Background(),
-		`INSERT INTO platform.users (id, email, password_hash, name, is_admin) VALUES ($1, $2, '', $3, TRUE)`,
+		`INSERT INTO registry.users (id, email, password_hash, name, is_admin) VALUES ($1, $2, '', $3, TRUE)`,
 		id, "itest-"+id[:8]+"@example.mn", "Integration test administrator"); err != nil {
 		t.Fatalf("create user: %v", err)
 	}
@@ -33,7 +33,7 @@ func newUser(t *testing.T, pool *pgxpool.Pool, tenantID string) string {
 		t.Fatalf("create membership: %v", err)
 	}
 	t.Cleanup(func() {
-		_, _ = pool.Exec(context.Background(), `DELETE FROM platform.users WHERE id = $1`, id)
+		_, _ = pool.Exec(context.Background(), `DELETE FROM registry.users WHERE id = $1`, id)
 	})
 	return id
 }

@@ -327,7 +327,7 @@ func (ai *AppInstaller) grantAppPermissions(ctx context.Context, tx pgx.Tx, tena
 
 		permID := uuid.New().String()
 		if _, err := tx.Exec(ctx,
-			`INSERT INTO platform.permissions (id, code, name, description)
+			`INSERT INTO registry.permissions (id, code, name, description)
 			 VALUES ($1, $2, $3, $4) ON CONFLICT (code) DO NOTHING`,
 			permID, perm.Code, perm.Name, perm.Description); err != nil {
 			return fmt.Errorf("register permission %s for %s: %w", perm.Code, app.ID, err)
@@ -337,7 +337,7 @@ func (ai *AppInstaller) grantAppPermissions(ctx context.Context, tx pgx.Tx, tena
 		if adminRoleID != "" {
 			if _, err := tx.Exec(ctx,
 				`INSERT INTO tenant.role_permissions (role_id, permission_id)
-				 SELECT $1, p.id FROM platform.permissions p WHERE p.code = $2
+				 SELECT $1, p.id FROM registry.permissions p WHERE p.code = $2
 				 ON CONFLICT DO NOTHING`, adminRoleID, perm.Code); err != nil {
 				return fmt.Errorf("grant %s to the admin role: %w", perm.Code, err)
 			}
@@ -353,7 +353,7 @@ func (ai *AppInstaller) grantAppPermissions(ctx context.Context, tx pgx.Tx, tena
 
 		for _, roleCode := range defaultRolesFor(perm) {
 			if _, err := tx.Exec(ctx, `INSERT INTO tenant.role_permissions(role_id,permission_id)
-				SELECT r.id,p.id FROM tenant.roles r JOIN platform.permissions p ON p.code=$3
+				SELECT r.id,p.id FROM tenant.roles r JOIN registry.permissions p ON p.code=$3
 				WHERE r.tenant_id=$1 AND r.code=$2 AND r.active ON CONFLICT DO NOTHING`,
 				tenantID, roleCode, perm.Code); err != nil {
 				return fmt.Errorf("grant %s to the %s role: %w", perm.Code, roleCode, err)
@@ -525,7 +525,7 @@ func (ai *AppInstaller) SyncCatalog(ctx context.Context) error {
 	var failed []string
 	for _, app := range ai.GetCatalog() {
 		_, err := ai.db.Exec(ctx,
-			`INSERT INTO platform.apps (id, slug, name, description, icon_url, category, visibility)
+			`INSERT INTO registry.apps (id, slug, name, description, icon_url, category, visibility)
 			 VALUES ($1, $2, $3, $4, $5, $6, $7)
 			 ON CONFLICT (id) DO UPDATE SET
 			     slug        = EXCLUDED.slug,
@@ -561,7 +561,7 @@ func (ai *AppInstaller) SyncCatalog(ctx context.Context) error {
 			platformConstraint = ">=0.1.0"
 		}
 		_, err = ai.db.Exec(ctx,
-			`INSERT INTO platform.app_versions (app_id, version, platform_constraint, manifest)
+			`INSERT INTO registry.app_versions (app_id, version, platform_constraint, manifest)
 			 VALUES ($1, $2, $3, $4)
 			 ON CONFLICT (app_id, version) DO NOTHING`,
 			app.ID, app.Version, platformConstraint, manifest)
@@ -637,7 +637,7 @@ func (ai *AppInstaller) EnsureDefaultApps(ctx context.Context) error {
 		}
 
 		rows, err := ai.db.Query(ctx,
-			`SELECT t.id::text FROM platform.tenants t
+			`SELECT t.id::text FROM registry.tenants t
 			  WHERE NOT EXISTS (SELECT 1 FROM tenant.app_installations ai
 			                     WHERE ai.tenant_id = t.id AND ai.app_id = $1)`, appID)
 		if err != nil {

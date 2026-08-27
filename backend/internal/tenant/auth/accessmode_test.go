@@ -40,14 +40,14 @@ func accessModeServer(t *testing.T, mode string) (*Handlers, *pgxpool.Pool) {
 func setMode(t *testing.T, pool *pgxpool.Pool, store *settings.Store, mode string) {
 	t.Helper()
 	if _, err := pool.Exec(context.Background(),
-		`INSERT INTO platform.platform_settings (key, value) VALUES ($1, $2)
+		`INSERT INTO registry.platform_settings (key, value) VALUES ($1, $2)
 		 ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
 		settings.AccessMode, mode); err != nil {
 		t.Fatalf("write the access mode: %v", err)
 	}
 	t.Cleanup(func() {
 		_, _ = pool.Exec(context.Background(),
-			`DELETE FROM platform.platform_settings WHERE key = $1`, settings.AccessMode)
+			`DELETE FROM registry.platform_settings WHERE key = $1`, settings.AccessMode)
 	})
 	if err := store.Load(context.Background()); err != nil {
 		t.Fatalf("load the settings: %v", err)
@@ -66,12 +66,12 @@ func TestAPrivatePlatformProvisionsNobodyThroughEID(t *testing.T) {
 	slug := fmt.Sprintf("jit-%d", time.Now().UnixNano())
 	var tenantID string
 	if err := pool.QueryRow(context.Background(),
-		`INSERT INTO platform.tenants (slug, name) VALUES ($1, $1) RETURNING id::text`, slug).
+		`INSERT INTO registry.tenants (slug, name) VALUES ($1, $1) RETURNING id::text`, slug).
 		Scan(&tenantID); err != nil {
 		t.Fatalf("create the provisioning organisation: %v", err)
 	}
 	t.Cleanup(func() {
-		_, _ = pool.Exec(context.Background(), `DELETE FROM platform.tenants WHERE id = $1::uuid`, tenantID)
+		_, _ = pool.Exec(context.Background(), `DELETE FROM registry.tenants WHERE id = $1::uuid`, tenantID)
 	})
 	t.Setenv("EID_JIT_TENANT_SLUG", slug)
 	t.Setenv("EID_RP_SECRET", "test-linking-key")

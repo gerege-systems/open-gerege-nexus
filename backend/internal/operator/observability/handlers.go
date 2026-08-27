@@ -114,7 +114,7 @@ func (s *Service) backgroundJobs(ctx context.Context) []BackgroundJob {
 	// organisations still counting down, which is the useful number anyway.
 	var awaiting int
 	if err := s.db.QueryRow(ctx,
-		`SELECT count(*) FROM platform.tenants WHERE deletion_scheduled_at IS NOT NULL`).Scan(&awaiting); err == nil {
+		`SELECT count(*) FROM registry.tenants WHERE deletion_scheduled_at IS NOT NULL`).Scan(&awaiting); err == nil {
 		jobs = append(jobs, BackgroundJob{
 			Name: "deletion_sweep", OK: true, Pending: awaiting,
 		})
@@ -143,7 +143,7 @@ func (s *Service) tenantTrouble(ctx context.Context) []TenantTrouble {
 	rows, err := s.db.Query(operator.Scoped(ctx),
 		`SELECT a.tenant_id::text, COALESCE(t.name, ''), count(*), min(a.action)
 		   FROM tenant.audit_events a
-		   LEFT JOIN platform.tenants t ON t.id = a.tenant_id
+		   LEFT JOIN registry.tenants t ON t.id = a.tenant_id
 		  WHERE a.created_at > NOW() - INTERVAL '24 hours'
 		    AND a.tenant_id IS NOT NULL
 		    AND (a.action LIKE '%fail%' OR a.action LIKE '%error%' OR a.action LIKE '%denied%')
@@ -203,7 +203,7 @@ func (s *Service) CatalogStatus(ctx context.Context) CatalogStatus {
 	rows, err := s.db.Query(operator.Scoped(ctx),
 		`SELECT i.app_id, COALESCE(a.name, i.app_id), i.installed_version, count(*)
 		   FROM tenant.app_installations i
-		   LEFT JOIN platform.apps a ON a.id = i.app_id
+		   LEFT JOIN registry.apps a ON a.id = i.app_id
 		  WHERE i.enabled AND i.status = 'installed'
 		  GROUP BY i.app_id, a.name, i.installed_version
 		  ORDER BY i.app_id`)

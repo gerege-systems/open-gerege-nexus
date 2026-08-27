@@ -27,7 +27,7 @@ func (s *Service) ListAudit(ctx context.Context, action, targetType, targetID st
 	rows, err := s.db.Query(operator.Scoped(ctx),
 		`SELECT id::text, operator_id::text, operator_email, action, target_type, target_id,
 		        reason, before, after, ip, created_at
-		   FROM platform.operator_audit
+		   FROM operator.operator_audit
 		  WHERE ($1 = '' OR action = $1)
 		    AND ($2 = '' OR target_type = $2)
 		    AND ($3 = '' OR target_id = $3)
@@ -68,7 +68,7 @@ func (s *Service) ListOperators(ctx context.Context) ([]OperatorSummary, error) 
 
 	rows, err := s.db.Query(ctx,
 		`SELECT id::text, email, name, role, disabled_at, last_login_at, created_at
-		   FROM platform.operator_accounts
+		   FROM operator.operator_accounts
 		  ORDER BY email`)
 	if err != nil {
 		return nil, fmt.Errorf("control plane: list the operators: %w", err)

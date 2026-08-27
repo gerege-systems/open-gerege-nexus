@@ -67,8 +67,8 @@ func (h *Handlers) HandleCredentialCheck(w http.ResponseWriter, r *http.Request)
 	var email, purpose string
 	err := h.db.QueryRow(r.Context(),
 		`SELECT u.email, g.purpose
-		   FROM platform.credential_grants g
-		   JOIN platform.users u ON u.id = g.user_id
+		   FROM registry.credential_grants g
+		   JOIN registry.users u ON u.id = g.user_id
 		  WHERE g.token_hash = $1 AND g.redeemed_at IS NULL AND g.expires_at > NOW()`,
 		hashRecoveryToken(token)).Scan(&email, &purpose)
 	if err != nil {
@@ -118,7 +118,7 @@ func (h *Handlers) HandleCredentialRedeem(w http.ResponseWriter, r *http.Request
 	// let the same link be spent twice by two requests a millisecond apart.
 	var userID, purpose string
 	err = tx.QueryRow(r.Context(),
-		`UPDATE platform.credential_grants SET redeemed_at = NOW()
+		`UPDATE registry.credential_grants SET redeemed_at = NOW()
 		  WHERE token_hash = $1 AND redeemed_at IS NULL AND expires_at > NOW()
 		RETURNING user_id::text, purpose`,
 		hashRecoveryToken(req.Token)).Scan(&userID, &purpose)
@@ -133,7 +133,7 @@ func (h *Handlers) HandleCredentialRedeem(w http.ResponseWriter, r *http.Request
 	}
 
 	if _, err := tx.Exec(r.Context(),
-		`UPDATE platform.users SET password_hash = $2, failed_login_attempts = 0, locked_until = NULL
+		`UPDATE registry.users SET password_hash = $2, failed_login_attempts = 0, locked_until = NULL
 		  WHERE id = $1::uuid`, userID, hash); err != nil {
 		slog.Error("could not set a chosen password", "error", err)
 		httpx.Error(w, http.StatusInternalServerError, "that could not be saved")
@@ -187,7 +187,7 @@ func (h *Handlers) HandleImpersonationRedeem(w http.ResponseWriter, r *http.Requ
 	var impersonationID, tenantID, userID, operatorID, operatorEmail, reason string
 	var endsAt time.Time
 	err = tx.QueryRow(r.Context(),
-		`UPDATE platform.operator_impersonations SET redeemed_at = NOW()
+		`UPDATE registry.operator_impersonations SET redeemed_at = NOW()
 		  WHERE handover_hash = $1 AND redeemed_at IS NULL AND handover_expires_at > NOW()
 		RETURNING id::text, tenant_id::text, user_id::text, operator_id::text,
 		          operator_email, reason, ends_at`,
@@ -281,7 +281,7 @@ func (h *Handlers) EndImpersonations(ctx context.Context) {
 	defer cancel()
 
 	if _, err := h.db.Exec(sweepCtx,
-		`UPDATE platform.operator_impersonations SET ended_at = NOW()
+		`UPDATE registry.operator_impersonations SET ended_at = NOW()
 		  WHERE ended_at IS NULL AND ends_at <= NOW()`); err != nil {
 		slog.Warn("could not close the finished impersonations", "error", err)
 	}

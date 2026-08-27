@@ -148,16 +148,16 @@ func seedInitialData(ctx context.Context, db *pgxpool.Pool, installer appInstall
 // deployment that once created the tenant by hand keeps the row it has.
 func ensureTenant(ctx context.Context, db *pgxpool.Pool, id, slug, name string) (string, error) {
 	var existing string
-	if err := db.QueryRow(ctx, `SELECT id::text FROM platform.tenants WHERE slug = $1`, slug).Scan(&existing); err == nil {
+	if err := db.QueryRow(ctx, `SELECT id::text FROM registry.tenants WHERE slug = $1`, slug).Scan(&existing); err == nil {
 		return existing, nil
 	}
 	if _, err := db.Exec(ctx,
-		`INSERT INTO platform.tenants (id, slug, name) VALUES ($1, $2, $3) ON CONFLICT (slug) DO NOTHING`,
+		`INSERT INTO registry.tenants (id, slug, name) VALUES ($1, $2, $3) ON CONFLICT (slug) DO NOTHING`,
 		id, slug, name); err != nil {
 		return "", err
 	}
 	var created string
-	if err := db.QueryRow(ctx, `SELECT id::text FROM platform.tenants WHERE slug = $1`, slug).Scan(&created); err != nil {
+	if err := db.QueryRow(ctx, `SELECT id::text FROM registry.tenants WHERE slug = $1`, slug).Scan(&created); err != nil {
 		return "", err
 	}
 	return created, nil
@@ -165,7 +165,7 @@ func ensureTenant(ctx context.Context, db *pgxpool.Pool, id, slug, name string) 
 
 func ensureDemoUser(ctx context.Context, db *pgxpool.Pool) (string, error) {
 	var userID string
-	if err := db.QueryRow(ctx, `SELECT id::text FROM platform.users WHERE email = $1`, demoEmail).Scan(&userID); err == nil {
+	if err := db.QueryRow(ctx, `SELECT id::text FROM registry.users WHERE email = $1`, demoEmail).Scan(&userID); err == nil {
 		return userID, nil
 	}
 
@@ -174,12 +174,12 @@ func ensureDemoUser(ctx context.Context, db *pgxpool.Pool) (string, error) {
 		return "", err
 	}
 	if _, err := db.Exec(ctx,
-		`INSERT INTO platform.users (id, email, password_hash, name, is_admin)
+		`INSERT INTO registry.users (id, email, password_hash, name, is_admin)
 		 VALUES ($1, $2, $3, 'System Admin', FALSE)
 		 ON CONFLICT (email) DO NOTHING`, demoUserID, demoEmail, passHash); err != nil {
 		return "", err
 	}
-	if err := db.QueryRow(ctx, `SELECT id::text FROM platform.users WHERE email = $1`, demoEmail).Scan(&userID); err != nil {
+	if err := db.QueryRow(ctx, `SELECT id::text FROM registry.users WHERE email = $1`, demoEmail).Scan(&userID); err != nil {
 		return "", err
 	}
 	return userID, nil

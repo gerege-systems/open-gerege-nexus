@@ -92,7 +92,7 @@ func (c *Console) BeginImpersonation(ctx context.Context, sess Session, tenantID
 
 	var email string
 	err = c.db.QueryRow(Scoped(ctx),
-		`SELECT u.email FROM platform.users u
+		`SELECT u.email FROM registry.users u
 		   JOIN tenant.memberships m ON m.user_id = u.id AND m.tenant_id = $2::uuid
 		  WHERE u.id = $1::uuid`, userID, tenantID).Scan(&email)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -122,7 +122,7 @@ func (c *Console) BeginImpersonation(ctx context.Context, sess Session, tenantID
 		},
 	}, func(ctx context.Context, tx pgx.Tx) error {
 		if _, err := tx.Exec(ctx,
-			`INSERT INTO platform.operator_impersonations
+			`INSERT INTO registry.operator_impersonations
 			     (operator_id, operator_email, tenant_id, user_id, reason,
 			      handover_hash, handover_expires_at, ends_at)
 			 VALUES ($1::uuid, $2, $3::uuid, $4::uuid, $5, $6, NOW() + $7::interval, NOW() + $8::interval)`,
@@ -160,8 +160,8 @@ func (c *Console) ListImpersonations(ctx context.Context, tenantID string) ([]Im
 	rows, err := c.db.Query(Scoped(ctx),
 		`SELECT i.id::text, i.operator_email, i.tenant_id::text, i.user_id::text,
 		        COALESCE(u.email, ''), i.reason, i.redeemed_at, i.ends_at, i.created_at
-		   FROM platform.operator_impersonations i
-		   LEFT JOIN platform.users u ON u.id = i.user_id
+		   FROM registry.operator_impersonations i
+		   LEFT JOIN registry.users u ON u.id = i.user_id
 		  WHERE i.tenant_id = $1::uuid
 		  ORDER BY i.created_at DESC
 		  LIMIT 50`, tenantID)

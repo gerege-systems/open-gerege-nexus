@@ -100,7 +100,7 @@ func (s *SessionStore) create(ctx context.Context, tx pgx.Tx, operatorID, userAg
 	}
 
 	if _, err := tx.Exec(ctx,
-		`INSERT INTO platform.operator_sessions (token_hash, operator_id, user_agent, ip_address, expires_at, stepped_up_at)
+		`INSERT INTO operator.operator_sessions (token_hash, operator_id, user_agent, ip_address, expires_at, stepped_up_at)
 		 VALUES ($1, $2, $3, $4, $5, $6)`,
 		HashToken(token), operatorID, userAgent, ip, expiresAt, steppedUpAt); err != nil {
 		return "", time.Time{}, fmt.Errorf("persist the operator session: %w", err)
@@ -127,22 +127,22 @@ func (s *SessionStore) Resolve(ctx context.Context, token string) (Session, erro
 	)
 	err := s.db.QueryRow(ctx,
 		`WITH live AS (
-		    SELECT s.id FROM platform.operator_sessions s
-		      JOIN platform.operator_accounts a ON a.id = s.operator_id
+		    SELECT s.id FROM operator.operator_sessions s
+		      JOIN operator.operator_accounts a ON a.id = s.operator_id
 		     WHERE s.token_hash = $1
 		       AND s.revoked_at IS NULL
 		       AND s.expires_at > NOW()
 		       AND s.last_seen_at > NOW() - $2::interval
 		       AND a.disabled_at IS NULL
 		), touched AS (
-		    UPDATE platform.operator_sessions SET last_seen_at = NOW()
+		    UPDATE operator.operator_sessions SET last_seen_at = NOW()
 		     WHERE id IN (SELECT id FROM live)
 		       AND last_seen_at < NOW() - $3::interval
 		)
 		SELECT a.id::text, a.email, a.name, a.role, s.stepped_up_at, s.expires_at
-		  FROM platform.operator_sessions s
+		  FROM operator.operator_sessions s
 		  JOIN live ON live.id = s.id
-		  JOIN platform.operator_accounts a ON a.id = s.operator_id`,
+		  JOIN operator.operator_accounts a ON a.id = s.operator_id`,
 		HashToken(token), SessionIdleTimeout.String(), touchInterval.String()).
 		Scan(&sess.ID, &sess.Email, &sess.Name, &role, &steppedUpAt, &sess.ExpiresAt)
 	if err != nil {
@@ -163,7 +163,7 @@ func (s *SessionStore) Resolve(ctx context.Context, token string) (Session, erro
 // MarkSteppedUp records that the second factor has just been re-confirmed.
 func (s *SessionStore) MarkSteppedUp(ctx context.Context, tx pgx.Tx, token string) error {
 	_, err := tx.Exec(ctx,
-		`UPDATE platform.operator_sessions SET stepped_up_at = NOW()
+		`UPDATE operator.operator_sessions SET stepped_up_at = NOW()
 		  WHERE token_hash = $1 AND revoked_at IS NULL`, HashToken(token))
 	if err != nil {
 		return fmt.Errorf("record the step-up: %w", err)
@@ -178,7 +178,7 @@ func (s *SessionStore) Revoke(ctx context.Context, tx pgx.Tx, token string) erro
 		return nil
 	}
 	_, err := tx.Exec(ctx,
-		`UPDATE platform.operator_sessions SET revoked_at = NOW()
+		`UPDATE operator.operator_sessions SET revoked_at = NOW()
 		  WHERE token_hash = $1 AND revoked_at IS NULL`, HashToken(token))
 	return err
 }
@@ -188,7 +188,7 @@ func (s *SessionStore) Revoke(ctx context.Context, tx pgx.Tx, token string) erro
 // whenever their current session happens to expire.
 func (s *SessionStore) RevokeAllForOperator(ctx context.Context, tx pgx.Tx, operatorID string) (int64, error) {
 	tag, err := tx.Exec(ctx,
-		`UPDATE platform.operator_sessions SET revoked_at = NOW()
+		`UPDATE operator.operator_sessions SET revoked_at = NOW()
 		  WHERE operator_id = $1 AND revoked_at IS NULL AND expires_at > NOW()`, operatorID)
 	if err != nil {
 		return 0, fmt.Errorf("revoke the operator's sessions: %w", err)
@@ -232,7 +232,7 @@ func (s *SessionStore) sweep(ctx context.Context) {
 	defer cancel()
 
 	tag, err := s.db.Exec(sweepCtx,
-		`DELETE FROM platform.operator_sessions WHERE expires_at < NOW() - INTERVAL '`+sweepGrace+`'`)
+		`DELETE FROM operator.operator_sessions WHERE expires_at < NOW() - INTERVAL '`+sweepGrace+`'`)
 	if err != nil {
 		slog.Warn("control plane: could not purge expired operator sessions", "error", err)
 		return

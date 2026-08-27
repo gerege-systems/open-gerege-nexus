@@ -54,26 +54,26 @@ func newProfileFixture(t *testing.T) *profileFixture {
 	newTenant := func(prefix string) string {
 		var id string
 		if err := pool.QueryRow(ctx,
-			`INSERT INTO platform.tenants (slug, name) VALUES ($1 || substr(gen_random_uuid()::text, 1, 8), 'Profile test')
+			`INSERT INTO registry.tenants (slug, name) VALUES ($1 || substr(gen_random_uuid()::text, 1, 8), 'Profile test')
 			 RETURNING id::text`, prefix).Scan(&id); err != nil {
 			t.Fatalf("tenant: %v", err)
 		}
 		// No profile is inserted here on purpose. It arrives with the tenant, by
 		// trigger, and every read below would fail if it did not — which is the
 		// only way that invariant is worth relying on.
-		t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM platform.tenants WHERE id = $1`, id) })
+		t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM registry.tenants WHERE id = $1`, id) })
 		return id
 	}
 
 	f := &profileFixture{pool: pool, tenantID: newTenant("prof-"), otherID: newTenant("other-")}
 
 	if err := pool.QueryRow(ctx,
-		`INSERT INTO platform.users (email, password_hash, name, is_admin)
+		`INSERT INTO registry.users (email, password_hash, name, is_admin)
 		 VALUES ('prof-' || substr(gen_random_uuid()::text, 1, 8) || '@example.com', 'x', 'Profile Admin', TRUE)
 		 RETURNING id::text`).Scan(&f.userID); err != nil {
 		t.Fatalf("user: %v", err)
 	}
-	t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM platform.users WHERE id = $1`, f.userID) })
+	t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM registry.users WHERE id = $1`, f.userID) })
 
 	if _, err := pool.Exec(ctx,
 		`INSERT INTO tenant.memberships (tenant_id, user_id) VALUES ($1, $2)`, f.tenantID, f.userID); err != nil {

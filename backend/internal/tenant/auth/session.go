@@ -204,7 +204,7 @@ func (s *SessionStore) Resolve(ctx context.Context, token string) (UserClaims, e
 		        ) AS is_admin
 		   FROM tenant.sessions s
 		   JOIN live ON live.id = s.id
-		   JOIN platform.users u ON u.id = s.user_id
+		   JOIN registry.users u ON u.id = s.user_id
 		   JOIN tenant.memberships sm ON sm.tenant_id=s.tenant_id AND sm.user_id=s.user_id`,
 		hashToken(token), nullableTime(idleCutoff), touchInterval.String()).
 		Scan(&claims.UserID, &claims.TenantID, &claims.Email, &claims.AllowedTenantIDs,
@@ -249,7 +249,7 @@ func (s *SessionStore) TenantsForUser(ctx context.Context, userID string) ([]Ten
 	rows, err := s.db.Query(ctx,
 		`SELECT t.id::text, t.name, t.slug
 		   FROM tenant.memberships m
-		   JOIN platform.tenants t ON t.id = m.tenant_id
+		   JOIN registry.tenants t ON t.id = m.tenant_id
 		  WHERE m.user_id = $1
 		  ORDER BY t.name, t.id`, userID)
 	if err != nil {

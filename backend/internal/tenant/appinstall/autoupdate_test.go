@@ -57,19 +57,19 @@ func fixture(t *testing.T, installed catalog.CatalogApp) (*pgxpool.Pool, string)
 
 	var tenantID string
 	if err := pool.QueryRow(ctx,
-		`INSERT INTO platform.tenants (slug, name) VALUES ('au-' || substr(gen_random_uuid()::text, 1, 8), 'Auto update')
+		`INSERT INTO registry.tenants (slug, name) VALUES ('au-' || substr(gen_random_uuid()::text, 1, 8), 'Auto update')
 		 RETURNING id::text`).Scan(&tenantID); err != nil {
 		t.Fatalf("tenant: %v", err)
 	}
-	t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM platform.tenants WHERE id = $1`, tenantID) })
+	t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM registry.tenants WHERE id = $1`, tenantID) })
 	t.Cleanup(func() {
-		_, _ = pool.Exec(context.Background(), `DELETE FROM platform.apps WHERE id = $1`, installed.ID)
+		_, _ = pool.Exec(context.Background(), `DELETE FROM registry.apps WHERE id = $1`, installed.ID)
 	})
 
 	// The installed version, in the catalogue table and the version history —
 	// which is what a later version is compared against.
 	if _, err := pool.Exec(ctx,
-		`INSERT INTO platform.apps (id, slug, name, visibility) VALUES ($1, $2, $3, 'public')
+		`INSERT INTO registry.apps (id, slug, name, visibility) VALUES ($1, $2, $3, 'public')
 		 ON CONFLICT (id) DO NOTHING`, installed.ID, installed.Slug, installed.Name); err != nil {
 		t.Fatalf("app: %v", err)
 	}
@@ -78,7 +78,7 @@ func fixture(t *testing.T, installed catalog.CatalogApp) (*pgxpool.Pool, string)
 		t.Fatal(err)
 	}
 	if _, err := pool.Exec(ctx,
-		`INSERT INTO platform.app_versions (app_id, version, manifest) VALUES ($1, $2, $3)
+		`INSERT INTO registry.app_versions (app_id, version, manifest) VALUES ($1, $2, $3)
 		 ON CONFLICT (app_id, version) DO NOTHING`, installed.ID, installed.Version, manifest); err != nil {
 		t.Fatalf("version: %v", err)
 	}

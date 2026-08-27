@@ -39,19 +39,19 @@ func tenantWithMember(t *testing.T, pool *pgxpool.Pool) (tenantID, userID, token
 	slug := fmt.Sprintf("susp-%d", time.Now().UnixNano())
 
 	if err := pool.QueryRow(ctx,
-		`INSERT INTO platform.tenants (slug, name) VALUES ($1, $1) RETURNING id::text`, slug).Scan(&tenantID); err != nil {
+		`INSERT INTO registry.tenants (slug, name) VALUES ($1, $1) RETURNING id::text`, slug).Scan(&tenantID); err != nil {
 		t.Fatalf("create the organisation: %v", err)
 	}
 	t.Cleanup(func() {
-		_, _ = pool.Exec(context.Background(), `DELETE FROM platform.tenants WHERE id=$1::uuid`, tenantID)
+		_, _ = pool.Exec(context.Background(), `DELETE FROM registry.tenants WHERE id=$1::uuid`, tenantID)
 	})
 
 	if err := pool.QueryRow(ctx,
-		`INSERT INTO platform.users (email, password_hash, name) VALUES ($1, 'x', 'Member') RETURNING id::text`,
+		`INSERT INTO registry.users (email, password_hash, name) VALUES ($1, 'x', 'Member') RETURNING id::text`,
 		slug+"@identity.invalid").Scan(&userID); err != nil {
 		t.Fatalf("create the person: %v", err)
 	}
-	t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM platform.users WHERE id=$1::uuid`, userID) })
+	t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM registry.users WHERE id=$1::uuid`, userID) })
 
 	if _, err := pool.Exec(ctx,
 		`INSERT INTO tenant.memberships (tenant_id, user_id) VALUES ($1::uuid, $2::uuid)`, tenantID, userID); err != nil {
@@ -92,7 +92,7 @@ func TestASuspendedOrganisationIsRefusedByEveryRoute(t *testing.T) {
 	}
 
 	if _, err := pool.Exec(context.Background(),
-		`UPDATE platform.tenants SET suspended_at = NOW(), suspension_reason = 'unpaid' WHERE id = $1::uuid`,
+		`UPDATE registry.tenants SET suspended_at = NOW(), suspension_reason = 'unpaid' WHERE id = $1::uuid`,
 		tenantID); err != nil {
 		t.Fatalf("suspend: %v", err)
 	}
@@ -124,7 +124,7 @@ func TestSigningInToASuspendedOrganisationIsRefused(t *testing.T) {
 	tenantID, userID, _ := tenantWithMember(t, pool)
 
 	if _, err := pool.Exec(context.Background(),
-		`UPDATE platform.tenants SET suspended_at = NOW() WHERE id = $1::uuid`, tenantID); err != nil {
+		`UPDATE registry.tenants SET suspended_at = NOW() WHERE id = $1::uuid`, tenantID); err != nil {
 		t.Fatalf("suspend: %v", err)
 	}
 

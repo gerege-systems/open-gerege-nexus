@@ -74,9 +74,9 @@ const tenantProfileColumns = `SELECT t.id::text, t.slug, t.name,
 	p.province, p.district, p.khoroo, p.address_line, p.postal_code,
 	p.phone, p.email, p.website, p.logo_url, p.timezone, p.locale, p.currency,
 	COALESCE(p.parent_tenant_id::text, ''), COALESCE(parent.name, '')
-	FROM platform.tenants t
+	FROM registry.tenants t
 	JOIN tenant.tenant_profiles p ON p.tenant_id = t.id
-	LEFT JOIN platform.tenants parent ON parent.id = p.parent_tenant_id
+	LEFT JOIN registry.tenants parent ON parent.id = p.parent_tenant_id
 	WHERE t.id = $1`
 
 // HandleGetTenantProfile answers for any member of the organisation. It used to
@@ -172,7 +172,7 @@ func (h *Handlers) HandleUpdateTenantProfile(w http.ResponseWriter, r *http.Requ
 			return
 		}
 		if _, err := tx.Exec(r.Context(),
-			`UPDATE platform.tenants SET name = $1 WHERE id = $2`, strings.TrimSpace(*body.Name), tenantID); err != nil {
+			`UPDATE registry.tenants SET name = $1 WHERE id = $2`, strings.TrimSpace(*body.Name), tenantID); err != nil {
 			slog.Error("tenant: could not rename the organisation", "error", err, "tenant_id", tenantID)
 			httpx.Error(w, http.StatusInternalServerError, "could not save the organisation")
 			return
@@ -336,7 +336,7 @@ func (h *Handlers) HandleGetPreferences(w http.ResponseWriter, r *http.Request) 
 	var p Preferences
 	if err := h.db.QueryRow(r.Context(),
 		`SELECT u.name, u.email, u.phone, u.locale, u.timezone, tp.locale, tp.timezone
-		   FROM platform.users u, tenant.tenant_profiles tp
+		   FROM registry.users u, tenant.tenant_profiles tp
 		  WHERE u.id = $1 AND tp.tenant_id = $2`, claims.UserID, tenantID).
 		Scan(&p.Name, &p.Email, &p.Phone, &p.Locale, &p.Timezone,
 			&p.OrganisationLocale, &p.OrganisationTimezone); err != nil {
@@ -372,7 +372,7 @@ func (h *Handlers) HandleUpdatePreferences(w http.ResponseWriter, r *http.Reques
 	// address a verification link goes to, so changing it is a proof-of-address
 	// flow rather than a text field — see emailverify.
 	if _, err := h.db.Exec(r.Context(),
-		`UPDATE platform.users SET
+		`UPDATE registry.users SET
 		     name     = COALESCE($2, name),
 		     phone    = COALESCE($3, phone),
 		     locale   = COALESCE($4, locale),

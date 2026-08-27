@@ -102,12 +102,12 @@ func newInstallation(t *testing.T, pool *pgxpool.Pool, name string, seed byte) *
 	tenantID := uuid.NewString()
 	slug := strings.ToLower(name) + "-" + tenantID[:8]
 	if _, err := pool.Exec(context.Background(),
-		`INSERT INTO platform.tenants (id, name, slug) VALUES ($1, $2, $3)`,
+		`INSERT INTO registry.tenants (id, name, slug) VALUES ($1, $2, $3)`,
 		tenantID, "Өртөө test "+name, slug); err != nil {
 		t.Fatalf("create tenant: %v", err)
 	}
 	t.Cleanup(func() {
-		_, _ = pool.Exec(context.Background(), `DELETE FROM platform.tenants WHERE id = $1`, tenantID)
+		_, _ = pool.Exec(context.Background(), `DELETE FROM registry.tenants WHERE id = $1`, tenantID)
 	})
 
 	return &installation{svc: service, server: server, tenantID: tenantID}

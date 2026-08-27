@@ -82,7 +82,7 @@ func (s *Service) ListTenants(ctx context.Context, search string) ([]TenantSumma
 		          WHERE i.tenant_id = t.id AND i.enabled AND i.status = 'installed'),
 		        (SELECT max(s.last_seen_at) FROM tenant.sessions s WHERE s.tenant_id = t.id),
 		        t.suspended_at, t.suspension_reason, t.deletion_scheduled_at, t.maintenance_at
-		   FROM platform.tenants t
+		   FROM registry.tenants t
 		   LEFT JOIN tenant.tenant_profiles p ON p.tenant_id = t.id
 		  WHERE $1 = ''
 		     OR t.name ILIKE '%' || $1 || '%'
@@ -181,7 +181,7 @@ func (s *Service) GetTenant(ctx context.Context, tenantID string) (TenantDetail,
 		          WHERE i.tenant_id = t.id AND i.enabled AND i.status = 'installed'),
 		        (SELECT max(s.last_seen_at) FROM tenant.sessions s WHERE s.tenant_id = t.id),
 		        t.suspended_at, t.suspension_reason, t.deletion_scheduled_at, t.maintenance_at
-		   FROM platform.tenants t
+		   FROM registry.tenants t
 		   LEFT JOIN tenant.tenant_profiles p ON p.tenant_id = t.id
 		  WHERE t.id = $1::uuid`, tenantID).
 		Scan(&detail.ID, &detail.Slug, &detail.Name, &detail.RegistrationNumber,
@@ -221,7 +221,7 @@ func (s *Service) tenantApps(ctx context.Context, tenantID string) ([]TenantApp,
 	rows, err := s.db.Query(ctx,
 		`SELECT i.app_id, COALESCE(a.name, i.app_id), i.installed_version, i.status, i.enabled, i.installed_at
 		   FROM tenant.app_installations i
-		   LEFT JOIN platform.apps a ON a.id = i.app_id
+		   LEFT JOIN registry.apps a ON a.id = i.app_id
 		  WHERE i.tenant_id = $1::uuid
 		  ORDER BY COALESCE(a.name, i.app_id)`, tenantID)
 	if err != nil {
@@ -248,7 +248,7 @@ func (s *Service) tenantMembers(ctx context.Context, tenantID string) ([]TenantM
 		`SELECT u.id::text, u.email, u.name,
 		        COALESCE(ARRAY_AGG(r.code ORDER BY r.code) FILTER (WHERE r.code IS NOT NULL), '{}') AS roles
 		   FROM tenant.memberships m
-		   JOIN platform.users u ON u.id = m.user_id
+		   JOIN registry.users u ON u.id = m.user_id
 		   LEFT JOIN tenant.membership_roles mr ON mr.membership_id = m.id
 		   LEFT JOIN tenant.roles r ON r.id = mr.role_id AND r.tenant_id = m.tenant_id
 		  WHERE m.tenant_id = $1::uuid

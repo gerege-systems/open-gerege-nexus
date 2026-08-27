@@ -61,14 +61,14 @@ func newFixture(t *testing.T) *fixture {
 	var tenantID string
 	slug := fmt.Sprintf("emailverify-test-%d", time.Now().UnixNano())
 	if err := pool.QueryRow(context.Background(),
-		`INSERT INTO platform.tenants (slug, name) VALUES ($1, $2) RETURNING id::text`,
+		`INSERT INTO registry.tenants (slug, name) VALUES ($1, $2) RETURNING id::text`,
 		slug, "Email verification integration test").Scan(&tenantID); err != nil {
 		t.Fatalf("create tenant: %v", err)
 	}
 	t.Cleanup(func() {
-		// The schema cascades from platform.tenants, so one delete clears this test's
+		// The schema cascades from registry.tenants, so one delete clears this test's
 		// verifications with it.
-		_, _ = pool.Exec(context.Background(), `DELETE FROM platform.tenants WHERE id = $1`, tenantID)
+		_, _ = pool.Exec(context.Background(), `DELETE FROM registry.tenants WHERE id = $1`, tenantID)
 	})
 
 	return &fixture{svc: NewService(pool), stub: stub, pool: pool, tenantID: tenantID}

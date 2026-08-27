@@ -108,7 +108,7 @@ func ActiveGrants(ctx context.Context, db Queryer, granteeTenantID, reportKey st
 	rows, err := db.Query(nexus.WithoutTenant(ctx), `
 		SELECT g.id, g.grantor_tenant_id, t.name, g.scope, g.counterparty_ref
 		  FROM tenant.report_grants g
-		  JOIN platform.tenants t ON t.id = g.grantor_tenant_id
+		  JOIN registry.tenants t ON t.id = g.grantor_tenant_id
 		 WHERE g.grantee_tenant_id = $1
 		   AND g.report_key = $2
 		   AND g.revoked_at IS NULL
@@ -335,8 +335,8 @@ func ListGrants(ctx context.Context, db Queryer, tenantID string) ([]GrantRow, e
 		       g.valid_from, g.valid_until, g.revoked_at, g.accepted_at,
 		       g.note, g.created_at
 		  FROM tenant.report_grants g
-		  JOIN platform.tenants grantor ON grantor.id = g.grantor_tenant_id
-		  JOIN platform.tenants grantee ON grantee.id = g.grantee_tenant_id
+		  JOIN registry.tenants grantor ON grantor.id = g.grantor_tenant_id
+		  JOIN registry.tenants grantee ON grantee.id = g.grantee_tenant_id
 		 WHERE g.grantor_tenant_id = $1 OR g.grantee_tenant_id = $1
 		 ORDER BY g.created_at DESC`, tenantID)
 	if err != nil {

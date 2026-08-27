@@ -26,7 +26,7 @@ Gerege Nexus нь Go + Next.js + PostgreSQL дээрх **модульт моно
 | Origin | `nexus.gerege.mn` | `cp.nexus.gerege.mn` |
 | API | `/api/v1/*` | `/api/platform/v1/*` |
 | Session cookie | `session_token` | `cp_session` |
-| Бүртгэл | `platform.users` + `tenant.memberships` | `platform.operator_accounts` |
+| Бүртгэл | `registry.users` + `tenant.memberships` | `operator.operator_accounts` |
 | DB role | `gerege_nexus_tenant` | `gerege_nexus_operator` |
 | Go package | `internal/tenant/*` | `internal/operator/*` |
 
@@ -38,7 +38,7 @@ Gerege Nexus нь Go + Next.js + PostgreSQL дээрх **модульт моно
 ```text
 tenant origin ─┐                         ┌─ internal/tenant/* ─ tenant schema
                ├─ pkg/host/server.go ┤
-control origin ┘   shared middleware     └─ internal/operator/* ─ platform schema
+control origin ┘   shared middleware     └─ internal/operator/* ─ operator + registry
                           │
                     internal/kernel/*
                           │
@@ -89,7 +89,7 @@ middleware-ийг хуваалцана. `/health`, `/ready`, `/metrics` нь а�
 2. `cp_session`-ийг шалгаж, нууц үг + TOTP, богино idle timeout болон
    шаардлагатай үед step-up хэрэглэнэ.
 3. Query бүр `gerege_nexus_operator` role-оор ажиллана.
-4. Бичих үйлдэл ба `platform.operator_audit` мөр нэг transaction-д commit
+4. Бичих үйлдэл ба `operator.operator_audit` мөр нэг transaction-д commit
    хийнэ; audit бичигдээгүй write амжилт болохгүй.
 
 Production-д nginx-ийн CIDR allowlist нь HostGate-ээс өмнө ажиллана. Тиймээс
@@ -99,23 +99,32 @@ origin, session, DB role, audit нь тус тусдаа хамгаалалты�
 
 Миграц `00079_two_schemas.sql` хүснэгтүүдийг `platform` ба `tenant` schema-д
 салгаж, `00080_search_path_has_no_public.sql` runtime замаас `public`-ийг
-хассан.
+хассан. `00083_registry_and_operator.sql` нь `platform`-ийг хоёр болгож
+хуваасан.
 
 | Schema | Эзэмшдэг өгөгдөл |
 | --- | --- |
-| `platform` | tenants, users, apps, operator account/session/audit, approvals, settings, flags, announcements, quota, usage, backup metadata |
+| `registry` | tenants, users, identity, apps, permissions, quota, flags, announcements, usage, тохиргооны одоогийн утга |
+| `operator` | operator account/session/audit, approvals, backup metadata, тохиргооны өөрчлөлтийн түүх, битүүмжилсэн credential |
 | `tenant` | memberships, roles, sessions, app installations, profile/directory/device/integration/SSO/audit өгөгдөл |
 | `public` | goose migration ledger болон зориуд үлдээсэн `SECURITY DEFINER` function |
 
-Одоогийн migration inventory нь 27 platform, 40 tenant хүснэгттэй. Энэ тоо
-дангаараа contract биш; `backend/db/migrations/ownership_test.go`-д нэр бүрийн
-эзэмшлийг зарласан бөгөөд `schema_split_test.go` бодит DB-тэй тулгана.
+Одоогийн migration inventory нь 20 registry, 7 operator, 40 tenant хүснэгттэй.
+Энэ тоо дангаараа contract биш; `backend/db/migrations/ownership_test.go`-д нэр
+бүрийн эзэмшлийг зарласан бөгөөд `schema_split_test.go` бодит DB-тэй тулгана.
 
-Тенант role-д `platform` schema-ийн `USAGE` хэрэгтэй: announcements, feature
-flag overrides, operator impersonations, tenant quotas, usage events гэсэн
-таван boundary хүснэгтийг нэрээр нь уншина. Иймээс бодит хил нь schema USAGE
-биш, **хүснэгтийн түвшний grant**. `platform` schema-д шинээр үүсэх хүснэгт
-тенант role-д анхдагчаар хаалттайг DB integration test батална.
+Хоёр урсгал хоёр schema биш, гурав байгаагийн шалтгаан нь хилийн хүснэгтүүд.
+Тенант role-д announcements, feature flag overrides, operator impersonations,
+tenant quotas, usage events гэсэн таван хүснэгтийг нэрээр нь унших хэрэгтэй тул
+тэдгээрийг агуулсан schema-гийн `USAGE`-ийг түүнээс авч чадахгүй. 00083 хүртэл
+тэр schema нь бүх 27 хүснэгтийг агуулсан `platform` байсан бөгөөд хил нь зөвхөн
+**хүснэгтийн түвшний grant** дээр тогтдог байв.
+
+Одоо таван хилийн хүснэгт `registry`-д, тенантын урсгал хэзээ ч хүрдэггүй долоо
+нь `operator`-т байна. Тенант role `operator` дээр `USAGE` **огт аваагүй** тул
+`operator.operator_audit` түүний хувьд нэр ч биш. Хамгаалалт хоёр давхар:
+schema нь нэрийг нуух, хүснэгтийн grant нь мөрийг нээх. `registry`-д шинээр
+үүсэх хүснэгт тенант role-д анхдагчаар хаалттайг DB integration test батална.
 
 Бүх DDL `backend/db/migrations/` дахь goose migration-аар орно. Runtime DDL
 хоригтой; distribution module өөрийн migration-ийг `pkg/nexus` contract-аар
@@ -125,7 +134,7 @@ flag overrides, operator impersonations, tenant quotas, usage events гэсэн
 
 Core нь business app-ийн хүснэгт, handler-ийг эзэмшихгүй. Distribution нь
 module code, manifest, migration-аа нийлүүлж, Nexus SDK contract-аар бүртгэнэ.
-Операторын урсгал каталогийг татаж `platform.apps` metadata-г синк хийнэ; тенантын
+Операторын урсгал каталогийг татаж `registry.apps` metadata-г синк хийнэ; тенантын
 суулгалт, хувилбар, төлөв `tenant.app_installations`-д хадгалагдана.
 
 AI stock forecast endpoint ч built-in inventory table ашиглахгүй. Идэвхтэй

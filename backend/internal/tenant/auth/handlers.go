@@ -76,7 +76,7 @@ func (h *Handlers) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		              AND r.code='admin' AND r.active
 		        ) AS is_admin,
 		        m.tenant_id, u.locked_until
-		 FROM platform.users u
+		 FROM registry.users u
 		 JOIN tenant.memberships m ON m.user_id = u.id
 		 WHERE lower(u.email) = $1
 		 ORDER BY m.created_at, m.tenant_id
@@ -99,7 +99,7 @@ func (h *Handlers) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		httpx.Error(w, http.StatusUnauthorized, "invalid email or password")
 		return
 	}
-	_, _ = h.db.Exec(r.Context(), `UPDATE platform.users SET failed_login_attempts=0, locked_until=NULL WHERE id=$1`, userID)
+	_, _ = h.db.Exec(r.Context(), `UPDATE registry.users SET failed_login_attempts=0, locked_until=NULL WHERE id=$1`, userID)
 
 	token, expiresAt, err := h.IssueSession(r, userID, tenantID, "password")
 	if err != nil {
@@ -140,13 +140,13 @@ func (h *Handlers) HandleLogin(w http.ResponseWriter, r *http.Request) {
 // checks that before calling, so a live lockout is never extended by attempts
 // made during it.
 const loginFailureStatement = `
-	UPDATE platform.users u SET
+	UPDATE registry.users u SET
 	   failed_login_attempts = next.count,
 	   locked_until = CASE WHEN next.count >= $2 THEN NOW() + $3::interval END
 	  FROM (
 	      SELECT CASE WHEN locked_until IS NOT NULL AND locked_until <= NOW()
 	                  THEN 1 ELSE failed_login_attempts + 1 END AS count
-	        FROM platform.users WHERE id = $1
+	        FROM registry.users WHERE id = $1
 	  ) AS next
 	 WHERE u.id = $1`
 
@@ -498,7 +498,7 @@ func (h *Handlers) LinkEIDIdentity(ctx context.Context, userID string, identity 
 		claims = []byte("{}")
 	}
 	if _, err := h.db.Exec(ctx,
-		`INSERT INTO platform.user_eid_identities
+		`INSERT INTO registry.user_eid_identities
 		     (user_id, civil_id, reg_number, person_etsi, given_name, surname, claims, last_seen_at)
 		 VALUES ($1, NULLIF($2,''), NULLIF($3,''), $4, NULLIF($5,''), NULLIF($6,''), $7, NOW())
 		 ON CONFLICT (user_id) DO UPDATE SET
@@ -537,7 +537,7 @@ func (h *Handlers) ResolveOrProvisionEIDUser(ctx context.Context, identity *eid.
 	// or not they currently belong to an organisation, and letting the
 	// membership decide made a linked identity read as an unknown one.
 	err = h.db.QueryRow(ctx,
-		`SELECT user_id::text FROM platform.user_eid_identities WHERE person_etsi=$1`, personEtsi).Scan(&userID)
+		`SELECT user_id::text FROM registry.user_eid_identities WHERE person_etsi=$1`, personEtsi).Scan(&userID)
 	if err == nil {
 		tenantID, err = h.FirstTenantFor(ctx, userID)
 		if err != nil {
@@ -574,7 +574,7 @@ func (h *Handlers) ResolveOrProvisionEIDUser(ctx context.Context, identity *eid.
 	// was opened under.
 	if identity.GeID != 0 {
 		if err = h.db.QueryRow(ctx,
-			`SELECT u.id::text, m.tenant_id::text FROM platform.users u JOIN tenant.memberships m ON m.user_id=u.id
+			`SELECT u.id::text, m.tenant_id::text FROM registry.users u JOIN tenant.memberships m ON m.user_id=u.id
 			  WHERE u.ge_id=$1 ORDER BY m.created_at, m.tenant_id LIMIT 1`,
 			identity.GeID).Scan(&userID, &tenantID); err == nil {
 			return userID, tenantID, nil
@@ -587,7 +587,7 @@ func (h *Handlers) ResolveOrProvisionEIDUser(ctx context.Context, identity *eid.
 	// existed keeps its row and is upgraded in place by rememberGeID, rather
 	// than being left behind as a second copy of the same citizen.
 	if err = h.db.QueryRow(ctx,
-		`SELECT u.id::text, m.tenant_id::text FROM platform.users u JOIN tenant.memberships m ON m.user_id=u.id
+		`SELECT u.id::text, m.tenant_id::text FROM registry.users u JOIN tenant.memberships m ON m.user_id=u.id
 		  WHERE u.email = ANY($1) ORDER BY m.created_at, m.tenant_id LIMIT 1`,
 		[]string{syntheticEmail, email}).Scan(&userID, &tenantID); err == nil {
 		return userID, tenantID, nil
@@ -606,7 +606,7 @@ func (h *Handlers) ResolveOrProvisionEIDUser(ctx context.Context, identity *eid.
 	if tenantSlug == "" {
 		return "", "", SignInError{"eID identity is verified but account provisioning is disabled"}
 	}
-	if err = h.db.QueryRow(ctx, `SELECT id::text FROM platform.tenants WHERE slug=$1`, tenantSlug).Scan(&tenantID); err != nil {
+	if err = h.db.QueryRow(ctx, `SELECT id::text FROM registry.tenants WHERE slug=$1`, tenantSlug).Scan(&tenantID); err != nil {
 		return "", "", fmt.Errorf("eID provisioning tenant %q is unavailable: %w", tenantSlug, err)
 	}
 	name := strings.TrimSpace(identity.LastName + " " + identity.FirstName)
@@ -625,7 +625,7 @@ func (h *Handlers) ResolveOrProvisionEIDUser(ctx context.Context, identity *eid.
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 	if err = tx.QueryRow(ctx,
-		`INSERT INTO platform.users(email,password_hash,name,is_admin,ge_id) VALUES($1,$2,$3,FALSE,NULLIF($4,0)::bigint)
+		`INSERT INTO registry.users(email,password_hash,name,is_admin,ge_id) VALUES($1,$2,$3,FALSE,NULLIF($4,0)::bigint)
 		 ON CONFLICT(email) DO UPDATE SET name=EXCLUDED.name RETURNING id::text`,
 		email, passwordHash, name, identity.GeID).Scan(&userID); err != nil {
 		return "", "", err
@@ -654,8 +654,8 @@ func (h *Handlers) HandleMe(w http.ResponseWriter, r *http.Request) {
 
 	var name, email string
 	var tenantName string
-	_ = h.db.QueryRow(r.Context(), `SELECT name, email FROM platform.users WHERE id = $1`, claims.UserID).Scan(&name, &email)
-	_ = h.db.QueryRow(r.Context(), `SELECT name FROM platform.tenants WHERE id = $1`, claims.TenantID).Scan(&tenantName)
+	_ = h.db.QueryRow(r.Context(), `SELECT name, email FROM registry.users WHERE id = $1`, claims.UserID).Scan(&name, &email)
+	_ = h.db.QueryRow(r.Context(), `SELECT name FROM registry.tenants WHERE id = $1`, claims.TenantID).Scan(&tenantName)
 
 	// The effective grant of every role the member holds, so a screen can hide
 	// what the caller may not do. Administrators bypass the check, so their

@@ -38,7 +38,7 @@ func TestSuspendEndsTheSessionsAndResumeRestores(t *testing.T) {
 	var suspended bool
 	var reason string
 	if err := pool.QueryRow(ctx,
-		`SELECT suspended_at IS NOT NULL, suspension_reason FROM platform.tenants WHERE id = $1::uuid`,
+		`SELECT suspended_at IS NOT NULL, suspension_reason FROM registry.tenants WHERE id = $1::uuid`,
 		tenantID).Scan(&suspended, &reason); err != nil {
 		t.Fatalf("read the organisation: %v", err)
 	}
@@ -63,7 +63,7 @@ func TestSuspendEndsTheSessionsAndResumeRestores(t *testing.T) {
 		t.Fatalf("resume: %v", err)
 	}
 	if err := pool.QueryRow(ctx,
-		`SELECT suspended_at IS NOT NULL FROM platform.tenants WHERE id = $1::uuid`, tenantID).
+		`SELECT suspended_at IS NOT NULL FROM registry.tenants WHERE id = $1::uuid`, tenantID).
 		Scan(&suspended); err != nil {
 		t.Fatalf("read the organisation: %v", err)
 	}
@@ -85,7 +85,7 @@ func TestTheSweepDeletesWhenTheGracePeriodHasEnded(t *testing.T) {
 	ctx := context.Background()
 
 	if _, err := pool.Exec(ctx,
-		`UPDATE platform.tenants SET deletion_scheduled_at = NOW() - INTERVAL '1 minute' WHERE id = $1::uuid`,
+		`UPDATE registry.tenants SET deletion_scheduled_at = NOW() - INTERVAL '1 minute' WHERE id = $1::uuid`,
 		tenantID); err != nil {
 		t.Fatalf("backdate the deletion: %v", err)
 	}
@@ -93,7 +93,7 @@ func TestTheSweepDeletesWhenTheGracePeriodHasEnded(t *testing.T) {
 	service.SweepDeletions(ctx)
 
 	var alive bool
-	if err := pool.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM platform.tenants WHERE id = $1::uuid)`, tenantID).
+	if err := pool.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM registry.tenants WHERE id = $1::uuid)`, tenantID).
 		Scan(&alive); err != nil {
 		t.Fatalf("look for the organisation: %v", err)
 	}

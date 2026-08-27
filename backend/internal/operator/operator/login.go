@@ -140,7 +140,7 @@ func (c *Console) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		After:      map[string]any{"role": string(acct.role)},
 	}, func(ctx context.Context, tx pgx.Tx) error {
 		if _, err := tx.Exec(ctx,
-			`UPDATE platform.operator_accounts
+			`UPDATE operator.operator_accounts
 			    SET failed_login_attempts = 0, locked_until = NULL,
 			        totp_last_step = $2, last_login_at = NOW(), updated_at = NOW()
 			  WHERE id = $1`, acct.id, step); err != nil {
@@ -182,7 +182,7 @@ func (c *Console) lookupAccount(ctx context.Context, email string) (account, boo
 		        totp_confirmed_at IS NOT NULL, totp_last_step,
 		        (locked_until IS NOT NULL AND locked_until > NOW()),
 		        disabled_at IS NOT NULL, break_glass
-		   FROM platform.operator_accounts
+		   FROM operator.operator_accounts
 		  WHERE lower(email) = lower($1)`, email).
 		Scan(&acct.id, &acct.email, &acct.name, &role, &acct.passwordHash, &acct.totpSecret,
 			&acct.totpConfirmed, &acct.totpLastStep, &acct.locked, &acct.disabled, &acct.breakGlass)
@@ -206,14 +206,14 @@ func (c *Console) failLogin(ctx context.Context, w http.ResponseWriter, result s
 	// reasoning: otherwise one lockout makes every later single mistake lock
 	// the account again.
 	if _, err := c.db.Exec(ctx,
-		`UPDATE platform.operator_accounts
+		`UPDATE operator.operator_accounts
 		    SET failed_login_attempts = next.count,
 		        locked_until = CASE WHEN next.count >= $2 THEN NOW() + $3::interval END,
 		        updated_at = NOW()
 		   FROM (
 		      SELECT CASE WHEN locked_until IS NOT NULL AND locked_until <= NOW()
 		                  THEN 1 ELSE failed_login_attempts + 1 END AS count
-		        FROM platform.operator_accounts WHERE id = $1
+		        FROM operator.operator_accounts WHERE id = $1
 		   ) AS next
 		  WHERE id = $1`,
 		acct.id, maxLoginFailures, loginLockoutWindow.String()); err != nil {
@@ -313,7 +313,7 @@ func (c *Console) HandleStepUp(w http.ResponseWriter, r *http.Request) {
 		TargetID:   sess.ID,
 	}, func(ctx context.Context, tx pgx.Tx) error {
 		if _, err := tx.Exec(ctx,
-			`UPDATE platform.operator_accounts SET totp_last_step = $2, updated_at = NOW() WHERE id = $1`,
+			`UPDATE operator.operator_accounts SET totp_last_step = $2, updated_at = NOW() WHERE id = $1`,
 			acct.id, step); err != nil {
 			return err
 		}

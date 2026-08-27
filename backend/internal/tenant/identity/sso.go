@@ -254,7 +254,7 @@ func (h *Handlers) resolveOrProvisionSSOUser(ctx context.Context, cfg ssoclient.
 	// state: an administrator removes the last one, or an account is created
 	// ahead of the membership.
 	err = h.db.QueryRow(ctx,
-		`SELECT user_id::text FROM platform.user_sso_identities WHERE issuer = $1 AND subject = $2`,
+		`SELECT user_id::text FROM registry.user_sso_identities WHERE issuer = $1 AND subject = $2`,
 		issuer, identity.Subject).Scan(&userID)
 	if err == nil {
 		h.touchSSOIdentity(ctx, issuer, identity)
@@ -279,7 +279,7 @@ func (h *Handlers) resolveOrProvisionSSOUser(ctx context.Context, cfg ssoclient.
 	if email != "" && identity.EmailVerified {
 		if err = h.db.QueryRow(ctx,
 			`SELECT u.id::text, m.tenant_id::text
-			   FROM platform.users u JOIN tenant.memberships m ON m.user_id = u.id
+			   FROM registry.users u JOIN tenant.memberships m ON m.user_id = u.id
 			  WHERE lower(u.email) = $1
 			  ORDER BY m.created_at, m.tenant_id LIMIT 1`, email).Scan(&userID, &tenantID); err == nil {
 			h.linkSSOIdentity(ctx, userID, issuer, identity)
@@ -305,7 +305,7 @@ func (h *Handlers) provisionSSOUser(ctx context.Context, cfg ssoclient.Config, i
 	if slug == "" {
 		return "", "", auth.NewSignInError("your identity is verified but this deployment has no account for you")
 	}
-	if err = h.db.QueryRow(ctx, `SELECT id::text FROM platform.tenants WHERE slug = $1`, slug).Scan(&tenantID); err != nil {
+	if err = h.db.QueryRow(ctx, `SELECT id::text FROM registry.tenants WHERE slug = $1`, slug).Scan(&tenantID); err != nil {
 		return "", "", err
 	}
 
@@ -342,7 +342,7 @@ func (h *Handlers) provisionSSOUser(ctx context.Context, cfg ssoclient.Config, i
 	defer func() { _ = tx.Rollback(ctx) }()
 
 	if err = tx.QueryRow(ctx,
-		`INSERT INTO platform.users (email, password_hash, name, is_admin) VALUES ($1,$2,$3,FALSE)
+		`INSERT INTO registry.users (email, password_hash, name, is_admin) VALUES ($1,$2,$3,FALSE)
 		 ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name
 		 RETURNING id::text`, email, passwordHash, name).Scan(&userID); err != nil {
 		return "", "", err
@@ -366,7 +366,7 @@ func (h *Handlers) provisionSSOUser(ctx context.Context, cfg ssoclient.Config, i
 		return "", "", err
 	}
 	if _, err = tx.Exec(ctx,
-		`INSERT INTO platform.user_sso_identities (user_id, issuer, subject, email, name, claims, last_seen_at)
+		`INSERT INTO registry.user_sso_identities (user_id, issuer, subject, email, name, claims, last_seen_at)
 		 VALUES ($1,$2,$3,NULLIF($4,''),NULLIF($5,''),$6,NOW())
 		 ON CONFLICT (issuer, subject) DO UPDATE SET
 		     email = EXCLUDED.email, name = EXCLUDED.name,
@@ -409,7 +409,7 @@ func claimsJSON(claims map[string]any) []byte {
 // the next sign-in matches on the address again.
 func (h *Handlers) linkSSOIdentity(ctx context.Context, userID, issuer string, identity *ssoclient.Identity) {
 	if _, err := h.db.Exec(ctx,
-		`INSERT INTO platform.user_sso_identities (user_id, issuer, subject, email, name, claims, last_seen_at)
+		`INSERT INTO registry.user_sso_identities (user_id, issuer, subject, email, name, claims, last_seen_at)
 		 VALUES ($1,$2,$3,NULLIF($4,''),NULLIF($5,''),$6,NOW())
 		 ON CONFLICT (issuer, subject) DO UPDATE SET
 		     user_id = EXCLUDED.user_id, email = EXCLUDED.email,
@@ -425,7 +425,7 @@ func (h *Handlers) linkSSOIdentity(ctx context.Context, userID, issuer string, i
 // for somebody who already has a link.
 func (h *Handlers) touchSSOIdentity(ctx context.Context, issuer string, identity *ssoclient.Identity) {
 	if _, err := h.db.Exec(ctx,
-		`UPDATE platform.user_sso_identities
+		`UPDATE registry.user_sso_identities
 		    SET email = COALESCE(NULLIF($3,''), email),
 		        name = COALESCE(NULLIF($4,''), name),
 		        claims = $5,

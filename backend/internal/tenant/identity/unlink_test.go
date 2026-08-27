@@ -49,12 +49,12 @@ func unlinkUser(t *testing.T, pool *pgxpool.Pool) string {
 	ctx := context.Background()
 	var id string
 	if err := pool.QueryRow(ctx,
-		`INSERT INTO platform.users(email, password_hash, name) VALUES($1, 'x', 'unlink probe') RETURNING id::text`,
+		`INSERT INTO registry.users(email, password_hash, name) VALUES($1, 'x', 'unlink probe') RETURNING id::text`,
 		"unlink+"+uuid.NewString()+"@identity.invalid").Scan(&id); err != nil {
 		t.Fatalf("insert user: %v", err)
 	}
 	t.Cleanup(func() {
-		_, _ = pool.Exec(context.Background(), `DELETE FROM platform.users WHERE id=$1`, id)
+		_, _ = pool.Exec(context.Background(), `DELETE FROM registry.users WHERE id=$1`, id)
 	})
 	return id
 }
@@ -62,7 +62,7 @@ func unlinkUser(t *testing.T, pool *pgxpool.Pool) string {
 func addSSOIdentity(t *testing.T, pool *pgxpool.Pool, userID, issuer, subject string) {
 	t.Helper()
 	if _, err := pool.Exec(context.Background(),
-		`INSERT INTO platform.user_sso_identities(user_id, issuer, subject, email, name, claims)
+		`INSERT INTO registry.user_sso_identities(user_id, issuer, subject, email, name, claims)
 		 VALUES($1,$2,$3,$4,'probe','{}'::jsonb)`,
 		userID, issuer, subject, subject+"@identity.invalid"); err != nil {
 		t.Fatalf("insert sso identity: %v", err)
@@ -72,7 +72,7 @@ func addSSOIdentity(t *testing.T, pool *pgxpool.Pool, userID, issuer, subject st
 func addEIDIdentity(t *testing.T, pool *pgxpool.Pool, userID, etsi string) {
 	t.Helper()
 	if _, err := pool.Exec(context.Background(),
-		`INSERT INTO platform.user_eid_identities(user_id, person_etsi, given_name, surname, claims)
+		`INSERT INTO registry.user_eid_identities(user_id, person_etsi, given_name, surname, claims)
 		 VALUES($1,$2,'probe','probe','{}'::jsonb)`, userID, etsi); err != nil {
 		t.Fatalf("insert eid identity: %v", err)
 	}
@@ -125,7 +125,7 @@ func TestRemovingOneOfTwoLeavesTheOtherPinned(t *testing.T) {
 	addEIDIdentity(t, pool, userID, "ETSI-"+uuid.NewString())
 
 	if _, err := pool.Exec(ctx,
-		`DELETE FROM platform.user_sso_identities WHERE user_id=$1 AND subject=$2`, userID, subject); err != nil {
+		`DELETE FROM registry.user_sso_identities WHERE user_id=$1 AND subject=$2`, userID, subject); err != nil {
 		t.Fatalf("delete sso identity: %v", err)
 	}
 

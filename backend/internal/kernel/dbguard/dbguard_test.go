@@ -113,7 +113,7 @@ func seedTwoTenants(t *testing.T, pool *pgxpool.Pool) (string, string) {
 	for i, target := range []*string{&first, &second} {
 		slug := "guardtest-" + suffix + "-" + string(rune('a'+i))
 		if err := pool.QueryRow(ctx,
-			`INSERT INTO platform.tenants (name, slug) VALUES ($1,$1) RETURNING id::text`, slug).Scan(target); err != nil {
+			`INSERT INTO registry.tenants (name, slug) VALUES ($1,$1) RETURNING id::text`, slug).Scan(target); err != nil {
 			t.Fatal(err)
 		}
 		if _, err := pool.Exec(ctx,
@@ -125,7 +125,7 @@ func seedTwoTenants(t *testing.T, pool *pgxpool.Pool) (string, string) {
 	}
 	t.Cleanup(func() {
 		// Deleting through the platform path: the sweep is not acting for a tenant.
-		_, _ = pool.Exec(context.Background(), `DELETE FROM platform.tenants WHERE id = ANY($1)`,
+		_, _ = pool.Exec(context.Background(), `DELETE FROM registry.tenants WHERE id = ANY($1)`,
 			[]string{first, second})
 	})
 	return first, second

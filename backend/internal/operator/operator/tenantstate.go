@@ -36,7 +36,7 @@ func (c *Console) StateOf(ctx context.Context, tenantID string) (TenantState, er
 	var state TenantState
 	err := c.db.QueryRow(Scoped(ctx),
 		`SELECT id::text, slug, name, suspended_at, suspension_reason, deletion_scheduled_at
-		   FROM platform.tenants WHERE id = $1::uuid`, tenantID).
+		   FROM registry.tenants WHERE id = $1::uuid`, tenantID).
 		Scan(&state.ID, &state.Slug, &state.Name, &state.SuspendedAt,
 			&state.SuspensionReason, &state.DeletionScheduledAt)
 	if errors.Is(err, pgx.ErrNoRows) {

@@ -109,7 +109,7 @@ func (h *Handlers) Maintenance(ctx context.Context, tenantID string) maintenance
 	var at *time.Time
 	var message string
 	if err := h.db.QueryRow(ctx,
-		`SELECT maintenance_at, maintenance_message FROM platform.tenants WHERE id = $1::uuid`,
+		`SELECT maintenance_at, maintenance_message FROM registry.tenants WHERE id = $1::uuid`,
 		tenantID).Scan(&at, &message); err != nil {
 		if !errors.Is(err, pgx.ErrNoRows) {
 			slog.Warn("could not check whether the organisation is in Maintenance",
@@ -182,7 +182,7 @@ func (h *Handlers) Notices(ctx context.Context, tenantID string) []Notice {
 	}
 
 	rows, err := h.db.Query(ctx,
-		`SELECT kind, title, body FROM platform.announcements
+		`SELECT kind, title, body FROM registry.announcements
 		  WHERE starts_at <= NOW() AND (ends_at IS NULL OR ends_at > NOW())
 		  ORDER BY starts_at DESC
 		  LIMIT 5`)

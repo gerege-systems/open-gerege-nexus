@@ -95,7 +95,7 @@ func (s *Service) FindPeople(ctx context.Context, query string) ([]Person, error
 		`SELECT u.id::text, u.email, u.name, u.locked_until, u.failed_login_attempts,
 		        (SELECT count(*) FROM tenant.sessions s
 		          WHERE s.user_id = u.id AND s.revoked_at IS NULL AND s.expires_at > NOW())
-		   FROM platform.users u
+		   FROM registry.users u
 		  WHERE u.email ILIKE '%' || $1 || '%' OR u.name ILIKE '%' || $1 || '%'
 		  ORDER BY u.email
 		  LIMIT $2`, query, peoplePageSize)
@@ -142,7 +142,7 @@ func (s *Service) membershipsFor(ctx context.Context, userIDs []string) (map[str
 		`SELECT m.user_id::text, t.id::text, t.name, t.slug, t.suspended_at IS NOT NULL,
 		        COALESCE(ARRAY_AGG(r.code ORDER BY r.code) FILTER (WHERE r.code IS NOT NULL), '{}')
 		   FROM tenant.memberships m
-		   JOIN platform.tenants t ON t.id = m.tenant_id
+		   JOIN registry.tenants t ON t.id = m.tenant_id
 		   LEFT JOIN tenant.membership_roles mr ON mr.membership_id = m.id
 		   LEFT JOIN tenant.roles r ON r.id = mr.role_id AND r.tenant_id = m.tenant_id
 		  WHERE m.user_id = ANY($1::uuid[])
@@ -171,7 +171,7 @@ func (s *Service) person(ctx context.Context, userID string) (Person, error) {
 	var found Person
 	err := s.db.QueryRow(operator.Scoped(ctx),
 		`SELECT id::text, email, name, locked_until, failed_login_attempts
-		   FROM platform.users WHERE id = $1::uuid`, userID).
+		   FROM registry.users WHERE id = $1::uuid`, userID).
 		Scan(&found.ID, &found.Email, &found.Name, &found.LockedUntil, &found.FailedLogins)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return Person{}, ErrUserNotFound
@@ -203,7 +203,7 @@ func (s *Service) Unlock(ctx context.Context, sess operator.Session, userID, rea
 		Before:     map[string]any{"locked_until": before.LockedUntil, "failed_logins": before.FailedLogins},
 	}, func(ctx context.Context, tx pgx.Tx) error {
 		_, err := tx.Exec(ctx,
-			`UPDATE platform.users SET failed_login_attempts = 0, locked_until = NULL WHERE id = $1::uuid`,
+			`UPDATE registry.users SET failed_login_attempts = 0, locked_until = NULL WHERE id = $1::uuid`,
 			userID)
 		return err
 	})
@@ -289,13 +289,13 @@ func (s *Service) issueCredentialGrant(ctx context.Context, tx pgx.Tx, userID, p
 	// the same account are two chances for the older one — the one in the mail
 	// somebody forwarded — to still work.
 	if _, err := tx.Exec(ctx,
-		`UPDATE platform.credential_grants SET redeemed_at = NOW()
+		`UPDATE registry.credential_grants SET redeemed_at = NOW()
 		  WHERE user_id = $1::uuid AND redeemed_at IS NULL AND expires_at > NOW()`,
 		userID); err != nil {
 		return "", fmt.Errorf("retire the outstanding links: %w", err)
 	}
 	if _, err := tx.Exec(ctx,
-		`INSERT INTO platform.credential_grants (user_id, purpose, token_hash, issued_by_operator, expires_at)
+		`INSERT INTO registry.credential_grants (user_id, purpose, token_hash, issued_by_operator, expires_at)
 		 VALUES ($1::uuid, $2, $3, $4::uuid, NOW() + $5::interval)`,
 		userID, purpose, operator.HashToken(token), operatorID, CredentialLinkTTL.String()); err != nil {
 		return "", fmt.Errorf("record the link: %w", err)

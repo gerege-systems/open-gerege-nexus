@@ -467,7 +467,7 @@ type signingKey struct {
 func (s *Store) ActiveSigningKey(ctx context.Context) (*signingKey, error) {
 	var kid, privatePEM string
 	err := s.db.QueryRow(ctx,
-		`SELECT kid, private_key_pem FROM platform.oauth2_signing_keys WHERE active LIMIT 1`).
+		`SELECT kid, private_key_pem FROM registry.oauth2_signing_keys WHERE active LIMIT 1`).
 		Scan(&kid, &privatePEM)
 
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -504,12 +504,12 @@ func (s *Store) generateSigningKey(ctx context.Context) (*signingKey, error) {
 	// together, one insert loses the race — it then reads the winner's key
 	// rather than failing, so both end up signing with the same kid.
 	_, err = s.db.Exec(ctx, `
-		INSERT INTO platform.oauth2_signing_keys (kid, private_key_pem, public_key_pem)
+		INSERT INTO registry.oauth2_signing_keys (kid, private_key_pem, public_key_pem)
 		VALUES ($1,$2,$3)`, kid, privatePEM, publicPEM)
 	if err != nil {
 		var loadedKID, loadedPEM string
 		if lookupErr := s.db.QueryRow(ctx,
-			`SELECT kid, private_key_pem FROM platform.oauth2_signing_keys WHERE active LIMIT 1`).
+			`SELECT kid, private_key_pem FROM registry.oauth2_signing_keys WHERE active LIMIT 1`).
 			Scan(&loadedKID, &loadedPEM); lookupErr == nil {
 			parsed, parseErr := parsePrivateKeyPEM(loadedPEM)
 			if parseErr != nil {
@@ -527,7 +527,7 @@ func (s *Store) generateSigningKey(ctx context.Context) (*signingKey, error) {
 // plus any retired key whose tokens have not all expired yet.
 func (s *Store) PublicKeys(ctx context.Context) ([]map[string]any, error) {
 	rows, err := s.db.Query(ctx,
-		`SELECT kid, public_key_pem FROM platform.oauth2_signing_keys ORDER BY active DESC, created_at DESC`)
+		`SELECT kid, public_key_pem FROM registry.oauth2_signing_keys ORDER BY active DESC, created_at DESC`)
 	if err != nil {
 		return nil, err
 	}
@@ -559,7 +559,7 @@ func (s *Store) PublicKeys(ctx context.Context) ([]map[string]any, error) {
 // request. Retired keys are included — an id_token minted before a rotation is
 // still a truthful hint about who is signing out.
 func (s *Store) VerificationKeys(ctx context.Context) (map[string]*rsa.PublicKey, error) {
-	rows, err := s.db.Query(ctx, `SELECT kid, public_key_pem FROM platform.oauth2_signing_keys`)
+	rows, err := s.db.Query(ctx, `SELECT kid, public_key_pem FROM registry.oauth2_signing_keys`)
 	if err != nil {
 		return nil, err
 	}
@@ -673,7 +673,7 @@ func (s *Store) ConsentsByTenant(ctx context.Context, tenantID string, limit int
 		SELECT c.client_id, c.client_name, u.id::text, u.email, u.name, oc.scopes, oc.granted_at
 		  FROM tenant.oauth2_consents oc
 		  JOIN tenant.oauth2_clients c ON c.client_id = oc.client_id
-		  JOIN platform.users u ON u.id = oc.user_id
+		  JOIN registry.users u ON u.id = oc.user_id
 		 WHERE c.tenant_id = $1
 		 ORDER BY oc.granted_at DESC
 		 LIMIT $2`, tenantID, limit)
@@ -747,7 +747,7 @@ type SigningKeyInfo struct {
 func (s *Store) SigningKeys(ctx context.Context) ([]SigningKeyInfo, error) {
 	rows, err := s.db.Query(ctx,
 		`SELECT kid, algorithm, active, created_at, retired_at
-		   FROM platform.oauth2_signing_keys ORDER BY active DESC, created_at DESC`)
+		   FROM registry.oauth2_signing_keys ORDER BY active DESC, created_at DESC`)
 	if err != nil {
 		return nil, err
 	}

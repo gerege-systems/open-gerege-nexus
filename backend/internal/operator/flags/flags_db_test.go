@@ -40,7 +40,7 @@ func TestAFlagCanBeAimedAtOneOrganisation(t *testing.T) {
 
 	key := fmt.Sprintf("module.test-%d.disabled", time.Now().UnixNano())
 	t.Cleanup(func() {
-		_, _ = pool.Exec(context.Background(), `DELETE FROM platform.feature_flags WHERE key = $1`, key)
+		_, _ = pool.Exec(context.Background(), `DELETE FROM registry.feature_flags WHERE key = $1`, key)
 	})
 
 	if err := service.SaveFlag(ctx, sess, FlagInput{

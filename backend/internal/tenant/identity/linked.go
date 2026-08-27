@@ -55,7 +55,7 @@ func (h *Handlers) LinkedIdentities(ctx context.Context, userID string) []Linked
 
 	rows, err := h.db.Query(ctx,
 		`SELECT issuer, subject, COALESCE(email,''), COALESCE(name,''), claims, linked_at, last_seen_at
-		   FROM platform.user_sso_identities WHERE user_id = $1`, userID)
+		   FROM registry.user_sso_identities WHERE user_id = $1`, userID)
 	if err == nil {
 		defer rows.Close()
 		for rows.Next() {
@@ -78,7 +78,7 @@ func (h *Handlers) LinkedIdentities(ctx context.Context, userID string) []Linked
 	var raw []byte
 	if err := h.db.QueryRow(ctx,
 		`SELECT person_etsi, COALESCE(given_name,''), COALESCE(surname,''), claims, linked_at, last_seen_at
-		   FROM platform.user_eid_identities WHERE user_id = $1`, userID).
+		   FROM registry.user_eid_identities WHERE user_id = $1`, userID).
 		Scan(&eid.Subject, &eid.Name, &eid.Surname, &raw, &eid.LinkedAt, &eid.LastSeen); err == nil {
 		eid.Kind = "eid"
 		eid.Provider = "eID Mongolia"

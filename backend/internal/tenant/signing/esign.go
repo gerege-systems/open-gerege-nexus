@@ -142,7 +142,7 @@ func (m *Rails) Mount(r chi.Router, tenantAuthMiddleware func(http.Handler) http
 
 // ─── Request guards ──────────────────────────────────────────────────────────
 
-// actorFrom resolves the caller into platform.permissions and, when their account is
+// actorFrom resolves the caller into registry.permissions and, when their account is
 // linked, their eID signing identity. It is the single place authorisation
 // context is built, so no handler can forget to apply it.
 func (m *Rails) actorFrom(r *http.Request) (string, Actor, error) {

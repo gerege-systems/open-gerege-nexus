@@ -734,7 +734,7 @@ func (s *SSOProvider) loadUser(ctx context.Context, userID string) (userProfile,
 	var p userProfile
 	var geID *int64
 	err := s.store.db.QueryRow(ctx,
-		`SELECT email, name, ge_id FROM platform.users WHERE id = $1`, userID).
+		`SELECT email, name, ge_id FROM registry.users WHERE id = $1`, userID).
 		Scan(&p.Email, &p.Name, &geID)
 	if geID != nil {
 		p.GeID = *geID
@@ -752,7 +752,7 @@ func (s *SSOProvider) loadUser(ctx context.Context, userID string) (userProfile,
 // is not an error worth failing a sign-in over — the claim is simply absent.
 func (s *SSOProvider) tenantSlug(ctx context.Context, tenantID string) string {
 	var slug string
-	if err := s.store.db.QueryRow(ctx, `SELECT slug FROM platform.tenants WHERE id = $1`, tenantID).Scan(&slug); err != nil {
+	if err := s.store.db.QueryRow(ctx, `SELECT slug FROM registry.tenants WHERE id = $1`, tenantID).Scan(&slug); err != nil {
 		slog.Warn("could not resolve the tenant slug for a token", "error", err, "tenant_id", tenantID)
 		return ""
 	}

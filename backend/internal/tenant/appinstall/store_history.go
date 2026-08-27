@@ -125,7 +125,7 @@ func (h *Handlers) HandleAppHistory(w http.ResponseWriter, r *http.Request) {
 // SyncCatalog has been recording since long before anything read them back.
 func (h *Handlers) appReleaseHistory(r *http.Request, appID, locale string) ([]historyEntry, error) {
 	rows, err := h.db.Query(r.Context(),
-		`SELECT version, manifest, published_at FROM platform.app_versions
+		`SELECT version, manifest, published_at FROM registry.app_versions
 		  WHERE app_id = $1 ORDER BY published_at DESC`, appID)
 	if err != nil {
 		return nil, err
@@ -170,7 +170,7 @@ func (h *Handlers) appInstallationHistory(r *http.Request, tenantID, appID strin
 		        COALESCE(u.name, '')
 		   FROM tenant.installation_events e
 		   JOIN tenant.app_installations ai ON ai.id = e.installation_id
-		   LEFT JOIN platform.users u
+		   LEFT JOIN registry.users u
 		          ON u.id::text = NULLIF(e.details ->> 'user_id', 'system')
 		  WHERE ai.tenant_id = $1 AND ai.app_id = $2
 		  ORDER BY e.created_at DESC`, tenantID, appID)

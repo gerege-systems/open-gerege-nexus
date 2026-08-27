@@ -95,7 +95,7 @@ func newOperator(t *testing.T, pool *pgxpool.Pool, role Role) (Operator, string)
 	}
 	t.Cleanup(func() {
 		// The account goes; its audit rows stay, and cannot be removed.
-		_, _ = pool.Exec(context.Background(), `DELETE FROM platform.operator_accounts WHERE id = $1::uuid`, operator.ID)
+		_, _ = pool.Exec(context.Background(), `DELETE FROM operator.operator_accounts WHERE id = $1::uuid`, operator.ID)
 	})
 
 	// Confirmed with the previous step's code, which the skew window accepts.
@@ -125,7 +125,7 @@ func TestSignInRefusesAnUnconfirmedAccount(t *testing.T) {
 		t.Fatalf("create: %v", err)
 	}
 	t.Cleanup(func() {
-		_, _ = pool.Exec(context.Background(), `DELETE FROM platform.operator_accounts WHERE id = $1::uuid`, operator.ID)
+		_, _ = pool.Exec(context.Background(), `DELETE FROM operator.operator_accounts WHERE id = $1::uuid`, operator.ID)
 	})
 
 	recorder := signIn(t, service, email, "correct horse battery", codeAt(t, enrolment.Secret, time.Now()))
@@ -193,7 +193,7 @@ func TestSignInRefusesTheWrongPasswordAndLocksOut(t *testing.T) {
 
 	var locked bool
 	if err := pool.QueryRow(context.Background(),
-		`SELECT locked_until IS NOT NULL AND locked_until > NOW() FROM platform.operator_accounts WHERE id = $1::uuid`,
+		`SELECT locked_until IS NOT NULL AND locked_until > NOW() FROM operator.operator_accounts WHERE id = $1::uuid`,
 		operator.ID).Scan(&locked); err != nil {
 		t.Fatalf("read the lockout: %v", err)
 	}
@@ -220,12 +220,12 @@ func TestOperatorAuditCannotBeRewritten(t *testing.T) {
 	// As the owning login role, which outranks every GRANT. If this is refused,
 	// nothing in the process can rewrite the trail.
 	if _, err := pool.Exec(ctx,
-		`UPDATE platform.operator_audit SET reason = 'rewritten' WHERE operator_id = $1::uuid`,
+		`UPDATE operator.operator_audit SET reason = 'rewritten' WHERE operator_id = $1::uuid`,
 		operator.ID); err == nil {
 		t.Fatal("an audit row was updated")
 	}
 	if _, err := pool.Exec(ctx,
-		`DELETE FROM platform.operator_audit WHERE operator_id = $1::uuid`, operator.ID); err == nil {
+		`DELETE FROM operator.operator_audit WHERE operator_id = $1::uuid`, operator.ID); err == nil {
 		t.Fatal("an audit row was deleted")
 	}
 }
@@ -240,7 +240,7 @@ func TestOperatorRoleReadsButCannotWrite(t *testing.T) {
 	// Reads across organisations: the row-level policies admit this role for
 	// SELECT, on the tables migration 00049 names.
 	var tenants int
-	if err := pool.QueryRow(ctx, `SELECT count(*) FROM platform.tenants`).Scan(&tenants); err != nil {
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM registry.tenants`).Scan(&tenants); err != nil {
 		t.Fatalf("the operator role cannot read organisations: %v", err)
 	}
 	var memberships int
@@ -254,13 +254,13 @@ func TestOperatorRoleReadsButCannotWrite(t *testing.T) {
 	// Creating an organisation is *not* on this list, because CP-2 gave the
 	// console that on purpose: opening one is reversible, and removing one is
 	// the thing that is not.
-	if _, err := pool.Exec(ctx, `DELETE FROM platform.tenants WHERE slug = 'nothing-matching'`); err == nil {
+	if _, err := pool.Exec(ctx, `DELETE FROM registry.tenants WHERE slug = 'nothing-matching'`); err == nil {
 		t.Fatal("the operator role can delete organisations")
 	}
 	// The column grant is the sharp one: the console may write a person's
 	// lockout state and nothing else about them, so this is refused even
 	// though the row is one it can read and partly update.
-	if _, err := pool.Exec(ctx, `UPDATE platform.users SET name = name`); err == nil {
+	if _, err := pool.Exec(ctx, `UPDATE registry.users SET name = name`); err == nil {
 		t.Fatal("the operator role updated a person's record")
 	}
 
@@ -377,7 +377,7 @@ func auditCount(t *testing.T, pool *pgxpool.Pool, operatorID, action string) int
 	t.Helper()
 	var count int
 	if err := pool.QueryRow(context.Background(),
-		`SELECT count(*) FROM platform.operator_audit WHERE operator_id = $1::uuid AND action = $2`,
+		`SELECT count(*) FROM operator.operator_audit WHERE operator_id = $1::uuid AND action = $2`,
 		operatorID, action).Scan(&count); err != nil {
 		t.Fatalf("count the audit rows: %v", err)
 	}

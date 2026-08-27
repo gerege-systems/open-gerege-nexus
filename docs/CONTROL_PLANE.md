@@ -20,9 +20,9 @@
 | Нэвтрэлт | Нууц үг + баталгаажсан TOTP |
 | Cookie | `cp_session`, тенантын `session_token`-оос тусдаа |
 | Session | Дээд тал нь 8 цаг, 30 минут idle, мэдрэмтгий үйлдэлд step-up |
-| Account | `platform.operator_accounts`; `platform.users` биш |
+| Account | `operator.operator_accounts`; `registry.users` биш |
 | DB role | `gerege_nexus_operator` |
-| Audit | `platform.operator_audit`, append-only; write бүртэй нэг transaction |
+| Audit | `operator.operator_audit`, append-only; write бүртэй нэг transaction |
 
 Нэг Go бинарь tenant ба platform plane-ийг зэрэг үйлчилдэг ч origin, identity,
 cookie, DB role, audit нь тусдаа. Энэ хилийг нэгтгэж болохгүй. Оператор

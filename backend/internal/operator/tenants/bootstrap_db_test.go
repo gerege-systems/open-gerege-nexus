@@ -44,7 +44,7 @@ func TestBootstrapMakesAnAdministratorWhoCanSignIn(t *testing.T) {
 	}
 
 	var stored string
-	if err := tx.QueryRow(ctx, `SELECT password_hash FROM platform.users WHERE id = $1::uuid`,
+	if err := tx.QueryRow(ctx, `SELECT password_hash FROM registry.users WHERE id = $1::uuid`,
 		userID).Scan(&stored); err != nil {
 		t.Fatalf("read the account: %v", err)
 	}

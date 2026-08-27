@@ -40,12 +40,12 @@ func (s *Service) SetTenantMaintenance(ctx context.Context, sess operator.Sessio
 	}, func(ctx context.Context, tx pgx.Tx) error {
 		if !on {
 			_, err := tx.Exec(ctx,
-				`UPDATE platform.tenants SET maintenance_at = NULL, maintenance_message = '' WHERE id = $1::uuid`,
+				`UPDATE registry.tenants SET maintenance_at = NULL, maintenance_message = '' WHERE id = $1::uuid`,
 				tenantID)
 			return err
 		}
 		_, err := tx.Exec(ctx,
-			`UPDATE platform.tenants SET maintenance_at = NOW(), maintenance_message = $2 WHERE id = $1::uuid`,
+			`UPDATE registry.tenants SET maintenance_at = NOW(), maintenance_message = $2 WHERE id = $1::uuid`,
 			tenantID, message)
 		return err
 	})

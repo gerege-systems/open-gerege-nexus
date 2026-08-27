@@ -70,7 +70,7 @@ func (h *Handlers) HandleUnlinkIdentity(w http.ResponseWriter, r *http.Request) 
 	switch req.Kind {
 	case "eid":
 		ct, err := h.db.Exec(ctx,
-			`DELETE FROM platform.user_eid_identities WHERE user_id = $1 AND person_etsi = $2`,
+			`DELETE FROM registry.user_eid_identities WHERE user_id = $1 AND person_etsi = $2`,
 			claims.UserID, req.Subject)
 		if err != nil {
 			slog.Error("could not unlink an eID identity", "error", err, "user_id", claims.UserID)
@@ -80,7 +80,7 @@ func (h *Handlers) HandleUnlinkIdentity(w http.ResponseWriter, r *http.Request) 
 		tag = ct.RowsAffected()
 	case "sso":
 		ct, err := h.db.Exec(ctx,
-			`DELETE FROM platform.user_sso_identities WHERE user_id = $1 AND issuer = $2 AND subject = $3`,
+			`DELETE FROM registry.user_sso_identities WHERE user_id = $1 AND issuer = $2 AND subject = $3`,
 			claims.UserID, req.Issuer, req.Subject)
 		if err != nil {
 			slog.Error("could not unlink a provider identity", "error", err, "user_id", claims.UserID)

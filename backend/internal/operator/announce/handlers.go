@@ -39,7 +39,7 @@ type Announcement struct {
 func (s *Service) ListAnnouncements(ctx context.Context) ([]Announcement, error) {
 	rows, err := s.db.Query(operator.Scoped(ctx),
 		`SELECT id::text, tenant_id::text, kind, title, body, starts_at, ends_at, created_at
-		   FROM platform.announcements ORDER BY starts_at DESC LIMIT 100`)
+		   FROM registry.announcements ORDER BY starts_at DESC LIMIT 100`)
 	if err != nil {
 		return nil, fmt.Errorf("control plane: list the announcements: %w", err)
 	}
@@ -83,7 +83,7 @@ func (s *Service) Announce(ctx context.Context, sess operator.Session, announcem
 			starts = time.Now()
 		}
 		_, err := tx.Exec(ctx,
-			`INSERT INTO platform.announcements (tenant_id, kind, title, body, starts_at, ends_at, created_by)
+			`INSERT INTO registry.announcements (tenant_id, kind, title, body, starts_at, ends_at, created_by)
 			 VALUES (NULLIF($1, '')::uuid, $2, $3, $4, $5, $6, $7::uuid)`,
 			valueOr(announcement.TenantID, ""), announcement.Kind, announcement.Title,
 			announcement.Body, starts, announcement.EndsAt, sess.ID)
@@ -99,7 +99,7 @@ func (s *Service) WithdrawAnnouncement(ctx context.Context, sess operator.Sessio
 		TargetID:   id,
 		Reason:     reason,
 	}, func(ctx context.Context, tx pgx.Tx) error {
-		_, err := tx.Exec(ctx, `DELETE FROM platform.announcements WHERE id = $1::uuid`, id)
+		_, err := tx.Exec(ctx, `DELETE FROM registry.announcements WHERE id = $1::uuid`, id)
 		return err
 	})
 }

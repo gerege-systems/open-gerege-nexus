@@ -76,20 +76,20 @@ func newFixture(t *testing.T, opts ...func(*Client)) *fixture {
 
 	var tenantID string
 	if err := pool.QueryRow(ctx,
-		`INSERT INTO platform.tenants (slug, name) VALUES ('oauth-' || substr(gen_random_uuid()::text, 1, 8), 'OAuth test')
+		`INSERT INTO registry.tenants (slug, name) VALUES ('oauth-' || substr(gen_random_uuid()::text, 1, 8), 'OAuth test')
 		 RETURNING id::text`).Scan(&tenantID); err != nil {
 		t.Fatalf("tenant: %v", err)
 	}
-	t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM platform.tenants WHERE id = $1`, tenantID) })
+	t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM registry.tenants WHERE id = $1`, tenantID) })
 
 	email := "oauth-" + NewIdentifier(8) + "@example.com"
 	var userID string
 	if err := pool.QueryRow(ctx,
-		`INSERT INTO platform.users (email, password_hash, name) VALUES ($1, 'x', 'OAuth Tester') RETURNING id::text`,
+		`INSERT INTO registry.users (email, password_hash, name) VALUES ($1, 'x', 'OAuth Tester') RETURNING id::text`,
 		email).Scan(&userID); err != nil {
 		t.Fatalf("user: %v", err)
 	}
-	t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM platform.users WHERE id = $1`, userID) })
+	t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM registry.users WHERE id = $1`, userID) })
 
 	provider := &SSOProvider{store: NewStore(pool), issuer: testIssuer}
 	provider.AttachSessions(&fakeSessions{claims: auth.UserClaims{
@@ -575,12 +575,12 @@ func TestClientsAreTenantIsolated(t *testing.T) {
 
 	var otherTenant string
 	if err := f.pool.QueryRow(ctx,
-		`INSERT INTO platform.tenants (slug, name) VALUES ('oauth-other-' || substr(gen_random_uuid()::text, 1, 8), 'Other')
+		`INSERT INTO registry.tenants (slug, name) VALUES ('oauth-other-' || substr(gen_random_uuid()::text, 1, 8), 'Other')
 		 RETURNING id::text`).Scan(&otherTenant); err != nil {
 		t.Fatalf("tenant: %v", err)
 	}
 	t.Cleanup(func() {
-		_, _ = f.pool.Exec(context.Background(), `DELETE FROM platform.tenants WHERE id = $1`, otherTenant)
+		_, _ = f.pool.Exec(context.Background(), `DELETE FROM registry.tenants WHERE id = $1`, otherTenant)
 	})
 
 	// The portal used to call a provider method that returned every client on
@@ -738,7 +738,7 @@ func verifyIDToken(t *testing.T, f *fixture, idToken string) map[string]any {
 
 	var publicPEM string
 	if err := f.pool.QueryRow(context.Background(),
-		`SELECT public_key_pem FROM platform.oauth2_signing_keys WHERE kid = $1`, header["kid"]).Scan(&publicPEM); err != nil {
+		`SELECT public_key_pem FROM registry.oauth2_signing_keys WHERE kid = $1`, header["kid"]).Scan(&publicPEM); err != nil {
 		t.Fatalf("the kid in the id_token is not a published key: %v", err)
 	}
 	block, _ := pem.Decode([]byte(publicPEM))

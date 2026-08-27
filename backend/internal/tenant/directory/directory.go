@@ -42,8 +42,8 @@ func (s store) People(ctx context.Context, tenantIDs []string) ([]nexus.Director
 		        COALESCE(ARRAY_AGG(r.code) FILTER (WHERE r.code IS NOT NULL), '{}'),
 		        ms.tenant_id::text, tn.name
 		   FROM tenant.memberships ms
-		   JOIN platform.users u ON u.id = ms.user_id
-		   JOIN platform.tenants tn ON tn.id = ms.tenant_id
+		   JOIN registry.users u ON u.id = ms.user_id
+		   JOIN registry.tenants tn ON tn.id = ms.tenant_id
 		   LEFT JOIN tenant.membership_roles mr ON mr.membership_id = ms.id
 		   LEFT JOIN tenant.roles r ON r.id = mr.role_id
 		  WHERE ms.tenant_id = ANY($1::uuid[])
@@ -74,7 +74,7 @@ func (s store) Membership(ctx context.Context, tenantID, membershipID string) (n
 	var found nexus.DirectoryMembership
 	err := s.db.QueryRow(ctx,
 		`SELECT ms.user_id::text, u.is_admin
-		   FROM tenant.memberships ms JOIN platform.users u ON u.id = ms.user_id
+		   FROM tenant.memberships ms JOIN registry.users u ON u.id = ms.user_id
 		  WHERE ms.id = $1 AND ms.tenant_id = $2`,
 		membershipID, tenantID).Scan(&found.UserID, &found.IsAdmin)
 	if err != nil {
@@ -87,7 +87,7 @@ func (s store) CountAdmins(ctx context.Context, tenantID, exceptMembershipID str
 	var count int
 	err := s.db.QueryRow(ctx,
 		`SELECT count(*) FROM tenant.memberships ms
-		   JOIN platform.users u ON u.id = ms.user_id
+		   JOIN registry.users u ON u.id = ms.user_id
 		  WHERE ms.tenant_id = $1 AND ms.active AND u.is_admin AND ms.id <> $2`,
 		tenantID, exceptMembershipID).Scan(&count)
 	if err != nil {

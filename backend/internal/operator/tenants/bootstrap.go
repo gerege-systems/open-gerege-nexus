@@ -19,7 +19,7 @@ import (
 // organisation and no console therefore had no supported way to make it: the
 // two products that shipped before this were provisioned by hand-written SQL,
 // which has to get three non-obvious things right — the `admin` role is made by
-// a trigger on the tenant row, `platform.users.is_admin` is not where
+// a trigger on the tenant row, `registry.users.is_admin` is not where
 // administration lives, and the membership needs its role row — and got them
 // wrong on the first attempt.
 //
@@ -102,7 +102,7 @@ func Bootstrap(ctx context.Context, db *pgxpool.Pool, p FirstTenant) (tenantID, 
 		return "", "", fmt.Errorf("take the bootstrap lock: %w", err)
 	}
 	var provisioned bool
-	if err := tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM platform.tenants)`).Scan(&provisioned); err != nil {
+	if err := tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM registry.tenants)`).Scan(&provisioned); err != nil {
 		return "", "", fmt.Errorf("look for an existing organisation: %w", err)
 	}
 	if provisioned {
@@ -114,7 +114,7 @@ func Bootstrap(ctx context.Context, db *pgxpool.Pool, p FirstTenant) (tenantID, 
 	// organisations, and silently wrong here: the command would report success
 	// and the password just chosen would not be the one that signs in.
 	var taken bool
-	if err := tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM platform.users WHERE email = $1)`, email).
+	if err := tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM registry.users WHERE email = $1)`, email).
 		Scan(&taken); err != nil {
 		return "", "", fmt.Errorf("look for an existing account: %w", err)
 	}
@@ -150,7 +150,7 @@ type first struct {
 func bootstrapTx(ctx context.Context, tx pgx.Tx, p first) (string, string, error) {
 	var tenantID string
 	if err := tx.QueryRow(ctx,
-		`INSERT INTO platform.tenants (slug, name) VALUES ($1, $2) RETURNING id::text`,
+		`INSERT INTO registry.tenants (slug, name) VALUES ($1, $2) RETURNING id::text`,
 		p.slug, p.name).Scan(&tenantID); err != nil {
 		return "", "", fmt.Errorf("create the organisation: %w", err)
 	}
@@ -180,7 +180,7 @@ func bootstrapTx(ctx context.Context, tx pgx.Tx, p first) (string, string, error
 // which is the state in which nobody can sign in to it.
 func Unprovisioned(ctx context.Context, db *pgxpool.Pool) (bool, error) {
 	var exists bool
-	if err := db.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM platform.tenants)`).Scan(&exists); err != nil {
+	if err := db.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM registry.tenants)`).Scan(&exists); err != nil {
 		return false, err
 	}
 	return !exists, nil

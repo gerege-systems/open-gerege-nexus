@@ -110,7 +110,7 @@ func main() {
 		"Confirm it later without creating anything:\n"+
 		"  operator-bootstrap -confirm -email %s\n"+
 		"or remove the row and start over:\n"+
-		"  DELETE FROM platform.operator_accounts WHERE lower(email) = lower('%s');",
+		"  DELETE FROM operator.operator_accounts WHERE lower(email) = lower('%s');",
 		account.Email, account.Email)
 }
 

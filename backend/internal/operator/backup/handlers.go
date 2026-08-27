@@ -53,7 +53,7 @@ func (s *Service) StatusOf(ctx context.Context) Status {
 
 	var size *int64
 	err := s.db.QueryRow(ctx,
-		`SELECT started_at, size_bytes, ok, detail FROM platform.platform_backups
+		`SELECT started_at, size_bytes, ok, detail FROM operator.platform_backups
 		  WHERE kind = 'backup' ORDER BY started_at DESC LIMIT 1`).
 		Scan(&status.LastBackupAt, &size, &status.LastOK, &status.LastDetail)
 	switch {
@@ -69,7 +69,7 @@ func (s *Service) StatusOf(ctx context.Context) Status {
 	}
 
 	if err := s.db.QueryRow(ctx,
-		`SELECT started_at FROM platform.platform_backups
+		`SELECT started_at FROM operator.platform_backups
 		  WHERE kind = 'restore_test' ORDER BY started_at DESC LIMIT 1`).
 		Scan(&status.LastRestoreTestAt); err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		slog.Warn("control plane: could not read the restore tests", "error", err)
@@ -87,7 +87,7 @@ func (s *Service) RecordRestoreTest(ctx context.Context, sess operator.Session, 
 		After:      map[string]any{"detail": detail},
 	}, func(ctx context.Context, tx pgx.Tx) error {
 		_, err := tx.Exec(ctx,
-			`INSERT INTO platform.platform_backups (kind, finished_at, ok, detail, recorded_by)
+			`INSERT INTO operator.platform_backups (kind, finished_at, ok, detail, recorded_by)
 			 VALUES ('restore_test', NOW(), TRUE, $1, $2::uuid)`, detail, sess.ID)
 		return err
 	})

@@ -205,14 +205,14 @@ func (f *linkFixture) newSignedInPerson(t *testing.T) (userID, token string) {
 	t.Helper()
 	ctx := context.Background()
 	if err := f.pool.QueryRow(ctx,
-		`INSERT INTO platform.users(email, password_hash, name) VALUES($1,'x','link probe') RETURNING id::text`,
+		`INSERT INTO registry.users(email, password_hash, name) VALUES($1,'x','link probe') RETURNING id::text`,
 		"link+"+uuid.NewString()+"@identity.invalid").Scan(&userID); err != nil {
 		t.Fatalf("insert user: %v", err)
 	}
-	t.Cleanup(func() { _, _ = f.pool.Exec(context.Background(), `DELETE FROM platform.users WHERE id=$1`, userID) })
+	t.Cleanup(func() { _, _ = f.pool.Exec(context.Background(), `DELETE FROM registry.users WHERE id=$1`, userID) })
 
 	if _, err := f.pool.Exec(ctx,
-		`INSERT INTO platform.user_eid_identities(user_id, person_etsi, given_name, surname, claims)
+		`INSERT INTO registry.user_eid_identities(user_id, person_etsi, given_name, surname, claims)
 		 VALUES($1,$2,'Эрдэнэбат','Цэнддорж','{}'::jsonb)`, userID, "ETSI-"+uuid.NewString()); err != nil {
 		t.Fatalf("insert eid identity: %v", err)
 	}
@@ -224,11 +224,11 @@ func (f *linkFixture) newSignedInPerson(t *testing.T) (userID, token string) {
 	// gone by the time the membership referenced it.
 	var tenantID string
 	if err := f.pool.QueryRow(ctx,
-		`INSERT INTO platform.tenants(slug, name) VALUES($1,'Link probe') RETURNING id::text`,
+		`INSERT INTO registry.tenants(slug, name) VALUES($1,'Link probe') RETURNING id::text`,
 		"link-probe-"+uuid.NewString()[:8]).Scan(&tenantID); err != nil {
 		t.Fatalf("insert tenant: %v", err)
 	}
-	t.Cleanup(func() { _, _ = f.pool.Exec(context.Background(), `DELETE FROM platform.tenants WHERE id=$1`, tenantID) })
+	t.Cleanup(func() { _, _ = f.pool.Exec(context.Background(), `DELETE FROM registry.tenants WHERE id=$1`, tenantID) })
 
 	if _, err := f.pool.Exec(ctx,
 		`INSERT INTO tenant.memberships(tenant_id, user_id) VALUES($1,$2) ON CONFLICT DO NOTHING`,
@@ -384,7 +384,7 @@ func TestAGoogleAccountCannotBeTakenFromAnotherPerson(t *testing.T) {
 
 	var owner string
 	if err := f.pool.QueryRow(context.Background(),
-		`SELECT user_id::text FROM platform.user_sso_identities WHERE subject = $1`, f.google.subject).Scan(&owner); err != nil {
+		`SELECT user_id::text FROM registry.user_sso_identities WHERE subject = $1`, f.google.subject).Scan(&owner); err != nil {
 		t.Fatalf("read the identity's owner: %v", err)
 	}
 	if owner != f.userID {

@@ -57,7 +57,7 @@ func (h *Handlers) startIdentityBinding(ctx context.Context, issuer string, iden
 	sum := sha256.Sum256([]byte(token))
 
 	if _, err := h.db.Exec(ctx,
-		`INSERT INTO platform.identity_binding_sessions
+		`INSERT INTO registry.identity_binding_sessions
 		     (token_hash, issuer, subject, email, name, claims, expires_at)
 		 VALUES ($1,$2,$3,NULLIF($4,''),NULLIF($5,''),$6,$7)`,
 		hex.EncodeToString(sum[:]), issuer, identity.Subject,
@@ -96,7 +96,7 @@ func (h *Handlers) loadBinding(ctx context.Context, token string) (*pendingBindi
 	var consentedAt *time.Time
 	err := h.db.QueryRow(ctx,
 		`SELECT token_hash, issuer, subject, email, name, claims, consented_at
-		   FROM platform.identity_binding_sessions
+		   FROM registry.identity_binding_sessions
 		  WHERE token_hash = $1 AND expires_at > NOW()`, hash).
 		Scan(&b.TokenHash, &b.Issuer, &b.Subject, &email, &name, &b.Claims, &consentedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -179,7 +179,7 @@ func (h *Handlers) HandleBindingConsent(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	if _, err := h.db.Exec(r.Context(),
-		`UPDATE platform.identity_binding_sessions SET consented_at = NOW()
+		`UPDATE registry.identity_binding_sessions SET consented_at = NOW()
 		  WHERE token_hash = $1 AND consented_at IS NULL`, binding.TokenHash); err != nil {
 		slog.Error("could not record a binding consent", "error", err)
 		httpx.Error(w, http.StatusInternalServerError, "could not record the consent")
@@ -290,7 +290,7 @@ func (h *Handlers) HandleBindingEIDPoll(w http.ResponseWriter, r *http.Request) 
 	// Spent. The row held verified claims about somebody and has no further
 	// use; leaving it would be leaving a copy of their identity behind.
 	if _, err := h.db.Exec(r.Context(),
-		`DELETE FROM platform.identity_binding_sessions WHERE token_hash = $1`, binding.TokenHash); err != nil {
+		`DELETE FROM registry.identity_binding_sessions WHERE token_hash = $1`, binding.TokenHash); err != nil {
 		slog.Warn("could not clear a spent binding", "error", err)
 	}
 
@@ -313,7 +313,7 @@ func (h *Handlers) HandleBindingEIDPoll(w http.ResponseWriter, r *http.Request) 
 // carries verified claims about a person, so it does not get to sit there.
 func (h *Handlers) SweepExpiredBindings(ctx context.Context) {
 	if _, err := h.db.Exec(ctx,
-		`DELETE FROM platform.identity_binding_sessions WHERE expires_at < NOW()`); err != nil {
+		`DELETE FROM registry.identity_binding_sessions WHERE expires_at < NOW()`); err != nil {
 		slog.Warn("could not sweep expired identity bindings", "error", err)
 	}
 }

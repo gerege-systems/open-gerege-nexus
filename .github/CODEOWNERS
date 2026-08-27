@@ -58,7 +58,6 @@
 /backend/pkg/catalog/ @erdenebatt
 /backend/pkg/urtuu/ @erdenebatt
 /backend/pkg/host/ @erdenebatt
-/backend/pkg/platform/ @erdenebatt
 
 # The bootstrap that builds every module (its signature went from 4 parameters
 # to 9 in eleven days): where an app's need for one more line becomes the

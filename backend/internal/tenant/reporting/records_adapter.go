@@ -140,7 +140,7 @@ func (g grantRecords) History(ctx context.Context, tenantID string) ([]nexus.Rep
 	rows, err := g.db.Query(nexus.WithTenantID(ctx, tenantID), `
 		SELECT a.created_at, a.resource, a.details, coalesce(t.name, '—')
 		  FROM tenant.audit_events a
-		  LEFT JOIN platform.tenants t
+		  LEFT JOIN registry.tenants t
 		    ON t.id = (a.details->>'grantee_tenant_id')::uuid
 		 WHERE a.tenant_id = $1 AND a.action = 'reports.data_shared'
 		 ORDER BY a.created_at DESC

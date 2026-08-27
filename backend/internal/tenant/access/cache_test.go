@@ -19,17 +19,17 @@ func seedMember(t *testing.T, pool *pgxpool.Pool) (tenantID, userID, roleID, per
 	suffix := strings.ReplaceAll(uuid.NewString(), "-", "")[:12]
 
 	if err := pool.QueryRow(ctx,
-		`INSERT INTO platform.tenants (name, slug) VALUES ($1,$1) RETURNING id::text`,
+		`INSERT INTO registry.tenants (name, slug) VALUES ($1,$1) RETURNING id::text`,
 		"rbactest-"+suffix).Scan(&tenantID); err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() {
-		_, _ = pool.Exec(context.Background(), `DELETE FROM platform.tenants WHERE id=$1`, tenantID)
-		_, _ = pool.Exec(context.Background(), `DELETE FROM platform.users WHERE id=$1`, userID)
+		_, _ = pool.Exec(context.Background(), `DELETE FROM registry.tenants WHERE id=$1`, tenantID)
+		_, _ = pool.Exec(context.Background(), `DELETE FROM registry.users WHERE id=$1`, userID)
 	})
 
 	if err := pool.QueryRow(ctx,
-		`INSERT INTO platform.users (email, password_hash, name) VALUES ($1,'x','t') RETURNING id::text`,
+		`INSERT INTO registry.users (email, password_hash, name) VALUES ($1,'x','t') RETURNING id::text`,
 		"rbactest-"+suffix+"@example.mn").Scan(&userID); err != nil {
 		t.Fatal(err)
 	}
@@ -57,11 +57,11 @@ func seedMember(t *testing.T, pool *pgxpool.Pool) (tenantID, userID, roleID, per
 	// in whichever database it was pointed at.
 	permission = "cachetest." + suffix
 	if _, err := pool.Exec(ctx,
-		`INSERT INTO platform.permissions (code, name) VALUES ($1,$1)`, permission); err != nil {
+		`INSERT INTO registry.permissions (code, name) VALUES ($1,$1)`, permission); err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() {
-		_, _ = pool.Exec(context.Background(), `DELETE FROM platform.permissions WHERE code=$1`, permission)
+		_, _ = pool.Exec(context.Background(), `DELETE FROM registry.permissions WHERE code=$1`, permission)
 	})
 	return tenantID, userID, roleID, permission
 }
@@ -92,7 +92,7 @@ func TestRevokingAPermissionTakesEffectOnceTheTenantIsInvalidated(t *testing.T) 
 	grant := func() {
 		if _, err := pool.Exec(ctx,
 			`INSERT INTO tenant.role_permissions (role_id, permission_id)
-			 SELECT $1, id FROM platform.permissions WHERE code=$2 ON CONFLICT DO NOTHING`,
+			 SELECT $1, id FROM registry.permissions WHERE code=$2 ON CONFLICT DO NOTHING`,
 			roleID, permission); err != nil {
 			t.Fatal(err)
 		}
@@ -145,7 +145,7 @@ func TestCallersCannotWriteIntoEachOthersGrants(t *testing.T) {
 
 	if _, err := pool.Exec(ctx,
 		`INSERT INTO tenant.role_permissions (role_id, permission_id)
-		 SELECT $1, id FROM platform.permissions WHERE code=$2 ON CONFLICT DO NOTHING`,
+		 SELECT $1, id FROM registry.permissions WHERE code=$2 ON CONFLICT DO NOTHING`,
 		roleID, permission); err != nil {
 		t.Fatal(err)
 	}

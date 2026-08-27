@@ -37,11 +37,19 @@
  * organisation. So every entry carries a plane as well, decided by one
  * sentence (docs/TWO_PLANES_PROPOSAL.md §2.1):
  *
- *	A row that exists once per deployment is the platform plane. A row that
+ *	A row that exists once per deployment is the operator plane. A row that
  *	exists separately for each tenant is the tenant plane.
  *
  * There is no third value. Code both planes need is not a third plane, it is
  * the floor underneath them, and it owns no table.
+ *
+ * The operator plane's tables sit in two schemas, and that is a different cut.
+ * Migration 00083 asked a narrower question of the same twenty-seven tables —
+ * which of them may the tenant plane reach at all — and moved the seven it may
+ * not into `operator`, leaving twenty in `registry`. operatorOnlyTables below
+ * is that answer. A plane is who a row is held for; a schema is who may name
+ * it. The five boundary tables show why both are needed: they are the operator
+ * plane's and they are in registry, because a tenant reads its own rows.
  *
  * A tenant_id column is the usual sign of the tenant plane but not the rule.
  * Six tenant tables have none — esign_batch_items, membership_roles,
@@ -49,7 +57,7 @@
  * because they hang off a parent row that does. Five go the other way:
  * announcements, feature_flag_overrides, operator_impersonations,
  * tenant_quotas and usage_events carry a tenant_id and are still the
- * platform's, because the platform writes them and a tenant only reads its
+ * operator plane's, because the operator writes them and a tenant only reads its
  * own. Those five are the boundary between the planes, and they were not
  * chosen here: policy_shape_test.go had already found the same five and
  * written "console, FOR SELECT" beside them, before anyone was looking for a
@@ -72,7 +80,7 @@ import (
 // A table, and the two things a review needs to know about it: whose behalf
 // its rows are held on, and what it is for.
 type table struct {
-	plane   string // "tenant" or "platform" — the §2.1 rule, nothing else
+	plane   string // "tenant" or "operator" — the §2.1 rule, nothing else
 	purpose string
 }
 
@@ -85,42 +93,42 @@ type table struct {
 // which somebody can disagree with. Before, a CREATE TABLE in a 300-line
 // migration was indistinguishable from every other line in it.
 var platformTables = map[string]table{
-	// ---------------------------------------------------- the platform plane
+	// ---------------------------------------------------- the operator plane
 	// One row per deployment, whoever is signed in.
-	"announcements":             {"platform", "control plane"},
-	"app_dependencies":          {"platform", "app store"},
-	"app_versions":              {"platform", "app store"},
-	"apps":                      {"platform", "app store"},
-	"credential_grants":         {"platform", "access recovery"},
-	"eid_sign_state":            {"platform", "eID"},
-	"feature_flag_overrides":    {"platform", "control plane"},
-	"feature_flags":             {"platform", "control plane"},
-	"identity_binding_sessions": {"platform", "identity"},
-	"oauth2_signing_keys":       {"platform", "OAuth2 provider"},
-	"operator_accounts":         {"platform", "control plane"},
-	"operator_audit":            {"platform", "control plane"},
-	"operator_impersonations":   {"platform", "control plane"},
-	"operator_sessions":         {"platform", "control plane"},
-	"pending_approvals":         {"platform", "control plane"},
+	"announcements":             {"operator", "control plane"},
+	"app_dependencies":          {"operator", "app store"},
+	"app_versions":              {"operator", "app store"},
+	"apps":                      {"operator", "app store"},
+	"credential_grants":         {"operator", "access recovery"},
+	"eid_sign_state":            {"operator", "eID"},
+	"feature_flag_overrides":    {"operator", "control plane"},
+	"feature_flags":             {"operator", "control plane"},
+	"identity_binding_sessions": {"operator", "identity"},
+	"oauth2_signing_keys":       {"operator", "OAuth2 provider"},
+	"operator_accounts":         {"operator", "control plane"},
+	"operator_audit":            {"operator", "control plane"},
+	"operator_impersonations":   {"operator", "control plane"},
+	"operator_sessions":         {"operator", "control plane"},
+	"pending_approvals":         {"operator", "control plane"},
 	// The names of the rights, not who holds them: role_permissions is the
 	// tenant's half of this pair.
-	"permissions":      {"platform", "access control"},
-	"platform_backups": {"platform", "control plane"},
+	"permissions":      {"operator", "access control"},
+	"platform_backups": {"operator", "control plane"},
 	// The keys a deployment reaches other systems with, sealed. Its values
 	// never leave the process, which is why there is no history table beside
 	// it: a history of a credential is a list of the ones it used to have.
-	"platform_credentials":      {"platform", "control plane"},
-	"platform_settings":         {"platform", "control plane"},
-	"platform_settings_history": {"platform", "control plane"},
-	"store_app_versions":        {"platform", "app store"},
-	"tenant_quotas":             {"platform", "tenants"},
-	"tenants":                   {"platform", "tenants"},
-	"usage_events":              {"platform", "usage"},
+	"platform_credentials":      {"operator", "control plane"},
+	"platform_settings":         {"operator", "control plane"},
+	"platform_settings_history": {"operator", "control plane"},
+	"store_app_versions":        {"operator", "app store"},
+	"tenant_quotas":             {"operator", "tenants"},
+	"tenants":                   {"operator", "tenants"},
+	"usage_events":              {"operator", "usage"},
 	// A person is one person across the organisations they belong to; the
 	// membership is what is per-tenant, and that is on the other side.
-	"user_eid_identities": {"platform", "identity"},
-	"user_sso_identities": {"platform", "identity"},
-	"users":               {"platform", "users"},
+	"user_eid_identities": {"operator", "identity"},
+	"user_sso_identities": {"operator", "identity"},
+	"users":               {"operator", "users"},
 
 	// ------------------------------------------------------ the tenant plane
 	// One row per organisation, and no organisation reads another's.
@@ -166,9 +174,50 @@ var platformTables = map[string]table{
 	"urtuu_request_codes":        {"tenant", "Өртөө"},
 }
 
+// The seven the tenant plane may not reach at all.
+//
+// Migration 00083 split the operator plane's twenty-seven tables into two
+// schemas. The line was not drawn by taste: four of these seven — the operator
+// accounts, sessions, audit and the sealed credentials — already had no grant
+// of any kind for gerege_nexus_tenant, so the database was refusing them
+// already. The other three are named by no query outside internal/operator;
+// their tenant grants were left over from before 00079, when all sixty-six
+// tables shared `public` and one line granted the lot.
+//
+// What the move buys is a second lock. Before it, the boundary was table
+// grants alone: the tenant role held USAGE on `platform` because five tables
+// in it are the boundary, so operator_audit was shut by its own grant and
+// nothing else. Now the tenant role has no USAGE on `operator`, and the name
+// does not resolve for it.
+//
+// Everything not listed here is `registry` — deliberately, so that a table
+// added to the operator plane later lands on the open side and a review has to
+// argue it onto the closed one. schema_split_test.go checks the result against
+// the database.
+var operatorOnlyTables = map[string]bool{
+	"operator_accounts":         true,
+	"operator_audit":            true,
+	"operator_sessions":         true,
+	"pending_approvals":         true,
+	"platform_backups":          true,
+	"platform_credentials":      true,
+	"platform_settings_history": true,
+}
+
+// schemaOf is the schema a table must be in once 00083 has run.
+func schemaOf(name string) string {
+	if platformTables[name].plane == "tenant" {
+		return "tenant"
+	}
+	if operatorOnlyTables[name] {
+		return "operator"
+	}
+	return "registry"
+}
+
 var (
-	createTable = regexp.MustCompile(`(?i)CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:(?:public|platform|tenant)\.)?([a-z0-9_]+)`)
-	dropTable   = regexp.MustCompile(`(?i)DROP\s+TABLE\s+(?:IF\s+EXISTS\s+)?(?:(?:public|platform|tenant)\.)?([a-z0-9_]+)`)
+	createTable = regexp.MustCompile(`(?i)CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:(?:public|platform|registry|operator|tenant)\.)?([a-z0-9_]+)`)
+	dropTable   = regexp.MustCompile(`(?i)DROP\s+TABLE\s+(?:IF\s+EXISTS\s+)?(?:(?:public|platform|registry|operator|tenant)\.)?([a-z0-9_]+)`)
 	// Comments are stripped first. These files explain themselves at length,
 	// and a comment quoting `CREATE TABLE IF NOT EXISTS` was read as a table
 	// called "if".
@@ -236,7 +285,7 @@ If this really is a platform table, add it to platformTables in
 db/migrations/ownership_test.go with a word for what it is for and the plane it
 belongs to:
 
-	a row that exists once per deployment is the platform plane; a row that
+	a row that exists once per deployment is the operator plane; a row that
 	exists separately for each tenant is the tenant plane
 
 That line is the decision, and a review can disagree with it.`,
@@ -267,7 +316,7 @@ That line is the decision, and a review can disagree with it.`,
 func TestEveryTableDeclaresAPlane(t *testing.T) {
 	var undecided []string
 	for name, entry := range platformTables {
-		if entry.plane != "tenant" && entry.plane != "platform" {
+		if entry.plane != "tenant" && entry.plane != "operator" {
 			undecided = append(undecided, name+" ("+entry.plane+")")
 		}
 	}
@@ -275,10 +324,14 @@ func TestEveryTableDeclaresAPlane(t *testing.T) {
 	for _, name := range undecided {
 		t.Errorf(`%s is on neither plane.
 
-A row that exists once per deployment is the platform plane; a row that exists
+A row that exists once per deployment is the operator plane; a row that exists
 separately for each tenant is the tenant plane. There is no third value: shared
 code is the floor underneath both planes and owns no table, so a table that
-seems to want one is a table whose owner has not been decided.`, name)
+seems to want one is a table whose owner has not been decided.
+
+The operator plane's tables live in two schemas — registry and operator — but
+that is a second, narrower cut inside one plane, and operatorOnlyTables makes
+it. It is not a third plane.`, name)
 	}
 }
 
@@ -303,12 +356,12 @@ func TestBoundaryTablesAreThePlatforms(t *testing.T) {
 			continue
 		}
 		boundary = append(boundary, name)
-		if plane := platformTables[name].plane; plane != "platform" {
+		if plane := platformTables[name].plane; plane != "operator" {
 			t.Errorf(`%s is the boundary between the planes but ownership_test.go puts it on the %q plane.
 
 policy_shape_test.go calls it %q: the platform writes it, the console shows it
 and a tenant reads only its own rows through a FOR SELECT policy. That is the
-platform plane by §2.1 — the row is the deployment's statement about a tenant,
+operator plane by §2.1 — the row is the deployment's statement about a tenant,
 not the tenant's own row — and a schema move or a grant written from the other
 answer would hand the tenant plane something it may only read.`,
 				name, plane, consoleRead)

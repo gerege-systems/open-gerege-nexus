@@ -150,7 +150,7 @@ func TestAnInstalledAppSignsInAndTheTokenNamesTheTenant(t *testing.T) {
 
 	var expected string
 	if err := f.pool.QueryRow(context.Background(),
-		`SELECT slug FROM platform.tenants WHERE id = $1`, f.tenantID).Scan(&expected); err != nil {
+		`SELECT slug FROM registry.tenants WHERE id = $1`, f.tenantID).Scan(&expected); err != nil {
 		t.Fatalf("read the tenant slug: %v", err)
 	}
 	if slug != expected {

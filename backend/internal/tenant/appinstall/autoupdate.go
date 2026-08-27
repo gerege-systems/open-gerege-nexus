@@ -185,7 +185,7 @@ func (ai *AppInstaller) AutoUpdate(ctx context.Context) (AutoUpdateResult, error
 // running that code, so there is nothing for them to approve that they have not
 // already been given by the platform's own release.
 //
-// The installed version's manifest comes from platform.app_versions, which SyncCatalog
+// The installed version's manifest comes from registry.app_versions, which SyncCatalog
 // has been filling since the version history was added. An installation older
 // than that has no row, and this returns an error rather than a guess.
 func (ai *AppInstaller) widenedGrant(ctx context.Context, app catalog.CatalogApp, installedVersion string) ([]string, error) {
@@ -195,7 +195,7 @@ func (ai *AppInstaller) widenedGrant(ctx context.Context, app catalog.CatalogApp
 
 	var encoded []byte
 	err := ai.db.QueryRow(ctx,
-		`SELECT manifest FROM platform.app_versions WHERE app_id = $1 AND version = $2`,
+		`SELECT manifest FROM registry.app_versions WHERE app_id = $1 AND version = $2`,
 		app.ID, installedVersion).Scan(&encoded)
 	if err != nil {
 		return nil, fmt.Errorf("read the manifest of %s %s: %w", app.ID, installedVersion, err)

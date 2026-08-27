@@ -38,20 +38,20 @@ func TestAnInstalledAppThisBinaryCannotServeIsReported(t *testing.T) {
 
 	tenantID := uuid.NewString()
 	if _, err := pool.Exec(ctx,
-		`INSERT INTO platform.tenants (id, name, slug) VALUES ($1, 'Uncarried', $2)`,
+		`INSERT INTO registry.tenants (id, name, slug) VALUES ($1, 'Uncarried', $2)`,
 		tenantID, "uncarried-"+tenantID[:8]); err != nil {
 		t.Fatalf("tenant: %v", err)
 	}
-	t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM platform.tenants WHERE id = $1`, tenantID) })
+	t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM registry.tenants WHERE id = $1`, tenantID) })
 
 	const departed = "io.example.left.for.another.repository"
 	if _, err := pool.Exec(ctx,
-		`INSERT INTO platform.apps (id, slug, name, description, icon_url, category)
+		`INSERT INTO registry.apps (id, slug, name, description, icon_url, category)
 		 VALUES ($1, 'departed', 'Departed', '', '', 'Test') ON CONFLICT (id) DO NOTHING`,
 		departed); err != nil {
 		t.Fatalf("app row: %v", err)
 	}
-	t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM platform.apps WHERE id = $1`, departed) })
+	t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM registry.apps WHERE id = $1`, departed) })
 	if _, err := pool.Exec(ctx,
 		`INSERT INTO tenant.app_installations (tenant_id, app_id, installed_version, status, enabled)
 		 VALUES ($1, $2, '1.0.0', 'installed', TRUE)`, tenantID, departed); err != nil {

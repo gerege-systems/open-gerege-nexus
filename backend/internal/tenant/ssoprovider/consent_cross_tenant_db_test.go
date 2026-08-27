@@ -64,12 +64,12 @@ func TestConsentPromptFindsAnotherTenantsClient(t *testing.T) {
 
 	var userID string
 	if err := pool.QueryRow(ctx,
-		`INSERT INTO platform.users (email, password_hash, name)
+		`INSERT INTO registry.users (email, password_hash, name)
 		 VALUES ('consent-'||$1||'@example.com', 'x', 'Consent Tester') RETURNING id::text`,
 		NewIdentifier(8)).Scan(&userID); err != nil {
 		t.Fatalf("user: %v", err)
 	}
-	t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM platform.users WHERE id = $1`, userID) })
+	t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM registry.users WHERE id = $1`, userID) })
 
 	provider := &SSOProvider{store: NewStore(pool), issuer: testIssuer}
 	provider.AttachSessions(&fakeSessions{claims: auth.UserClaims{
@@ -115,11 +115,11 @@ func makeTenant(t *testing.T, pool *pgxpool.Pool) string {
 	t.Helper()
 	var id string
 	if err := pool.QueryRow(context.Background(),
-		`INSERT INTO platform.tenants (slug, name)
+		`INSERT INTO registry.tenants (slug, name)
 		 VALUES ('consent-'||substr(gen_random_uuid()::text, 1, 8), 'Consent test') RETURNING id::text`).
 		Scan(&id); err != nil {
 		t.Fatalf("tenant: %v", err)
 	}
-	t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM platform.tenants WHERE id = $1`, id) })
+	t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM registry.tenants WHERE id = $1`, id) })
 	return id
 }

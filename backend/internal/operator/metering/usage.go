@@ -72,7 +72,7 @@ func (s *Service) UsageFor(ctx context.Context, tenantID string) (Usage, error) 
 
 	rows, err := s.db.Query(ctx,
 		`SELECT metric, to_char(day, 'YYYY-MM-DD'), value
-		   FROM platform.usage_events
+		   FROM registry.usage_events
 		  WHERE tenant_id = $1::uuid AND day >= CURRENT_DATE - $2::int
 		  ORDER BY day`, tenantID, usageWindow)
 	if err != nil {
@@ -94,7 +94,7 @@ func (s *Service) UsageFor(ctx context.Context, tenantID string) (Usage, error) 
 	}
 
 	if err := s.db.QueryRow(ctx,
-		`SELECT max(recorded_at) FROM platform.usage_events WHERE tenant_id = $1::uuid`,
+		`SELECT max(recorded_at) FROM registry.usage_events WHERE tenant_id = $1::uuid`,
 		tenantID).Scan(&usage.Collected); err != nil {
 		return Usage{}, fmt.Errorf("control plane: read the collection time: %w", err)
 	}

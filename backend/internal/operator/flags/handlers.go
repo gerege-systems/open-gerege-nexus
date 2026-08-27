@@ -74,7 +74,7 @@ func (s *Service) SaveFlag(ctx context.Context, sess operator.Session, input Fla
 		},
 	}, func(ctx context.Context, tx pgx.Tx) error {
 		_, err := tx.Exec(ctx,
-			`INSERT INTO platform.feature_flags (key, description, owner, kind, enabled, rollout, expires_at, updated_at)
+			`INSERT INTO registry.feature_flags (key, description, owner, kind, enabled, rollout, expires_at, updated_at)
 			 VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
 			 ON CONFLICT (key) DO UPDATE
 			    SET description = EXCLUDED.description, owner = EXCLUDED.owner,
@@ -107,7 +107,7 @@ func (s *Service) DeleteFlag(ctx context.Context, sess operator.Session, key, re
 		TargetID:   key,
 		Reason:     reason,
 	}, func(ctx context.Context, tx pgx.Tx) error {
-		_, err := tx.Exec(ctx, `DELETE FROM platform.feature_flags WHERE key = $1`, key)
+		_, err := tx.Exec(ctx, `DELETE FROM registry.feature_flags WHERE key = $1`, key)
 		return err
 	})
 	if err != nil {
@@ -131,12 +131,12 @@ func (s *Service) SetFlagOverride(ctx context.Context, sess operator.Session, ke
 	}, func(ctx context.Context, tx pgx.Tx) error {
 		if enabled == nil {
 			_, err := tx.Exec(ctx,
-				`DELETE FROM platform.feature_flag_overrides WHERE flag_key = $1 AND tenant_id = $2::uuid`,
+				`DELETE FROM registry.feature_flag_overrides WHERE flag_key = $1 AND tenant_id = $2::uuid`,
 				key, tenantID)
 			return err
 		}
 		_, err := tx.Exec(ctx,
-			`INSERT INTO platform.feature_flag_overrides (flag_key, tenant_id, enabled, updated_at)
+			`INSERT INTO registry.feature_flag_overrides (flag_key, tenant_id, enabled, updated_at)
 			 VALUES ($1, $2::uuid, $3, NOW())
 			 ON CONFLICT (flag_key, tenant_id) DO UPDATE
 			    SET enabled = EXCLUDED.enabled, updated_at = NOW()`,

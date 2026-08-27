@@ -168,7 +168,7 @@ func (h *Handlers) linkGoogleToCurrentAccount(w http.ResponseWriter, r *http.Req
 	// authenticate at Google as them.
 	var owner string
 	err = h.db.QueryRow(r.Context(),
-		`SELECT user_id::text FROM platform.user_sso_identities WHERE issuer = $1 AND subject = $2`,
+		`SELECT user_id::text FROM registry.user_sso_identities WHERE issuer = $1 AND subject = $2`,
 		issuer, identity.Subject).Scan(&owner)
 	switch {
 	case err == nil && owner != claims.UserID:
@@ -345,7 +345,7 @@ func (h *Handlers) resolveGoogleUser(ctx context.Context, cfg ssoclient.Config, 
 	issuer := cfg.Issuer
 
 	err = h.db.QueryRow(ctx,
-		`SELECT user_id::text FROM platform.user_sso_identities WHERE issuer = $1 AND subject = $2`,
+		`SELECT user_id::text FROM registry.user_sso_identities WHERE issuer = $1 AND subject = $2`,
 		issuer, identity.Subject).Scan(&userID)
 	if err == nil {
 		h.touchSSOIdentity(ctx, issuer, identity)

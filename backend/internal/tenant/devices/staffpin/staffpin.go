@@ -86,7 +86,7 @@ func (s *Service) Verify(ctx context.Context, tenantID, secret string) (nexus.St
 		`SELECT p.membership_id::text,p.pin_hash,m.user_id::text,u.name,u.email,p.locked_until
 		   FROM tenant.staff_pin_credentials p
 		   JOIN tenant.memberships m ON m.id = p.membership_id
-		   JOIN platform.users u ON u.id = m.user_id
+		   JOIN registry.users u ON u.id = m.user_id
 		  WHERE p.tenant_id = $1 AND p.active`, tenantID)
 	if err != nil {
 		return nexus.StaffIdentity{}, err

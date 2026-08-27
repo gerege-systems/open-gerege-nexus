@@ -141,7 +141,7 @@ func recordAudit(ctx context.Context, tx pgx.Tx, sess Session, change Change, ip
 		return err
 	}
 	if _, err := tx.Exec(ctx,
-		`INSERT INTO platform.operator_audit
+		`INSERT INTO operator.operator_audit
 		     (operator_id, operator_email, action, target_type, target_id, reason, before, after, ip)
 		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
 		sess.ID, sess.Email, change.Action, change.TargetType, change.TargetID,

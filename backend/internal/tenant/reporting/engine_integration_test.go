@@ -105,13 +105,13 @@ func seedTenant(t *testing.T, pool *pgxpool.Pool, slug string, amount float64) s
 
 	id := uuid.NewString()
 	_, err := pool.Exec(ctx,
-		`INSERT INTO platform.tenants (id, name, slug) VALUES ($1, $2, $3)`,
+		`INSERT INTO registry.tenants (id, name, slug) VALUES ($1, $2, $3)`,
 		id, "Reporting test "+slug, slug)
 	if err != nil {
 		t.Fatalf("create tenant: %v", err)
 	}
 	t.Cleanup(func() {
-		_, _ = pool.Exec(context.Background(), `DELETE FROM platform.tenants WHERE id = $1`, id)
+		_, _ = pool.Exec(context.Background(), `DELETE FROM registry.tenants WHERE id = $1`, id)
 	})
 
 	_, err = pool.Exec(ctx,

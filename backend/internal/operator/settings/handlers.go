@@ -91,7 +91,7 @@ func (s *Service) RollbackSetting(ctx context.Context, sess operator.Session, ch
 	var key string
 	var previous *string
 	err := s.db.QueryRow(operator.Scoped(ctx),
-		`SELECT key, previous_value FROM platform.platform_settings_history WHERE id = $1::uuid`,
+		`SELECT key, previous_value FROM operator.platform_settings_history WHERE id = $1::uuid`,
 		changeID).Scan(&key, &previous)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return ErrHistoryNotFound
