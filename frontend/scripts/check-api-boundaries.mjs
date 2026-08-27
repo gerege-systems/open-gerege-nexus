@@ -60,6 +60,12 @@ const CORE_PREFIXES = [
   // The first-run wizard. It is the platform by definition: it runs before
   // there is an organisation for any app to belong to.
   "/setup",
+  // A person's own workspace. Platform by the same test as /profile: the rows
+  // behind it are written by whichever modules a deployment happens to carry,
+  // but the endpoint and the table are the core's (migration 00086), and a
+  // deployment with no such module answers with an empty list rather than a
+  // 404. An app's endpoint is one that stops existing when the app is removed.
+  "/me",
 ];
 
 const source = readFileSync(clientPath, "utf8");

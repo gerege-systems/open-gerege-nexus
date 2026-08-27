@@ -14,8 +14,8 @@ import AICopilot from "@/components/AICopilot";
 import { invokeShell, useShell, SHELL_EVENTS, SHELL_METHODS, type ShellNavigatePayload, type ShellSearchPayload } from "@/lib/shell";
 import { currentDeviceLine, type DeviceLine } from "@/lib/deviceLine";
 import { MenuIcon } from "@/lib/icons";
-import { organisationScreensVisible } from "@/lib/workspaceKind.mjs";
-import { LayoutGrid, Settings, Menu as HamburgerIcon, Palette, Building2, Search, Ellipsis, ShieldCheck, RefreshCw, MailCheck, ChevronDown, ChevronsDownUp, ChevronsUpDown, ExternalLink, Sparkles } from "lucide-react";
+import { homeScreensVisible, organisationScreensVisible } from "@/lib/workspaceKind.mjs";
+import { LayoutGrid, Settings, Menu as HamburgerIcon, Palette, Building2, Search, Ellipsis, ShieldCheck, RefreshCw, MailCheck, ChevronDown, ChevronsDownUp, ChevronsUpDown, ExternalLink, Sparkles, Inbox} from "lucide-react";
 
 // app_order and app_chrome describe the app rather than the entry: where its
 // tile sits in the rail, and whether it has a tile at all. Both come from the
@@ -245,6 +245,7 @@ export default function Layout({children}:{children:React.ReactNode}){
   // being a company. See lib/workspaceKind.mjs for why the rule lives there
   // rather than as the same condition written out four times here.
   const company=organisationScreensVisible(user?.workspace_kind);
+  const ownHome=homeScreensVisible(user?.workspace_kind);
   const mobileAppTabs=[
     // The platform tab is the way back out of an app on a phone, so it always
     // exists — it is where it goes that changes. The app store is the shelf a
@@ -261,6 +262,12 @@ export default function Layout({children}:{children:React.ReactNode}){
   if(loading)return <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-500 font-medium">{t("web.message.loading_platform")}</div>;
 
   const platformMenus=<><MenuGroup id={PLATFORM_GROUPS.modules} title={t("web.group.modules")} closed={closedGroups.includes(PLATFORM_GROUPS.modules)} onToggle={toggleGroup}>
+    {/* The mirror of the two lines below: an organisation's screens are hidden
+        in a home, and the home's own screen is hidden in an organisation. A
+        member of a company asks for things through the company, so this list
+        would be permanently empty for them — and an empty entry in a rail is a
+        promise the screen behind it cannot keep. */}
+    {ownHome&&<NavLink href="/me" active={pathname==="/me"} icon={<Inbox className="w-5 h-5"/>} label={t("web.menu.my_requests")}/>}
     {company&&<NavLink href="/apps" active={pathname==="/apps"} icon={<LayoutGrid className="w-5 h-5"/>} label={t("web.menu.app_store")}/>}
     {/* The organisation's own legal identity. A platform screen rather than a
         menu entry the organisation app contributes: it is read by the control

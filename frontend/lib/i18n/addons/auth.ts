@@ -137,6 +137,23 @@ export const auth = {
   },
   // Хувийн профайл.
   "profile.loading": { mn: "Ачаалж байна…", en: "Loading…" },
+
+  // /me — юу гуйсан, хаана явна. Хүний өөрийнх нь бичлэг тул profile-ийн
+  // хажууд: аль аль нь тэр хүнийхэн, байгууллагынх нь биш.
+  "me.view.requests_title": { mn: "Миний хүсэлтүүд", en: "My requests" },
+  "me.view.requests_subtitle": {
+    mn: "Та байгууллагуудад гаргасан хүсэлтүүдийнхээ төлөвийг эндээс харна. Баримт, нотолгоо нь тухайн байгууллагад үлдэнэ.",
+    en: "Where the requests you have made to organisations have got to. The documents and evidence stay with the organisation doing the work.",
+  },
+  "me.message.no_requests": {
+    mn: "Одоогоор хүсэлт алга. Байгууллагад хүсэлт гаргахад тэр нь энд гарч ирнэ.",
+    en: "No requests yet. Anything you ask an organisation for will appear here.",
+  },
+  "me.field.code": { mn: "Үйлчилгээ", en: "Service" },
+  "me.field.provider": { mn: "Хаана", en: "With" },
+  "me.field.status": { mn: "Төлөв", en: "Status" },
+  "me.field.answer": { mn: "Хариу", en: "Answer" },
+  "me.field.updated": { mn: "Шинэчлэгдсэн", en: "Updated" },
   "profile.stat.organisations": { mn: "Байгууллага", en: "Organisations" },
   "profile.stat.identities": { mn: "Таних тэмдэг", en: "Identities" },
   "profile.stat.sessions": { mn: "Нээлттэй session", en: "Open sessions" },
