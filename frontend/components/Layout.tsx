@@ -14,6 +14,7 @@ import AICopilot from "@/components/AICopilot";
 import { invokeShell, useShell, SHELL_EVENTS, SHELL_METHODS, type ShellNavigatePayload, type ShellSearchPayload } from "@/lib/shell";
 import { currentDeviceLine, type DeviceLine } from "@/lib/deviceLine";
 import { MenuIcon } from "@/lib/icons";
+import { organisationScreensVisible } from "@/lib/workspaceKind.mjs";
 import { LayoutGrid, Settings, Menu as HamburgerIcon, Palette, Building2, Search, Ellipsis, ShieldCheck, RefreshCw, Route, MailCheck, ChevronDown, ChevronsDownUp, ChevronsUpDown, ExternalLink, Sparkles, Link2 } from "lucide-react";
 
 // app_order and app_chrome describe the app rather than the entry: where its
@@ -240,8 +241,16 @@ export default function Layout({children}:{children:React.ReactNode}){
   // post-logout хаягаар нь энэ суулгац руу буцаана.
   async function logout(){let endSession="";try{const res=await api.logout();endSession=res.end_session_url||""}catch{}resetAccess();forgetTenants();if(endSession)window.location.assign(endSession);else router.replace("/")}
   const brandTitle=selected?.name||(t("web.label.platform"));
+  // A home is a workspace and gets this shell, minus the screens that are about
+  // being a company. See lib/workspaceKind.mjs for why the rule lives there
+  // rather than as the same condition written out four times here.
+  const company=organisationScreensVisible(user?.workspace_kind);
   const mobileAppTabs=[
-    {id:"platform",href:"/apps",external:false,active:platformActive,label:t("web.label.platform"),icon:<LayoutGrid className="w-5 h-5"/>},
+    // The platform tab is the way back out of an app on a phone, so it always
+    // exists — it is where it goes that changes. The app store is the shelf a
+    // company buys from; a home has nothing to buy, and the person's own record
+    // is what they came back to the shell for.
+    {id:"platform",href:company?"/apps":"/profile",external:false,active:platformActive,label:t("web.label.platform"),icon:<LayoutGrid className="w-5 h-5"/>},
     ...railApps.map(app=>({id:app.id,href:app.path,external:!!app.externalUrl,active:selected?.id===app.id,label:app.name,icon:<MenuIcon name={app.icon} className="w-5 h-5"/>})),
   ];
   const hasMobileMore=mobileAppTabs.length>5;
@@ -252,7 +261,7 @@ export default function Layout({children}:{children:React.ReactNode}){
   if(loading)return <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-500 font-medium">{t("web.message.loading_platform")}</div>;
 
   const platformMenus=<><MenuGroup id={PLATFORM_GROUPS.modules} title={t("web.group.modules")} closed={closedGroups.includes(PLATFORM_GROUPS.modules)} onToggle={toggleGroup}>
-    <NavLink href="/apps" active={pathname==="/apps"} icon={<LayoutGrid className="w-5 h-5"/>} label={t("web.menu.app_store")}/>
+    {company&&<NavLink href="/apps" active={pathname==="/apps"} icon={<LayoutGrid className="w-5 h-5"/>} label={t("web.menu.app_store")}/>}
     {/* The organisation's own legal identity. A platform screen rather than a
         menu entry the organisation app contributes: it is read by the control
         plane, by the state registry rail and by an SSO consent screen, so it
@@ -260,7 +269,7 @@ export default function Layout({children}:{children:React.ReactNode}){
         Under Modules rather than Settings, because it is a thing you look at
         and edit — the organisation itself — not a switch that changes how the
         platform behaves. */}
-    <NavLink href="/organisation" active={pathname==="/organisation"} icon={<Building2 className="w-5 h-5"/>} label={t("web.menu.organisation")}/>
+    {company&&<NavLink href="/organisation" active={pathname==="/organisation"} icon={<Building2 className="w-5 h-5"/>} label={t("web.menu.organisation")}/>}
     {/* Its screens, next in the list rather than nested under it. They were
         indented for a while, which made them look like a second level this
         sidebar does not otherwise have — one entry with children, in a menu
@@ -276,7 +285,7 @@ export default function Layout({children}:{children:React.ReactNode}){
     {/* Under Settings, where its screen already lives: /settings/apps is what
         the address bar says, and a sidebar that files it under Modules asks
         somebody to hold two answers for where the same page is. */}
-    <NavLink href="/settings/apps" active={pathname==="/settings/apps"} icon={<Settings className="w-5 h-5"/>} label={t("web.menu.installed_apps")}/>
+    {company&&<NavLink href="/settings/apps" active={pathname==="/settings/apps"} icon={<Settings className="w-5 h-5"/>} label={t("web.menu.installed_apps")}/>}
     <NavLink href="/settings/appearance" active={pathname==="/settings/appearance"} icon={<Palette className="w-5 h-5"/>} label={t("web.menu.appearance")}/>
     {user?.is_admin&&<NavLink href="/settings/ai" active={pathname==="/settings/ai"} icon={<Sparkles className="w-5 h-5"/>} label={t("ai.view.settings_title")}/>}
     {user?.is_admin&&<NavLink href="/settings/integrations" active={pathname==="/settings/integrations"} icon={<Link2 className="w-5 h-5"/>} label={t("integrations.view.title")}/>}

@@ -47,6 +47,9 @@ export const web = {
   // Reading alongside is not switching, and the wording has to carry that or
   // somebody will tick a box expecting new records to land somewhere else.
   "web.label.read_alongside": { mn: "Хамт харах", en: "Read alongside" },
+  // The switcher's second line for a personal workspace. Its slug is derived
+  // from a user id and says nothing, so the row says what it is instead.
+  "web.label.my_home": { mn: "Миний гэр", en: "My home" },
   "web.message.read_alongside_hint": {
     mn: "Сонгосон байгууллагуудын жагсаалтыг хамт харна. Шинэ бичлэг одоогийн байгууллагад л үүснэ.",
     en: "Lists span the organisations you tick. New records are still created in the one you are working in.",

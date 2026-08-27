@@ -24,6 +24,7 @@ import (
 	"context"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/auth"
 	"github.com/google/uuid"
@@ -211,5 +212,48 @@ func TestKindAndOwnerMustAgree(t *testing.T) {
 		if !strings.Contains(err.Error(), "tenants_home_has_an_owner") {
 			t.Errorf("%s was refused for an unexpected reason: %v", bad.name, err)
 		}
+	}
+}
+
+// The switcher can tell the two kinds apart, and the home sorts last.
+//
+// The list is the only place a person sees their workspaces side by side, and
+// after migration 00085 two of them can carry the same name — a citizen who
+// also works somewhere is "Бат Дорж" in one row and their employer in the
+// other. The slug does not help: a home's is derived from a user id. So the
+// kind travels with the row and the shell draws from it.
+//
+// Last rather than first because a home is where somebody ends up when they
+// have nowhere else, not the place they reach for. The same order the sign-in
+// path uses.
+func TestTheSwitcherSeesTheKindAndSortsTheHomeLast(t *testing.T) {
+	pool := openPool(t)
+	h := handlersFor(pool)
+	ctx := context.Background()
+	userID, orgID := seedMember(t, pool)
+
+	home, err := h.HomeFor(ctx, userID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	options, err := auth.NewSessionStore(pool, time.Hour).TenantsForUser(ctx, userID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	kinds := map[string]string{}
+	var order []string
+	for _, option := range options {
+		kinds[option.ID] = option.Kind
+		order = append(order, option.ID)
+	}
+	if kinds[orgID] != "organisation" {
+		t.Errorf("the organisation came back as %q", kinds[orgID])
+	}
+	if kinds[home] != "personal" {
+		t.Errorf("the home came back as %q", kinds[home])
+	}
+	if len(order) < 2 || order[len(order)-1] != home {
+		t.Errorf("the home is not last in %v", order)
 	}
 }

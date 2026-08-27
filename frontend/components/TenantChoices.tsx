@@ -1,15 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Building2, Check } from "lucide-react";
+import { Building2, Check, House } from "lucide-react";
 import { api } from "@/lib/api";
 import { resetAccess } from "@/lib/access";
 import { useI18n } from "@/lib/i18n";
+import { isHome } from "@/lib/workspaceKind.mjs";
 
 export interface TenantOption {
   id: string;
   name: string;
   slug: string;
+  /** "organisation" or "personal" — see lib/workspaceKind.mjs. */
+  kind?: string;
 }
 
 /**
@@ -60,23 +63,31 @@ export function useTenants(active: boolean) {
     };
   }, [active]);
 
-  const switchTo = useCallback(async (id: string) => {
-    setSwitching(true);
-    setFailed(false);
-    try {
-      await api.switchTenant(id);
-      // Everything on screen was fetched for the tenant being left — the menus,
-      // the permissions, every list on the page behind this control. A full
-      // load is the only honest way to drop all of it at once, and /apps is
-      // somewhere every tenant has, unlike the screen being stood on.
-      resetAccess();
-      forgetTenants();
-      window.location.assign("/apps");
-    } catch {
-      setSwitching(false);
-      setFailed(true);
-    }
-  }, []);
+  const switchTo = useCallback(
+    async (id: string) => {
+      setSwitching(true);
+      setFailed(false);
+      try {
+        await api.switchTenant(id);
+        // Everything on screen was fetched for the workspace being left — the
+        // menus, the permissions, every list on the page behind this control. A
+        // full load is the only honest way to drop all of it at once.
+        //
+        // Where it lands used to be /apps unconditionally, with a comment
+        // saying it is "somewhere every tenant has". Migration 00085 made that
+        // false: a home has no app store, so switching into one landed on a
+        // screen its own sidebar no longer offers. The profile is what is
+        // actually true of every workspace, and in a home it is the point.
+        resetAccess();
+        forgetTenants();
+        window.location.assign(isHome(tenants?.find((option) => option.id === id)) ? "/profile" : "/apps");
+      } catch {
+        setSwitching(false);
+        setFailed(true);
+      }
+    },
+    [tenants],
+  );
 
   // Reading alongside, rather than switching to. The reload is the same
   // reasoning as a switch: every list on the screen behind this control was
@@ -146,12 +157,19 @@ export function TenantChoices({
             option.id === current ? "bg-[var(--gerege-blue-soft)]" : ""
           }`}
         >
+          {/* The home wears a different mark and says so in words. Its slug is
+              derived from a user id and means nothing to the person reading it,
+              so the second line says what the row is instead of repeating an
+              identifier — this is the one row where "which of these am I in"
+              cannot be answered by the name, because the name is their own. */}
           <span className={option.id === current ? "text-[var(--gerege-blue)]" : "text-slate-400"}>
-            <Building2 className="w-4 h-4" />
+            {isHome(option) ? <House className="w-4 h-4" /> : <Building2 className="w-4 h-4" />}
           </span>
           <span className="min-w-0 flex-1">
             <strong className="block text-sm font-medium truncate">{option.name}</strong>
-            <small className="block text-xs text-slate-500 truncate">{option.slug}</small>
+            <small className="block text-xs text-slate-500 truncate">
+              {isHome(option) ? t("web.label.my_home") : option.slug}
+            </small>
           </span>
           {option.id === current && <Check className="w-4 h-4 shrink-0 text-[var(--gerege-blue)]" />}
         </button>

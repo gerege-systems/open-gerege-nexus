@@ -237,6 +237,10 @@ type TenantOption struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 	Slug string `json:"slug"`
+	// Kind is "organisation" or "personal". The switcher draws the home
+	// differently, and the shell hides an organisation's screens inside one —
+	// a home has no app store and no legal identity to look at.
+	Kind string `json:"kind"`
 }
 
 // TenantsForUser lists the tenants a person holds a membership in, by name.
@@ -246,12 +250,15 @@ type TenantOption struct {
 // the current tenant would answer this question with the one tenant the caller
 // is already in — a switcher that only ever offers where you already are.
 func (s *SessionStore) TenantsForUser(ctx context.Context, userID string) ([]TenantOption, error) {
+	// kind comes with them because the switcher has to say which row is the
+	// person's own home. Sorted by kind first so the home is last: it is the
+	// place somebody falls back to, not the one they reach for.
 	rows, err := s.db.Query(ctx,
-		`SELECT t.id::text, t.name, t.slug
+		`SELECT t.id::text, t.name, t.slug, t.kind
 		   FROM workspace.memberships m
 		   JOIN registry.tenants t ON t.id = m.tenant_id
 		  WHERE m.user_id = $1
-		  ORDER BY t.name, t.id`, userID)
+		  ORDER BY (t.kind = 'personal'), t.name, t.id`, userID)
 	if err != nil {
 		return nil, fmt.Errorf("list tenants for user: %w", err)
 	}
@@ -260,7 +267,7 @@ func (s *SessionStore) TenantsForUser(ctx context.Context, userID string) ([]Ten
 	options := make([]TenantOption, 0, 2)
 	for rows.Next() {
 		var option TenantOption
-		if err := rows.Scan(&option.ID, &option.Name, &option.Slug); err != nil {
+		if err := rows.Scan(&option.ID, &option.Name, &option.Slug, &option.Kind); err != nil {
 			return nil, fmt.Errorf("read tenant option: %w", err)
 		}
 		options = append(options, option)
