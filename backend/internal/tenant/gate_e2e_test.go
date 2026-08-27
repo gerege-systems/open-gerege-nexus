@@ -42,7 +42,7 @@ import (
 type gateFixture struct {
 	server *Service
 	// The plane's own routes, without the process-wide middleware the seam
-	// adds. Every request below is a GET, so the chain in pkg/platform would
+	// adds. Every request below is a GET, so the chain in pkg/host would
 	// change nothing about what is being asserted here — which is which
 	// requests the app gate lets through.
 	router       chi.Router

@@ -132,7 +132,7 @@ func (s *Service) authorised(r *http.Request) bool {
 
 // Routes mounts the wizard. Every path is public in the sense the route policy
 // means — no session can exist yet — and every one but the status carries the
-// token instead. See pkg/platform/route_policy_test.go.
+// token instead. See pkg/host/route_policy_test.go.
 func (s *Service) Routes(r chi.Router) {
 	r.Route("/api/v1/setup", func(r chi.Router) {
 		r.Get("/status", s.handleStatus)

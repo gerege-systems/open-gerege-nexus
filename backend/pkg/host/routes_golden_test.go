@@ -16,7 +16,7 @@
  * in a review is the plain statement of what the platform's surface gained or
  * lost.
  *
- *	go test ./pkg/platform -run TestTheRouteTable -update
+ *	go test ./pkg/host -run TestTheRouteTable -update
  *
  * App module routes are in the file too, behind an "[app] " marker. They are
  * mounted by registerAppModuleRoutes rather than written into setupRoutes, so
@@ -25,7 +25,7 @@
  * saying both at once.
  */
 
-package platform
+package host
 
 import (
 	"flag"
@@ -68,7 +68,7 @@ func TestTheRouteTableIsTheOneOnRecord(t *testing.T) {
 Every line here is a piece of the platform's public surface. If the change is
 deliberate, re-record it with
 
-    go test ./pkg/platform -run TestTheRouteTable -update
+    go test ./pkg/host -run TestTheRouteTable -update
 
 and say in the commit message what the surface gained and why it belongs in the
 core rather than in an app. If it is not deliberate, this is the accident the

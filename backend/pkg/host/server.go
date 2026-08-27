@@ -17,7 +17,7 @@
  * which is what makes that a configuration question rather than a fork.
  */
 
-package platform
+package host
 
 import (
 	"context"

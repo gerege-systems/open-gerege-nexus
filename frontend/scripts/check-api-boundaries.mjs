@@ -34,7 +34,7 @@ const clientPath = join(here, "..", "lib", "api", "client.ts");
  *
  * The App Store entries are here on purpose and are not a leak: the store
  * screens are how a deployment installs anything at all, so every deployment
- * has them. backend/pkg/platform/server.go serves them from the core for
+ * has them. backend/pkg/host/server.go serves them from the core for
  * the same reason. Same for /esign, which the documents app absorbed in
  * migration 00058 but whose rails are still platform code — and which is
  * therefore *not* in lib/api/client.ts either, but in lib/api/esign.ts beside

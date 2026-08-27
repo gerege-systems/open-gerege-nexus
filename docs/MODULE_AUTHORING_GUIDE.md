@@ -116,7 +116,7 @@ The cost is that a private route can become public by accident, and nothing in
 the diff would say so. So the rule is:
 
 > A route reachable without a session must be named in `publicRoutes` in
-> `backend/pkg/platform/route_policy_test.go`.
+> `backend/pkg/host/route_policy_test.go`.
 
 The test walks the real routing table, calls every route with no credentials,
 and fails on anything that answers `200` or `201` without being on the list. It

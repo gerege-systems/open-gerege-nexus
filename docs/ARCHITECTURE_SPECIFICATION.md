@@ -37,7 +37,7 @@ Gerege Nexus нь Go + Next.js + PostgreSQL дээрх **модульт моно
 
 ```text
 tenant origin ─┐                         ┌─ internal/tenant/* ─ tenant schema
-               ├─ pkg/platform/server.go ┤
+               ├─ pkg/host/server.go ┤
 control origin ┘   shared middleware     └─ internal/operator/* ─ platform schema
                           │
                     internal/kernel/*
@@ -45,7 +45,7 @@ control origin ┘   shared middleware     └─ internal/operator/* ─ platfo
                       PostgreSQL
 ```
 
-`backend/pkg/platform/server.go` нь хоёр урсгалын composition root: дундын
+`backend/pkg/host/server.go` нь хоёр урсгалын composition root: дундын
 store, middleware, router-ийг босгож хоёр route table-ийг зэрэг mount хийнэ.
 Хоёр урсгал хоорондоо import хийхгүй; `internal/planes_test.go` үүнийг
 компиляцын граф дээр шалгана.
@@ -58,7 +58,7 @@ store, middleware, router-ийг босгож хоёр route table-ийг зэр
 | `backend/internal/tenant` | Auth, access, directory, devices, identity, integrations, profile, SSO, app install зэрэг нэг тенантын ажиллагаа |
 | `backend/internal/operator` | Operator session, tenants, approvals, settings, flags, audit, support, metering, backup, catalog, observability |
 | `backend/internal/apps` | Distribution модулийн угсрах цэг. 2026-08-25-нд SSO Clients App Store руу явсны дараа **хоосон** — апп бүр `pkg/nexus`-ээр бүртгэгдэж каталогоор ирнэ |
-| `backend/pkg/platform` | Хоёр урсгалыг нэг HTTP процесст угсрах public host package |
+| `backend/pkg/host` | Хоёр урсгалыг нэг HTTP процесст угсрах public host package |
 | `backend/pkg/nexus` | Гадаад module/distribution-д зориулсан тогтвортой SDK contract |
 
 Plane-ийн үндсэн package нь зөвхөн дэд package-уудаа угсарна. Handler, store,
@@ -70,7 +70,7 @@ Plane-ийн үндсэн package нь зөвхөн дэд package-уудаа у
 
 ### 3.1 Дундын давхарга
 
-Хоёр урсгал `pkg/platform/server.go` дээр request ID, tracing, structured log,
+Хоёр урсгал `pkg/host/server.go` дээр request ID, tracing, structured log,
 panic recovery, load shedding, metrics, security headers, CORS, CSRF
 middleware-ийг хуваалцана. `/health`, `/ready`, `/metrics` нь аль нэг plane-д
 харьяалагдахгүй process endpoint.
@@ -151,7 +151,7 @@ distribution `stock_forecast` capability нийлүүлсэн үед delegation 
 | SQL хүснэгтээ schema-аар тодорхой заана | `backend/db/migrations/qualification_test.go` |
 | Тенант role зөвхөн таван boundary хүснэгт уншина | `schema_split_test.go` |
 | Шинэ platform хүснэгт анхдагчаар хаалттай | `TestNewPlatformTableIsClosedToTenantRole` |
-| API route санамсаргүй өөрчлөгдөхгүй | `backend/pkg/platform/testdata/routes.txt` |
+| API route санамсаргүй өөрчлөгдөхгүй | `backend/pkg/host/testdata/routes.txt` |
 | Origin ба `/cp` host routing | `frontend/tests/control-plane-host.test.mjs`, `frontend/scripts/check-control-plane-host.mjs`, `frontend/scripts/smoke-control-plane-host.mjs` |
 
 Шийдвэрийн үндэслэлийг [хоёр урсгалын санал](TWO_PLANES_PROPOSAL.md),

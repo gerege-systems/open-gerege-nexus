@@ -26,7 +26,7 @@ type InstalledApps = nexus.InstalledApps
 // criterion ECOSYSTEM_GIT_STRATEGY set for the split was a platform that boots
 // with no business app at all and takes every one of them from a catalogue.
 // The function stays because it is the seam a distribution's own Bootstrap
-// replaces — see pkg/platform.Options.Modules.
+// replaces — see pkg/host.Options.Modules.
 //
 // Where they went, and what each one left behind:
 //

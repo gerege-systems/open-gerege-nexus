@@ -98,12 +98,12 @@ var plannedKernelPackages = map[string]string{}
 //
 // server.go was the seam: it built both planes, mounted both route tables and
 // owned the router. It is three files now — internal/tenant/service.go,
-// internal/operator/service.go and pkg/platform/server.go — and the last of
+// internal/operator/service.go and pkg/host/server.go — and the last of
 // those is where the two planes become one process. The route tests and the
 // golden route table went with it, because the surface they describe is the
 // assembled one.
 var plannedSplitOrRemoved = map[string]string{
-	"service.go": "already three files: internal/tenant, internal/operator and pkg/platform, which is the only one that names both planes",
+	"service.go": "already three files: internal/tenant, internal/operator and pkg/host, which is the only one that names both planes",
 }
 
 func TestTenantDoesNotImportOperator(t *testing.T) {

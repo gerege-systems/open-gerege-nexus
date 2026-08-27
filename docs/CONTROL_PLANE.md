@@ -242,7 +242,7 @@ control-plane-ийн өөрчлөлтөд хамгийн багадаа:
 
 ```bash
 cd backend
-go test ./internal/operator/... ./internal/kernel/security/... ./pkg/platform/...
+go test ./internal/operator/... ./internal/kernel/security/... ./pkg/host/...
 
 cd ../frontend
 npm run test

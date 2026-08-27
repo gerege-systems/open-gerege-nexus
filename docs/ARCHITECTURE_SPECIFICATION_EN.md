@@ -37,7 +37,7 @@ trail. When an operator needs a tenant's view, they use the reason-bound,
 
 ```text
 tenant origin ─┐                         ┌─ internal/tenant/* ─ tenant schema
-               ├─ pkg/platform/server.go ┤
+               ├─ pkg/host/server.go ┤
 control origin ┘   shared middleware     └─ internal/operator/* ─ platform schema
                           │
                     internal/kernel/*
@@ -45,7 +45,7 @@ control origin ┘   shared middleware     └─ internal/operator/* ─ platfo
                       PostgreSQL
 ```
 
-`backend/pkg/platform/server.go` is the composition root. It constructs shared
+`backend/pkg/host/server.go` is the composition root. It constructs shared
 stores, middleware, and the router, then mounts both route tables. The planes do
 not import one another; `internal/planes_test.go` enforces that rule over the Go
 import graph.
@@ -58,7 +58,7 @@ import graph.
 | `backend/internal/tenant` | Authentication, access, directory, devices, identity, integrations, profile, SSO, and app installation for one tenant |
 | `backend/internal/operator` | Operator sessions, tenants, approvals, settings, flags, audit, support, metering, backup, catalog, and observability |
 | `backend/internal/apps` | Where a distribution's modules are assembled. Empty since 2026-08-25, when SSO Clients left for the App Store — every app now arrives through `pkg/nexus` and a catalogue |
-| `backend/pkg/platform` | Public host package that assembles both planes into one HTTP process |
+| `backend/pkg/host` | Public host package that assembles both planes into one HTTP process |
 | `backend/pkg/nexus` | Stable SDK contract for external modules and distributions |
 
 A plane's root package only composes its subpackages. Handlers, stores, and
@@ -72,7 +72,7 @@ relax the import or schema boundary.
 
 Both planes share request IDs, tracing, structured logging, panic recovery,
 load shedding, metrics, security headers, CORS, and CSRF middleware in
-`pkg/platform/server.go`. `/health`, `/ready`, and `/metrics` are process-level
+`pkg/host/server.go`. `/health`, `/ready`, and `/metrics` are process-level
 endpoints owned by neither plane.
 
 ### 3.2 Tenant request
@@ -155,7 +155,7 @@ returns `404` when no provider exists.
 | SQL qualifies owned tables by schema | `backend/db/migrations/qualification_test.go` |
 | Tenant role reads only five platform boundary tables | `schema_split_test.go` |
 | New platform tables are closed by default | `TestNewPlatformTableIsClosedToTenantRole` |
-| The HTTP surface does not drift silently | `backend/pkg/platform/testdata/routes.txt` |
+| The HTTP surface does not drift silently | `backend/pkg/host/testdata/routes.txt` |
 | Origin and `/cp` host routing remain separated | `frontend/tests/control-plane-host.test.mjs`, `frontend/scripts/check-control-plane-host.mjs`, `frontend/scripts/smoke-control-plane-host.mjs` |
 
 For rationale, see the [two-plane proposal](TWO_PLANES_PROPOSAL.md),

@@ -36,7 +36,7 @@ const (
 	// pullWindow is how long a poll is held open with nothing to say.
 	//
 	// It is 25 seconds because eid.PollWindow is, and the server's write
-	// deadline is derived from that one (pkg/platform/run.go): a handler that
+	// deadline is derived from that one (pkg/host/run.go): a handler that
 	// outlived the deadline would have its connection closed mid-answer and
 	// the caller would see a 502 rather than an empty batch. Reusing the number
 	// rather than picking a new one is what keeps the two from drifting apart.

@@ -17,7 +17,7 @@
 // has to name something the other owns. Where the planes genuinely meet, they
 // meet at five tables the platform writes and a tenant reads — see
 // db/migrations/ownership_test.go — and at the seam that assembles them, which
-// is pkg/platform.
+// is pkg/host.
 package tenant
 
 import (
@@ -652,7 +652,7 @@ func (s *Service) InstallAppForTenant(ctx context.Context, tenantID, appSlug, us
 //
 // The global middleware, /health, /ready and /metrics are not here: they belong
 // to the process rather than to either plane, and the console is mounted beside
-// this by the same seam. See pkg/platform.
+// this by the same seam. See pkg/host.
 func (s *Service) Routes(r chi.Router) {
 	// OpenID Connect Provider & OAuth2 Authorization Server.
 	//

@@ -126,7 +126,7 @@ func (g *Guard) Install(cfg *pgxpool.Config) {
 	//
 	// It sits here rather than beside the pool because this is the one place
 	// every pool in this codebase is configured — production's in
-	// pkg/platform/run.go and every database-backed test's — and a second call
+	// pkg/host/run.go and every database-backed test's — and a second call
 	// somebody has to remember is how a timezone bug comes back. It is a
 	// connection parameter rather than a statement, so it is set once when the
 	// connection is made and costs nothing per query.

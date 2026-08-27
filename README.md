@@ -104,7 +104,8 @@ backend/
   internal/tenant/      байгууллагын нэрийн өмнөөс ажиллах plane
   internal/apps/        distribution module-ийн угсрах цэг (одоо хоосон)
   pkg/nexus/            distribution module-ийн нийтийн SDK
-  pkg/platform/         distribution binary-г асаах нийтийн entry point
+  pkg/host/             distribution binary-г асаах нийтийн entry point
+  pkg/platform/         түүний хуучин нэр, дараагийн major хүртэл дамжуулна
 frontend/               Next.js web shell ба control plane UI
 catalog/                үндсэн catalog, manifest, chronicle
 native-apps/            macOS, iOS/iPadOS, Windows, Android client
@@ -182,7 +183,7 @@ README дахь API жагсаалт бүрэн contract биш. Кодтой х
 сурвалжууд:
 
 - Platform route snapshot:
-  [`backend/pkg/platform/testdata/routes.txt`](backend/pkg/platform/testdata/routes.txt)
+  [`backend/pkg/host/testdata/routes.txt`](backend/pkg/host/testdata/routes.txt)
 - Module SDK public API snapshot:
   [`backend/pkg/nexus/testdata/api.txt`](backend/pkg/nexus/testdata/api.txt)
 - Base catalog: [`catalog/apps.json`](catalog/apps.json) (хоосон)

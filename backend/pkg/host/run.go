@@ -32,7 +32,7 @@
  * point: this repository's binary is built the way every distribution's is.
  */
 
-package platform
+package host
 
 import (
 	"context"

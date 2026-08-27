@@ -1,4 +1,4 @@
-package platform
+package host
 
 import (
 	"io"

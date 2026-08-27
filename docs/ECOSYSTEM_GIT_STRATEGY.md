@@ -236,7 +236,7 @@ distribution-ийг бүгдийг нь суулгасан Түвшин 2-ын �
    — салгасан. Гурван модуль тэнд нүүж, цөмийг `backend v1.1.0` tag-аар авна.
    Салгалт нь гурван зүйлийг шаардсан бөгөөд гурвуулаа одоо бүх distribution-д
    бэлэн: `pkg/nexus` (модулийн гэрээ), `pkg/catalog` (апп сторын гэрээ),
-   `pkg/platform` (нийтийн эхлүүлэгч). Дөрөв дэх нь `cmd/migrate`-ийн
+   `pkg/host` (нийтийн эхлүүлэгч). Дөрөв дэх нь `cmd/migrate`-ийн
    `MIGRATIONS_DIR`/`MIGRATIONS_TABLE` — distribution өөрийн schema-тай бол
    хэрэгтэй;
 2. ~~`gerege-gov`~~ → **[gov-gerege-nexus](https://github.com/gerege-systems/gov-gerege-nexus)**
@@ -443,7 +443,7 @@ distribution залгамжилж, appstore.gerege.mn дээр Nexus платф�
 
 Тест бичихэд тэр даруй хоёр зөрчил гарав, хоёул жинхэнэ:
 
-* `pkg/platform/server.go` нь `egov.Rail`-ыг нэрлэхийн тулд аппыг
+* `pkg/host/server.go` нь `egov.Rail`-ыг нэрлэхийн тулд аппыг
   импортолж байв. Эхлээд дотоод rail contract-аар салгаж, эцэст нь гадаад
   distribution ч хэрэглэх `nexus.StateRail`/`nexus.StateRails` public contract
   болгосон — платформ утгыг бүтээж, module зөвхөн дүрсэлнэ;
@@ -465,7 +465,7 @@ distribution залгамжилж, appstore.gerege.mn дээр Nexus платф�
 
 | Алхам | Ажил | Үр дүн | Байдал |
 | --- | --- | --- | --- |
-| 1 | `pkg/nexus` SDK гаргаж, дотоод модулиудыг түүн рүү шилжүүлэх | Гадны repo модуль бичиж чаддаг болно | ✅ SDK + `pkg/catalog` + `pkg/platform`; арван нэгэн модуль бүгд SDK-аар бүртгэгддэг |
+| 1 | `pkg/nexus` SDK гаргаж, дотоод модулиудыг түүн рүү шилжүүлэх | Гадны repo модуль бичиж чаддаг болно | ✅ SDK + `pkg/catalog` + `pkg/host`; арван нэгэн модуль бүгд SDK-аар бүртгэгддэг |
 | 2 | Semver release журам + эхний `v1.0.0` tag | Dependency болж чадна | ✅ `docs/RELEASING.md`, `backend/v1.0.0`, `v1.1.0` |
 | 3 | Брэндийг runtime тохиргоо болгох + deploy config repo | Түвшин 1 бүрэн ажиллана | 🔶 Брэнд гарлаа (2026-08-15, §2.3): нэр/лого/өнгө `BRAND_*`-аас хүсэлт тутам, орчуулгад `{brand}`. `apiBase()`-тэй хамт образ одоо өөрийн хаяг ч, нэр ч мэдэхгүй. Үлдсэн нь icon багц ба deploy config repo |
 | 4 | Reusable workflows + template repo | Шинэ платформ хагас өдөрт | 🔶 CI бэлэн (`distribution-{ci,security}.yml`); template repo үлдсэн |
