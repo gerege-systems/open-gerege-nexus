@@ -2,7 +2,7 @@
 import {useEffect,useState} from "react";
 import {api,apiBase} from "@/lib/api";
 import {useI18n} from "@/lib/i18n";
-import {Building2,KeyRound,MonitorSmartphone,ShieldCheck,Unlink} from "lucide-react";
+import {Building2,House,KeyRound,MonitorSmartphone,ShieldCheck,Unlink} from "lucide-react";
 import {ProviderMark,GoogleMark} from "@/components/ProviderMark";
 
 /**
@@ -25,6 +25,7 @@ type Identity = {
 type Profile = {
   id: string; name: string; email: string; created_at: string; is_admin: boolean;
   organisations: Array<{id:string;name:string;slug:string}>;
+  home?: {id:string;name:string;slug:string}|null;
   identities: Identity[]; active_sessions: number;
 };
 
@@ -194,10 +195,17 @@ export default function ProfilePage(){const {t}=useI18n();
     <section className="profile__section">
       <h2>{t("profile.organisations")}</h2>
       <ul className="profile__list">
+        {/* Гэр эхэнд, тусдаа тэмдэгтэйгээ. Slug нь хэрэглэгчийн id-аас гардаг
+            тул уншигчид юу ч хэлэхгүй — доод мөрөнд юу болохыг нь бичнэ. */}
+        {profile.home&&<li key={profile.home.id}><div className="profile__row">
+          <span className="profile__icon"><House/></span>
+          <div className="profile__grow"><b>{profile.home.name}</b><span>{t("web.label.my_home")}</span></div>
+        </div></li>}
         {profile.organisations.map(o=><li key={o.id}><div className="profile__row">
           <span className="profile__icon"><Building2/></span>
           <div className="profile__grow"><b>{o.name}</b><span>{o.slug}</span></div>
         </div></li>)}
+        {profile.organisations.length===0&&<li className="profile__muted">{t("profile.message.no_organisations")}</li>}
       </ul>
     </section>
   </main>
