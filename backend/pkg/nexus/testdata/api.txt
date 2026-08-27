@@ -124,6 +124,7 @@
   PermissionDefinition.Name string
   PermissionStore.GetUserPermissions(ctx context.Context, workspaceID, userID string) (map[string]bool, error)
   PersonFeed.Publish(ctx context.Context, geID int64, item PersonItem) error
+  PersonFeed.PublishTo(ctx context.Context, accountID string, item PersonItem) error
   PersonItem.Answer string
   PersonItem.Code string
   PersonItem.ProviderWorkspaceID string

@@ -99,18 +99,37 @@ func (s *Store) Items(ctx context.Context, limit int) ([]Item, error) {
 // Publish is nexus.PersonFeed: a module telling a citizen where their request
 // has got to.
 //
-// Everything that makes this safe is in the database. registry.publish_person_item
+// The Gerege number is the module's natural word for a person — it is what the
+// applicant record on the other side carries — and the home is found by the
+// account that owns it, so this resolves one into the other and hands the
+// account on. One statement, and it is here rather than inside the function
+// because ge_id is nullable: an account opened with a password has none, and a
+// function keyed on it could never reach them. The core's own publisher
+// (join.go) skips this step entirely, having had the account all along.
+func (s *Store) Publish(ctx context.Context, geID int64, item nexus.PersonItem) error {
+	var userID string
+	err := s.db.QueryRow(ctx,
+		`SELECT id::text FROM registry.users WHERE ge_id = $1`, geID).Scan(&userID)
+	if err != nil {
+		return fmt.Errorf("find the person carrying Gerege number %d: %w", geID, err)
+	}
+	return s.PublishTo(ctx, userID, item)
+}
+
+// PublishTo is the write itself, for a caller that already knows the account.
+//
+// Everything that makes it safe is in the database. registry.publish_person_item
 // is SECURITY DEFINER — it has to be, because the row goes into a workspace the
 // caller is not bound to and the policy would refuse it — so the function is
-// deliberately narrow: it finds the home by the Gerege number, refuses anything
-// that is not a personal workspace, writes one table's named columns, and holds
-// EXECUTE for one role. Migration 00086 sets those four rules out and the tests
-// beside it hold them.
+// deliberately narrow: it finds the home by its owner, refuses anything that is
+// not a personal workspace, writes one table's named columns, and holds EXECUTE
+// for one role. Migrations 00086 and 00089 set those rules out and the tests
+// beside this file hold them.
 //
 // This wrapper adds nothing to them, which is the point. It takes the caller's
-// context, so the write joins the module's own transaction and its own audit
+// context, so the write joins the caller's own transaction and its own audit
 // row rather than opening a second one that can commit without them.
-func (s *Store) Publish(ctx context.Context, geID int64, item nexus.PersonItem) error {
+func (s *Store) PublishTo(ctx context.Context, accountID string, item nexus.PersonItem) error {
 	var provider any
 	if item.ProviderWorkspaceID != "" {
 		provider = item.ProviderWorkspaceID
@@ -119,9 +138,9 @@ func (s *Store) Publish(ctx context.Context, geID int64, item nexus.PersonItem) 
 		// Every parameter cast, because the function is resolved by its argument
 		// types and pgx sends them untyped: without the casts PostgreSQL cannot
 		// choose the overload and refuses the call before it runs.
-		`SELECT registry.publish_person_item($1::bigint, $2::uuid, $3::text, $4::text, $5::text, $6::text, $7::text)`,
-		geID, provider, item.SourceApp, item.SourceRef, item.Code, item.Status, item.Answer); err != nil {
-		return fmt.Errorf("publish a request into %d's home: %w", geID, err)
+		`SELECT registry.publish_person_item($1::uuid, $2::uuid, $3::text, $4::text, $5::text, $6::text, $7::text)`,
+		accountID, provider, item.SourceApp, item.SourceRef, item.Code, item.Status, item.Answer); err != nil {
+		return fmt.Errorf("publish a request into %s's home: %w", accountID, err)
 	}
 	return nil
 }

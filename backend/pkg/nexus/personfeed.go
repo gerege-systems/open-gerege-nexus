@@ -45,7 +45,25 @@ import "context"
 // first row rather than adding one. There is no Delete: a citizen's record of
 // having asked is not the supplier's to remove.
 type PersonFeed interface {
+	// Publish names the person by their Gerege number, which is the identifier
+	// a supplier's record of them carries.
 	Publish(ctx context.Context, geID int64, item PersonItem) error
+
+	// PublishTo names them by their account on this deployment.
+	//
+	// Two ways in because there are two kinds of caller and neither one's
+	// identifier is the other's. A module knows a Gerege number: it came in on
+	// the request and the person may never have signed in here. The platform
+	// itself knows an account — it is answering about somebody who is signed
+	// in — and cannot use the first form at all, because ge_id is null on every
+	// account opened with a password rather than an eID.
+	//
+	// The platform is the first caller of this one: internal/workspace/access
+	// publishes the answer to a request to join. That is deliberate rather than
+	// incidental. A capability this repository declares and never calls is the
+	// mistake capability.go was written about — see the MeetingBooker note
+	// there — and it is not one to make twice on the same page.
+	PublishTo(ctx context.Context, accountID string, item PersonItem) error
 }
 
 // PersonItem is one request, as the person who made it sees it.

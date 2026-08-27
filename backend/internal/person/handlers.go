@@ -7,12 +7,15 @@
 package person
 
 import (
+	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
 
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/kernel/httpx"
+	"github.com/gerege-systems/open-gerege-nexus/backend/pkg/nexus"
 )
 
 // Routes mounts what a person asks for on their own behalf.
@@ -28,6 +31,7 @@ func (s *Store) Routes(r chi.Router, gate func(http.Handler) http.Handler) {
 	r.Route("/api/v1/me", func(mr chi.Router) {
 		mr.Use(gate)
 		mr.Get("/items", s.HandleItems)
+		mr.Post("/join-requests", s.HandleAsk)
 	})
 }
 
@@ -50,4 +54,41 @@ func (s *Store) HandleItems(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.JSON(w, http.StatusOK, map[string]any{"items": items})
+}
+
+// HandleAsk is somebody asking an organisation to let them in.
+//
+// By slug, because that is the name a person is given when they are told where
+// to apply — it is in the address of every screen that organisation serves. The
+// alternative is a picker over every organisation on the deployment, which is a
+// directory, and a directory is a decision about what a citizen may enumerate
+// rather than a detail of this endpoint.
+func (s *Store) HandleAsk(w http.ResponseWriter, r *http.Request) {
+	claims, err := nexus.UserFromContext(r.Context())
+	if err != nil {
+		httpx.Error(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	var body struct {
+		Slug    string `json:"slug"`
+		Message string `json:"message"`
+	}
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<12)).Decode(&body); err != nil {
+		httpx.Error(w, http.StatusBadRequest, "malformed request body")
+		return
+	}
+
+	switch err := s.Ask(r.Context(), claims.UserID, body.Slug, body.Message); {
+	case err == nil:
+		httpx.JSON(w, http.StatusOK, map[string]any{"ok": true})
+	case errors.Is(err, ErrNotAsked):
+		httpx.Error(w, http.StatusNotFound, "no organisation answers to that name")
+	default:
+		// Everything the function refuses is something the person can act on —
+		// already a member, the organisation is closed — so its own words go
+		// back rather than a number. They are database messages, which is not
+		// ideal prose; the screen has the room to say it better and the
+		// endpoint should not decide that for it.
+		httpx.Error(w, http.StatusConflict, err.Error())
+	}
 }

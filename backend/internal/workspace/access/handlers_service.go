@@ -26,7 +26,9 @@ type Handlers struct {
 	// edited on one replica is a role every replica must stop believing in.
 	bus *cache.Bus
 	// authn issues the session a redeemed link ends in, and answers whether the
-	// organisation behind it is still open.
+	// organisation behind it is still open. It also answers whether the
+	// organisation has room for one more member, which is what accepting a
+	// request to join spends.
 	authn *auth.Handlers
 }
 

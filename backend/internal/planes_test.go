@@ -132,6 +132,8 @@ var plannedPersonPackages = map[string]string{
 	// file appears is the moment to decide which subpackage it opens rather
 	// than the day somebody counts forty.
 	"person.go":         "person (the store and its one statement)",
+	"join.go":           "person (asking an organisation to let you in)",
+	"join_db_test.go":   "person (the four rules of request_to_join, which are database rules)",
 	"handlers.go":       "person (its routes; moves the day there is a second screen)",
 	"person_db_test.go": "person (the four rules of publish_person_item, which are database rules)",
 }

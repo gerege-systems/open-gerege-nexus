@@ -92,8 +92,8 @@ func TestEveryPlatformMigrationTableLandsOnItsDeclaredSchema(t *testing.T) {
 	// stays legible: twenty of the operator plane's tables are ones a tenant may
 	// also read and seven are not. A number edited alongside a migration is a
 	// number somebody looked at.
-	if counts["workspace"] != 32 || counts["registry"] != 20 || counts["operator"] != 7 {
-		t.Errorf("schema counts: workspace=%d registry=%d operator=%d; want 32, 20 and 7",
+	if counts["workspace"] != 33 || counts["registry"] != 20 || counts["operator"] != 7 {
+		t.Errorf("schema counts: workspace=%d registry=%d operator=%d; want 33, 20 and 7",
 			counts["workspace"], counts["registry"], counts["operator"])
 	}
 }
