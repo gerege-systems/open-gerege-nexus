@@ -9,10 +9,13 @@ package canary
 import (
 	"context"
 	"errors"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"github.com/gerege-systems/open-gerege-nexus/backend/pkg/nexus"
+	"github.com/go-chi/chi/v5"
 )
 
 // A distribution constructs its module the way a product's main() does, and
@@ -112,5 +115,53 @@ func TestAPermissionsDeclaredReachIsHonoured(t *testing.T) {
 	}
 	if err := contradiction.Validate(); err == nil {
 		t.Error("a permission that is both AdminOnly and granted by default was accepted")
+	}
+}
+
+// The three calls every handler in every distribution starts with.
+//
+// api.txt records that RequireWorkspace, UserFromContext and WorkspaceOf exist
+// with those signatures. It cannot say that a context carrying a workspace makes
+// all three agree about which one, or that a context carrying none is refused —
+// and those are the properties a handler is written against.
+//
+// This test is why .github/workflows/downstream.yml no longer clones a product
+// from another repository to find out. That job did catch this surface, and it
+// caught it by making the platform's pipeline depend on a repository the
+// platform does not own: a deliberate major-version rename could not be merged
+// here until somebody else's product had been updated and pushed, and a job
+// that cannot tell an intended break from an accident will eventually be
+// merged past rather than fixed.
+func TestTheRequestScopedContractHoldsForAHandler(t *testing.T) {
+	module := New(nexus.NewPlatform(nil, nil))
+	const workspaceID, userID = "11111111-1111-1111-1111-111111111111", "22222222-2222-2222-2222-222222222222"
+
+	router := chi.NewRouter()
+	module.RegisterRoutes(router, func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := nexus.WithWorkspaceID(r.Context(), workspaceID)
+			ctx = nexus.WithUser(ctx, nexus.UserClaims{UserID: userID, WorkspaceID: workspaceID})
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	})
+
+	answered := httptest.NewRecorder()
+	router.ServeHTTP(answered, httptest.NewRequest(http.MethodGet, "/api/v1/canary/mine", nil))
+	if answered.Code != http.StatusOK {
+		t.Fatalf("a request carrying a workspace was answered %d: %s", answered.Code, answered.Body.String())
+	}
+	if body := answered.Body.String(); !strings.Contains(body, workspaceID) || !strings.Contains(body, userID) {
+		t.Errorf("the handler answered %s, which names neither the workspace nor the person", body)
+	}
+
+	// And the other half: no workspace in the context is refused rather than
+	// served with an empty string, which is what a module would otherwise put
+	// into a WHERE clause.
+	bare := chi.NewRouter()
+	module.RegisterRoutes(bare, func(next http.Handler) http.Handler { return next })
+	refused := httptest.NewRecorder()
+	bare.ServeHTTP(refused, httptest.NewRequest(http.MethodGet, "/api/v1/canary/mine", nil))
+	if refused.Code == http.StatusOK {
+		t.Errorf("a request with no workspace was answered %d: %s", refused.Code, refused.Body.String())
 	}
 }

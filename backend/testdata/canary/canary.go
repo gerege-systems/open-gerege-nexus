@@ -94,7 +94,40 @@ func (m *Module) RegisterRoutes(r chi.Router, gate func(http.Handler) http.Handl
 	r.Route("/api/v1/canary", func(cr chi.Router) {
 		cr.Use(gate)
 		cr.Get("/", func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusNoContent) })
+		cr.Get("/mine", m.mine)
 	})
+}
+
+// mine is the request-scoped half of the contract: who is asking, and which
+// workspace are they asking for.
+//
+// Nothing else in this file needs it — the module could publish a capability, a
+// report and an assistant tool without ever reading a request — and that is
+// exactly why it is here. Every handler in every distribution begins with these
+// three calls, so they are the most-used part of the SDK and the part a rename
+// reaches first. They were caught until now by cloning a real product in CI and
+// building it, which pointed the platform's own pipeline at a repository it
+// does not own; see .github/workflows/downstream.yml.
+func (m *Module) mine(w http.ResponseWriter, r *http.Request) {
+	workspaceID, ok := nexus.RequireWorkspace(w, r)
+	if !ok {
+		return
+	}
+	claims, err := nexus.UserFromContext(r.Context())
+	if err != nil {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	// The same answer by two routes. A handler reads the acting workspace from
+	// the claims it already has; a report has no ResponseWriter to refuse with
+	// and takes the context alone. Both are contract, so the canary asserts
+	// they agree rather than picking one.
+	if claims.WorkspaceID != workspaceID || nexus.WorkspaceOf(r.Context()) != workspaceID {
+		http.Error(w, "the workspace this request acts for is read three ways and they disagree", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_, _ = w.Write([]byte(`{"workspace_id":"` + workspaceID + `","user_id":"` + claims.UserID + `"}`))
 }
 
 func (m *Module) MenuPermission() string        { return "canary.read" }
