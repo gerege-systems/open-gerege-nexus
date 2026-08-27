@@ -48,7 +48,6 @@ import (
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/devices/staffpin"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/directory"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/emailverify"
-	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/home"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/identity"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/identity/dan"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/identity/eid"
@@ -112,9 +111,6 @@ type Service struct {
 	// access is who may do what inside one organisation, and the two links the
 	// console hands out when somebody cannot get in at all.
 	access *access.Handlers
-	// home is a person's own workspace: the requests other organisations have
-	// published into it, and the rail they publish through.
-	home *home.Store
 	// profile is what a person and an organisation say about themselves.
 	profile *profile.Handlers
 	// devices is the terminals an organisation enrols, and the sign-in a till
@@ -448,11 +444,6 @@ func New(deps Deps) (*Service, error) {
 		Google: googleLogin, SSO: federatedSignIn, Authn: s.authn,
 	})
 	// After identity, whose list of ways in the person's screen shows.
-	s.home = home.New(db)
-	// The rail a module publishes a citizen's request onto. Provided rather
-	// than passed: a module that never touches a citizen should not have to
-	// know this exists, and one that does asks for it by type.
-	nexus.Provide[nexus.PersonFeed](home.AsPersonFeed(s.home))
 	s.profile = profile.New(db, s.sessions, s.identity)
 	s.access = access.New(db, bus, s.authn)
 	s.appinstall = appinstall.New(appinstall.Deps{
@@ -640,6 +631,14 @@ func (s *Service) InstallAppForTenant(ctx context.Context, tenantID, appSlug, us
 // The global middleware, /health, /ready and /metrics are not here: they belong
 // to the process rather than to either plane, and the console is mounted beside
 // this by the same seam. See pkg/host.
+// AuthMiddleware is "who is making this request, and for which workspace".
+//
+// Exported for one caller: pkg/host, which mounts internal/person behind it.
+// A port rather than an import in the other direction — person asks a question
+// and gets an answer, and does not gain the ability to run this plane's
+// queries. ADR 0001's rule, and the same shape a module's RegisterRoutes takes.
+func (s *Service) AuthMiddleware() func(http.Handler) http.Handler { return s.authn.Middleware }
+
 func (s *Service) Routes(r chi.Router) {
 	// OpenID Connect Provider & OAuth2 Authorization Server.
 	//
@@ -770,11 +769,6 @@ func (s *Service) Routes(r chi.Router) {
 			// A person's own record: which identities are linked to this
 			// account and what each provider said. Inside the authenticated
 			// group and answering only for the caller — see profile_handlers.go.
-			// What this person asked other organisations for. In the
-			// authenticated group beside /profile because it is the same kind
-			// of thing — the caller's own record — and for the same reason it
-			// carries no permission of its own.
-			pr.Get("/me/items", s.home.HandleItems)
 			pr.Get("/profile", s.profile.HandleProfile)
 			pr.Post("/profile/identities/unlink", s.identity.HandleUnlinkIdentity)
 			// What the signed-in person prefers, wherever they are. No

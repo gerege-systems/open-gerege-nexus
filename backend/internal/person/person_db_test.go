@@ -18,7 +18,7 @@
  * is a line somebody could delete while the feature kept working.
  */
 
-package home_test
+package person_test
 
 import (
 	"context"
@@ -31,7 +31,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/home"
+	"github.com/gerege-systems/open-gerege-nexus/backend/internal/person"
 	"github.com/gerege-systems/open-gerege-nexus/backend/pkg/nexus"
 )
 
@@ -109,7 +109,7 @@ func item(ref string) nexus.PersonItem {
 // together: a write nobody can read is a write into a hole.
 func TestAPublishedRequestArrivesInThatPersonsHome(t *testing.T) {
 	pool := openPool(t)
-	store := home.New(pool)
+	store := person.New(pool)
 	ctx := context.Background()
 
 	geID, _, homeID := seedHome(t, pool)
@@ -140,7 +140,7 @@ func TestAPublishedRequestArrivesInThatPersonsHome(t *testing.T) {
 // moves, so anything else is a feed that grows a line per state change.
 func TestPublishingTheSameRequestTwiceUpdatesOneRow(t *testing.T) {
 	pool := openPool(t)
-	store := home.New(pool)
+	store := person.New(pool)
 	ctx := context.Background()
 	geID, _, homeID := seedHome(t, pool)
 
@@ -177,7 +177,7 @@ func TestPublishingTheSameRequestTwiceUpdatesOneRow(t *testing.T) {
 // person's writes into that person's home and no other.
 func TestTheGeregeNumberDecidesWhoseHomeItIs(t *testing.T) {
 	pool := openPool(t)
-	store := home.New(pool)
+	store := person.New(pool)
 	ctx := context.Background()
 
 	firstGeID, _, firstHome := seedHome(t, pool)
@@ -218,7 +218,7 @@ func TestTheGeregeNumberDecidesWhoseHomeItIs(t *testing.T) {
 // a wrong number indistinguishable from a right one.
 func TestPublishingToANumberWithNoHomeFails(t *testing.T) {
 	pool := openPool(t)
-	store := home.New(pool)
+	store := person.New(pool)
 
 	err := store.Publish(context.Background(), 999999999999, item("REQ-NOBODY"))
 	if err == nil {
@@ -254,7 +254,7 @@ func TestAnOrganisationIsNeverPublishedInto(t *testing.T) {
 
 	// And the positive half: with the organisation unreachable, the number
 	// still resolves to the home.
-	store := home.New(pool)
+	store := person.New(pool)
 	if err := store.Publish(ctx, geID, item("REQ-C")); err != nil {
 		t.Fatal(err)
 	}
@@ -341,7 +341,7 @@ func TestTheOperatorRoleCannotPublish(t *testing.T) {
 // sees their row and not the other person's.
 func TestOneCitizenDoesNotSeeAnothersRequests(t *testing.T) {
 	pool := openPool(t)
-	store := home.New(pool)
+	store := person.New(pool)
 	ctx := context.Background()
 
 	firstGeID, _, firstHome := seedHome(t, pool)

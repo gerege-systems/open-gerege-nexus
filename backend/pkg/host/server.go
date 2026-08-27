@@ -37,7 +37,9 @@ import (
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/kernel/telemetry"
 	core "github.com/gerege-systems/open-gerege-nexus/backend/internal/operator"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/operator/setup"
+	"github.com/gerege-systems/open-gerege-nexus/backend/internal/person"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace"
+	"github.com/gerege-systems/open-gerege-nexus/backend/pkg/nexus"
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -144,8 +146,16 @@ func newServer(db *pgxpool.Pool, catalogPath string, bus *cache.Bus, extra ...wo
 
 	setupWizard := setup.New(db)
 
+	// The person's own tree. Built here because it is nobody's subpackage: see
+	// the note beside its Routes call below.
+	personPlane := person.New(db)
+	// The rail a module publishes a citizen's request onto. Provided rather
+	// than passed: a module that never touches a citizen should not have to
+	// know this exists, and one that does asks for it by type.
+	nexus.Provide[nexus.PersonFeed](person.AsPersonFeed(personPlane))
+
 	return &server{
-		router:      newRouter(db, tenantPlane, platformPlane, setupWizard),
+		router:      newRouter(db, tenantPlane, platformPlane, personPlane, setupWizard),
 		workspace:   tenantPlane,
 		platform:    platformPlane,
 		settings:    settingsStore,
@@ -157,7 +167,7 @@ func newServer(db *pgxpool.Pool, catalogPath string, bus *cache.Bus, extra ...wo
 
 // newRouter is the process's HTTP surface: what every request passes through,
 // the three routes that belong to no plane, and then the planes themselves.
-func newRouter(db *pgxpool.Pool, tenantPlane *workspace.Service, platformPlane *core.Service, wizard *setup.Service) *chi.Mux {
+func newRouter(db *pgxpool.Pool, tenantPlane *workspace.Service, platformPlane *core.Service, personPlane *person.Store, wizard *setup.Service) *chi.Mux {
 	r := chi.NewRouter()
 
 	// First, so everything below it — the access log, every slog line a handler
@@ -216,6 +226,21 @@ func newRouter(db *pgxpool.Pool, tenantPlane *workspace.Service, platformPlane *
 	// against its history when the history is the only thing that changed.
 	platformPlane.Routes(r)
 	tenantPlane.Routes(r)
+	// The person's own tree, mounted here rather than by either plane.
+	//
+	// internal/person answers for one subject — the human being — and neither
+	// existing plane is that subject: workspace answers for an organisation
+	// and operator answers for the deployment. Its rows live in the person's
+	// own workspace and its queries run as the workspace role, so it is not a
+	// third database boundary; it is a third *domain*, and the personal side is
+	// the one with room to grow. Keeping it out of internal/workspace now is
+	// cheaper than taking it out later, when it is four packages deep in a tree
+	// named for organisations.
+	//
+	// internal/planes_test.go holds the rule that makes that separation real: a
+	// plane may not import another. This is the file allowed to name them all,
+	// which is why the session middleware is handed across here.
+	personPlane.Routes(r, tenantPlane.AuthMiddleware())
 	// Last, and unconditionally: the wizard answers 404 to everything until it
 	// is armed, so mounting it on a deployment that was set up years ago costs
 	// one route table entry and nothing else.

@@ -17,7 +17,7 @@
  * side is the one statement below. See docs/WORKSPACE_NAMING_PROPOSAL.md §4.9.
  */
 
-package home
+package person
 
 import (
 	"context"

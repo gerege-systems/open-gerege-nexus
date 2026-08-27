@@ -48,7 +48,15 @@ const modulePrefix = "github.com/gerege-systems/open-gerege-nexus/backend"
 //
 //	workspace  gerege_nexus_tenant    one organisation's rows
 //	operator   gerege_nexus_operator  every organisation, named columns only
-//	person     gerege_nexus_person    every organisation, only the rows about me
+//	person     gerege_nexus_tenant    one person's own workspace
+//
+// person shares the workspace role, and that is not an oversight in the
+// sentence above — it is what migration 00085 bought. A citizen acts inside a
+// workspace of their own, so the existing policy already limits them to their
+// own rows and no fourth role was needed. What makes it a separate tree is the
+// subject it answers for: a human being rather than an organisation. The rule
+// this file enforces is about imports, not about roles, and it holds either
+// way.
 //
 // person is in this list before internal/person exists, for the reason the
 // other two were: a rule written after the code is an argument, a rule written
@@ -113,7 +121,20 @@ var plannedOperatorPackages = map[string]string{
 // after it appears, which is the whole mechanism that stopped the last root
 // directory reaching 46 files. A handler does not belong here either — the
 // root composes subpackages and nothing else.
-var plannedPersonPackages = map[string]string{}
+var plannedPersonPackages = map[string]string{
+	// Three files, and the honest answer for now is that they stay. The tree is
+	// one screen deep — a store, its handler and the tests — and splitting 170
+	// lines into subpackages would be naming things before there is anything to
+	// tell apart.
+	//
+	// They are written down anyway, because that is what this list is for: the
+	// personal side is the one with room to grow, and the run after a fourth
+	// file appears is the moment to decide which subpackage it opens rather
+	// than the day somebody counts forty.
+	"person.go":         "person (the store and its one statement)",
+	"handlers.go":       "person (its routes; moves the day there is a second screen)",
+	"person_db_test.go": "person (the four rules of publish_person_item, which are database rules)",
+}
 
 // The floor. These own no table and answer to no plane, which is what
 // makes them safe for both to import — and why the third rule below matters

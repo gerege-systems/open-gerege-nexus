@@ -4,14 +4,32 @@
  * Distributed under the Apache 2.0 License.
  */
 
-package home
+package person
 
 import (
 	"net/http"
 	"strconv"
 
+	"github.com/go-chi/chi/v5"
+
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/kernel/httpx"
 )
+
+// Routes mounts what a person asks for on their own behalf.
+//
+// The gate is handed in rather than imported, and that is the whole reason this
+// package can sit beside the workspace plane instead of inside it. Resolving a
+// session is the workspace plane's work — it owns the table, the cookie and the
+// rules about suspension — and importing it here would bring every query in
+// that package with it, each one written for somebody acting inside an
+// organisation. So the host, which is the one file allowed to name more than
+// one of these trees, passes the middleware in. See pkg/host/server.go.
+func (s *Store) Routes(r chi.Router, gate func(http.Handler) http.Handler) {
+	r.Route("/api/v1/me", func(mr chi.Router) {
+		mr.Use(gate)
+		mr.Get("/items", s.HandleItems)
+	})
+}
 
 // HandleItems answers "what did I ask for, and where has it got to".
 //
