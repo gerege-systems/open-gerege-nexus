@@ -664,6 +664,35 @@ func (h *Handlers) ResolveOrProvisionEIDUser(ctx context.Context, identity *eid.
 	if name == "" {
 		name = "eID Mongolia хэрэглэгч"
 	}
+
+	// The address the new account is opened under.
+	//
+	// eID hands over an email and a telephone number along with the name, and
+	// until now both were thrown away: the account was opened under a
+	// synthesised address and the citizen's own details survived only inside
+	// the claims blob, where no screen and no query can reach them. Somebody
+	// signing in for the first time landed on a profile that knew their name
+	// and nothing else they had just been asked to share.
+	//
+	// The address eID gives is used only to OPEN an account, never to FIND
+	// one. That distinction is the whole of the safety here: the lookups above
+	// stay on the Gerege number and the synthesised address, both of which
+	// this platform derives itself. eID's email is what the citizen told the
+	// civil registry, not proof they control that mailbox today — matching on
+	// it would let anybody holding an eID walk into an account opened by
+	// somebody who once used the same address.
+	//
+	// And only when it is free. registry.users.email is unique, so a collision
+	// would fail the insert; falling back keeps the sign-in working and leaves
+	// the address with whoever already had it.
+	accountEmail := email
+	if candidate := strings.ToLower(strings.TrimSpace(identity.Email)); candidate != "" {
+		var taken bool
+		if err := h.db.QueryRow(ctx,
+			`SELECT EXISTS (SELECT 1 FROM registry.users WHERE lower(email) = $1)`, candidate).Scan(&taken); err == nil && !taken {
+			accountEmail = candidate
+		}
+	}
 	// The synthetic account has no password login path. Keep the random-looking
 	// preimage within bcrypt's strict 72-byte input limit.
 	passwordHash, err := HashPassword(digest)
@@ -676,9 +705,15 @@ func (h *Handlers) ResolveOrProvisionEIDUser(ctx context.Context, identity *eid.
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 	if err = tx.QueryRow(ctx,
-		`INSERT INTO registry.users(email,password_hash,name,is_admin,ge_id) VALUES($1,$2,$3,FALSE,NULLIF($4,0)::bigint)
-		 ON CONFLICT(email) DO UPDATE SET name=EXCLUDED.name RETURNING id::text`,
-		email, passwordHash, name, identity.GeID).Scan(&userID); err != nil {
+		`INSERT INTO registry.users(email,password_hash,name,phone,is_admin,ge_id)
+		 VALUES($1,$2,$3,COALESCE(NULLIF($4,''),''),FALSE,NULLIF($5,0)::bigint)
+		 ON CONFLICT(email) DO UPDATE SET
+		     name  = EXCLUDED.name,
+		     -- Байгаа дугаарыг хоосноор дарахгүй: eID энэ удаа утас
+		     -- буцаагаагүй нь хүн түүнийгээ устгасан гэсэн үг биш.
+		     phone = COALESCE(NULLIF(EXCLUDED.phone,''), registry.users.phone)
+		 RETURNING id::text`,
+		accountEmail, passwordHash, name, identity.Phone, identity.GeID).Scan(&userID); err != nil {
 		return "", "", err
 	}
 	if err = tx.Commit(ctx); err != nil {
