@@ -137,6 +137,11 @@ export const auth = {
   },
   // Хувийн профайл.
   "profile.loading": { mn: "Ачаалж байна…", en: "Loading…" },
+  "profile.link_eid": { mn: "eID-ээ холбох", en: "Link your eID" },
+  "profile.link_eid_note": {
+    mn: "eID холбосноор Гэрэгэ дугаар тань энэ дансанд бүртгэгдэнэ. Байгууллагууд таны хүсэлтийн хариуг тэр дугаараар тань олж мэдэгддэг тул үүнгүйгээр хариу ирэхгүй.",
+    en: "Linking your eID records your Gerege number on this account. Organisations answer a request by that number, so without it their answer has nowhere to arrive.",
+  },
   // Гишүүнчлэлгүй хүнд энэ жагсаалт хоосон байх нь ердийн байдал — 00085-аас
   // хойш тэр хүн гэртээ ажилладаг.
   "profile.message.no_organisations": {

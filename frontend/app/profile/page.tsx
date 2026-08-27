@@ -4,6 +4,7 @@ import {api,apiBase} from "@/lib/api";
 import {useI18n} from "@/lib/i18n";
 import {Building2,House,KeyRound,MonitorSmartphone,ShieldCheck,Unlink} from "lucide-react";
 import {ProviderMark,GoogleMark} from "@/components/ProviderMark";
+import EIDLogin from "@/components/EIDLogin";
 
 /**
  * Хүний өөрийнх нь тухай бичлэг.
@@ -85,7 +86,10 @@ export default function ProfilePage(){const {t}=useI18n();
     history.replaceState(null,"",location.pathname);
   },[]);
 
-  useEffect(()=>{void api.profile().then(setProfile).catch((e:any)=>setError(e?.message||"—"))},[]);
+  // round-ыг нэмэхэд дахин уншина: eID холбогдмогц жагсаалт, Гэрэгэ дугаар,
+  // «холбогдсон таних тэмдэг алга» гэсэн мөр гурвуулаа хуучирдаг.
+  const [round,setRound]=useState(0);
+  useEffect(()=>{void api.profile().then(setProfile).catch((e:any)=>setError(e?.message||"—"))},[round]);
   // Серверээс асууна, таамаглахгүй: Google-ээр нэвтрэх тохируулаагүй
   // deployment дээр холбох товч гарч ирээд дарахад л бүтэлгүйтэх нь дор.
   useEffect(()=>{void api.ssoConfig().then(c=>setCanLinkGoogle(!!c.google?.enabled)).catch(()=>{})},[]);
@@ -109,6 +113,10 @@ export default function ProfilePage(){const {t}=useI18n();
   // Google аль хэдийн холбогдсон эсэх — issuer-ээр, провайдерын нэрээр биш:
   // нэр нь дэлгэцийн хэл, issuer нь баримт.
   const hasGoogle=profile?.identities.some(i=>i.issuer?.includes("accounts.google.com"))??false;
+  // eID-ийг kind-ээр нь шалгана, issuer-ээр биш: тэр нь провайдерын данс биш,
+  // үндэсний таних тэмдэг бөгөөд өөрийн хүснэгттэй (registry.user_eid_identities).
+  const hasEID=profile?.identities.some(i=>i.kind==="eid")??false;
+  const [linking,setLinking]=useState(false);
 
   if(error)return <main className="profile"><p className="profile__error">{error}</p></main>;
   if(!profile)return <main className="profile"><p className="profile__muted">{t("profile.loading")}</p></main>;
@@ -190,6 +198,21 @@ export default function ProfilePage(){const {t}=useI18n();
         <GoogleMark/> {t("profile.link_google")}
       </a>}
       {canLinkGoogle&&!hasGoogle&&<p className="profile__muted profile__link-note">{t("profile.link_google_note")}</p>}
+
+      {/* eID нь Google-ээс өөр байрлалтай.
+          Google бол нэвтрэх нэмэлт зам; eID бол хүн хэн болохын **нотолгоо**,
+          дагалдан Гэрэгэ дугаар авчирдаг. Тэр дугаар нь нийлүүлэгчийн модуль
+          хүнийг нэрлэх цорын ганц үг (pkg/nexus.PersonFeed, 00086) — нууц
+          үгээр нээсэн дансанд огт байхгүй. Тиймээс энэ товч нь чимэглэл биш:
+          үүнгүйгээр иргэн хүсэлт гаргаад хариуг нь хүлээж авах аргагүй. */}
+      {!hasEID&&<div className="profile__eid-link">
+        {!linking
+          ? <button className="profile__link-provider" onClick={()=>setLinking(true)}>
+              <ShieldCheck/> {t("profile.link_eid")}
+            </button>
+          : <EIDLogin link variant="signin" onLinked={()=>{setLinking(false);setRound(n=>n+1)}}/>}
+        <p className="profile__muted profile__link-note">{t("profile.link_eid_note")}</p>
+      </div>}
     </section>
 
     <section className="profile__section">
