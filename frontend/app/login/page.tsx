@@ -20,7 +20,23 @@ const SSO_ERRORS:Record<string,TranslationKey>={no_account:"auth.sso.error_no_ac
 
 /** Google-ийн албан ёсны дөрвөн өнгийн "G". */
 
-export default function LoginPage(){const router=useRouter();const {t}=useI18n();const brand=useBrand();const [next,setNext]=useState("/profile"),[admin,setAdmin]=useState(false),[email,setEmail]=useState("admin@example.com"),[password,setPassword]=useState("Password123!"),[error,setError]=useState("");
+/**
+ * Талбарууд ХООСОН эхэлнэ.
+ *
+ * Энэ хоёр нь `useState("admin@example.com")` ба `useState("Password123!")`
+ * гэж бөглөгдсөн байсан бөгөөд хоёр зүйл буруу байв.
+ *
+ * Нэг нь харагдах байдал: тэдгээр нь placeholder мэт харагддаг ч жинхэнэ утга
+ * тул хүн бичиж эхлэхэд арилдаггүй, шинэ текст нь ард нь наалдаж хоёр дахин
+ * бичигдсэн мэт болно. Placeholder бол саарал бичээс биш, **утгагүй** талбарын
+ * шинж — тиймээс жинхэнэ placeholder болов.
+ *
+ * Хоёр дахь нь илүү чухал: нийтэд нээлттэй нэвтрэх дэлгэц бүр зочин болгонд
+ * ажиллаж магадгүй админы нэр, нууц үгийн таамгийг бэлэн бичээд өгч байсан.
+ * Демо суулгацад тохирох байсан ч бүх суулгацад тохирохгүй, мөн демо гэдгийг
+ * энэ дэлгэц мэдэх ч аргагүй.
+ */
+export default function LoginPage(){const router=useRouter();const {t}=useI18n();const brand=useBrand();const [next,setNext]=useState("/profile"),[admin,setAdmin]=useState(false),[email,setEmail]=useState(""),[password,setPassword]=useState(""),[error,setError]=useState("");
   // undefined = хараахан асуугаагүй. Энэ ялгаа чухал: асуухаас өмнө eID
   // хэлбэрийг зурчихвал холбоосон суулгац дээр хүн энд нэвтэрч болно гэж
   // хэсэг хугацаанд итгэж, дараа нь өөр рүү шилжсэн нь будлиантай.
@@ -112,7 +128,7 @@ export default function LoginPage(){const router=useRouter();const {t}=useI18n()
           <div className="signin-footer">
             <hr/>
             <button className="admin-disclosure" onClick={()=>setAdmin(v=>!v)}><Lock/> {t("auth.action.admin_disclosure")} <ChevronDown className={admin?"rotate-180":""}/></button>
-            {admin&&<form className="admin-login" onSubmit={passwordLogin}>{error&&<p>{error}</p>}<label><Mail/> <input type="email" value={email} onChange={e=>setEmail(e.target.value)} required/></label><label><Lock/> <input type="password" value={password} onChange={e=>setPassword(e.target.value)} required/></label><button>{t("auth.action.admin_sign_in")}</button></form>}
+            {admin&&<form className="admin-login" onSubmit={passwordLogin}>{error&&<p>{error}</p>}<label><Mail/> <input type="email" autoComplete="username" placeholder={t("auth.field.email")} value={email} onChange={e=>setEmail(e.target.value)} required/></label><label><Lock/> <input type="password" autoComplete="current-password" placeholder={t("auth.field.password")} value={password} onChange={e=>setPassword(e.target.value)} required/></label><button>{t("auth.action.admin_sign_in")}</button></form>}
             {/* Link rather than an anchor: this points at a page of this
                 application, and a full page load here throws away the sign-in
                 state the screen is holding. */}
