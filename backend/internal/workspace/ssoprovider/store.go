@@ -30,7 +30,7 @@ var ErrNotFound = errors.New("not found")
 // Client is a registered OAuth2 relying party.
 type Client struct {
 	ID           string   `json:"id"`
-	TenantID     string   `json:"tenant_id"`
+	WorkspaceID  string   `json:"tenant_id"`
 	ClientID     string   `json:"client_id"`
 	ClientName   string   `json:"client_name"`
 	ClientURI    string   `json:"client_uri,omitempty"`
@@ -128,7 +128,7 @@ const clientColumns = `id, tenant_id, client_id, client_name, client_uri, logo_u
 
 func scanClient(row pgx.Row) (*Client, error) {
 	var c Client
-	err := row.Scan(&c.ID, &c.TenantID, &c.ClientID, &c.ClientName, &c.ClientURI, &c.LogoURI,
+	err := row.Scan(&c.ID, &c.WorkspaceID, &c.ClientID, &c.ClientName, &c.ClientURI, &c.LogoURI,
 		&c.ClientType, &c.RedirectURIs, &c.GrantTypes, &c.Scopes, &c.PostLogoutRedirectURIs, &c.Disabled,
 		&c.CreatedAt, &c.UpdatedAt, &c.SecretRotatedAt, &c.LastUsedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -155,7 +155,7 @@ func (s *Store) CreateClient(ctx context.Context, c *Client, secretHash, created
 			 client_type, redirect_uris, grant_types, scopes, post_logout_redirect_uris, created_by)
 		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
 		RETURNING `+clientColumns,
-		c.TenantID, c.ClientID, hash, c.ClientName, c.ClientURI, c.LogoURI,
+		c.WorkspaceID, c.ClientID, hash, c.ClientName, c.ClientURI, c.LogoURI,
 		c.ClientType, list(c.RedirectURIs), list(c.GrantTypes), list(c.Scopes),
 		list(c.PostLogoutRedirectURIs), creator)
 	return scanClient(row)

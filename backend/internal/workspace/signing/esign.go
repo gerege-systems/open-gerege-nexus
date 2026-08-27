@@ -146,7 +146,7 @@ func (m *Rails) Mount(r chi.Router, tenantAuthMiddleware func(http.Handler) http
 // linked, their eID signing identity. It is the single place authorisation
 // context is built, so no handler can forget to apply it.
 func (m *Rails) actorFrom(r *http.Request) (string, Actor, error) {
-	tenantID, err := nexus.TenantID(r.Context())
+	tenantID, err := nexus.WorkspaceID(r.Context())
 	if err != nil {
 		return "", Actor{}, &Error{Code: "UNAUTHORIZED", Message: "unauthorized", Status: http.StatusUnauthorized}
 	}

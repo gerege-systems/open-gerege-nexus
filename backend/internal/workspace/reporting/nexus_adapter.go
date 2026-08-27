@@ -96,7 +96,7 @@ func (a engineAdapter) Form(ctx context.Context, tenantID, key, locale string) (
 
 // options fills one dropdown from this organisation's own rows.
 func (a engineAdapter) options(ctx context.Context, tenantID, query string) ([]nexus.ParamOption, error) {
-	rows, err := a.engine.db.Query(nexus.WithTenantID(ctx, tenantID), query, tenantID)
+	rows, err := a.engine.db.Query(nexus.WithWorkspaceID(ctx, tenantID), query, tenantID)
 	if err != nil {
 		return nil, err
 	}

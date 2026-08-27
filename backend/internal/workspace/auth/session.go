@@ -207,7 +207,7 @@ func (s *SessionStore) Resolve(ctx context.Context, token string) (UserClaims, e
 		   JOIN registry.users u ON u.id = s.user_id
 		   JOIN workspace.memberships sm ON sm.tenant_id=s.tenant_id AND sm.user_id=s.user_id`,
 		hashToken(token), nullableTime(idleCutoff), touchInterval.String()).
-		Scan(&claims.UserID, &claims.TenantID, &claims.Email, &claims.AllowedTenantIDs,
+		Scan(&claims.UserID, &claims.WorkspaceID, &claims.Email, &claims.AllowedWorkspaceIDs,
 			&claims.ImpersonatedBy, &claims.IsAdmin)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -363,7 +363,7 @@ func (s *SessionStore) SetActiveTenants(ctx context.Context, token string, tenan
 	// Crossing tenants is the point, so this runs on the platform path: under
 	// the caller's own policies, memberships in another organisation are not
 	// visible and every id would look like one they do not hold.
-	ctx = nexus.WithoutTenant(ctx)
+	ctx = nexus.WithoutWorkspace(ctx)
 
 	var current string
 	if err := s.db.QueryRow(ctx,

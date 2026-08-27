@@ -41,11 +41,11 @@ type DirectoryPerson struct {
 	IsAdmin  bool     `json:"is_admin"`
 	Roles    []string `json:"roles"`
 	JoinedAt string   `json:"joined_at"`
-	// TenantID and TenantName say which organisation this membership is in.
+	// WorkspaceID and WorkspaceName say which organisation this membership is in.
 	// Only meaningful when the session reads across more than one, which is
 	// when a screen has to show it.
-	TenantID   string `json:"tenant_id"`
-	TenantName string `json:"tenant_name"`
+	WorkspaceID   string `json:"tenant_id"`
+	WorkspaceName string `json:"tenant_name"`
 }
 
 // DirectoryMembership is the smallest answer about one membership: who it is
@@ -61,12 +61,12 @@ type Directory interface {
 	// People lists the memberships of the named organisations, with the roles
 	// each holds. Ordered by organisation, then active first, then by name:
 	// a staff list is read by a person looking for somebody.
-	People(ctx context.Context, tenantIDs []string) ([]DirectoryPerson, error)
+	People(ctx context.Context, workspaceIDs []string) ([]DirectoryPerson, error)
 
 	// Membership is one membership, or an error if this organisation has no
 	// such row. Used before an act on somebody, to establish that they are
 	// somebody this organisation may act on at all.
-	Membership(ctx context.Context, tenantID, membershipID string) (DirectoryMembership, error)
+	Membership(ctx context.Context, workspaceID, membershipID string) (DirectoryMembership, error)
 
 	// CountAdmins is how many active platform administrators this organisation
 	// has, not counting one membership.
@@ -75,7 +75,7 @@ type Directory interface {
 	// anybody left who can undo it", which is the check that stops an
 	// organisation locking itself out. A count without the exception would be
 	// the wrong number by exactly one at the only moment it matters.
-	CountAdmins(ctx context.Context, tenantID, exceptMembershipID string) (int, error)
+	CountAdmins(ctx context.Context, workspaceID, exceptMembershipID string) (int, error)
 
 	// SetActive turns a membership on or off, reporting whether a row moved.
 	//
@@ -83,7 +83,7 @@ type Directory interface {
 	// screen has to be able to say somebody has left. It cannot add a member,
 	// grant a role or delete an account — those are Access control's, and a
 	// module that could do them could grant itself a permission.
-	SetActive(ctx context.Context, tenantID, membershipID string, active bool) (bool, error)
+	SetActive(ctx context.Context, workspaceID, membershipID string, active bool) (bool, error)
 }
 
 // People returns the directory this deployment provides.

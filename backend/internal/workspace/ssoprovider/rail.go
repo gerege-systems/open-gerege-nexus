@@ -73,7 +73,7 @@ func (r clientRegistry) GetClient(ctx context.Context, tenantID, clientID string
 // generated; what this deployment stores is its own business.
 func (r clientRegistry) CreateClient(ctx context.Context, tenantID string, c nexus.SSOClient, secret, createdBy string) (nexus.SSOClient, error) {
 	client := Client(c)
-	client.TenantID = tenantID
+	client.WorkspaceID = tenantID
 
 	secretHash := ""
 	if secret != "" {

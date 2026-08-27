@@ -162,7 +162,7 @@ func (s *Service) sweepOnce(ctx context.Context) {
 	defer cancel()
 	// Housekeeping crosses every organisation deliberately, so it runs on the
 	// platform path — the same rule every other sweep on this platform follows.
-	sweepCtx = nexus.WithoutTenant(sweepCtx)
+	sweepCtx = nexus.WithoutWorkspace(sweepCtx)
 
 	// Deliveries first, outbox second: an outbox row with a delivery still
 	// pointing at it is one somebody is still waiting for, and the foreign key

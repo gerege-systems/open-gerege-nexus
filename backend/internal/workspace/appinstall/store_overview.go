@@ -73,7 +73,7 @@ type overviewApp struct {
 // dbguard exists to enforce. The installation columns below are this tenant's
 // own. If a platform-operator role is ever introduced, the count belongs to it.
 func (h *Handlers) HandleStoreOverview(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := nexus.RequireTenant(w, r)
+	tenantID, ok := nexus.RequireWorkspace(w, r)
 	if !ok {
 		return
 	}

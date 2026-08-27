@@ -93,12 +93,12 @@ func newFixture(t *testing.T, opts ...func(*Client)) *fixture {
 
 	provider := &SSOProvider{store: NewStore(pool), issuer: testIssuer}
 	provider.AttachSessions(&fakeSessions{claims: auth.UserClaims{
-		UserID: userID, TenantID: tenantID, Email: email,
+		UserID: userID, WorkspaceID: tenantID, Email: email,
 	}})
 
 	secret := "sec_" + NewIdentifier(48)
 	client := &Client{
-		TenantID:     tenantID,
+		WorkspaceID:  tenantID,
 		ClientID:     "app_test_" + NewIdentifier(8),
 		ClientName:   "Integration Test App",
 		ClientType:   clientTypeConfidential,

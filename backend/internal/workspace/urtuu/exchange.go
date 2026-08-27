@@ -131,7 +131,7 @@ func (s *Service) HandlePull(w http.ResponseWriter, r *http.Request) {
 	}
 	s.noteSeen(r.Context(), peer, nil)
 	if len(envelopes) > 0 {
-		audit.Record(nexus.WithTenantID(r.Context(), peer.TenantID), peer.TenantID, "",
+		audit.Record(nexus.WithWorkspaceID(r.Context(), peer.TenantID), peer.TenantID, "",
 			"urtuu.sent", "urtuu_peer",
 			map[string]any{"peer_id": peer.ID, "peer_name": peer.Name, "count": len(envelopes)})
 	}
@@ -198,7 +198,7 @@ func (s *Service) accept(ctx context.Context, peer peerRow, envelopes []urtuu.En
 		// by anybody: an unverified envelope's created_at is not evidence of
 		// anything.
 		if err := urtuu.Verify(peer.PublicKey, envelope); err != nil {
-			audit.Record(nexus.WithTenantID(ctx, peer.TenantID), peer.TenantID, "",
+			audit.Record(nexus.WithWorkspaceID(ctx, peer.TenantID), peer.TenantID, "",
 				"urtuu.rejected", "urtuu_peer",
 				map[string]any{"peer_id": peer.ID, "message_id": envelope.MessageID, "reason": "signature"})
 			return nil, nil, err
@@ -219,7 +219,7 @@ func (s *Service) accept(ctx context.Context, peer peerRow, envelopes []urtuu.En
 		// first delivery got, which is what makes the retry safe to make.
 		accepted = append(accepted, envelope.MessageID)
 		if stored {
-			audit.Record(nexus.WithTenantID(ctx, peer.TenantID), peer.TenantID, "",
+			audit.Record(nexus.WithWorkspaceID(ctx, peer.TenantID), peer.TenantID, "",
 				"urtuu.received", "urtuu_peer",
 				map[string]any{"peer_id": peer.ID, "peer_name": peer.Name,
 					"message_id": envelope.MessageID, "kind": envelope.Kind})

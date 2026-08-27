@@ -70,7 +70,7 @@ type Code struct {
 // code: the screen shows both together, and a vocabulary is tens of rows, not
 // thousands.
 func (s *Service) listCodes(ctx context.Context, tenantID string) ([]Code, error) {
-	rows, err := s.db.Query(nexus.WithTenantID(ctx, tenantID), `
+	rows, err := s.db.Query(nexus.WithWorkspaceID(ctx, tenantID), `
 		SELECT c.id::text, c.code, c.names, c.schema, c.line,
 		       EXTRACT(EPOCH FROM c.default_sla)::bigint, c.source,
 		       coalesce(c.source_peer_id::text, ''), coalesce(p.name, ''),
@@ -102,7 +102,7 @@ func (s *Service) listCodes(ctx context.Context, tenantID string) ([]Code, error
 }
 
 func (s *Service) handleListCodes(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := nexus.RequireTenant(w, r)
+	tenantID, ok := nexus.RequireWorkspace(w, r)
 	if !ok {
 		return
 	}
@@ -135,7 +135,7 @@ type codeRequest struct {
 // announced; letting either be typed in would produce a code that looks
 // national and answers to nobody.
 func (s *Service) handleCreateCode(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := nexus.RequireTenant(w, r)
+	tenantID, ok := nexus.RequireWorkspace(w, r)
 	if !ok {
 		return
 	}
@@ -176,7 +176,7 @@ func (s *Service) handleCreateCode(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var id string
-	err := s.db.QueryRow(nexus.WithTenantID(r.Context(), tenantID), `
+	err := s.db.QueryRow(nexus.WithWorkspaceID(r.Context(), tenantID), `
 		INSERT INTO workspace.urtuu_request_codes
 		    (tenant_id, code, names, schema, default_sla, line, source, created_by)
 		VALUES ($1, $2, $3, $4,
@@ -203,7 +203,7 @@ func (s *Service) handleCreateCode(w http.ResponseWriter, r *http.Request) {
 // flag is this organisation's own decision and stays editable — deciding not to
 // use a code is not the same as redefining it.
 func (s *Service) handleUpdateCode(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := nexus.RequireTenant(w, r)
+	tenantID, ok := nexus.RequireWorkspace(w, r)
 	if !ok {
 		return
 	}
@@ -220,7 +220,7 @@ func (s *Service) handleUpdateCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx := nexus.WithTenantID(r.Context(), tenantID)
+	ctx := nexus.WithWorkspaceID(r.Context(), tenantID)
 	var source, code string
 	if err := s.db.QueryRow(ctx,
 		`SELECT source, code FROM workspace.urtuu_request_codes WHERE id = $1`, id).Scan(&source, &code); err != nil {
@@ -286,7 +286,7 @@ func (s *Service) handleSetPeerCodes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx := nexus.WithTenantID(r.Context(), tenantID)
+	ctx := nexus.WithWorkspaceID(r.Context(), tenantID)
 	tx, err := s.db.Begin(ctx)
 	if err != nil {
 		nexus.Error(w, http.StatusInternalServerError, "could not open the link's vocabulary")

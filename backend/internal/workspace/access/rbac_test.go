@@ -23,9 +23,9 @@ func TestRequirePermission(t *testing.T) {
 		want   int
 	}{
 		{"unauthenticated", nil, nil, http.StatusUnauthorized},
-		{"missing permission", &auth.UserClaims{UserID: "u", TenantID: "t"}, fakePermissionStore{}, http.StatusForbidden},
-		{"granted through role", &auth.UserClaims{UserID: "u", TenantID: "t"}, fakePermissionStore{"contacts.read": true}, http.StatusNoContent},
-		{"tenant administrator bypass", &auth.UserClaims{UserID: "u", TenantID: "t", IsAdmin: true}, fakePermissionStore{}, http.StatusNoContent},
+		{"missing permission", &auth.UserClaims{UserID: "u", WorkspaceID: "t"}, fakePermissionStore{}, http.StatusForbidden},
+		{"granted through role", &auth.UserClaims{UserID: "u", WorkspaceID: "t"}, fakePermissionStore{"contacts.read": true}, http.StatusNoContent},
+		{"tenant administrator bypass", &auth.UserClaims{UserID: "u", WorkspaceID: "t", IsAdmin: true}, fakePermissionStore{}, http.StatusNoContent},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {

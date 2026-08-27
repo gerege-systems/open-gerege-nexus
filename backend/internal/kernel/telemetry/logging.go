@@ -47,7 +47,7 @@ func (h *ContextHandler) Handle(ctx context.Context, record slog.Record) error {
 	if id := chimiddleware.GetReqID(ctx); id != "" {
 		record.AddAttrs(slog.String("request_id", id))
 	}
-	if tenantID, err := nexus.TenantID(ctx); err == nil {
+	if tenantID, err := nexus.WorkspaceID(ctx); err == nil {
 		record.AddAttrs(slog.String("tenant_id", tenantID))
 	}
 	// The trace, when there is one. This is the join between the two halves of

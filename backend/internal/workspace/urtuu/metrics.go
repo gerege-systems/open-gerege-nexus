@@ -77,7 +77,7 @@ const (
 // that was established and then never spoke shows as silent rather than as
 // absent — which is exactly the failure this exists to surface.
 func (s *Service) refreshPeerGauge(ctx context.Context) {
-	rows, err := s.db.Query(nexus.WithoutTenant(ctx), `
+	rows, err := s.db.Query(nexus.WithoutWorkspace(ctx), `
 		SELECT role, max(EXTRACT(EPOCH FROM (NOW() - coalesce(last_seen_at, created_at))))
 		  FROM workspace.urtuu_peers
 		 WHERE status = 'active' AND revoked_at IS NULL AND installation_id = $1

@@ -26,7 +26,7 @@ import (
 )
 
 func (h *Handlers) HandleMenus(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := nexus.RequireTenant(w, r)
+	tenantID, ok := nexus.RequireWorkspace(w, r)
 	if !ok {
 		return
 	}
@@ -125,7 +125,7 @@ func runnableHere(app catalog.CatalogApp) bool {
 }
 
 func (h *Handlers) HandleListStoreApps(w http.ResponseWriter, r *http.Request) {
-	tenantID, _ := nexus.TenantID(r.Context())
+	tenantID, _ := nexus.WorkspaceID(r.Context())
 	available := h.installer.GetCatalog()
 
 	// "installed" and "enabled" are distinct states: an app can be installed
@@ -221,7 +221,7 @@ func (h *Handlers) presentableInstallation(appID string) bool {
 }
 
 func (h *Handlers) HandleListInstalledApps(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := nexus.RequireTenant(w, r)
+	tenantID, ok := nexus.RequireWorkspace(w, r)
 	if !ok {
 		return
 	}
@@ -328,7 +328,7 @@ func (h *Handlers) HandleInstallApp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.installer.InstallApp(r.Context(), claims.TenantID, slug, claims.UserID); err != nil {
+	if err := h.installer.InstallApp(r.Context(), claims.WorkspaceID, slug, claims.UserID); err != nil {
 		// The failure used to be handed to the browser verbatim. That answered
 		// a database outage with "bad request" and described the inside of the
 		// server — constraint names, the module registry, the dependency graph
@@ -339,14 +339,14 @@ func (h *Handlers) HandleInstallApp(w http.ResponseWriter, r *http.Request) {
 			httpx.Error(w, http.StatusNotFound, "app not found")
 			return
 		}
-		slog.Error("app installation failed", "error", err, "app_slug", slug, "tenant_id", claims.TenantID)
+		slog.Error("app installation failed", "error", err, "app_slug", slug, "tenant_id", claims.WorkspaceID)
 		httpx.Error(w, http.StatusInternalServerError,
 			"could not install this app; the failure has been logged for your administrator")
 		return
 	}
 	// The app gate reads a cached copy of this row, so the screen that just
 	// pressed the button has to stop being told the old answer.
-	h.ForgetGate(claims.TenantID)
+	h.ForgetGate(claims.WorkspaceID)
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]string{"status": "installed", "app": slug})
@@ -371,7 +371,7 @@ func (h *Handlers) HandleUpgradeApp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	from, to, err := h.installer.UpgradeApp(r.Context(), claims.TenantID, slug, claims.UserID)
+	from, to, err := h.installer.UpgradeApp(r.Context(), claims.WorkspaceID, slug, claims.UserID)
 	switch {
 	case errors.Is(err, ErrAppNotFound):
 		httpx.Error(w, http.StatusNotFound, "app not found")
@@ -387,7 +387,7 @@ func (h *Handlers) HandleUpgradeApp(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	case err != nil:
-		slog.Error("app upgrade failed", "error", err, "app_slug", slug, "tenant_id", claims.TenantID)
+		slog.Error("app upgrade failed", "error", err, "app_slug", slug, "tenant_id", claims.WorkspaceID)
 		httpx.Error(w, http.StatusInternalServerError,
 			"could not update this app; the failure has been logged for your administrator")
 		return
@@ -395,7 +395,7 @@ func (h *Handlers) HandleUpgradeApp(w http.ResponseWriter, r *http.Request) {
 
 	// The app gate reads a cached copy of this row, so the screen that just
 	// pressed the button has to stop being told the old answer.
-	h.ForgetGate(claims.TenantID)
+	h.ForgetGate(claims.WorkspaceID)
 
 	httpx.JSON(w, http.StatusOK, map[string]string{
 		"status": "upgraded", "app": slug, "from": from, "to": to,
@@ -475,7 +475,7 @@ func (h *Handlers) HandleSetAutoUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	switch err := h.installer.SetAutoUpdate(r.Context(), claims.TenantID, slug, body.Enabled); {
+	switch err := h.installer.SetAutoUpdate(r.Context(), claims.WorkspaceID, slug, body.Enabled); {
 	case errors.Is(err, ErrAppNotFound):
 		httpx.Error(w, http.StatusNotFound, "app not found")
 		return
@@ -483,7 +483,7 @@ func (h *Handlers) HandleSetAutoUpdate(w http.ResponseWriter, r *http.Request) {
 		httpx.Error(w, http.StatusNotFound, "this app is not installed for your organisation")
 		return
 	case err != nil:
-		slog.Error("could not set auto-update", "error", err, "app_slug", slug, "tenant_id", claims.TenantID)
+		slog.Error("could not set auto-update", "error", err, "app_slug", slug, "tenant_id", claims.WorkspaceID)
 		httpx.Error(w, http.StatusInternalServerError, "could not save that preference")
 		return
 	}
@@ -543,18 +543,18 @@ func (h *Handlers) HandleDisableApp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.installer.DisableApp(r.Context(), claims.TenantID, slug, claims.UserID); err != nil {
+	if err := h.installer.DisableApp(r.Context(), claims.WorkspaceID, slug, claims.UserID); err != nil {
 		if errors.Is(err, ErrAppNotFound) {
 			httpx.Error(w, http.StatusNotFound, "app not found")
 			return
 		}
-		slog.Error("could not disable an app", "error", err, "app_slug", slug, "tenant_id", claims.TenantID)
+		slog.Error("could not disable an app", "error", err, "app_slug", slug, "tenant_id", claims.WorkspaceID)
 		httpx.Error(w, http.StatusInternalServerError, "could not disable this app")
 		return
 	}
 	// The app gate reads a cached copy of this row, so the screen that just
 	// pressed the button has to stop being told the old answer.
-	h.ForgetGate(claims.TenantID)
+	h.ForgetGate(claims.WorkspaceID)
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]string{"status": "disabled", "app": slug})
@@ -573,13 +573,13 @@ func (h *Handlers) HandleEnableApp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.installer.EnableApp(r.Context(), claims.TenantID, slug, claims.UserID); err != nil {
+	if err := h.installer.EnableApp(r.Context(), claims.WorkspaceID, slug, claims.UserID); err != nil {
 		httpx.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	// The app gate reads a cached copy of this row, so the screen that just
 	// pressed the button has to stop being told the old answer.
-	h.ForgetGate(claims.TenantID)
+	h.ForgetGate(claims.WorkspaceID)
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]string{"status": "enabled", "app": slug})

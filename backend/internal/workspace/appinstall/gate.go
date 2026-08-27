@@ -19,7 +19,7 @@ import (
 func (h *Handlers) GateMiddleware(appID string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return h.authn.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			tenantID, ok := nexus.RequireTenant(w, r)
+			tenantID, ok := nexus.RequireWorkspace(w, r)
 			if !ok {
 				return
 			}

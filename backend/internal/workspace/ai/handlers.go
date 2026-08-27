@@ -37,7 +37,7 @@ func NewService(db nexus.DB) *Service {
 func (s *Service) HandleAICopilot(w http.ResponseWriter, r *http.Request) {
 	telemetry.RecordAIRequest("copilot")
 	s.recordAIUse(r, "copilot")
-	tenantID, ok := nexus.RequireTenant(w, r)
+	tenantID, ok := nexus.RequireWorkspace(w, r)
 	if !ok {
 		return
 	}
@@ -66,7 +66,7 @@ func (s *Service) HandleAICopilot(w http.ResponseWriter, r *http.Request) {
 func (s *Service) HandleAIChat(w http.ResponseWriter, r *http.Request) {
 	telemetry.RecordAIRequest("chat")
 	s.recordAIUse(r, "chat")
-	tenantID, ok := nexus.RequireTenant(w, r)
+	tenantID, ok := nexus.RequireWorkspace(w, r)
 	if !ok {
 		return
 	}
@@ -156,7 +156,7 @@ func (s *Service) HandleAITranslate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Service) HandleAIListPrompts(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := nexus.RequireTenant(w, r)
+	tenantID, ok := nexus.RequireWorkspace(w, r)
 	if !ok {
 		return
 	}
@@ -184,7 +184,7 @@ func (s *Service) HandleAIListPrompts(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Service) HandleAIUpdatePrompt(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := nexus.RequireTenant(w, r)
+	tenantID, ok := nexus.RequireWorkspace(w, r)
 	if !ok {
 		return
 	}
@@ -210,7 +210,7 @@ func (s *Service) HandleAIUpdatePrompt(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Service) HandleAIListKnowledge(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := nexus.RequireTenant(w, r)
+	tenantID, ok := nexus.RequireWorkspace(w, r)
 	if !ok {
 		return
 	}
@@ -238,7 +238,7 @@ func (s *Service) HandleAIListKnowledge(w http.ResponseWriter, r *http.Request) 
 }
 
 func (s *Service) HandleAICreateKnowledge(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := nexus.RequireTenant(w, r)
+	tenantID, ok := nexus.RequireWorkspace(w, r)
 	if !ok {
 		return
 	}
@@ -265,7 +265,7 @@ func aiStatus(error) int { return http.StatusBadGateway }
 func (s *Service) HandleAIForecast(w http.ResponseWriter, r *http.Request) {
 	telemetry.RecordAIRequest("forecast")
 	s.recordAIUse(r, "forecast")
-	tenantID, ok := nexus.RequireTenant(w, r)
+	tenantID, ok := nexus.RequireWorkspace(w, r)
 	if !ok {
 		return
 	}
@@ -293,5 +293,5 @@ func (s *Service) recordAIUse(r *http.Request, kind string) {
 	if err != nil {
 		return
 	}
-	audit.Record(r.Context(), claims.TenantID, claims.UserID, "ai."+kind, kind, nil)
+	audit.Record(r.Context(), claims.WorkspaceID, claims.UserID, "ai."+kind, kind, nil)
 }

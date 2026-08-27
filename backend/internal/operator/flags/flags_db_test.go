@@ -91,5 +91,5 @@ func TestAFlagCanBeAimedAtOneOrganisation(t *testing.T) {
 
 // tenantContext is what the request middleware would have built.
 func tenantContext(tenantID string) context.Context {
-	return nexus.WithTenantID(context.Background(), tenantID)
+	return nexus.WithWorkspaceID(context.Background(), tenantID)
 }

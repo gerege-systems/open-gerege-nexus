@@ -96,7 +96,7 @@ func (signaturesByRail) Run(ctx context.Context, q nexus.Querier, p nexus.Params
 		 ORDER BY 1, 2`
 
 	rows, err := q.Query(ctx, query,
-		nexus.TenantOf(ctx), p.Time("period_from"), p.Time("period_to"))
+		nexus.WorkspaceOf(ctx), p.Time("period_from"), p.Time("period_to"))
 	if err != nil {
 		return nexus.Result{}, err
 	}
@@ -190,7 +190,7 @@ func (signersActivity) Run(ctx context.Context, q nexus.Querier, p nexus.Params)
 		 ORDER BY 2 DESC, 1`
 
 	rows, err := q.Query(ctx, query,
-		nexus.TenantOf(ctx), p.Time("period_from"), p.Time("period_to"))
+		nexus.WorkspaceOf(ctx), p.Time("period_from"), p.Time("period_to"))
 	if err != nil {
 		return nexus.Result{}, err
 	}

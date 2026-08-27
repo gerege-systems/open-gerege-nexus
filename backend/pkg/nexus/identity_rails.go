@@ -108,7 +108,7 @@ func DAN() (DANAuthenticator, error) { return Capability[DANAuthenticator]() }
 // One method, and it takes the app's own gate: the platform mounts the
 // handlers, the app decides who may reach them.
 type SigningRails interface {
-	Mount(r chi.Router, tenantAuthMiddleware func(http.Handler) http.Handler)
+	Mount(r chi.Router, workspaceAuthMiddleware func(http.Handler) http.Handler)
 }
 
 // SigningRailsOf returns the PDF signing rails this deployment provides.

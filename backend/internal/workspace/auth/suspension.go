@@ -206,7 +206,7 @@ func (q QuotaRail) Gate(kind string) func(http.Handler) http.Handler {
 func aiQuota(db *pgxpool.Pool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			tenantID, err := nexus.TenantID(r.Context())
+			tenantID, err := nexus.WorkspaceID(r.Context())
 			if err != nil {
 				next.ServeHTTP(w, r)
 				return

@@ -43,6 +43,40 @@ distribution байх үед энэ найдвар л тэднийг fork хий
 
 ### Эвдэх шаардлагатай бол
 
+### Хийгдсэн эвдрэл — дараагийн tag нь **v2.0.0**
+
+2026-08-27-нд `pkg/nexus`-ийн `tenant` гэдэг үг бүхэлдээ `workspace` болов.
+`api.txt`-ийн 554 мөрөөс **65 нь дахин бичигдсэн**, нэг ч тэмдэглэгээ
+нэмэгдээгүй, хасагдаагүй. Шалтгаан нь ADR 0006: `tenant` бол байршлын үг
+бөгөөд хувийн муж («гэр») орж ирэх мөчид эцэслэн худал болно.
+
+| Хуучин | Шинэ |
+| --- | --- |
+| `nexus.TenantID(ctx)` | `nexus.WorkspaceID(ctx)` |
+| `nexus.TenantOf(ctx)` | `nexus.WorkspaceOf(ctx)` |
+| `nexus.RequireTenant` | `nexus.RequireWorkspace` |
+| `nexus.WithTenantID` | `nexus.WithWorkspaceID` |
+| `nexus.WithoutTenant` | `nexus.WithoutWorkspace` |
+| `nexus.AllowedTenants` / `WithAllowedTenants` | `nexus.AllowedWorkspaces` / `WithAllowedWorkspaces` |
+| `nexus.ErrTenantMissing` | `nexus.ErrWorkspaceMissing` |
+| `UserClaims.TenantID` / `.AllowedTenantIDs` | `.WorkspaceID` / `.AllowedWorkspaceIDs` |
+| `DirectoryPerson.TenantID` / `.TenantName` | `.WorkspaceID` / `.WorkspaceName` |
+| `SSOClient.TenantID`, `LinkMessage.TenantID` | `.WorkspaceID` |
+| `ReportGrant.GrantorTenantID` / `.GranteeTenantID` | `.GrantorWorkspaceID` / `.GranteeWorkspaceID` |
+
+**Deprecated alias үлдээгээгүй.** Доорх дүрэм нэг major цикл хүлээхийг
+шаарддаг ч энд хүлээх зүйл байхгүй: `Use*` функцүүд нь **нэмэлт** зам байсан
+бөгөөд хуучин нь ажилласаар байж чадна, харин нэр солих нь нэг л нэрийг хоёр
+удаа зарлахыг шаардана. Тиймээс энэ нь v2.0.0-ийн ажил бөгөөд дараагийн tag
+major байна. Дээрх deprecation жагсаалт мөн тэр өдрийн ажил — хоёулаа нэг
+tag дээр гарна.
+
+**Wire format өөрчлөгдөөгүй.** JSON тэмдэглэгээ `tenant_id`, `tenant_name`,
+`allowed_tenant_ids`, `grantor_tenant_id`, `grantee_tenant_id` хэвээр. Go
+дахь нэр домэйний үг, HTTP дахь нэр нийцтэй байдлаар хөлдсөн — frontend,
+native клиент, гадны SSO клиент бүр хуучин талбарыг хардаг. Хоёр гэрээ
+тусдаа, тусдаа хувилбартай.
+
 ### Одоо хүлээгдэж буй deprecation-ууд
 
 | Юу | Оронд нь | Хэзээ устах |

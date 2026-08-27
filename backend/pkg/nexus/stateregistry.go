@@ -81,7 +81,7 @@ type AuditEntry struct {
 // has to find the acts it recorded under its old name, and the tenant's own
 // rows are the only ones any caller can see regardless.
 type AuditReader interface {
-	RecentByPrefix(ctx context.Context, tenantID string, prefixes []string, limit int) ([]AuditEntry, error)
+	RecentByPrefix(ctx context.Context, workspaceID string, prefixes []string, limit int) ([]AuditEntry, error)
 }
 
 // AuditHistory returns the audit reader, or an error naming the contract.

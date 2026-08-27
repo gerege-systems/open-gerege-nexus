@@ -33,14 +33,14 @@ func (h *Handlers) Middleware(next http.Handler) http.Handler {
 		// the same transaction, so this is the belt to that braces: a client
 		// holding a token issued a moment before, or a replica whose cache is
 		// a few seconds behind, is refused here.
-		if h.RefuseIfSuspended(w, r, claims.TenantID) {
+		if h.RefuseIfSuspended(w, r, claims.WorkspaceID) {
 			return
 		}
 
 		// Maintenance is checked after suspension and before anything else,
 		// and only for writes: the point of a Maintenance window is that
 		// people can still see what they need.
-		if h.RefuseIfReadOnly(w, r, claims.TenantID) {
+		if h.RefuseIfReadOnly(w, r, claims.WorkspaceID) {
 			return
 		}
 
@@ -53,11 +53,11 @@ func (h *Handlers) Middleware(next http.Handler) http.Handler {
 			// one somebody writes next.
 			ctx = audit.MarkImpersonated(ctx, claims.ImpersonatedBy)
 		}
-		ctx = nexus.WithTenantID(ctx, claims.TenantID)
+		ctx = nexus.WithWorkspaceID(ctx, claims.WorkspaceID)
 		// The organisations this session reads across, straight from the
 		// session row. dbguard turns it into the policy's array; almost every
 		// session carries none and behaves exactly as it always has.
-		ctx = nexus.WithAllowedTenants(ctx, claims.AllowedTenantIDs)
+		ctx = nexus.WithAllowedWorkspaces(ctx, claims.AllowedWorkspaceIDs)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

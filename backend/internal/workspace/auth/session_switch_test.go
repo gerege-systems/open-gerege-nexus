@@ -63,8 +63,8 @@ func TestSwitchingTenantsRotatesTheToken(t *testing.T) {
 	if err != nil {
 		t.Fatalf("the new token did not resolve: %v", err)
 	}
-	if claims.TenantID != second {
-		t.Fatalf("tenant=%s want=%s", claims.TenantID, second)
+	if claims.WorkspaceID != second {
+		t.Fatalf("tenant=%s want=%s", claims.WorkspaceID, second)
 	}
 	if claims.UserID != userID {
 		t.Fatalf("user=%s want=%s", claims.UserID, userID)
@@ -104,8 +104,8 @@ func TestSwitchingToATenantYouAreNotInIsRefused(t *testing.T) {
 	if err != nil {
 		t.Fatalf("the refused switch cost the caller their session: %v", err)
 	}
-	if claims.TenantID != first {
-		t.Fatalf("tenant=%s want=%s", claims.TenantID, first)
+	if claims.WorkspaceID != first {
+		t.Fatalf("tenant=%s want=%s", claims.WorkspaceID, first)
 	}
 }
 

@@ -193,14 +193,14 @@ func (s *SSOProvider) EnsureDefaultClient(ctx context.Context) {
 	if existing, err := s.store.GetClient(ctx, clientID); err == nil {
 		// Keep the secret in step with the environment so rotating the
 		// deployment secret actually rotates the credential.
-		if err := s.store.RotateClientSecret(ctx, existing.TenantID, clientID, hashSecret(secret)); err != nil {
+		if err := s.store.RotateClientSecret(ctx, existing.WorkspaceID, clientID, hashSecret(secret)); err != nil {
 			slog.Error("failed to sync the built-in SSO client secret", "error", err)
 		}
 		return
 	}
 
 	_, err := s.store.CreateClient(ctx, &Client{
-		TenantID:     tenantID,
+		WorkspaceID:  tenantID,
 		ClientID:     clientID,
 		ClientName:   "Gerege Developer Portal",
 		ClientType:   clientTypeConfidential,
@@ -272,7 +272,7 @@ func (s *SSOProvider) EnsureConsoleClient(ctx context.Context) {
 			updated.ClientURI = origin
 			updated.RedirectURIs = []string{redirect}
 			updated.PostLogoutRedirectURIs = []string{postLogout}
-			if _, err := s.store.UpdateClient(ctx, existing.TenantID, &updated); err != nil {
+			if _, err := s.store.UpdateClient(ctx, existing.WorkspaceID, &updated); err != nil {
 				slog.Error("could not point the developer console client at its origin",
 					"error", err, "redirect_uri", redirect)
 				return
@@ -283,7 +283,7 @@ func (s *SSOProvider) EnsureConsoleClient(ctx context.Context) {
 	}
 
 	if _, err := s.store.CreateClient(ctx, &Client{
-		TenantID:               tenantID,
+		WorkspaceID:            tenantID,
 		ClientID:               clientID,
 		ClientName:             "Gerege Developer Console",
 		ClientURI:              origin,

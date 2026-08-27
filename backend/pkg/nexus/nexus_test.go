@@ -186,7 +186,7 @@ func (m workingModule) RegisterRoutes(r chi.Router, gate func(http.Handler) http
 }
 
 func (m workingModule) handle(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := nexus.RequireTenant(w, r)
+	workspaceID, ok := nexus.RequireWorkspace(w, r)
 	if !ok {
 		return
 	}
@@ -195,8 +195,8 @@ func (m workingModule) handle(w http.ResponseWriter, r *http.Request) {
 		nexus.Error(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
-	nexus.Audit(r.Context(), tenantID, claims.UserID, "working.read", "working", nil)
-	nexus.JSON(w, http.StatusOK, map[string]string{"tenant": tenantID, "user": claims.UserID})
+	nexus.Audit(r.Context(), workspaceID, claims.UserID, "working.read", "working", nil)
+	nexus.JSON(w, http.StatusOK, map[string]string{"tenant": workspaceID, "user": claims.UserID})
 }
 
 // grants is a PermissionStore a test can hold. That the interface is small
@@ -209,8 +209,8 @@ func (g grants) GetUserPermissions(context.Context, string, string) (map[string]
 
 func TestAModuleWrittenAgainstTheSDKCanServeARequest(t *testing.T) {
 	var recorded []string
-	nexus.Provide[nexus.AuditSink](func(_ context.Context, tenantID, userID, action, _ string, _ map[string]any) {
-		recorded = append(recorded, action+" "+tenantID+" "+userID)
+	nexus.Provide[nexus.AuditSink](func(_ context.Context, workspaceID, userID, action, _ string, _ map[string]any) {
+		recorded = append(recorded, action+" "+workspaceID+" "+userID)
 	})
 	t.Cleanup(func() { nexus.Provide[nexus.AuditSink](nil) })
 
@@ -219,8 +219,8 @@ func TestAModuleWrittenAgainstTheSDKCanServeARequest(t *testing.T) {
 		router := chi.NewRouter()
 		module.RegisterRoutes(router, func(next http.Handler) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				ctx := nexus.WithTenantID(r.Context(), "tenant-1")
-				ctx = nexus.WithUser(ctx, nexus.UserClaims{UserID: "user-1", TenantID: "tenant-1"})
+				ctx := nexus.WithWorkspaceID(r.Context(), "tenant-1")
+				ctx = nexus.WithUser(ctx, nexus.UserClaims{UserID: "user-1", WorkspaceID: "tenant-1"})
 				next.ServeHTTP(w, r.WithContext(ctx))
 			})
 		})

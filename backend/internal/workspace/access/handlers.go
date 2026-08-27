@@ -45,7 +45,7 @@ type accessMember struct {
 }
 
 func (h *Handlers) HandleAccessOverview(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := nexus.RequireTenant(w, r)
+	tenantID, ok := nexus.RequireWorkspace(w, r)
 	if !ok {
 		return
 	}
@@ -135,7 +135,7 @@ func (h *Handlers) HandleAccessOverview(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *Handlers) HandleCreateRole(w http.ResponseWriter, r *http.Request) {
-	tenantID, _ := nexus.TenantID(r.Context())
+	tenantID, _ := nexus.WorkspaceID(r.Context())
 	claims, _ := auth.UserFromContext(r.Context())
 	var req struct {
 		Code        string `json:"code"`
@@ -164,7 +164,7 @@ func (h *Handlers) HandleCreateRole(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) HandleUpdateRole(w http.ResponseWriter, r *http.Request) {
-	tenantID, _ := nexus.TenantID(r.Context())
+	tenantID, _ := nexus.WorkspaceID(r.Context())
 	claims, _ := auth.UserFromContext(r.Context())
 	id := chi.URLParam(r, "id")
 	var req struct {
@@ -197,7 +197,7 @@ func (h *Handlers) HandleUpdateRole(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) HandleDeleteRole(w http.ResponseWriter, r *http.Request) {
-	tenantID, _ := nexus.TenantID(r.Context())
+	tenantID, _ := nexus.WorkspaceID(r.Context())
 	claims, _ := auth.UserFromContext(r.Context())
 	id := chi.URLParam(r, "id")
 	var system bool
@@ -219,7 +219,7 @@ func (h *Handlers) HandleDeleteRole(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) HandleSetRolePermissions(w http.ResponseWriter, r *http.Request) {
-	tenantID, _ := nexus.TenantID(r.Context())
+	tenantID, _ := nexus.WorkspaceID(r.Context())
 	claims, _ := auth.UserFromContext(r.Context())
 	id := chi.URLParam(r, "id")
 	var req struct {
@@ -281,7 +281,7 @@ func (h *Handlers) HandleSetRolePermissions(w http.ResponseWriter, r *http.Reque
 }
 
 func (h *Handlers) HandleSetMembershipRoles(w http.ResponseWriter, r *http.Request) {
-	tenantID, _ := nexus.TenantID(r.Context())
+	tenantID, _ := nexus.WorkspaceID(r.Context())
 	claims, _ := auth.UserFromContext(r.Context())
 	id := chi.URLParam(r, "id")
 	var req struct {
@@ -391,7 +391,7 @@ func collectStrings(ctx context.Context, q querier, sql string, args ...any) ([]
 // invalidate would be a role edit that takes half a minute to bite, and the
 // administrator would be looking at a screen that says it already has.
 func (h *Handlers) recordAccessChange(r *http.Request, actor, action, resource, resourceID string, before, after any) {
-	tenantID, _ := nexus.TenantID(r.Context())
+	tenantID, _ := nexus.WorkspaceID(r.Context())
 	h.forgetGrants(tenantID)
 	beforeJSON, _ := json.Marshal(before)
 	afterJSON, _ := json.Marshal(after)

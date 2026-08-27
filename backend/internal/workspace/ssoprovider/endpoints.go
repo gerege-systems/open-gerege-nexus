@@ -179,9 +179,9 @@ func (s *SSOProvider) HandleAuthorize(w http.ResponseWriter, r *http.Request) {
 	// app and refused for one that did not. access_denied rather than
 	// unauthorized_client — the client is fine, this user's tenant is not
 	// entitled to it, and that is what RFC 6749 §4.1.2.1 calls access_denied.
-	if !s.allowedForTenant(ctx, claims.TenantID, client.ClientID) {
+	if !s.allowedForTenant(ctx, claims.WorkspaceID, client.ClientID) {
 		slog.Info("refused an authorization request: the user's tenant has not installed this app",
-			"client_id", client.ClientID, "tenant_id", claims.TenantID)
+			"client_id", client.ClientID, "tenant_id", claims.WorkspaceID)
 		fail("access_denied", "your organisation has not installed this application")
 		return
 	}
@@ -276,7 +276,7 @@ func (s *SSOProvider) HandleConsentPrompt(w http.ResponseWriter, r *http.Request
 
 	// The consent screen describes a grant that is about to be made, so it is
 	// held to the same rule as the endpoint that redirected here.
-	if !s.allowedForTenant(r.Context(), claims.TenantID, req.Client.ClientID) {
+	if !s.allowedForTenant(r.Context(), claims.WorkspaceID, req.Client.ClientID) {
 		writeOAuthError(w, http.StatusForbidden, "access_denied",
 			"your organisation has not installed this application")
 		return
@@ -325,7 +325,7 @@ func (s *SSOProvider) HandleConsentDecision(w http.ResponseWriter, r *http.Reque
 	// This endpoint mints a code of its own, so the gate at /oauth2/auth is not
 	// enough: a browser can post here directly, and everything else about this
 	// request is re-validated from scratch for the same reason.
-	if !s.allowedForTenant(ctx, claims.TenantID, req.Client.ClientID) {
+	if !s.allowedForTenant(ctx, claims.WorkspaceID, req.Client.ClientID) {
 		writeJSON(w, http.StatusOK, map[string]string{
 			"redirect_to": errorRedirectURL(req.RedirectURI, "access_denied",
 				"your organisation has not installed this application", req.State),
@@ -344,7 +344,7 @@ func (s *SSOProvider) HandleConsentDecision(w http.ResponseWriter, r *http.Reque
 	// Merge with anything granted earlier so approving a narrow request does
 	// not silently withdraw a wider standing grant.
 	granted, _ := s.store.GetConsent(ctx, claims.UserID, req.Client.ClientID)
-	if err := s.store.SaveConsent(ctx, claims.TenantID, claims.UserID, req.Client.ClientID,
+	if err := s.store.SaveConsent(ctx, claims.WorkspaceID, claims.UserID, req.Client.ClientID,
 		union(granted, req.Scopes)); err != nil {
 		slog.Error("failed to record consent", "error", err)
 		writeOAuthError(w, http.StatusInternalServerError, "server_error", "could not record consent")
@@ -388,7 +388,7 @@ func (s *SSOProvider) parseConsentQuery(ctx context.Context, values url.Values) 
 	// where row-level security scopes every read to the caller's tenant and hid
 	// every client but their own — a first consent to somebody else's client
 	// answered "unknown or disabled client" and no sign-in ever completed.
-	client, err := s.store.GetClient(nexus.WithoutTenant(ctx), values.Get("client_id"))
+	client, err := s.store.GetClient(nexus.WithoutWorkspace(ctx), values.Get("client_id"))
 	if err != nil || client.Disabled {
 		return nil, &oauthError{"unauthorized_client", "unknown or disabled client"}
 	}
@@ -427,7 +427,7 @@ func (s *SSOProvider) issueAuthCode(ctx context.Context, req *authRequest, claim
 		// The user's tenant, not the client's: the token addresses the data
 		// domain the person belongs to, which is what a resource server filters
 		// by. A client registered by one tenant can sign in a user of another.
-		TenantID:            claims.TenantID,
+		TenantID:            claims.WorkspaceID,
 		UserID:              claims.UserID,
 		RedirectURI:         req.RedirectURI,
 		Scopes:              req.Scopes,
@@ -658,7 +658,7 @@ func (s *SSOProvider) grantClientCredentials(w http.ResponseWriter, r *http.Requ
 	})
 
 	s.store.TouchClient(ctx, client.ClientID)
-	s.issueTokenSet(w, r, client, client.TenantID, nil, scopes, "", nil, nil)
+	s.issueTokenSet(w, r, client, client.WorkspaceID, nil, scopes, "", nil, nil)
 }
 
 // issueTokenSet mints the access token, and the id_token and refresh token when

@@ -77,7 +77,7 @@ func (revenueByMonth) Run(ctx context.Context, q nexus.Querier,
           FROM tenant.billing_invoices
          WHERE tenant_id = $1 AND created_at >= $2 AND created_at <= $3
          GROUP BY 1 ORDER BY 1`,
-        nexus.TenantOf(ctx), p.Time("period_from"), p.Time("period_to"))
+        nexus.WorkspaceOf(ctx), p.Time("period_from"), p.Time("period_to"))
     if err != nil {
         return nexus.Result{}, err
     }
@@ -115,7 +115,7 @@ Frontend-д ямар ч өөрчлөлт хэрэггүй.
 | Дүрэм | Яагаад |
 | --- | --- |
 | `WHERE tenant_id = $1` **заавал** бич | Хэрэглээний давхаргын шүүлт нь үндсэн хамгаалалт. RLS бол доод давхарга — мартсан заалтыг хоосон үр дүн болгож барих сүүлчийн тор, эхнийх нь биш |
-| Тенантыг `nexus.TenantOf(ctx)`-оос ав | Нэгдсэн тайланд яг энэ л зүйл өөр тенант болж солигдоно (§5) |
+| Мужийг `nexus.WorkspaceOf(ctx)`-оос ав | Нэгдсэн тайланд яг энэ л зүйл өөр муж болж солигдоно (§5) |
 | Нэгтгэлийг SQL дотор хий | Мянган мөрийг Go руу татаад давталтаар нэмэх нь демо тенант дээр адилхан ажиллаж, бодит дээр унана |
 | Хүний нэр биш, регистрийн дугаар биш | Тайлан бол экспортлогдож, и-мэйлээр явж, татсан хавтсанд үлддэг зүйл |
 | `mn` гарчиг заавал | Байхгүй бол Register нь асах үед panic хийнэ |

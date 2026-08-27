@@ -48,7 +48,7 @@ func decodePublicKey(raw string) (ed25519.PublicKey, error) {
 // listPeers reads one organisation's links, with the one number that says
 // whether a link is working: how much is queued for it and has not landed.
 func (s *Service) listPeers(ctx context.Context, tenantID string) ([]Peer, error) {
-	rows, err := s.db.Query(nexus.WithTenantID(ctx, tenantID), `
+	rows, err := s.db.Query(nexus.WithWorkspaceID(ctx, tenantID), `
 		SELECT p.id::text, p.name, p.role, p.base_url, p.status, p.peer_public_key,
 		       p.invite_expires_at, p.last_seen_at, p.last_error, p.clock_skew_seconds,
 		       p.revoked_at, p.created_at,
@@ -84,7 +84,7 @@ func (s *Service) listPeers(ctx context.Context, tenantID string) ([]Peer, error
 func (s *Service) peerByToken(ctx context.Context, token string) (peerRow, error) {
 	var row peerRow
 	var key string
-	err := s.db.QueryRow(nexus.WithoutTenant(ctx), `
+	err := s.db.QueryRow(nexus.WithoutWorkspace(ctx), `
 		SELECT id::text, tenant_id::text, name, role, base_url, peer_public_key, status
 		  FROM workspace.urtuu_peers
 		 -- installation_id: a token is only this installation's to honour if the
@@ -107,7 +107,7 @@ func (s *Service) peerByToken(ctx context.Context, token string) (peerRow, error
 // deliberately — so it runs on the platform path and carries each row's own
 // tenant into the work it does for it.
 func (s *Service) activeChildLinks(ctx context.Context) ([]peerRow, error) {
-	rows, err := s.db.Query(nexus.WithoutTenant(ctx), `
+	rows, err := s.db.Query(nexus.WithoutWorkspace(ctx), `
 		SELECT id::text, tenant_id::text, name, role, base_url, peer_public_key, status
 		  FROM workspace.urtuu_peers
 		 WHERE role = 'child' AND status = 'active' AND revoked_at IS NULL AND base_url <> ''
@@ -160,7 +160,7 @@ func (s *Service) Enqueue(ctx context.Context, tenantID, kind string, payload an
 		return "", err
 	}
 
-	ctx = nexus.WithTenantID(ctx, tenantID)
+	ctx = nexus.WithWorkspaceID(ctx, tenantID)
 	tx, err := s.db.Begin(ctx)
 	if err != nil {
 		return "", err
@@ -243,7 +243,7 @@ func (s *Service) queue(ctx context.Context, tx pgx.Tx, tenantID string, envelop
 // alternative — mark delivered when the send returns — turns every dropped
 // response into work that silently never happened.
 func (s *Service) dueEnvelopes(ctx context.Context, peer peerRow, limit int) ([]urtuu.Envelope, error) {
-	ctx = nexus.WithTenantID(ctx, peer.TenantID)
+	ctx = nexus.WithWorkspaceID(ctx, peer.TenantID)
 	rows, err := s.db.Query(ctx, `
 		WITH due AS (
 		    SELECT d.id
@@ -294,7 +294,7 @@ func (s *Service) markDelivered(ctx context.Context, peer peerRow, messageIDs []
 	if len(messageIDs) == 0 {
 		return nil
 	}
-	tag, err := s.db.Exec(nexus.WithTenantID(ctx, peer.TenantID), `
+	tag, err := s.db.Exec(nexus.WithWorkspaceID(ctx, peer.TenantID), `
 		UPDATE workspace.urtuu_deliveries d
 		   SET delivered_at = NOW(), last_error = ''
 		  FROM workspace.urtuu_outbox o
@@ -314,7 +314,7 @@ func (s *Service) markDelivered(ctx context.Context, peer peerRow, messageIDs []
 // reads this: "not delivered" without a reason is a support ticket.
 func (s *Service) noteFailure(ctx context.Context, peer peerRow, reason string) {
 	deliveriesTotal.WithLabelValues(deliveryFailed).Inc()
-	_, _ = s.db.Exec(nexus.WithTenantID(ctx, peer.TenantID),
+	_, _ = s.db.Exec(nexus.WithWorkspaceID(ctx, peer.TenantID),
 		`UPDATE workspace.urtuu_peers SET last_error = $2, updated_at = NOW() WHERE id = $1`, peer.ID, reason)
 }
 
@@ -333,7 +333,7 @@ func (s *Service) noteSeen(ctx context.Context, peer peerRow, skew *time.Duratio
 		value := int(skew.Seconds())
 		seconds = &value
 	}
-	_, _ = s.db.Exec(nexus.WithTenantID(ctx, peer.TenantID), `
+	_, _ = s.db.Exec(nexus.WithWorkspaceID(ctx, peer.TenantID), `
 		UPDATE workspace.urtuu_peers
 		   SET last_seen_at = NOW(), last_error = '',
 		       clock_skew_seconds = COALESCE($2, clock_skew_seconds), updated_at = NOW()
@@ -350,7 +350,7 @@ func (s *Service) receive(ctx context.Context, peer peerRow, envelope urtuu.Enve
 	if err != nil {
 		return false, err
 	}
-	tag, err := s.db.Exec(nexus.WithTenantID(ctx, peer.TenantID), `
+	tag, err := s.db.Exec(nexus.WithWorkspaceID(ctx, peer.TenantID), `
 		INSERT INTO workspace.urtuu_inbox (tenant_id, peer_id, message_id, kind, created_at, payload, signature)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		ON CONFLICT (tenant_id, message_id) DO NOTHING`,
@@ -366,7 +366,7 @@ func (s *Service) receive(ctx context.Context, peer peerRow, envelope urtuu.Enve
 // it. Until the acknowledgement lands the other side keeps offering the same
 // envelopes, which is exactly what should happen.
 func (s *Service) unacked(ctx context.Context, peer peerRow, limit int) ([]string, error) {
-	rows, err := s.db.Query(nexus.WithTenantID(ctx, peer.TenantID), `
+	rows, err := s.db.Query(nexus.WithWorkspaceID(ctx, peer.TenantID), `
 		SELECT message_id FROM workspace.urtuu_inbox
 		 WHERE peer_id = $1 AND acked_at IS NULL
 		 ORDER BY received_at LIMIT $2`, peer.ID, limit)
@@ -391,7 +391,7 @@ func (s *Service) markAcked(ctx context.Context, peer peerRow, messageIDs []stri
 	if len(messageIDs) == 0 {
 		return nil
 	}
-	_, err := s.db.Exec(nexus.WithTenantID(ctx, peer.TenantID), `
+	_, err := s.db.Exec(nexus.WithWorkspaceID(ctx, peer.TenantID), `
 		UPDATE workspace.urtuu_inbox SET acked_at = NOW()
 		 WHERE peer_id = $1 AND acked_at IS NULL AND message_id = ANY($2)`, peer.ID, messageIDs)
 	return err
@@ -400,7 +400,7 @@ func (s *Service) markAcked(ctx context.Context, peer peerRow, messageIDs []stri
 // pendingCount answers whether a long poll has anything to return yet.
 func (s *Service) pendingCount(ctx context.Context, peer peerRow) (int, error) {
 	var count int
-	err := s.db.QueryRow(nexus.WithTenantID(ctx, peer.TenantID), `
+	err := s.db.QueryRow(nexus.WithWorkspaceID(ctx, peer.TenantID), `
 		SELECT count(*) FROM workspace.urtuu_deliveries
 		 WHERE peer_id = $1 AND delivered_at IS NULL AND next_attempt_at <= NOW()`, peer.ID).Scan(&count)
 	if errors.Is(err, pgx.ErrNoRows) {

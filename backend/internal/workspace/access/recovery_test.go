@@ -193,7 +193,7 @@ func TestAnImpersonationHandoverProducesAMarkedSession(t *testing.T) {
 	if !claims.Impersonated || claims.ImpersonatedBy != operatorID {
 		t.Fatalf("the session does not know it is an impersonation: %+v", claims)
 	}
-	if claims.UserID != userID || claims.TenantID != tenantID {
+	if claims.UserID != userID || claims.WorkspaceID != tenantID {
 		t.Fatalf("the session is for the wrong person: %+v", claims)
 	}
 

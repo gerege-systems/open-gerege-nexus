@@ -75,7 +75,7 @@ type Peer struct {
 
 // handleListPeers is the Settings → Өртөө screen.
 func (s *Service) handleListPeers(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := nexus.RequireTenant(w, r)
+	tenantID, ok := nexus.RequireWorkspace(w, r)
 	if !ok {
 		return
 	}
@@ -115,7 +115,7 @@ func (s *Service) handleInvite(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var id string
-	err = s.db.QueryRow(nexus.WithTenantID(r.Context(), tenantID), `
+	err = s.db.QueryRow(nexus.WithWorkspaceID(r.Context(), tenantID), `
 		INSERT INTO workspace.urtuu_peers
 		    (tenant_id, name, role, status, invite_code_hash, invite_expires_at, installation_id, created_by)
 		VALUES ($1, $2, 'parent', 'pending', $3, NOW() + $4::interval, $5, NULLIF($6, '')::uuid)
@@ -181,7 +181,7 @@ func (s *Service) handleJoin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx := nexus.WithTenantID(r.Context(), tenantID)
+	ctx := nexus.WithWorkspaceID(r.Context(), tenantID)
 	var id string
 	err = s.db.QueryRow(ctx, `
 		INSERT INTO workspace.urtuu_peers
@@ -247,7 +247,7 @@ func (s *Service) HandleRedeem(w http.ResponseWriter, r *http.Request) {
 	// The platform path: an invitation is not held by anybody yet, so there is
 	// no tenant to resolve it in. The code's hash is the whole lookup, and it
 	// is what carries the tenant back.
-	ctx := nexus.WithoutTenant(r.Context())
+	ctx := nexus.WithoutWorkspace(r.Context())
 	var id, tenantID string
 	err := s.db.QueryRow(ctx, `
 		UPDATE workspace.urtuu_peers
@@ -295,7 +295,7 @@ func (s *Service) handleConfirm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tag, err := s.db.Exec(nexus.WithTenantID(r.Context(), tenantID), `
+	tag, err := s.db.Exec(nexus.WithWorkspaceID(r.Context(), tenantID), `
 		UPDATE workspace.urtuu_peers SET status = 'active', updated_at = NOW()
 		 WHERE id = $1 AND status = 'pending' AND revoked_at IS NULL
 		   -- Only a link somebody has actually redeemed: confirming one that
@@ -323,7 +323,7 @@ func (s *Service) handleRevoke(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tag, err := s.db.Exec(nexus.WithTenantID(r.Context(), tenantID), `
+	tag, err := s.db.Exec(nexus.WithWorkspaceID(r.Context(), tenantID), `
 		UPDATE workspace.urtuu_peers
 		   SET status = 'revoked', revoked_at = NOW(),
 		       -- The credential goes with the link. Revoked is checked on every
@@ -422,7 +422,7 @@ func inviteCode() (string, error) {
 // requireEnabled resolves the caller's organisation and refuses when this
 // installation has no Өртөө identity to act with.
 func (s *Service) requireEnabled(w http.ResponseWriter, r *http.Request) (string, bool) {
-	tenantID, ok := nexus.RequireTenant(w, r)
+	tenantID, ok := nexus.RequireWorkspace(w, r)
 	if !ok {
 		return "", false
 	}
@@ -436,7 +436,7 @@ func (s *Service) requireEnabled(w http.ResponseWriter, r *http.Request) (string
 
 // peerParty resolves the caller's organisation and the link id together.
 func (s *Service) peerParty(w http.ResponseWriter, r *http.Request) (string, string, bool) {
-	tenantID, ok := nexus.RequireTenant(w, r)
+	tenantID, ok := nexus.RequireWorkspace(w, r)
 	if !ok {
 		return "", "", false
 	}

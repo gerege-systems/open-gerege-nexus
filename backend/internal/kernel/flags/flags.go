@@ -100,7 +100,7 @@ func Enabled(ctx context.Context, key string) bool {
 	if Default == nil {
 		return false
 	}
-	tenantID, _ := nexus.TenantID(ctx)
+	tenantID, _ := nexus.WorkspaceID(ctx)
 	return Default.enabled(key, tenantID)
 }
 

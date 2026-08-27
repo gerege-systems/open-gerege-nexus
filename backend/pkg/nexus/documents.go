@@ -51,11 +51,11 @@ type DocumentFiler interface {
 	// capability is the platform's, but the tables and the screens belong to an
 	// installation, and filing into an app nobody has is how a record ends up
 	// somewhere its owner cannot see it.
-	File(ctx context.Context, tenantID string, draft DocumentDraft) (FiledDocument, error)
+	File(ctx context.Context, workspaceID string, draft DocumentDraft) (FiledDocument, error)
 
 	// Document returns one filed document, for a module following what became
 	// of something it filed.
-	Document(ctx context.Context, tenantID, documentID string) (FiledDocument, error)
+	Document(ctx context.Context, workspaceID, documentID string) (FiledDocument, error)
 }
 
 // DocumentDraft is what a module knows when it files something.

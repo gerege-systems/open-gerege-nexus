@@ -404,7 +404,7 @@ func (s *Service) importRing(ctx context.Context, tenantID string) (int, error) 
 		return 0, err
 	}
 
-	ctx = nexus.WithTenantID(ctx, tenantID)
+	ctx = nexus.WithWorkspaceID(ctx, tenantID)
 	tx, err := s.db.Begin(ctx)
 	if err != nil {
 		return 0, err
@@ -423,7 +423,7 @@ func (s *Service) importRing(ctx context.Context, tenantID string) (int, error) 
 }
 
 func (s *Service) handleRingSync(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := nexus.RequireTenant(w, r)
+	tenantID, ok := nexus.RequireWorkspace(w, r)
 	if !ok {
 		return
 	}

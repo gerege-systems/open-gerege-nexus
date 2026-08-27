@@ -59,7 +59,7 @@ func (s store) People(ctx context.Context, tenantIDs []string) ([]nexus.Director
 		var person nexus.DirectoryPerson
 		if err := rows.Scan(&person.MembershipID, &person.UserID, &person.Name,
 			&person.Email, &person.Phone, &person.Active, &person.IsAdmin,
-			&person.JoinedAt, &person.Roles, &person.TenantID, &person.TenantName); err != nil {
+			&person.JoinedAt, &person.Roles, &person.WorkspaceID, &person.WorkspaceName); err != nil {
 			return nil, fmt.Errorf("read the directory: %w", err)
 		}
 		people = append(people, person)

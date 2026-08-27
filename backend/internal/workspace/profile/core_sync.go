@@ -44,7 +44,7 @@ func core() *geregecore.Client {
 // HandleSyncTenantProfileFromCore is mounted behind requireAdmin, like the
 // update it performs.
 func (h *Handlers) HandleSyncTenantProfileFromCore(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := nexus.RequireTenant(w, r)
+	tenantID, ok := nexus.RequireWorkspace(w, r)
 	if !ok {
 		return
 	}

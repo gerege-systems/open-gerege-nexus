@@ -75,7 +75,7 @@ type verifySendRequest struct {
 // directly, which is why this platform no longer issues keys.
 // HandleVerifySend asks the hosted service for a link.
 func (s *Service) HandleVerifySend(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := nexus.RequireTenant(w, r)
+	tenantID, ok := nexus.RequireWorkspace(w, r)
 	if !ok {
 		return
 	}
@@ -160,7 +160,7 @@ h1{font-size:20px;margin:0 0 12px}p{color:#475569;font-size:14px;line-height:1.6
 // been asked for, and whether the service that sends it is reachable.
 // HandleOverview answers the operator screen.
 func (s *Service) HandleOverview(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := nexus.RequireTenant(w, r)
+	tenantID, ok := nexus.RequireWorkspace(w, r)
 	if !ok {
 		return
 	}

@@ -99,7 +99,7 @@ func (h *Handlers) HandleRegisterPushToken(w http.ResponseWriter, r *http.Reques
 		httpx.Error(w, 503, "push registration is not configured")
 		return
 	}
-	_, err = h.db.Exec(r.Context(), `INSERT INTO workspace.push_tokens(tenant_id,user_id,provider,token_hash,token_ciphertext,app_id) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(token_hash) DO UPDATE SET user_id=EXCLUDED.user_id,tenant_id=EXCLUDED.tenant_id,provider=EXCLUDED.provider,token_ciphertext=EXCLUDED.token_ciphertext,app_id=EXCLUDED.app_id,updated_at=NOW()`, claims.TenantID, claims.UserID, req.Provider, caseSensitiveSecretHash(req.Token), encrypted, req.AppID)
+	_, err = h.db.Exec(r.Context(), `INSERT INTO workspace.push_tokens(tenant_id,user_id,provider,token_hash,token_ciphertext,app_id) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(token_hash) DO UPDATE SET user_id=EXCLUDED.user_id,tenant_id=EXCLUDED.tenant_id,provider=EXCLUDED.provider,token_ciphertext=EXCLUDED.token_ciphertext,app_id=EXCLUDED.app_id,updated_at=NOW()`, claims.WorkspaceID, claims.UserID, req.Provider, caseSensitiveSecretHash(req.Token), encrypted, req.AppID)
 	if err != nil {
 		httpx.Error(w, 503, "push registration failed")
 		return

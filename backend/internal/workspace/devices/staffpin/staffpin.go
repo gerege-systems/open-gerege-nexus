@@ -66,12 +66,12 @@ func (s *Service) HandleSetPIN(w http.ResponseWriter, r *http.Request) {
 		 SELECT id,tenant_id,$3 FROM workspace.memberships WHERE id=$1 AND tenant_id=$2
 		 ON CONFLICT(membership_id) DO UPDATE
 		    SET pin_hash=EXCLUDED.pin_hash,active=true,failed_attempts=0,locked_until=NULL,updated_at=NOW()`,
-		req.MembershipID, claims.TenantID, hash)
+		req.MembershipID, claims.WorkspaceID, hash)
 	if err != nil || result.RowsAffected() != 1 {
 		httpx.Error(w, http.StatusNotFound, "membership not found")
 		return
 	}
-	audit.Record(r.Context(), claims.TenantID, claims.UserID, "staff.pin_changed", "membership",
+	audit.Record(r.Context(), claims.WorkspaceID, claims.UserID, "staff.pin_changed", "membership",
 		map[string]any{"membership_id": req.MembershipID})
 	httpx.JSON(w, http.StatusOK, map[string]string{"status": "updated"})
 }

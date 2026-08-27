@@ -43,7 +43,7 @@ func AsSchedules(db DB) nexus.ReportSchedules { return scheduleRecords{db} }
 type scheduleRecords struct{ db DB }
 
 func (s scheduleRecords) List(ctx context.Context, tenantID string) ([]nexus.ReportSchedule, error) {
-	rows, err := ListSchedules(nexus.WithTenantID(ctx, tenantID), s.db, tenantID)
+	rows, err := ListSchedules(nexus.WithWorkspaceID(ctx, tenantID), s.db, tenantID)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (s scheduleRecords) List(ctx context.Context, tenantID string) ([]nexus.Rep
 
 func (s scheduleRecords) Create(ctx context.Context, tenantID string, schedule nexus.ReportSchedule) (string, error) {
 	var id string
-	err := s.db.QueryRow(nexus.WithTenantID(ctx, tenantID), `
+	err := s.db.QueryRow(nexus.WithWorkspaceID(ctx, tenantID), `
 		INSERT INTO workspace.report_schedules
 		    (tenant_id, report_key, name, params, cron, format, recipients, active, created_by)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NULLIF($9, '')::uuid)
@@ -80,7 +80,7 @@ func (s scheduleRecords) Update(ctx context.Context, tenantID, id string, schedu
 	// The tenant clause is here as well as in the policy. `WHERE id = $1` alone
 	// would be a schedule id from one organisation editing another's row, and
 	// the row-level policy is the layer that catches it — not the only one.
-	tag, err := s.db.Exec(nexus.WithTenantID(ctx, tenantID), `
+	tag, err := s.db.Exec(nexus.WithWorkspaceID(ctx, tenantID), `
 		UPDATE workspace.report_schedules
 		   SET report_key = $3, name = $4, params = $5, cron = $6, format = $7,
 		       recipients = $8, active = $9, updated_at = NOW()
@@ -95,7 +95,7 @@ func (s scheduleRecords) Update(ctx context.Context, tenantID, id string, schedu
 
 func (s scheduleRecords) Delete(ctx context.Context, tenantID, id string) (string, error) {
 	var reportKey string
-	err := s.db.QueryRow(nexus.WithTenantID(ctx, tenantID),
+	err := s.db.QueryRow(nexus.WithWorkspaceID(ctx, tenantID),
 		`DELETE FROM workspace.report_schedules WHERE id = $1 AND tenant_id = $2 RETURNING report_key`,
 		id, tenantID).Scan(&reportKey)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -119,8 +119,8 @@ func (g grantRecords) List(ctx context.Context, tenantID string) ([]nexus.Report
 	for _, row := range rows {
 		grants = append(grants, nexus.ReportGrant{
 			ID: row.ID, ReportKey: row.ReportKey,
-			GrantorTenantID: row.GrantorTenantID, GrantorName: row.GrantorName,
-			GranteeTenantID: row.GranteeTenantID, GranteeName: row.GranteeName,
+			GrantorWorkspaceID: row.GrantorTenantID, GrantorName: row.GrantorName,
+			GranteeWorkspaceID: row.GranteeTenantID, GranteeName: row.GranteeName,
 			Scope: row.Scope, CounterpartyRef: row.CounterpartyRef,
 			ValidFrom: row.ValidFrom, ValidUntil: row.ValidUntil,
 			RevokedAt: row.RevokedAt, AcceptedAt: row.AcceptedAt,
@@ -137,7 +137,7 @@ func (g grantRecords) List(ctx context.Context, tenantID string) ([]nexus.Report
 // there by the consolidated run on both sides, and a second record of the same
 // fact would be a second thing to keep true.
 func (g grantRecords) History(ctx context.Context, tenantID string) ([]nexus.ReportGrantUse, error) {
-	rows, err := g.db.Query(nexus.WithTenantID(ctx, tenantID), `
+	rows, err := g.db.Query(nexus.WithWorkspaceID(ctx, tenantID), `
 		SELECT a.created_at, a.resource, a.details, coalesce(t.name, '—')
 		  FROM workspace.audit_events a
 		  LEFT JOIN registry.tenants t
@@ -175,13 +175,13 @@ func (g grantRecords) History(ctx context.Context, tenantID string) ([]nexus.Rep
 
 func (g grantRecords) Request(ctx context.Context, grant nexus.ReportGrant) (string, error) {
 	var id string
-	err := g.db.QueryRow(nexus.WithTenantID(ctx, grant.GranteeTenantID), `
+	err := g.db.QueryRow(nexus.WithWorkspaceID(ctx, grant.GranteeWorkspaceID), `
 		INSERT INTO workspace.report_grants
 		    (grantor_tenant_id, grantee_tenant_id, report_key, scope,
 		     counterparty_ref, valid_until, created_by, note)
 		VALUES ($1, $2, $3, $4, $5, $6, NULLIF($7, '')::uuid, $8)
 		RETURNING id`,
-		grant.GrantorTenantID, grant.GranteeTenantID, grant.ReportKey, grant.Scope,
+		grant.GrantorWorkspaceID, grant.GranteeWorkspaceID, grant.ReportKey, grant.Scope,
 		grant.CounterpartyRef, grant.ValidUntil, grant.CreatedBy, grant.Note).Scan(&id)
 	// One live agreement per pair per report, held by a partial unique index.
 	// Only that violation is the conflict: the handler this was lifted from
@@ -198,7 +198,7 @@ func (g grantRecords) Accept(ctx context.Context, grantorTenantID, id, actorUser
 	// the row-level policy lets both parties see the row, so without this
 	// clause a grantee could accept their own request.
 	var reportKey string
-	err := g.db.QueryRow(nexus.WithTenantID(ctx, grantorTenantID), `
+	err := g.db.QueryRow(nexus.WithWorkspaceID(ctx, grantorTenantID), `
 		UPDATE workspace.report_grants
 		   SET accepted_by = NULLIF($3, '')::uuid, accepted_at = NOW(), updated_at = NOW()
 		 WHERE id = $1 AND grantor_tenant_id = $2 AND revoked_at IS NULL AND accepted_at IS NULL
@@ -211,7 +211,7 @@ func (g grantRecords) Accept(ctx context.Context, grantorTenantID, id, actorUser
 
 func (g grantRecords) Revoke(ctx context.Context, tenantID, id string) (string, string, error) {
 	var reportKey, side string
-	err := g.db.QueryRow(nexus.WithTenantID(ctx, tenantID), `
+	err := g.db.QueryRow(nexus.WithWorkspaceID(ctx, tenantID), `
 		UPDATE workspace.report_grants
 		   SET revoked_at = NOW(), updated_at = NOW()
 		 WHERE id = $1
@@ -235,7 +235,7 @@ func (g grantRecords) OrganisationByRegistration(ctx context.Context, registrati
 		return "", nexus.ErrOrganisationNotFound
 	}
 	var tenantID string
-	err := g.db.QueryRow(nexus.WithoutTenant(ctx),
+	err := g.db.QueryRow(nexus.WithoutWorkspace(ctx),
 		`SELECT tenant_id FROM workspace.tenant_profiles WHERE registration_number = $1`,
 		registration).Scan(&tenantID)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -246,7 +246,7 @@ func (g grantRecords) OrganisationByRegistration(ctx context.Context, registrati
 
 func (g grantRecords) RegistrationOf(ctx context.Context, tenantID string) (string, error) {
 	var registration string
-	err := g.db.QueryRow(nexus.WithTenantID(ctx, tenantID),
+	err := g.db.QueryRow(nexus.WithWorkspaceID(ctx, tenantID),
 		`SELECT registration_number FROM workspace.tenant_profiles WHERE tenant_id = $1`,
 		tenantID).Scan(&registration)
 	if errors.Is(err, pgx.ErrNoRows) {

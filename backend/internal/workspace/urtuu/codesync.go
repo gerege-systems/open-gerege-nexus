@@ -69,7 +69,7 @@ const inboxBatch = 100
 // tenant's link brought it — so the listing runs on the platform path and each
 // reader is called inside its own envelope's tenant.
 func (s *Service) ProcessInbox(ctx context.Context) {
-	rows, err := s.db.Query(nexus.WithoutTenant(ctx), `
+	rows, err := s.db.Query(nexus.WithoutWorkspace(ctx), `
 		SELECT i.id::text, i.tenant_id::text, i.peer_id::text, coalesce(p.name, ''),
 		       i.message_id, i.kind, i.created_at, i.payload
 		  FROM workspace.urtuu_inbox i
@@ -90,7 +90,7 @@ func (s *Service) ProcessInbox(ctx context.Context) {
 	for rows.Next() {
 		var item pending
 		var payload string
-		if err := rows.Scan(&item.id, &item.message.TenantID, &item.message.PeerID,
+		if err := rows.Scan(&item.id, &item.message.WorkspaceID, &item.message.PeerID,
 			&item.message.PeerName, &item.message.MessageID, &item.message.Kind,
 			&item.message.CreatedAt, &payload); err != nil {
 			rows.Close()
@@ -118,7 +118,7 @@ func (s *Service) ProcessInbox(ctx context.Context) {
 				"kind", item.message.Kind, "message_id", item.message.MessageID, "error", err)
 			continue
 		}
-		if _, err := s.db.Exec(nexus.WithTenantID(ctx, item.message.TenantID),
+		if _, err := s.db.Exec(nexus.WithWorkspaceID(ctx, item.message.WorkspaceID),
 			`UPDATE workspace.urtuu_inbox SET processed_at = NOW() WHERE id = $1`, item.id); err != nil {
 			// The reader has already acted. Failing to record that costs a
 			// second call, which is why every reader has to be safe to repeat.
@@ -142,7 +142,7 @@ type codeSync struct {
 
 // announceCodes tells one link what it may raise work under.
 func (s *Service) announceCodes(ctx context.Context, tenantID, peerID string) error {
-	rows, err := s.db.Query(nexus.WithTenantID(ctx, tenantID), `
+	rows, err := s.db.Query(nexus.WithWorkspaceID(ctx, tenantID), `
 		SELECT c.code, c.names, c.schema, c.line,
 		       coalesce(EXTRACT(EPOCH FROM c.default_sla)::bigint, 0),
 		       c.ring_process_ref, c.version
@@ -195,7 +195,7 @@ func (s *Service) receiveCodeSync(ctx context.Context, message nexus.LinkMessage
 		return nil
 	}
 
-	ctx = nexus.WithTenantID(ctx, message.TenantID)
+	ctx = nexus.WithWorkspaceID(ctx, message.WorkspaceID)
 	tx, err := s.db.Begin(ctx)
 	if err != nil {
 		return err
@@ -204,7 +204,7 @@ func (s *Service) receiveCodeSync(ctx context.Context, message nexus.LinkMessage
 
 	kept := make([]string, 0, len(announcement.Codes))
 	for _, code := range announcement.Codes {
-		if err := upsertCode(ctx, tx, message.TenantID, contract.SourceLink, message.PeerID, code); err != nil {
+		if err := upsertCode(ctx, tx, message.WorkspaceID, contract.SourceLink, message.PeerID, code); err != nil {
 			return err
 		}
 		kept = append(kept, code.Code)

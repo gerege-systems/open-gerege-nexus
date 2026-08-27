@@ -68,12 +68,12 @@ func (h *Handlers) HandleCreateEnrollmentCode(w http.ResponseWriter, r *http.Req
 		return
 	}
 	expires := time.Now().Add(enrollmentTTL)
-	_, err = h.db.Exec(r.Context(), `INSERT INTO workspace.device_enrollment_codes(tenant_id,code_hash,created_by,expires_at) VALUES($1,$2,$3,$4)`, claims.TenantID, secretHash(code), claims.UserID, expires)
+	_, err = h.db.Exec(r.Context(), `INSERT INTO workspace.device_enrollment_codes(tenant_id,code_hash,created_by,expires_at) VALUES($1,$2,$3,$4)`, claims.WorkspaceID, secretHash(code), claims.UserID, expires)
 	if err != nil {
 		httpx.Error(w, 500, "failed to persist enrollment code")
 		return
 	}
-	audit.Record(r.Context(), claims.TenantID, claims.UserID, "device.enrollment_code_created", "device", nil)
+	audit.Record(r.Context(), claims.WorkspaceID, claims.UserID, "device.enrollment_code_created", "device", nil)
 	httpx.JSON(w, http.StatusCreated, map[string]any{"code": code, "expires_at": expires})
 }
 
@@ -164,7 +164,7 @@ func (h *Handlers) Middleware(next http.Handler) http.Handler {
 			return
 		}
 		ctx := context.WithValue(r.Context(), deviceContextKey{}, claims)
-		ctx = nexus.WithTenantID(ctx, claims.TenantID)
+		ctx = nexus.WithWorkspaceID(ctx, claims.TenantID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -199,7 +199,7 @@ func (h *Handlers) HandleRotateDeviceToken(w http.ResponseWriter, r *http.Reques
 }
 
 func (h *Handlers) HandleUpdateDeviceStatus(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := nexus.RequireTenant(w, r)
+	tenantID, ok := nexus.RequireWorkspace(w, r)
 	if !ok {
 		return
 	}
@@ -225,7 +225,7 @@ func (h *Handlers) HandleUpdateDeviceStatus(w http.ResponseWriter, r *http.Reque
 }
 
 func (h *Handlers) HandleListDevices(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := nexus.RequireTenant(w, r)
+	tenantID, ok := nexus.RequireWorkspace(w, r)
 	if !ok {
 		return
 	}

@@ -59,7 +59,7 @@ func (p peerDirectory) Peers(ctx context.Context, tenantID string) ([]nexus.Peer
 // is what makes the query readable.
 func (p peerDirectory) RequestCode(ctx context.Context, tenantID, code string) (nexus.RequestCode, bool, error) {
 	var found nexus.RequestCode
-	err := p.s.db.QueryRow(nexus.WithTenantID(ctx, tenantID), `
+	err := p.s.db.QueryRow(nexus.WithWorkspaceID(ctx, tenantID), `
 		SELECT code, names, EXTRACT(EPOCH FROM default_sla)::bigint, line, active, source
 		  FROM workspace.urtuu_request_codes WHERE tenant_id = $1 AND code = $2`,
 		tenantID, code).Scan(&found.Code, &found.Names, &found.SLA, &found.Line,
@@ -82,7 +82,7 @@ func (p peerDirectory) RequestCode(ctx context.Context, tenantID, code string) (
 // thing, and a report that added them together would be reporting about
 // neither.
 func (p peerDirectory) DeliveryLoad(ctx context.Context, tenantID string, from, to time.Time) ([]nexus.PeerLoad, error) {
-	rows, err := p.s.db.Query(nexus.WithTenantID(ctx, tenantID), `
+	rows, err := p.s.db.Query(nexus.WithWorkspaceID(ctx, tenantID), `
 		SELECT d.peer_id::text,
 		       count(*),
 		       count(*) FILTER (WHERE d.delivered_at IS NOT NULL),
@@ -111,7 +111,7 @@ func (p peerDirectory) DeliveryLoad(ctx context.Context, tenantID string, from, 
 
 func (p peerDirectory) CodeOpenOn(ctx context.Context, tenantID, peerID, code string) (bool, error) {
 	var open bool
-	err := p.s.db.QueryRow(nexus.WithTenantID(ctx, tenantID), `
+	err := p.s.db.QueryRow(nexus.WithWorkspaceID(ctx, tenantID), `
 		SELECT EXISTS (SELECT 1 FROM workspace.urtuu_peer_codes
 		                WHERE tenant_id = $1 AND peer_id = $2 AND code = $3)`,
 		tenantID, peerID, code).Scan(&open)

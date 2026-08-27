@@ -39,23 +39,23 @@ import (
 // ReportSchedules is the platform's record of what it mails and when.
 type ReportSchedules interface {
 	// List is one organisation's schedules, newest first.
-	List(ctx context.Context, tenantID string) ([]ReportSchedule, error)
+	List(ctx context.Context, workspaceID string) ([]ReportSchedule, error)
 
 	// Create records a new one and returns its id.
 	//
 	// It does not validate: ReportEngine.ValidateSchedule is what refuses a
 	// schedule the engine could not later run, and a caller that skipped it
 	// would be storing something that fails at three in the morning to nobody.
-	Create(ctx context.Context, tenantID string, schedule ReportSchedule) (string, error)
+	Create(ctx context.Context, workspaceID string, schedule ReportSchedule) (string, error)
 
 	// Update replaces one, reporting whether it was this organisation's to
 	// replace. False is a schedule belonging to somebody else, which is the
 	// same answer as one that does not exist — deliberately.
-	Update(ctx context.Context, tenantID, id string, schedule ReportSchedule) (bool, error)
+	Update(ctx context.Context, workspaceID, id string, schedule ReportSchedule) (bool, error)
 
 	// Delete removes one and answers with the report it named, for the audit
 	// entry the caller writes, or ErrReportScheduleNotFound.
-	Delete(ctx context.Context, tenantID, id string) (reportKey string, err error)
+	Delete(ctx context.Context, workspaceID, id string) (reportKey string, err error)
 }
 
 // ReportSchedule is one standing instruction to mail a report.
@@ -89,13 +89,13 @@ type ReportSchedule struct {
 // be a caller that could accept its own request.
 type ReportGrants interface {
 	// List is every agreement this organisation is on either side of.
-	List(ctx context.Context, tenantID string) ([]ReportGrant, error)
+	List(ctx context.Context, workspaceID string) ([]ReportGrant, error)
 
 	// History is who has read this organisation's data under those agreements.
 	//
 	// A read of somebody else's rows is the act this whole mechanism exists to
 	// govern, and an organisation is entitled to know when it happened.
-	History(ctx context.Context, tenantID string) ([]ReportGrantUse, error)
+	History(ctx context.Context, workspaceID string) ([]ReportGrantUse, error)
 
 	// Request asks another organisation for a report and returns the id.
 	//
@@ -108,11 +108,11 @@ type ReportGrants interface {
 	// ErrReportGrantNotPending — which is also the answer to a grantee trying
 	// to accept their own request, because the statement is scoped to the
 	// grantor.
-	Accept(ctx context.Context, grantorTenantID, id, actorUserID string) (reportKey string, err error)
+	Accept(ctx context.Context, grantorWorkspaceID, id, actorUserID string) (reportKey string, err error)
 
 	// Revoke may be either party. It answers with the report key and which side
 	// ended it — "given" or "received" — or ErrReportGrantNotFound.
-	Revoke(ctx context.Context, tenantID, id string) (reportKey, side string, err error)
+	Revoke(ctx context.Context, workspaceID, id string) (reportKey, side string, err error)
 
 	// OrganisationByRegistration finds the organisation a request names.
 	//
@@ -121,22 +121,22 @@ type ReportGrants interface {
 	// a report names the other party by the number on their registration
 	// certificate, which is public. ErrOrganisationNotFound when no
 	// organisation on this deployment has it.
-	OrganisationByRegistration(ctx context.Context, registration string) (tenantID string, err error)
+	OrganisationByRegistration(ctx context.Context, registration string) (workspaceID string, err error)
 
 	// RegistrationOf is this organisation's own number, or empty when it has
 	// not set one. Empty rather than an error: not having filled in a legal
 	// profile is a state, not a fault.
-	RegistrationOf(ctx context.Context, tenantID string) (string, error)
+	RegistrationOf(ctx context.Context, workspaceID string) (string, error)
 }
 
 // ReportGrant is one agreement, as both parties see it.
 type ReportGrant struct {
-	ID              string `json:"id"`
-	ReportKey       string `json:"report_key"`
-	GrantorTenantID string `json:"grantor_tenant_id"`
-	GrantorName     string `json:"grantor_name,omitempty"`
-	GranteeTenantID string `json:"grantee_tenant_id"`
-	GranteeName     string `json:"grantee_name,omitempty"`
+	ID                 string `json:"id"`
+	ReportKey          string `json:"report_key"`
+	GrantorWorkspaceID string `json:"grantor_tenant_id"`
+	GrantorName        string `json:"grantor_name,omitempty"`
+	GranteeWorkspaceID string `json:"grantee_tenant_id"`
+	GranteeName        string `json:"grantee_name,omitempty"`
 	// Scope is ReportScopeFull or ReportScopeCounterparty. A report that was
 	// not written to be shared at that scope cannot be named here.
 	Scope string `json:"scope"`

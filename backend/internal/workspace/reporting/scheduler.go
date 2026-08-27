@@ -133,7 +133,7 @@ func (s *Scheduler) claimDue(ctx context.Context, now time.Time) ([]dueSchedule,
 	// The platform path: this sweep crosses every tenant deliberately, so it
 	// runs as the login role and outside the row-level policies, the way the
 	// other housekeeping sweeps do.
-	ctx = nexus.WithoutTenant(ctx)
+	ctx = nexus.WithoutWorkspace(ctx)
 
 	// A pinned connection, because pg_try_advisory_lock is session-scoped: taken
 	// on one connection and released on another it would do nothing at all.
@@ -258,7 +258,7 @@ func (s *Scheduler) run(ctx context.Context, schedule dueSchedule) {
 	// Recorded whichever way it went. A schedule that has been failing for a
 	// month is exactly the thing nobody notices: the report simply stops
 	// arriving, and only the recipient knows.
-	if _, err := s.engine.DB().Exec(nexus.WithoutTenant(context.WithoutCancel(ctx)),
+	if _, err := s.engine.DB().Exec(nexus.WithoutWorkspace(context.WithoutCancel(ctx)),
 		`UPDATE workspace.report_schedules SET last_status = $2, last_error = $3, updated_at = NOW() WHERE id = $1`,
 		schedule.ID, status, truncate(failure, 500)); err != nil {
 		slog.Error("reports: could not record a scheduled run", "schedule_id", schedule.ID, "error", err)
@@ -290,7 +290,7 @@ func (s *Scheduler) produceAndDeliver(ctx context.Context, schedule dueSchedule)
 	// Audited before delivery, and audited whether or not delivery is
 	// configured: the fact that the numbers were read out of the database is
 	// the auditable act. Who received them is in the same record.
-	audit.Record(nexus.WithTenantID(ctx, schedule.TenantID), schedule.TenantID, schedule.CreatedBy,
+	audit.Record(nexus.WithWorkspaceID(ctx, schedule.TenantID), schedule.TenantID, schedule.CreatedBy,
 		"reports.scheduled_run", schedule.ReportKey, map[string]any{
 			"schedule_id": schedule.ID,
 			"format":      string(schedule.Format),

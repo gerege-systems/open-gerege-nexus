@@ -206,7 +206,7 @@ func (h *Handlers) HandleTenants(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	options, err := h.sessions.TenantsForUser(nexus.WithoutTenant(r.Context()), claims.UserID)
+	options, err := h.sessions.TenantsForUser(nexus.WithoutWorkspace(r.Context()), claims.UserID)
 	if err != nil {
 		slog.Error("failed to list the tenants a user belongs to", "user_id", claims.UserID, "error", err)
 		httpx.Error(w, http.StatusInternalServerError, "failed to list tenants")
@@ -214,7 +214,7 @@ func (h *Handlers) HandleTenants(w http.ResponseWriter, r *http.Request) {
 	}
 
 	httpx.JSON(w, http.StatusOK, map[string]any{
-		"current": claims.TenantID,
+		"current": claims.WorkspaceID,
 		"tenants": options,
 		// Which of them this session is reading across. Empty would be
 		// ambiguous on the client — "none" and "just the current one" look the
@@ -224,10 +224,10 @@ func (h *Handlers) HandleTenants(w http.ResponseWriter, r *http.Request) {
 }
 
 func activeOrCurrent(claims UserClaims) []string {
-	if len(claims.AllowedTenantIDs) > 0 {
-		return claims.AllowedTenantIDs
+	if len(claims.AllowedWorkspaceIDs) > 0 {
+		return claims.AllowedWorkspaceIDs
 	}
-	return []string{claims.TenantID}
+	return []string{claims.WorkspaceID}
 }
 
 // HandleSetActiveTenants chooses which organisations this session reads across.
@@ -295,12 +295,12 @@ func (h *Handlers) HandleSwitchTenant(w http.ResponseWriter, r *http.Request) {
 
 	// Already there. Answering rather than rotating keeps a double-click on the
 	// tenant you are in from replacing a working session with another one.
-	if req.TenantID == claims.TenantID {
-		httpx.JSON(w, http.StatusOK, map[string]any{"tenant_id": claims.TenantID, "switched": false})
+	if req.TenantID == claims.WorkspaceID {
+		httpx.JSON(w, http.StatusOK, map[string]any{"tenant_id": claims.WorkspaceID, "switched": false})
 		return
 	}
 
-	token, expiresAt, err := h.sessions.SwitchTenant(nexus.WithoutTenant(r.Context()), TokenFromRequest(r), req.TenantID)
+	token, expiresAt, err := h.sessions.SwitchTenant(nexus.WithoutWorkspace(r.Context()), TokenFromRequest(r), req.TenantID)
 	switch {
 	case errors.Is(err, ErrNotAMember):
 		// Not 404: whether that tenant exists is not this caller's business.
@@ -318,8 +318,8 @@ func (h *Handlers) HandleSwitchTenant(w http.ResponseWriter, r *http.Request) {
 	SetSessionCookie(w, token, expiresAt)
 	// Recorded against the tenant being left, because that is the trail an
 	// administrator of it reads: this person stopped acting here, and when.
-	audit.Record(r.Context(), claims.TenantID, claims.UserID, "auth.tenant_switched", "session",
-		map[string]any{"from": claims.TenantID, "to": req.TenantID})
+	audit.Record(r.Context(), claims.WorkspaceID, claims.UserID, "auth.tenant_switched", "session",
+		map[string]any{"from": claims.WorkspaceID, "to": req.TenantID})
 	httpx.JSON(w, http.StatusOK, map[string]any{
 		"tenant_id":  req.TenantID,
 		"switched":   true,
@@ -352,7 +352,7 @@ func (h *Handlers) HandleLogoutEverywhere(w http.ResponseWriter, r *http.Request
 	}
 
 	ClearSessionCookie(w)
-	audit.Record(r.Context(), claims.TenantID, claims.UserID, "auth.logout_everywhere", "session",
+	audit.Record(r.Context(), claims.WorkspaceID, claims.UserID, "auth.logout_everywhere", "session",
 		map[string]any{"revoked": revoked})
 	httpx.JSON(w, http.StatusOK, map[string]any{"status": "logged_out_everywhere", "revoked": revoked})
 }
@@ -655,14 +655,14 @@ func (h *Handlers) HandleMe(w http.ResponseWriter, r *http.Request) {
 	var name, email string
 	var tenantName string
 	_ = h.db.QueryRow(r.Context(), `SELECT name, email FROM registry.users WHERE id = $1`, claims.UserID).Scan(&name, &email)
-	_ = h.db.QueryRow(r.Context(), `SELECT name FROM registry.tenants WHERE id = $1`, claims.TenantID).Scan(&tenantName)
+	_ = h.db.QueryRow(r.Context(), `SELECT name FROM registry.tenants WHERE id = $1`, claims.WorkspaceID).Scan(&tenantName)
 
 	// The effective grant of every role the member holds, so a screen can hide
 	// what the caller may not do. Administrators bypass the check, so their
 	// list stays empty rather than enumerating the whole catalog.
 	granted := make([]string, 0)
 	if !claims.IsAdmin {
-		if permissions, permErr := h.permissions.GetUserPermissions(r.Context(), claims.TenantID, claims.UserID); permErr == nil {
+		if permissions, permErr := h.permissions.GetUserPermissions(r.Context(), claims.WorkspaceID, claims.UserID); permErr == nil {
 			for code := range permissions {
 				granted = append(granted, code)
 			}
@@ -673,7 +673,7 @@ func (h *Handlers) HandleMe(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{
 		"id":          claims.UserID,
-		"tenant_id":   claims.TenantID,
+		"tenant_id":   claims.WorkspaceID,
 		"tenant_name": tenantName,
 		"name":        name,
 		"email":       email,
@@ -681,7 +681,7 @@ func (h *Handlers) HandleMe(w http.ResponseWriter, r *http.Request) {
 		"permissions": granted,
 		// What the platform wants to tell this person right now: a Maintenance
 		// window, or an announcement an operator broadcast.
-		"Notices": h.Notices(r.Context(), claims.TenantID),
+		"Notices": h.Notices(r.Context(), claims.WorkspaceID),
 		// Whether a platform operator is inside this account right now. The
 		// shell draws a banner from it that cannot be dismissed — the person
 		// whose screen this is has a right to know, and so does anybody

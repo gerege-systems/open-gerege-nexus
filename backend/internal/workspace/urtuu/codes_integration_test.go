@@ -269,7 +269,7 @@ func TestRevokingALinkRemovesTheCodesItAnnounced(t *testing.T) {
 		t.Fatal("the code never arrived")
 	}
 
-	if _, err := pool.Exec(nexus.WithTenantID(context.Background(), child.tenantID),
+	if _, err := pool.Exec(nexus.WithWorkspaceID(context.Background(), child.tenantID),
 		`DELETE FROM workspace.urtuu_peers WHERE id = $1`, childPeerID); err != nil {
 		t.Fatalf("remove link: %v", err)
 	}

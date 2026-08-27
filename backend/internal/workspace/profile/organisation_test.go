@@ -88,8 +88,8 @@ func newProfileFixture(t *testing.T) *profileFixture {
 	router := chi.NewRouter()
 	router.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ctx := nexus.WithTenantID(r.Context(), f.tenantID)
-			ctx = auth.WithUserContext(ctx, auth.UserClaims{UserID: f.userID, TenantID: f.tenantID, IsAdmin: true})
+			ctx := nexus.WithWorkspaceID(r.Context(), f.tenantID)
+			ctx = auth.WithUserContext(ctx, auth.UserClaims{UserID: f.userID, WorkspaceID: f.tenantID, IsAdmin: true})
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	})

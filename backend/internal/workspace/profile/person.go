@@ -53,7 +53,7 @@ func (h *Handlers) HandleProfile(w http.ResponseWriter, r *http.Request) {
 	// The organisations this person belongs to. Crosses tenants by definition,
 	// so it runs on the platform path — under the caller's own policies a
 	// membership elsewhere is not visible, and the list would be one long.
-	memberships, err := h.sessions.TenantsForUser(nexus.WithoutTenant(ctx), claims.UserID)
+	memberships, err := h.sessions.TenantsForUser(nexus.WithoutWorkspace(ctx), claims.UserID)
 	if err != nil {
 		slog.Warn("could not list a person's organisations", "error", err)
 		memberships = nil
@@ -76,7 +76,7 @@ func (h *Handlers) HandleProfile(w http.ResponseWriter, r *http.Request) {
 		"email":           email,
 		"created_at":      createdAt,
 		"is_admin":        claims.IsAdmin,
-		"current_tenant":  claims.TenantID,
+		"current_tenant":  claims.WorkspaceID,
 		"organisations":   memberships,
 		"identities":      identities,
 		"active_sessions": activeSessions,

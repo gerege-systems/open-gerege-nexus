@@ -147,7 +147,7 @@ func (g *Guard) Install(cfg *pgxpool.Config) {
 			return true, nil
 		}
 		role, tenantID, allowed := "none", "", ""
-		id, idErr := nexus.TenantID(ctx)
+		id, idErr := nexus.WorkspaceID(ctx)
 		switch {
 		case IsOperator(ctx):
 			// Refused rather than quietly served as the login role: falling
@@ -163,7 +163,7 @@ func (g *Guard) Install(cfg *pgxpool.Config) {
 			role, tenantID = TenantRole, id
 			// Only ever widened by the session, and only past the same
 			// membership check that produced the acting tenant.
-			allowed = allowedLiteral(nexus.AllowedTenants(ctx))
+			allowed = allowedLiteral(nexus.AllowedWorkspaces(ctx))
 		}
 		if _, err := conn.Exec(ctx, bindStatement, role, tenantID, allowed); err != nil {
 			// False destroys the connection rather than handing over one whose

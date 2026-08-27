@@ -128,7 +128,7 @@ func (i *installation) adminCall(t *testing.T, handler http.HandlerFunc, body an
 		}
 	}
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/urtuu/peers", strings.NewReader(string(encoded)))
-	ctx := nexus.WithTenantID(req.Context(), i.tenantID)
+	ctx := nexus.WithWorkspaceID(req.Context(), i.tenantID)
 	if peerID != "" {
 		routeCtx := chi.NewRouteContext()
 		routeCtx.URLParams.Add("id", peerID)
@@ -184,7 +184,7 @@ func handshake(t *testing.T, parent, child *installation) (string, string) {
 func (i *installation) peerStatus(t *testing.T, peerID string) string {
 	t.Helper()
 	var status string
-	err := i.svc.db.QueryRow(nexus.WithTenantID(context.Background(), i.tenantID),
+	err := i.svc.db.QueryRow(nexus.WithWorkspaceID(context.Background(), i.tenantID),
 		`SELECT status FROM workspace.urtuu_peers WHERE id = $1`, peerID).Scan(&status)
 	if err != nil {
 		t.Fatalf("read link: %v", err)
@@ -195,7 +195,7 @@ func (i *installation) peerStatus(t *testing.T, peerID string) string {
 func (i *installation) inboxCount(t *testing.T) int {
 	t.Helper()
 	var count int
-	if err := i.svc.db.QueryRow(nexus.WithTenantID(context.Background(), i.tenantID),
+	if err := i.svc.db.QueryRow(nexus.WithWorkspaceID(context.Background(), i.tenantID),
 		`SELECT count(*) FROM workspace.urtuu_inbox`).Scan(&count); err != nil {
 		t.Fatalf("count inbox: %v", err)
 	}
@@ -205,7 +205,7 @@ func (i *installation) inboxCount(t *testing.T) int {
 func (i *installation) undelivered(t *testing.T) int {
 	t.Helper()
 	var count int
-	if err := i.svc.db.QueryRow(nexus.WithTenantID(context.Background(), i.tenantID),
+	if err := i.svc.db.QueryRow(nexus.WithWorkspaceID(context.Background(), i.tenantID),
 		`SELECT count(*) FROM workspace.urtuu_deliveries WHERE delivered_at IS NULL`).Scan(&count); err != nil {
 		t.Fatalf("count deliveries: %v", err)
 	}
@@ -254,7 +254,7 @@ func TestAnInvitationEstablishesALinkBothSidesAgreeOn(t *testing.T) {
 	// And the keys were actually swapped, which is the only thing that makes a
 	// signature checkable later.
 	var storedKey string
-	if err := pool.QueryRow(nexus.WithTenantID(context.Background(), parent.tenantID),
+	if err := pool.QueryRow(nexus.WithWorkspaceID(context.Background(), parent.tenantID),
 		`SELECT peer_public_key FROM workspace.urtuu_peers WHERE id = $1`, parentPeerID).Scan(&storedKey); err != nil {
 		t.Fatalf("read key: %v", err)
 	}
@@ -362,7 +362,7 @@ func TestWorkTravelsDownAndAnAnswerComesBack(t *testing.T) {
 	}
 
 	var storedID string
-	if err := pool.QueryRow(nexus.WithTenantID(context.Background(), child.tenantID),
+	if err := pool.QueryRow(nexus.WithWorkspaceID(context.Background(), child.tenantID),
 		`SELECT message_id FROM workspace.urtuu_inbox LIMIT 1`).Scan(&storedID); err != nil {
 		t.Fatalf("read inbox: %v", err)
 	}
@@ -404,7 +404,7 @@ func TestAnEditedEnvelopeIsRefusedEvenOverAGoodLink(t *testing.T) {
 		contract.KindTaskAssigned, map[string]string{"code": "D-101"}, parentPeerID); err != nil {
 		t.Fatalf("enqueue: %v", err)
 	}
-	if _, err := pool.Exec(nexus.WithTenantID(context.Background(), parent.tenantID),
+	if _, err := pool.Exec(nexus.WithWorkspaceID(context.Background(), parent.tenantID),
 		`UPDATE workspace.urtuu_outbox SET payload = $1`, `{"code":"D-999"}`); err != nil {
 		t.Fatalf("tamper: %v", err)
 	}
@@ -450,7 +450,7 @@ func TestARevokedLinkStopsAnswering(t *testing.T) {
 	// And the row is still here. "Who were we connected to, and when" outlives
 	// the connection.
 	var revokedAt *time.Time
-	if err := pool.QueryRow(nexus.WithTenantID(context.Background(), parent.tenantID),
+	if err := pool.QueryRow(nexus.WithWorkspaceID(context.Background(), parent.tenantID),
 		`SELECT revoked_at FROM workspace.urtuu_peers WHERE id = $1`, parentPeerID).Scan(&revokedAt); err != nil {
 		t.Fatalf("the revoked link was deleted rather than closed: %v", err)
 	}
@@ -517,7 +517,7 @@ func TestASignedEnvelopeSurvivesTheOutboxToTheNanosecond(t *testing.T) {
 		t.Fatalf("sign: %v", err)
 	}
 
-	ctx := nexus.WithTenantID(context.Background(), parent.tenantID)
+	ctx := nexus.WithWorkspaceID(context.Background(), parent.tenantID)
 	tx, err := pool.Begin(ctx)
 	if err != nil {
 		t.Fatalf("begin: %v", err)

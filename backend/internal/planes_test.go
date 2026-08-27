@@ -26,18 +26,36 @@ import (
 // is to go — TestCountTodaysCrossPlaneImports prints the number Үе C has to
 // bring to zero.
 //
-// Three rules, from docs/TWO_PLANES_PROPOSAL.md §2.3 and §2.8:
+// One rule, from docs/TWO_PLANES_PROPOSAL.md §2.3 and §2.8, and it does not
+// count planes:
 //
-//	internal/workspace   must not import internal/operator
-//	internal/operator must not import internal/workspace
-//	internal/kernel   must import neither; both may import it, and pkg/…
+//	a plane must not import another plane
+//	internal/kernel must import none of them; all may import it, and pkg/…
 //
-// The third is the one that keeps kernel a floor rather than a third plane. A
-// kernel package that imports a plane has picked a side, and everything under
-// it inherits the choice — which is how internal/operator came to mean "the
-// rest of the code" in the first place.
+// The second is what keeps kernel a floor rather than one more plane. A kernel
+// package that imports a plane has picked a side, and everything under it
+// inherits the choice — which is how internal/operator came to mean "the rest
+// of the code" in the first place.
+//
+// Naming the rule this way rather than as a pair of directed statements is what
+// made the third plane cost thirty lines instead of an argument: see `planes`.
 
 const modulePrefix = "github.com/gerege-systems/open-gerege-nexus/backend"
+
+// The planes. Each answers for a different subject, and each runs as its own
+// PostgreSQL role — which is the layer that actually decides what a query may
+// read, and therefore the layer that decides what is a plane:
+//
+//	workspace  gerege_nexus_tenant    one organisation's rows
+//	operator   gerege_nexus_operator  every organisation, named columns only
+//	person     gerege_nexus_person    every organisation, only the rows about me
+//
+// person is in this list before internal/person exists, for the reason the
+// other two were: a rule written after the code is an argument, a rule written
+// before it is a fact. planePackages reports a missing tree rather than failing
+// on it, so every rule below is green today and starts measuring on the day the
+// directory appears — with nobody having to remember to switch it on.
+var planes = []string{"workspace", "operator", "person"}
 
 // crossPlaneExceptions are the imports across the planes that are meant.
 //
@@ -88,7 +106,16 @@ var plannedOperatorPackages = map[string]string{
 	"service_test.go": "operator (asserts the versioned route and its guarded compatibility address)",
 }
 
-// The floor. These own no table and answer to neither plane, which is what
+// The person plane's root, which is empty because the plane is.
+//
+// It is declared now so that the first file put in internal/person has a list
+// to be missing from: TestEveryRootFileHasAPlannedHome names it on the run
+// after it appears, which is the whole mechanism that stopped the last root
+// directory reaching 46 files. A handler does not belong here either — the
+// root composes subpackages and nothing else.
+var plannedPersonPackages = map[string]string{}
+
+// The floor. These own no table and answer to no plane, which is what
 // makes them safe for both to import — and why the third rule below matters
 // more than it looks: internal/kernel/security already imports
 // internal/workspace/auth, and auth is the workspace plane's.
@@ -122,7 +149,46 @@ func TestOperatorDoesNotImportWorkspace(t *testing.T) {
 			"the answer, it asks the database for it.")
 }
 
-// The kernel is a floor, not a third plane.
+// The person plane crosses organisations; a workspace package is inside one.
+//
+// This is the import that would be easiest to justify and worst to have. The
+// person plane needs a session resolved, and workspace/auth already resolves
+// sessions — so the import writes itself. What arrives with it is every query
+// in that package, each one written for somebody acting inside an organisation,
+// now reachable from a request that belongs to somebody who is in none of them.
+//
+// What the person plane actually needs is an answer to one question — who is
+// this token — and a question is a port. It declares the interface; pkg/host,
+// the only place allowed to name more than one plane, passes the implementation
+// in. docs/PERSON_PLANE_PROMPTS.md P0 is where that port is written.
+func TestPersonDoesNotImportAnotherPlane(t *testing.T) {
+	assertNoImportsAcross(t, "person", "workspace",
+		"The person plane answers for one human across every organisation; a workspace "+
+			"package answers for one organisation. Importing the second into the first is "+
+			"how a query written for somebody acting inside an organisation comes to run "+
+			"for somebody who is not in it. What this plane needs from a session is a "+
+			"question — who is this token — and a question is a port, not an import.")
+	assertNoImportsAcross(t, "person", "operator",
+		"A citizen's screen has no business holding the console's statements. The operator "+
+			"plane reads every organisation on a reason and an audit row; the person plane "+
+			"reads its own rows on neither, because it needs neither. An import here would "+
+			"put the first set of queries one typo away from the second.")
+}
+
+// And the other direction, which rots more quietly.
+func TestNoPlaneImportsPerson(t *testing.T) {
+	assertNoImportsAcross(t, "workspace", "person",
+		"An organisation's handler reaching for a person-scoped read is how a statement "+
+			"bound to gerege_nexus_person comes to run inside a request bound to "+
+			"gerege_nexus_tenant. The roles are the boundary; an import that crosses them "+
+			"makes the roles decorative. If the workspace plane needs to know something "+
+			"about a person, it asks the database, the same way the operator plane does.")
+	assertNoImportsAcross(t, "operator", "person",
+		"The console looking at what a citizen sees is impersonation — a reason, a clock "+
+			"and two audit rows — not an import.")
+}
+
+// The kernel is a floor, not one more plane.
 //
 // It is the rule with something already against it: internal/kernel/security
 // imports internal/workspace/auth today, and auth is the workspace plane's. That
@@ -136,12 +202,12 @@ func TestKernelImportsNeitherPlane(t *testing.T) {
 	}
 	for _, pkg := range pkgs {
 		for _, imported := range directImports(t, pkg) {
-			for _, plane := range []string{"workspace", "operator"} {
+			for _, plane := range planes {
 				if !strings.HasPrefix(imported, modulePrefix+"/internal/"+plane+"/") {
 					continue
 				}
 				t.Errorf("%s imports %s.\n"+
-					"kernel is what both planes stand on; a kernel package that imports one "+
+					"kernel is what every plane stands on; a kernel package that imports one "+
 					"of them has picked a side, and every package built on it inherits the "+
 					"choice without being asked. If the plane needs this, it belongs in the "+
 					"plane; if both do, what they share is smaller than this import.",
@@ -159,8 +225,17 @@ func TestKernelImportsNeitherPlane(t *testing.T) {
 // it appears rather than on the day the directory is supposed to be empty.
 func TestEveryRootFileHasAPlannedHome(t *testing.T) {
 	var entries []os.DirEntry
-	for _, plane := range []string{"workspace", "operator"} {
+	for _, plane := range planes {
 		found, err := os.ReadDir(plane)
+		if errors.Is(err, os.ErrNotExist) {
+			// A plane named in the rule before its directory exists. Reporting
+			// it beats failing on it: the alternative is that adding a name to
+			// `planes` breaks a test about files, which teaches the next person
+			// to add the name last — after the code, when the rule is an
+			// argument again.
+			t.Logf("internal/%s does not exist yet; nothing to place", plane)
+			continue
+		}
 		if err != nil {
 			t.Fatalf("read internal/%s: %v", plane, err)
 		}
@@ -170,7 +245,7 @@ func TestEveryRootFileHasAPlannedHome(t *testing.T) {
 	planned := map[string]string{}
 	for _, list := range []map[string]string{
 		plannedWorkspacePackages, plannedOperatorPackages,
-		plannedKernelPackages, plannedSplitOrRemoved,
+		plannedPersonPackages, plannedKernelPackages, plannedSplitOrRemoved,
 	} {
 		for name, home := range list {
 			if other, dup := planned[name]; dup {

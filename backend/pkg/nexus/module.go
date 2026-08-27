@@ -195,7 +195,7 @@ type Module interface {
 	Dependencies() []Dependency
 	Permissions() []PermissionDefinition
 	Menus() []MenuDefinition
-	RegisterRoutes(r chi.Router, tenantAuthMiddleware func(http.Handler) http.Handler)
+	RegisterRoutes(r chi.Router, workspaceAuthMiddleware func(http.Handler) http.Handler)
 }
 
 // AccessPolicy is how a module asks the platform to enforce permissions on its

@@ -63,7 +63,7 @@ type Link interface {
 	//
 	// With no peer ids the message goes to every peer this tenant is linked to
 	// in the sending direction. Naming peers narrows it to those.
-	Enqueue(ctx context.Context, tenantID, kind string, payload any, peerIDs ...string) (string, error)
+	Enqueue(ctx context.Context, workspaceID, kind string, payload any, peerIDs ...string) (string, error)
 
 	// EnqueueTx is Enqueue inside the caller's transaction.
 	//
@@ -72,7 +72,7 @@ type Link interface {
 	// transaction that writes the row produces an announcement of something
 	// that never existed when the transaction rolls back, and there is nothing
 	// downstream that can tell.
-	EnqueueTx(ctx context.Context, tx pgx.Tx, tenantID, kind string, payload any, peerIDs ...string) (string, error)
+	EnqueueTx(ctx context.Context, tx pgx.Tx, workspaceID, kind string, payload any, peerIDs ...string) (string, error)
 
 	// Deliver registers the reader for one kind of arriving message.
 	//
@@ -93,11 +93,11 @@ type LinkReader func(ctx context.Context, message LinkMessage) error
 
 // LinkMessage is one envelope as the receiving module sees it.
 type LinkMessage struct {
-	TenantID  string
-	PeerID    string
-	PeerName  string
-	MessageID string
-	Kind      string
+	WorkspaceID string
+	PeerID      string
+	PeerName    string
+	MessageID   string
+	Kind        string
 	// CreatedAt is the *sender's* clock. Deadlines are measured from it by
 	// design: the receiving installation's clock is not the one the work was
 	// promised against.

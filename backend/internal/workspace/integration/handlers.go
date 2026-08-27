@@ -72,7 +72,7 @@ func integrationError(w http.ResponseWriter, err error) {
 }
 
 func (h *Handler) HandleList(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := nexus.RequireTenant(w, r)
+	tenantID, ok := nexus.RequireWorkspace(w, r)
 	if !ok {
 		return
 	}
@@ -93,7 +93,7 @@ func (h *Handler) HandleProviders(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleRegister(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := nexus.RequireTenant(w, r)
+	tenantID, ok := nexus.RequireWorkspace(w, r)
 	if !ok {
 		return
 	}
@@ -114,7 +114,7 @@ func (h *Handler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleUpdate(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := nexus.RequireTenant(w, r)
+	tenantID, ok := nexus.RequireWorkspace(w, r)
 	if !ok {
 		return
 	}
@@ -135,7 +135,7 @@ func (h *Handler) HandleUpdate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleDelete(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := nexus.RequireTenant(w, r)
+	tenantID, ok := nexus.RequireWorkspace(w, r)
 	if !ok {
 		return
 	}
@@ -151,7 +151,7 @@ func (h *Handler) HandleDelete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleConnect(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := nexus.RequireTenant(w, r)
+	tenantID, ok := nexus.RequireWorkspace(w, r)
 	if !ok {
 		return
 	}
@@ -165,7 +165,7 @@ func (h *Handler) HandleConnect(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleDisconnect(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := nexus.RequireTenant(w, r)
+	tenantID, ok := nexus.RequireWorkspace(w, r)
 	if !ok {
 		return
 	}
@@ -181,7 +181,7 @@ func (h *Handler) HandleDisconnect(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleDeliveries(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := nexus.RequireTenant(w, r)
+	tenantID, ok := nexus.RequireWorkspace(w, r)
 	if !ok {
 		return
 	}

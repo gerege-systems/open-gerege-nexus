@@ -73,11 +73,11 @@ func TestConsentPromptFindsAnotherTenantsClient(t *testing.T) {
 
 	provider := &SSOProvider{store: NewStore(pool), issuer: testIssuer}
 	provider.AttachSessions(&fakeSessions{claims: auth.UserClaims{
-		UserID: userID, TenantID: caller, Email: "consent@example.com",
+		UserID: userID, WorkspaceID: caller, Email: "consent@example.com",
 	}})
 
 	client, err := provider.store.CreateClient(ctx, &Client{
-		TenantID:     owner,
+		WorkspaceID:  owner,
 		ClientID:     "app_cross_" + NewIdentifier(8),
 		ClientName:   "Another Tenant's App",
 		ClientType:   clientTypeConfidential,
@@ -100,7 +100,7 @@ func TestConsentPromptFindsAnotherTenantsClient(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/oauth2/consent?"+q.Encode(), nil)
 	// What the session middleware puts there, and what dbguard binds the
 	// connection to.
-	req = req.WithContext(nexus.WithTenantID(req.Context(), caller))
+	req = req.WithContext(nexus.WithWorkspaceID(req.Context(), caller))
 	req.AddCookie(&http.Cookie{Name: "session_token", Value: "test-session"})
 	rec := httptest.NewRecorder()
 	provider.HandleConsentPrompt(rec, req)

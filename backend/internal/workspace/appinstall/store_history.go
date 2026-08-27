@@ -71,7 +71,7 @@ type historyEntry struct {
 // administrative one: "what changed in the app I use" is a question the people
 // using it ask, and the answer names no one outside their own organisation.
 func (h *Handlers) HandleAppHistory(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := nexus.RequireTenant(w, r)
+	tenantID, ok := nexus.RequireWorkspace(w, r)
 	if !ok {
 		return
 	}
