@@ -22,10 +22,14 @@ package auth_test
 
 import (
 	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/gerege-systems/open-gerege-nexus/backend/internal/kernel/memo"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/auth"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -255,5 +259,74 @@ func TestTheSwitcherSeesTheKindAndSortsTheHomeLast(t *testing.T) {
 	}
 	if len(order) < 2 || order[len(order)-1] != home {
 		t.Errorf("the home is not last in %v", order)
+	}
+}
+
+// Signing in with a password, belonging to no organisation.
+//
+// The regression this exists for: HandleLogin looked the account up with an
+// inner join onto memberships, so somebody with none matched no row and was
+// told "invalid email or password". Everything else about 00085 worked — the
+// eID and federated paths ask FirstTenantFor — and this one path carried its
+// own copy of the question, so it kept the old answer. It was found on
+// production, by signing in as a citizen for the first time.
+//
+// Asserted through the handler rather than through FirstTenantFor, because
+// FirstTenantFor was right the whole time. What was wrong was that nothing
+// called it here.
+func TestSomebodyInNoOrganisationCanSignInWithAPassword(t *testing.T) {
+	pool := openPool(t)
+	ctx := context.Background()
+	suffix := strings.ReplaceAll(uuid.NewString(), "-", "")[:12]
+	email := "passwordonly-" + suffix + "@example.mn"
+
+	hash, err := auth.HashPassword("Password123!")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var userID string
+	if err := pool.QueryRow(ctx,
+		`INSERT INTO registry.users (email, password_hash, name) VALUES ($1,$2,$3) RETURNING id::text`,
+		email, hash, "Иргэн "+suffix).Scan(&userID); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM registry.users WHERE id=$1`, userID) })
+
+	body := `{"email":"` + email + `","password":"Password123!"}`
+	request := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", strings.NewReader(body))
+	request.Header.Set("Origin", "https://nexus.invalid")
+	recorder := httptest.NewRecorder()
+	auth.New(auth.Deps{
+		DB:        pool,
+		Sessions:  auth.NewSessionStore(pool, time.Hour),
+		Suspended: memo.New[bool](auth.SuspendedTTL),
+	}).HandleLogin(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("a citizen with no organisation was refused a password sign-in: %d %s",
+			recorder.Code, recorder.Body.String())
+	}
+
+	var answer struct {
+		User struct {
+			TenantID string `json:"tenant_id"`
+			IsAdmin  bool   `json:"is_admin"`
+		} `json:"user"`
+	}
+	if err := json.Unmarshal(recorder.Body.Bytes(), &answer); err != nil {
+		t.Fatal(err)
+	}
+	var kind string
+	if err := pool.QueryRow(ctx,
+		`SELECT kind FROM registry.tenants WHERE id = $1::uuid`, answer.User.TenantID).Scan(&kind); err != nil {
+		t.Fatalf("the sign-in opened a workspace that is not there: %v", err)
+	}
+	if kind != "personal" {
+		t.Errorf("the sign-in opened a %q workspace, want the person's own home", kind)
+	}
+	// Nobody administers a workspace with one person in it, and saying
+	// otherwise would draw an administrator's rail in a home.
+	if answer.User.IsAdmin {
+		t.Error("a citizen is an administrator of their own home")
 	}
 }
