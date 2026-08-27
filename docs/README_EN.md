@@ -97,7 +97,7 @@ Spanish overlays; missing overlay strings fall back to English. See the
 
 ### 3. National digital infrastructure
 
-- **XYP — State Information Exchange** (`internal/tenant/identity/gerege/xyp.go`): citizen civil
+- **XYP — State Information Exchange** (`internal/workspace/identity/gerege/xyp.go`): citizen civil
   registration (`WS100101`) and legal entity verification (`WS100201`).
 - **National E-ID and DAN** ([`developer.gerege.mn`](https://developer.gerege.mn),
   [`eidmongolia.mn`](https://eidmongolia.mn)) — PKI digital signature, mobile
@@ -105,7 +105,7 @@ Spanish overlays; missing overlay strings fall back to English. See the
 - **Built-in OAuth2 / OIDC provider**
   (`/.well-known/openid-configuration`) issuing client-credentials tokens to
   third-party systems.
-- **Email verification** (`internal/tenant/emailverify`) — one shared flow for proving
+- **Email verification** (`internal/workspace/emailverify`) — one shared flow for proving
   an address, called in process by every app module. The mail is sent by the
   hosted service (`enigma.mn`), so the platform holds no mailbox credential and
   owns no sender address; the verification is recorded when the person comes
@@ -118,9 +118,9 @@ Spanish overlays; missing overlay strings fall back to English. See the
 
 ### 4. AI copilot and analytics
 
-- **AI assistant** (`internal/tenant/ai/copilot.go`) — intent-classified conversation
+- **AI assistant** (`internal/workspace/ai/copilot.go`) — intent-classified conversation
   wired to live tenant data.
-- **Stock forecast endpoint** (`internal/tenant/ai/handlers.go`) — delegates to
+- **Stock forecast endpoint** (`internal/workspace/ai/handlers.go`) — delegates to
   an enabled distribution's `stock_forecast` capability and returns `404` when
   no module provides it.
 

@@ -192,12 +192,12 @@ Repo хоорондын гэрээ болсон гурван зүйл цөмий
 
 | Шинэ нэр (ID) | Хуучин | Юу өөрчлөгдөх вэ |
 | --- | --- | --- |
-| **`organisation`** — Бүртгэл / Directory (`io.gerege.nexus.organisation`) | `apps/core` + `apps/contacts` | "Core" гэдэг нэр нь платформын техникийн цөмтэй андуурагдана. Мөн апп нь хоёр давхаргыг нийлүүлчихсэн: **тенантын хуулийн профайл** (нэр, регистр, лого) нь апп биш tenant plane-ийн шинж чанар тул `internal/tenant/profile`-д үлдэнэ; **хэлтэс/ажилтан** (HR-lite) нь distribution module байна. Кодын аудитаар өөр нэг ч модуль үүнээс хамаардаггүй нь тогтоогдсон тул "устгагдашгүй" статусыг хасч, default-суудаг-гэхдээ-устгаж-болдог болгоно — платформ 0 business апптай асч чаддаг байх нь экосистемийн суурийн шалгуур |
-| **`egov`** — Цахим засгийн холболт (`io.gerege.nexus.egov`) | Шинэ distribution module | ХУР иргэн/хуулийн этгээдийн лавлагаа, eID/ДАН холболтын дэлгэц, баталгаажуулалтын түүх нь "харилцагчийн бүртгэл" биш, Gerege-ийн төрийн дэд бүтцийн нүүр. Доод түвшний клиентүүд `internal/tenant/identity/{gerege,eid,dan}`-д үлдэж, `egov` нь `pkg/nexus` capability-аар тэдний апп-нүүр болно |
+| **`organisation`** — Бүртгэл / Directory (`io.gerege.nexus.organisation`) | `apps/core` + `apps/contacts` | "Core" гэдэг нэр нь платформын техникийн цөмтэй андуурагдана. Мөн апп нь хоёр давхаргыг нийлүүлчихсэн: **тенантын хуулийн профайл** (нэр, регистр, лого) нь апп биш tenant plane-ийн шинж чанар тул `internal/workspace/profile`-д үлдэнэ; **хэлтэс/ажилтан** (HR-lite) нь distribution module байна. Кодын аудитаар өөр нэг ч модуль үүнээс хамаардаггүй нь тогтоогдсон тул "устгагдашгүй" статусыг хасч, default-суудаг-гэхдээ-устгаж-болдог болгоно — платформ 0 business апптай асч чаддаг байх нь экосистемийн суурийн шалгуур |
+| **`egov`** — Цахим засгийн холболт (`io.gerege.nexus.egov`) | Шинэ distribution module | ХУР иргэн/хуулийн этгээдийн лавлагаа, eID/ДАН холболтын дэлгэц, баталгаажуулалтын түүх нь "харилцагчийн бүртгэл" биш, Gerege-ийн төрийн дэд бүтцийн нүүр. Доод түвшний клиентүүд `internal/workspace/identity/{gerege,eid,dan}`-д үлдэж, `egov` нь `pkg/nexus` capability-аар тэдний апп-нүүр болно |
 | ~~**`contacts`**~~ → **commerce distribution руу гарлаа** (2026-08-15) | `apps/contacts` | Эхлээд `organisation`-д нэгдсэн (00059), тэр өдрөө л [business-gerege-nexus](https://github.com/gerege-systems/business-gerege-nexus) руу гарав. Нэгтгэлийн үндэслэл хагасаараа зөв байсан: хэлтэс, ажилтан бол байгууллага бүрд байдаг — платформынх; харилцагч бол худалддаг бизнест байдаг — distribution-ых. `contacts` хүснэгт (00003) болон дэлгэцүүд цөмд байрандаа, модульгүйгээр амьгүй (§2.3). ХУР авто-бөглөлт нь `egov`-ийн үйлчилгээг дууддаг хэвээр |
 | **`sso_clients`** — SSO клиентүүд (`io.gerege.nexus.sso_clients`) → **App Store руу гарлаа (2026-08-25)**, цөм нь `nexus.SSOClientRegistry` рельсээ л үлдээв | `apps/developer_portal` | Энэ модуль үнэндээ платформын OIDC provider-т OAuth2 client бүртгэдэг CRUD (`/api/v1/developer`) — "Developer Portal" гэдэг нэр нь апп сторын жинхэнэ хөгжүүлэгчийн консол (developer.gerege.mn, `publisher_studio`)-той шууд мөргөлдөж төөрөгдүүлнэ. Нэрийг үүргээр нь: SSO/холболтын клиентүүд |
 | **`documents`** — Баримт бичиг (`io.gerege.nexus.documents`) | `apps/documents` + `apps/esign` | **Хоёр апп нэг болов (2026-08-15).** Стор дээр "Цахим баримт ба гарын үсэг", "PDF цахим гарын үсэг" гэсэн хоёр карт байсан нь нэг л асуултад хариулж байв. Гарын үсэг бол хүн дангаар нь авдаг бүтээгдэхүүн биш. `esign` пакет үлдсэн — модуль биш, `documents`-ийн дотоод суваг; эрх `documents.read/sign/manage` болж нэгдэв (миграц 00058). eID signing rail platform-д тул цөмд |
-| **`reports`** — Тайлан | — | Хөдөлгүүр нь `internal/tenant/reporting`-д, апп UI нь distribution-д; module нь `pkg/nexus`-ийн report capability-аар хөдөлгүүрт хүрнэ |
+| **`reports`** — Тайлан | — | Хөдөлгүүр нь `internal/workspace/reporting`-д, апп UI нь distribution-д; module нь `pkg/nexus`-ийн report capability-аар хөдөлгүүрт хүрнэ |
 
 Нэр солилт нь өгөгдлийн миграц гэдгийг анхаар: module ID нь
 `app_installations`, каталог manifest, цэсний түлхүүр, frontend route-д
@@ -210,7 +210,7 @@ route redirect. Энэ зардал нь SDK гарсны **дараа** төл�
 
 | Хэсэг | Тайлбар |
 | --- | --- |
-| `internal/tenant/*`, `internal/platform/*`, `internal/kernel/*` бүхэлдээ | tenant/platform хоёр урсгал, plane-neutral kernel, auth, SSO, RBAC, dbguard, app catalog/install, observability, audit, settings, flags, quota, metering, reporting engine, identity rail, email verification, AI ба integration — платформын суурь |
+| `internal/workspace/*`, `internal/operator/*`, `internal/kernel/*` бүхэлдээ | tenant/platform хоёр урсгал, plane-neutral kernel, auth, SSO, RBAC, dbguard, app catalog/install, observability, audit, settings, flags, quota, metering, reporting engine, identity rail, email verification, AI ба integration — платформын суурь |
 | Frontend shell | login/auth/settings/profile/organisation/apps(store UI)/module framework/cp/impersonate/reports + kiosk бүрхүүл (төхөөрөмжийн туршлага нь платформынх) |
 | `native-apps/*`, `catalog/` schema + tooling, `deploy/` суурь | Бүрхүүл, гэрээ, дэд бүтэц |
 
@@ -236,7 +236,7 @@ distribution-ийг бүгдийг нь суулгасан Түвшин 2-ын �
    — салгасан. Гурван модуль тэнд нүүж, цөмийг `backend v1.1.0` tag-аар авна.
    Салгалт нь гурван зүйлийг шаардсан бөгөөд гурвуулаа одоо бүх distribution-д
    бэлэн: `pkg/nexus` (модулийн гэрээ), `pkg/catalog` (апп сторын гэрээ),
-   `pkg/platform` (нийтийн эхлүүлэгч). Дөрөв дэх нь `cmd/migrate`-ийн
+   `pkg/host` (нийтийн эхлүүлэгч). Дөрөв дэх нь `cmd/migrate`-ийн
    `MIGRATIONS_DIR`/`MIGRATIONS_TABLE` — distribution өөрийн schema-тай бол
    хэрэгтэй;
 2. ~~`gerege-gov`~~ → **[gov-gerege-nexus](https://github.com/gerege-systems/gov-gerege-nexus)**
@@ -443,7 +443,7 @@ distribution залгамжилж, appstore.gerege.mn дээр Nexus платф�
 
 Тест бичихэд тэр даруй хоёр зөрчил гарав, хоёул жинхэнэ:
 
-* `pkg/platform/server.go` нь `egov.Rail`-ыг нэрлэхийн тулд аппыг
+* `pkg/host/server.go` нь `egov.Rail`-ыг нэрлэхийн тулд аппыг
   импортолж байв. Эхлээд дотоод rail contract-аар салгаж, эцэст нь гадаад
   distribution ч хэрэглэх `nexus.StateRail`/`nexus.StateRails` public contract
   болгосон — платформ утгыг бүтээж, module зөвхөн дүрсэлнэ;
@@ -465,7 +465,7 @@ distribution залгамжилж, appstore.gerege.mn дээр Nexus платф�
 
 | Алхам | Ажил | Үр дүн | Байдал |
 | --- | --- | --- | --- |
-| 1 | `pkg/nexus` SDK гаргаж, дотоод модулиудыг түүн рүү шилжүүлэх | Гадны repo модуль бичиж чаддаг болно | ✅ SDK + `pkg/catalog` + `pkg/platform`; арван нэгэн модуль бүгд SDK-аар бүртгэгддэг |
+| 1 | `pkg/nexus` SDK гаргаж, дотоод модулиудыг түүн рүү шилжүүлэх | Гадны repo модуль бичиж чаддаг болно | ✅ SDK + `pkg/catalog` + `pkg/host`; арван нэгэн модуль бүгд SDK-аар бүртгэгддэг |
 | 2 | Semver release журам + эхний `v1.0.0` tag | Dependency болж чадна | ✅ `docs/RELEASING.md`, `backend/v1.0.0`, `v1.1.0` |
 | 3 | Брэндийг runtime тохиргоо болгох + deploy config repo | Түвшин 1 бүрэн ажиллана | 🔶 Брэнд гарлаа (2026-08-15, §2.3): нэр/лого/өнгө `BRAND_*`-аас хүсэлт тутам, орчуулгад `{brand}`. `apiBase()`-тэй хамт образ одоо өөрийн хаяг ч, нэр ч мэдэхгүй. Үлдсэн нь icon багц ба deploy config repo |
 | 4 | Reusable workflows + template repo | Шинэ платформ хагас өдөрт | 🔶 CI бэлэн (`distribution-{ci,security}.yml`); template repo үлдсэн |

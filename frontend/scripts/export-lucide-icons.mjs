@@ -14,7 +14,7 @@
  * Something still has to hold that set, though, or a typo in a Go menu
  * definition becomes a fallback glyph nobody notices. So the set is exported
  * here, from the installed package, and
- * backend/internal/tenant/menu/icons_test.go reads the file. Generated rather
+ * backend/internal/workspace/menu/icons_test.go reads the file. Generated rather
  * than written: an upgrade that renames an icon should move this file, and a
  * diff in it is the honest statement of what a lucide upgrade changed.
  */

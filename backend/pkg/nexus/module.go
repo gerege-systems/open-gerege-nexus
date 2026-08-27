@@ -144,7 +144,7 @@ type MenuDefinition struct {
 	// another app's group — and this is how a module says which of its own two
 	// it means. Before it existed, that answer lived in a table inside the
 	// platform keyed by app id, which no module outside this repository could
-	// add to; internal/tenant/menu/blueprints.go was that table.
+	// add to; internal/workspace/menu/blueprints.go was that table.
 	Group string `json:"-"`
 
 	// AppOrder and AppChrome describe the *app* this entry belongs to rather
@@ -195,7 +195,7 @@ type Module interface {
 	Dependencies() []Dependency
 	Permissions() []PermissionDefinition
 	Menus() []MenuDefinition
-	RegisterRoutes(r chi.Router, tenantAuthMiddleware func(http.Handler) http.Handler)
+	RegisterRoutes(r chi.Router, workspaceAuthMiddleware func(http.Handler) http.Handler)
 }
 
 // AccessPolicy is how a module asks the platform to enforce permissions on its

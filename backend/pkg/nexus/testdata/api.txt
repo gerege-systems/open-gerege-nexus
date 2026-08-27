@@ -1,7 +1,7 @@
   AccessPolicy.MenuPermission() string
   AccessPolicy.RoutePermissionPrefix() string
   AssistantSource.AssistantTools() []AssistantTool
-  AssistantTool.Call func(ctx context.Context, tenantID string, args map[string]any) (map[string]any, error)
+  AssistantTool.Call func(ctx context.Context, workspaceID string, args map[string]any) (map[string]any, error)
   AssistantTool.Description string
   AssistantTool.Name string
   AssistantTool.Parameters map[string]any
@@ -9,7 +9,7 @@
   AuditEntry.At time.Time
   AuditEntry.Details map[string]any
   AuditEntry.UserID string
-  AuditReader.RecentByPrefix(ctx context.Context, tenantID string, prefixes []string, limit int) ([]AuditEntry, error)
+  AuditReader.RecentByPrefix(ctx context.Context, workspaceID string, prefixes []string, limit int) ([]AuditEntry, error)
   CeremonyState.Identity *SignerIdentity
   CeremonyState.State string
   CitizenRecord.Address string
@@ -49,10 +49,10 @@
   DB.QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
   Dependency.ID string
   Dependency.VersionConstraint string
-  Directory.CountAdmins(ctx context.Context, tenantID, exceptMembershipID string) (int, error)
-  Directory.Membership(ctx context.Context, tenantID, membershipID string) (DirectoryMembership, error)
-  Directory.People(ctx context.Context, tenantIDs []string) ([]DirectoryPerson, error)
-  Directory.SetActive(ctx context.Context, tenantID, membershipID string, active bool) (bool, error)
+  Directory.CountAdmins(ctx context.Context, workspaceID, exceptMembershipID string) (int, error)
+  Directory.Membership(ctx context.Context, workspaceID, membershipID string) (DirectoryMembership, error)
+  Directory.People(ctx context.Context, workspaceIDs []string) ([]DirectoryPerson, error)
+  Directory.SetActive(ctx context.Context, workspaceID, membershipID string, active bool) (bool, error)
   DirectoryMembership.IsAdmin bool
   DirectoryMembership.UserID string
   DirectoryPerson.Active bool
@@ -63,13 +63,13 @@
   DirectoryPerson.Name string
   DirectoryPerson.Phone string
   DirectoryPerson.Roles []string
-  DirectoryPerson.TenantID string
-  DirectoryPerson.TenantName string
   DirectoryPerson.UserID string
+  DirectoryPerson.WorkspaceID string
+  DirectoryPerson.WorkspaceName string
   DocumentDraft.Title string
   DocumentDraft.Type string
-  DocumentFiler.Document(ctx context.Context, tenantID, documentID string) (FiledDocument, error)
-  DocumentFiler.File(ctx context.Context, tenantID string, draft DocumentDraft) (FiledDocument, error)
+  DocumentFiler.Document(ctx context.Context, workspaceID, documentID string) (FiledDocument, error)
+  DocumentFiler.File(ctx context.Context, workspaceID string, draft DocumentDraft) (FiledDocument, error)
   DocumentSignatureRequest.DisplayText string
   DocumentSignatureRequest.FileName string
   DocumentSignatureRequest.FullName string
@@ -87,8 +87,8 @@
   FiledDocument.Type string
   Link.Deliver(kind string, reader LinkReader)
   Link.Enabled() bool
-  Link.Enqueue(ctx context.Context, tenantID, kind string, payload any, peerIDs ...string) (string, error)
-  Link.EnqueueTx(ctx context.Context, tx pgx.Tx, tenantID, kind string, payload any, peerIDs ...string) (string, error)
+  Link.Enqueue(ctx context.Context, workspaceID, kind string, payload any, peerIDs ...string) (string, error)
+  Link.EnqueueTx(ctx context.Context, tx pgx.Tx, workspaceID, kind string, payload any, peerIDs ...string) (string, error)
   Link.InstallationID() string
   LinkMessage.CreatedAt time.Time
   LinkMessage.Kind string
@@ -96,14 +96,14 @@
   LinkMessage.Payload []byte
   LinkMessage.PeerID string
   LinkMessage.PeerName string
-  LinkMessage.TenantID string
+  LinkMessage.WorkspaceID string
   Meeting.ExternalID string
   Meeting.IntegrationID string
   Meeting.IntegrationName string
   Meeting.JoinURL string
   Meeting.Provider string
-  MeetingBooker.CreateMeeting(ctx context.Context, tenantID, integrationID, title string, startsAt time.Time, duration time.Duration, reference string) (*Meeting, error)
-  MeetingBooker.FirstMeetingConnector(ctx context.Context, tenantID string) (*MeetingConnector, error)
+  MeetingBooker.CreateMeeting(ctx context.Context, workspaceID, integrationID, title string, startsAt time.Time, duration time.Duration, reference string) (*Meeting, error)
+  MeetingBooker.FirstMeetingConnector(ctx context.Context, workspaceID string) (*MeetingConnector, error)
   MeetingConnector.ID string
   MeetingConnector.Name string
   MeetingConnector.Provider string
@@ -125,7 +125,7 @@
   Module.Menus() []MenuDefinition
   Module.Name() string
   Module.Permissions() []PermissionDefinition
-  Module.RegisterRoutes(r chi.Router, tenantAuthMiddleware func(http.Handler) http.Handler)
+  Module.RegisterRoutes(r chi.Router, workspaceAuthMiddleware func(http.Handler) http.Handler)
   Module.Version() string
   Note.Level string
   Note.Message string
@@ -146,10 +146,10 @@
   Peer.Role string
   Peer.Status string
   Peer.Undelivered int
-  PeerDirectory.CodeOpenOn(ctx context.Context, tenantID, peerID, code string) (bool, error)
-  PeerDirectory.DeliveryLoad(ctx context.Context, tenantID string, from, to time.Time) ([]PeerLoad, error)
-  PeerDirectory.Peers(ctx context.Context, tenantID string) ([]Peer, error)
-  PeerDirectory.RequestCode(ctx context.Context, tenantID, code string) (RequestCode, bool, error)
+  PeerDirectory.CodeOpenOn(ctx context.Context, workspaceID, peerID, code string) (bool, error)
+  PeerDirectory.DeliveryLoad(ctx context.Context, workspaceID string, from, to time.Time) ([]PeerLoad, error)
+  PeerDirectory.Peers(ctx context.Context, workspaceID string) ([]Peer, error)
+  PeerDirectory.RequestCode(ctx context.Context, workspaceID, code string) (RequestCode, bool, error)
   PeerLoad.Delivered int64
   PeerLoad.Envelopes int64
   PeerLoad.PeerID string
@@ -160,7 +160,7 @@
   PermissionDefinition.DefaultRoles []string
   PermissionDefinition.Description string
   PermissionDefinition.Name string
-  PermissionStore.GetUserPermissions(ctx context.Context, tenantID, userID string) (map[string]bool, error)
+  PermissionStore.GetUserPermissions(ctx context.Context, workspaceID, userID string) (map[string]bool, error)
   Platform.DB() DB
   Platform.Permissions() PermissionStore
   Querier.Query(ctx context.Context, sql string, args ...any) (Rows, error)
@@ -179,11 +179,11 @@
   ReportEngine.Available(installed map[string]bool) []ReportDescription
   ReportEngine.Deliverable() bool
   ReportEngine.Describe(key string) (ReportDescription, bool)
-  ReportEngine.Export(ctx context.Context, tenantID, key string, params map[string]string, locale, format string) (*ReportExport, error)
-  ReportEngine.Form(ctx context.Context, tenantID, key, locale string) (*ReportForm, error)
+  ReportEngine.Export(ctx context.Context, workspaceID, key string, params map[string]string, locale, format string) (*ReportExport, error)
+  ReportEngine.Form(ctx context.Context, workspaceID, key, locale string) (*ReportForm, error)
   ReportEngine.NormalizeFormat(raw string) (string, error)
-  ReportEngine.Run(ctx context.Context, tenantID, key string, params map[string]string, locale string) (*ReportRun, error)
-  ReportEngine.RunConsolidated(ctx context.Context, tenantID, key string, params map[string]string, locale, actorUserID string) (*ReportRun, error)
+  ReportEngine.Run(ctx context.Context, workspaceID, key string, params map[string]string, locale string) (*ReportRun, error)
+  ReportEngine.RunConsolidated(ctx context.Context, workspaceID, key string, params map[string]string, locale, actorUserID string) (*ReportRun, error)
   ReportEngine.ValidateCron(expression string) error
   ReportEngine.ValidateSchedule(key string, params map[string]string, locale, cron, format string) error
   ReportExport.Bytes []byte
@@ -201,9 +201,9 @@
   ReportGrant.CreatedBy string
   ReportGrant.Direction string
   ReportGrant.GranteeName string
-  ReportGrant.GranteeTenantID string
+  ReportGrant.GranteeWorkspaceID string
   ReportGrant.GrantorName string
-  ReportGrant.GrantorTenantID string
+  ReportGrant.GrantorWorkspaceID string
   ReportGrant.ID string
   ReportGrant.Note string
   ReportGrant.ReportKey string
@@ -217,13 +217,13 @@
   ReportGrantUse.ReportKey string
   ReportGrantUse.Rows int
   ReportGrantUse.Scope string
-  ReportGrants.Accept(ctx context.Context, grantorTenantID, id, actorUserID string) (reportKey string, err error)
-  ReportGrants.History(ctx context.Context, tenantID string) ([]ReportGrantUse, error)
-  ReportGrants.List(ctx context.Context, tenantID string) ([]ReportGrant, error)
-  ReportGrants.OrganisationByRegistration(ctx context.Context, registration string) (tenantID string, err error)
-  ReportGrants.RegistrationOf(ctx context.Context, tenantID string) (string, error)
+  ReportGrants.Accept(ctx context.Context, grantorWorkspaceID, id, actorUserID string) (reportKey string, err error)
+  ReportGrants.History(ctx context.Context, workspaceID string) ([]ReportGrantUse, error)
+  ReportGrants.List(ctx context.Context, workspaceID string) ([]ReportGrant, error)
+  ReportGrants.OrganisationByRegistration(ctx context.Context, registration string) (workspaceID string, err error)
+  ReportGrants.RegistrationOf(ctx context.Context, workspaceID string) (string, error)
   ReportGrants.Request(ctx context.Context, grant ReportGrant) (string, error)
-  ReportGrants.Revoke(ctx context.Context, tenantID, id string) (reportKey, side string, err error)
+  ReportGrants.Revoke(ctx context.Context, workspaceID, id string) (reportKey, side string, err error)
   ReportRun.Key string
   ReportRun.Result Result
   ReportRun.Title string
@@ -241,10 +241,10 @@
   ReportSchedule.Recipients []string
   ReportSchedule.ReportKey string
   ReportSchedule.Titles map[string]string
-  ReportSchedules.Create(ctx context.Context, tenantID string, schedule ReportSchedule) (string, error)
-  ReportSchedules.Delete(ctx context.Context, tenantID, id string) (reportKey string, err error)
-  ReportSchedules.List(ctx context.Context, tenantID string) ([]ReportSchedule, error)
-  ReportSchedules.Update(ctx context.Context, tenantID, id string, schedule ReportSchedule) (bool, error)
+  ReportSchedules.Create(ctx context.Context, workspaceID string, schedule ReportSchedule) (string, error)
+  ReportSchedules.Delete(ctx context.Context, workspaceID, id string) (reportKey string, err error)
+  ReportSchedules.List(ctx context.Context, workspaceID string) ([]ReportSchedule, error)
+  ReportSchedules.Update(ctx context.Context, workspaceID, id string, schedule ReportSchedule) (bool, error)
   RequestCode.Active bool
   RequestCode.Code string
   RequestCode.Line string
@@ -274,8 +274,8 @@
   SSOClient.Scopes []string
   SSOClient.Secret string
   SSOClient.SecretRotatedAt *time.Time
-  SSOClient.TenantID string
   SSOClient.UpdatedAt time.Time
+  SSOClient.WorkspaceID string
   SSOClientActivity.ActiveAccess int
   SSOClientActivity.ActiveRefresh int
   SSOClientActivity.ClientID string
@@ -285,22 +285,22 @@
   SSOClientActivity.Disabled bool
   SSOClientActivity.LastUsedAt *time.Time
   SSOClientRegistry.AllowedRedirect(raw string) error
-  SSOClientRegistry.ClientActivity(ctx context.Context, tenantID string) ([]SSOClientActivity, error)
-  SSOClientRegistry.Consents(ctx context.Context, tenantID string, limit int) ([]SSOConsent, error)
-  SSOClientRegistry.CreateClient(ctx context.Context, tenantID string, c SSOClient, secret, createdBy string) (SSOClient, error)
-  SSOClientRegistry.DeleteClient(ctx context.Context, tenantID, clientID string) error
-  SSOClientRegistry.GetClient(ctx context.Context, tenantID, clientID string) (SSOClient, error)
+  SSOClientRegistry.ClientActivity(ctx context.Context, workspaceID string) ([]SSOClientActivity, error)
+  SSOClientRegistry.Consents(ctx context.Context, workspaceID string, limit int) ([]SSOConsent, error)
+  SSOClientRegistry.CreateClient(ctx context.Context, workspaceID string, c SSOClient, secret, createdBy string) (SSOClient, error)
+  SSOClientRegistry.DeleteClient(ctx context.Context, workspaceID, clientID string) error
+  SSOClientRegistry.GetClient(ctx context.Context, workspaceID, clientID string) (SSOClient, error)
   SSOClientRegistry.IsSupportedScope(name string) bool
   SSOClientRegistry.Issuer() string
-  SSOClientRegistry.ListClients(ctx context.Context, tenantID string) ([]SSOClient, error)
+  SSOClientRegistry.ListClients(ctx context.Context, workspaceID string) ([]SSOClient, error)
   SSOClientRegistry.NewIdentifier(n int) string
-  SSOClientRegistry.RevokeClientTokens(ctx context.Context, tenantID, clientID string) (int64, error)
-  SSOClientRegistry.RotateClientSecret(ctx context.Context, tenantID, clientID, secret string) error
+  SSOClientRegistry.RevokeClientTokens(ctx context.Context, workspaceID, clientID string) (int64, error)
+  SSOClientRegistry.RotateClientSecret(ctx context.Context, workspaceID, clientID, secret string) error
   SSOClientRegistry.SigningKeys(ctx context.Context) ([]SSOSigningKey, error)
   SSOClientRegistry.SupportedGrantTypes() []string
   SSOClientRegistry.SupportedScopes() []SSOScope
-  SSOClientRegistry.UpdateClient(ctx context.Context, tenantID string, c SSOClient) (SSOClient, error)
-  SSOClientRegistry.WithdrawConsent(ctx context.Context, tenantID, clientID, userID string) error
+  SSOClientRegistry.UpdateClient(ctx context.Context, workspaceID string, c SSOClient) (SSOClient, error)
+  SSOClientRegistry.WithdrawConsent(ctx context.Context, workspaceID, clientID, userID string) error
   SSOConsent.ClientID string
   SSOConsent.ClientName string
   SSOConsent.GrantedAt time.Time
@@ -342,8 +342,8 @@
   SignerIdentity.FirstName string
   SignerIdentity.LastName string
   SignerIdentity.RegNumber string
-  SigningRails.Mount(r chi.Router, tenantAuthMiddleware func(http.Handler) http.Handler)
-  StaffCredential.Verify(ctx context.Context, tenantID, secret string) (StaffIdentity, error)
+  SigningRails.Mount(r chi.Router, workspaceAuthMiddleware func(http.Handler) http.Handler)
+  StaffCredential.Verify(ctx context.Context, workspaceID, secret string) (StaffIdentity, error)
   StaffIdentity.Email string
   StaffIdentity.MembershipID string
   StaffIdentity.Name string
@@ -354,13 +354,13 @@
   StateRail.Name string
   StateRegistry.Citizen(ctx context.Context, regNumber string) (*CitizenRecord, error)
   StateRegistry.Company(ctx context.Context, companyReg string) (*CompanyRecord, error)
-  UserClaims.AllowedTenantIDs []string
+  UserClaims.AllowedWorkspaceIDs []string
   UserClaims.Email string
   UserClaims.Impersonated bool
   UserClaims.ImpersonatedBy string
   UserClaims.IsAdmin bool
-  UserClaims.TenantID string
   UserClaims.UserID string
+  UserClaims.WorkspaceID string
 const ChartCategory
 const ChartNone
 const ChartValue
@@ -399,10 +399,10 @@ func (Params) Time(key string) time.Time
 func (Params) UUID(key string) string
 func (PermissionDefinition) Validate() error
 func (SignatureState) Settled() bool
-func AllowedTenants(ctx context.Context) []string
-func AppsOf(ctx context.Context, tenantID string) (map[string]bool, error)
+func AllowedWorkspaces(ctx context.Context) []string
+func AppsOf(ctx context.Context, workspaceID string) (map[string]bool, error)
 func AssistantToolset() []AssistantTool
-func Audit(ctx context.Context, tenantID, userID, action, resource string, details map[string]any)
+func Audit(ctx context.Context, workspaceID, userID, action, resource string, details map[string]any)
 func AuditHistory() (AuditReader, error)
 func Capability[T any]() (T, error)
 func Collect(rows Rows, scan func() (map[string]any, error)) ([]map[string]any, error)
@@ -423,7 +423,7 @@ func MigrationsOf(moduleID string) (fs.FS, bool)
 func NewParams(values map[string]any, locale string) Params
 func NewPlatform(db DB, permissions PermissionStore) Platform
 func Now() time.Time
-func Peers(ctx context.Context, tenantID string) ([]Peer, error)
+func Peers(ctx context.Context, workspaceID string) ([]Peer, error)
 func People() (Directory, error)
 func ProvideAssistant(moduleID string, source AssistantSource)
 func Provide[T any](impl T)
@@ -434,13 +434,11 @@ func Register(m Module)
 func RegisterReport(report Report)
 func Reports() (ReportEngine, error)
 func RequirePermission(store PermissionStore, permissionCode string) func(http.Handler) http.Handler
-func RequireTenant(w http.ResponseWriter, r *http.Request) (string, bool)
+func RequireWorkspace(w http.ResponseWriter, r *http.Request) (string, bool)
 func Ring() (Link, error)
 func RoutePermissionPrefixOf(m Module) string
 func SigningRailsOf() (SigningRails, error)
 func StateRegistryOf() (StateRegistry, error)
-func TenantID(ctx context.Context) (string, error)
-func TenantOf(ctx context.Context) string
 func TimezoneName() string
 func Today() time.Time
 func UseAuditSink(sink AuditSink)
@@ -449,16 +447,18 @@ func UseLink(l Link)
 func UseReportSink(sink func(Report))
 func UserFromContext(ctx context.Context) (UserClaims, error)
 func VerifyModuleExists(id string) error
-func WithAllowedTenants(ctx context.Context, tenantIDs []string) context.Context
-func WithTenantID(ctx context.Context, tenantID string) context.Context
+func WithAllowedWorkspaces(ctx context.Context, workspaceIDs []string) context.Context
 func WithUser(ctx context.Context, claims UserClaims) context.Context
-func WithoutTenant(ctx context.Context) context.Context
+func WithWorkspaceID(ctx context.Context, workspaceID string) context.Context
+func WithoutWorkspace(ctx context.Context) context.Context
+func WorkspaceID(ctx context.Context) (string, error)
+func WorkspaceOf(ctx context.Context) string
 type AccessPolicy interface
 type AssistantSource interface
 type AssistantTool struct
 type AuditEntry struct
 type AuditReader interface
-type AuditSink func(ctx context.Context, tenantID, userID, action, resource string, details map[string]any)
+type AuditSink func(ctx context.Context, workspaceID, userID, action, resource string, details map[string]any)
 type CeremonyState struct
 type ChartRole string
 type CitizenRecord struct
@@ -477,7 +477,7 @@ type DocumentFiler interface
 type DocumentSignatureRequest struct
 type EIDSigner interface
 type FiledDocument struct
-type InstalledApps func(ctx context.Context, tenantID string) (map[string]bool, error)
+type InstalledApps func(ctx context.Context, workspaceID string) (map[string]bool, error)
 type Link interface
 type LinkMessage struct
 type LinkReader func(ctx context.Context, message LinkMessage) error
@@ -549,6 +549,6 @@ var ErrReportScheduleNotFound
 var ErrSSOClientNotFound
 var ErrSigningUnavailable
 var ErrStaffCredentialRejected
-var ErrTenantMissing
 var ErrUnauthenticated
+var ErrWorkspaceMissing
 var SupportedLocales

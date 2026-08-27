@@ -100,7 +100,7 @@ func TestContextHandlerAddsRequestAndTenant(t *testing.T) {
 		slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelInfo})))
 
 	ctx := context.WithValue(context.Background(), chimiddleware.RequestIDKey, "req-42")
-	ctx = nexus.WithTenantID(ctx, "11111111-1111-1111-1111-111111111111")
+	ctx = nexus.WithWorkspaceID(ctx, "11111111-1111-1111-1111-111111111111")
 
 	logger.InfoContext(ctx, "something happened")
 

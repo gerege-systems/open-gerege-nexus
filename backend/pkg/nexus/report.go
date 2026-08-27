@@ -361,22 +361,22 @@ func NewParams(values map[string]any, locale string) Params {
 	return Params{values: values, locale: locale}
 }
 
-// TenantOf is TenantID for a report, with the error dropped.
+// WorkspaceOf is WorkspaceID for a report, with the error dropped.
 //
 // A report reads; if the context carries no organisation the query it builds
 // filters on the empty string and returns nothing, which is the right answer
 // and the one the platform's own version has always given. The two-value form
 // belongs in a handler, which has somewhere to send a 400.
-func TenantOf(ctx context.Context) string {
-	tenantID, _ := TenantID(ctx)
-	return tenantID
+func WorkspaceOf(ctx context.Context) string {
+	workspaceID, _ := WorkspaceID(ctx)
+	return workspaceID
 }
 
 // The grants a report may opt into, named here so a module can say which of
 // them it supports.
 //
 // ReportScopeFull was declared and its twin was not, which left half the
-// vocabulary inside internal/tenant/reporting: a module could say "full" and
+// vocabulary inside internal/workspace/reporting: a module could say "full" and
 // could not say "counterparty", and could not say "not counterparty" either.
 // Declaring an interface in internal types makes it an internal interface
 // however carefully it was inverted (see meetings.go); declaring half its

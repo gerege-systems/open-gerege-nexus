@@ -54,7 +54,7 @@ var ErrPDFSigningUnavailable = errors.New("nexus: this signing rail cannot sign 
 // # What is deliberately not here
 //
 // PDF signing, downloading the signed artifact and listing the organisations a
-// citizen may sign for. Those belong to internal/tenant/signing, which is a
+// citizen may sign for. Those belong to internal/workspace/signing, which is a
 // platform package and holds the concrete client; publishing them for a single
 // in-repository caller would be a contract carried by every distribution for
 // nobody's benefit.

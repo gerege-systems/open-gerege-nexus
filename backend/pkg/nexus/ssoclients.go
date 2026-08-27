@@ -56,38 +56,38 @@ type SSOClientRegistry interface {
 	// or a secret from its own is generating it from one that nobody has.
 	NewIdentifier(n int) string
 
-	ListClients(ctx context.Context, tenantID string) ([]SSOClient, error)
+	ListClients(ctx context.Context, workspaceID string) ([]SSOClient, error)
 
 	// GetClient answers ErrSSOClientNotFound when this tenant does not own a
 	// client by that id, which is also the answer when somebody else does.
-	GetClient(ctx context.Context, tenantID, clientID string) (SSOClient, error)
+	GetClient(ctx context.Context, workspaceID, clientID string) (SSOClient, error)
 
 	// CreateClient registers a client and returns it. The secret is passed in
 	// plaintext and stored as a digest; a public client is created with an
 	// empty one. What comes back carries the plaintext exactly once — this is
 	// the only call that can, because the database cannot reproduce it.
-	CreateClient(ctx context.Context, tenantID string, c SSOClient, secret, createdBy string) (SSOClient, error)
+	CreateClient(ctx context.Context, workspaceID string, c SSOClient, secret, createdBy string) (SSOClient, error)
 
-	UpdateClient(ctx context.Context, tenantID string, c SSOClient) (SSOClient, error)
-	DeleteClient(ctx context.Context, tenantID, clientID string) error
+	UpdateClient(ctx context.Context, workspaceID string, c SSOClient) (SSOClient, error)
+	DeleteClient(ctx context.Context, workspaceID, clientID string) error
 
 	// RotateClientSecret replaces the digest, invalidating the old secret.
-	RotateClientSecret(ctx context.Context, tenantID, clientID, secret string) error
+	RotateClientSecret(ctx context.Context, workspaceID, clientID, secret string) error
 
 	// ClientActivity is what this tenant's clients are actually doing: live
 	// tokens, standing consents, and when each credential was last exchanged.
-	ClientActivity(ctx context.Context, tenantID string) ([]SSOClientActivity, error)
+	ClientActivity(ctx context.Context, workspaceID string) ([]SSOClientActivity, error)
 
 	// Consents lists the standing grants users have given this tenant's
 	// clients, most recent first, up to limit.
-	Consents(ctx context.Context, tenantID string, limit int) ([]SSOConsent, error)
+	Consents(ctx context.Context, workspaceID string, limit int) ([]SSOConsent, error)
 
 	// RevokeClientTokens invalidates every live token a client holds without
 	// deleting the registration, and reports how many it killed.
-	RevokeClientTokens(ctx context.Context, tenantID, clientID string) (int64, error)
+	RevokeClientTokens(ctx context.Context, workspaceID, clientID string) (int64, error)
 
 	// WithdrawConsent removes one user's standing grant to one client.
-	WithdrawConsent(ctx context.Context, tenantID, clientID, userID string) error
+	WithdrawConsent(ctx context.Context, workspaceID, clientID, userID string) error
 
 	// SigningKeys is the public half of what the JWKS publishes, so an
 	// integrator can see which kid to pin. No private material crosses here,
@@ -116,7 +116,7 @@ type SSOScope struct {
 // marshal the struct.
 type SSOClient struct {
 	ID           string   `json:"id"`
-	TenantID     string   `json:"tenant_id"`
+	WorkspaceID  string   `json:"tenant_id"`
 	ClientID     string   `json:"client_id"`
 	ClientName   string   `json:"client_name"`
 	ClientURI    string   `json:"client_uri,omitempty"`

@@ -4,7 +4,7 @@
  * Distributed under the Apache 2.0 License.
  *
  * Creates the first operator account for the control plane. There is no web
- * registration for the console, on purpose: see internal/platform/operator.
+ * registration for the console, on purpose: see internal/operator/operator.
  */
 
 package main
@@ -20,7 +20,7 @@ import (
 	"time"
 
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/kernel/security"
-	"github.com/gerege-systems/open-gerege-nexus/backend/internal/platform/operator"
+	"github.com/gerege-systems/open-gerege-nexus/backend/internal/operator/operator"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -110,7 +110,7 @@ func main() {
 		"Confirm it later without creating anything:\n"+
 		"  operator-bootstrap -confirm -email %s\n"+
 		"or remove the row and start over:\n"+
-		"  DELETE FROM platform.operator_accounts WHERE lower(email) = lower('%s');",
+		"  DELETE FROM operator.operator_accounts WHERE lower(email) = lower('%s');",
 		account.Email, account.Email)
 }
 

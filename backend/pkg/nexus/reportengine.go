@@ -43,7 +43,7 @@ type ReportEngine interface {
 	// declares — OptionsQuery — and running a report's SQL is the engine's to
 	// do. What comes back never carries it: it is a statement this platform
 	// runs, and a browser has no use for it.
-	Form(ctx context.Context, tenantID, key, locale string) (*ReportForm, error)
+	Form(ctx context.Context, workspaceID, key, locale string) (*ReportForm, error)
 
 	// Run binds the parameters and produces the rows, in one call.
 	//
@@ -51,7 +51,7 @@ type ReportEngine interface {
 	// rejects a parameter a report did not declare, and a caller that could
 	// run without binding would be running a report with whatever the browser
 	// sent.
-	Run(ctx context.Context, tenantID, key string, params map[string]string, locale string) (*ReportRun, error)
+	Run(ctx context.Context, workspaceID, key string, params map[string]string, locale string) (*ReportRun, error)
 
 	// Export runs a report and renders it to a file.
 	//
@@ -59,7 +59,7 @@ type ReportEngine interface {
 	// them — a filename and a content type — because a caller that had to
 	// derive those would be deriving them from a format string the engine
 	// already parsed.
-	Export(ctx context.Context, tenantID, key string, params map[string]string, locale, format string) (*ReportExport, error)
+	Export(ctx context.Context, workspaceID, key string, params map[string]string, locale, format string) (*ReportExport, error)
 
 	// ValidateSchedule refuses a schedule the engine could not later run:
 	// unknown report, parameters it did not declare, a cron it cannot parse,
@@ -78,7 +78,7 @@ type ReportEngine interface {
 	// it is audited on both sides, and a report that was not written to be
 	// shared refuses it. Folding it into Run would make the safe operation and
 	// the dangerous one the same call.
-	RunConsolidated(ctx context.Context, tenantID, key string, params map[string]string, locale, actorUserID string) (*ReportRun, error)
+	RunConsolidated(ctx context.Context, workspaceID, key string, params map[string]string, locale, actorUserID string) (*ReportRun, error)
 
 	// ValidateCron and NormalizeFormat are the two halves of a schedule that
 	// are not about any particular report: whether the expression parses, and

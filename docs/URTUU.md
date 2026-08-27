@@ -23,7 +23,7 @@
 | Давхарга | Байршил | Юу хийдэг |
 | --- | --- | --- |
 | **Гэрээ** | `backend/pkg/urtuu` | Дугтуй, Ed25519 гарын үсэг, даалгаврын статусын машин, хүсэлтийн кодын төрөл. Distribution бүр (gov, commerce…) ижил ойлголттой байхын тулд `pkg`-д |
-| **Тээвэр** | `backend/internal/tenant/urtuu` | Холбоос, гарах/ирэх дараалал, хүргэлтийн retry, идемпотент хүлээн авалт, pull/push цэгүүд. Платформын үйлчилгээ — суулгасан аппаас хамаарахгүй |
+| **Тээвэр** | `backend/internal/workspace/urtuu` | Холбоос, гарах/ирэх дараалал, хүргэлтийн retry, идемпотент хүлээн авалт, pull/push цэгүүд. Платформын үйлчилгээ — суулгасан аппаас хамаарахгүй |
 | **Апп «Өртөө»** | `client-gerege-nexus` distribution (`io.gerege.nexus.urtuu`) | Даалгаврын амьдралын мөчлөг, дэлгэцүүд, самбар, тайлангууд. Цөмд код/хүснэгтээ хадгалахгүй, `pkg/nexus` capability-аар тээвэрт хүрнэ |
 
 **Яагаад тээврийг цөмд оруулсан бэ.** Админы байгуулсан холбоос дээгүүр яваа
@@ -181,7 +181,7 @@ Schema) болон хэдий хугацаанд хийхийг (SLA) өөрөө
 хэлбэрийг санал болгож өгнө. Гарын үсгийн вход нь каталог болон Өртөөгийн
 дугтуйтай яг ижил: `generated_at + '\n' + түүхий байт`. Нэг дүрэм гурван газар.
 
-Хэрэгжилт: [`internal/tenant/urtuu/ring.go`](../backend/internal/tenant/urtuu/ring.go).
+Хэрэгжилт: [`internal/workspace/urtuu/ring.go`](../backend/internal/workspace/urtuu/ring.go).
 
 - **Гарын үсэггүй бүртгэл хэзээ ч хүлээн авагдахгүй.** `RING_PUBLIC_KEY`
   тавигдаагүй бол импорт огт байхгүй.
@@ -417,7 +417,7 @@ Integration тестүүд яг үүнийг нэг процесс дотор х
 
 ```bash
 cd backend
-URTUU_TEST_DATABASE_URL=postgres://... go test ./internal/tenant/urtuu/... ./pkg/urtuu/...
+URTUU_TEST_DATABASE_URL=postgres://... go test ./internal/workspace/urtuu/... ./pkg/urtuu/...
 ```
 
 Өртөө аппын domain/module тест нь `client-gerege-nexus` distribution-ын CI-д

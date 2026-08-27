@@ -56,7 +56,7 @@ type AssistantTool struct {
 	// told. An error is turned into a refusal the model can report, not into a
 	// number: a tool that could not answer must not look like one that
 	// answered zero.
-	Call func(ctx context.Context, tenantID string, args map[string]any) (map[string]any, error)
+	Call func(ctx context.Context, workspaceID string, args map[string]any) (map[string]any, error)
 }
 
 // AssistantSource is a module with something to lend the assistant.

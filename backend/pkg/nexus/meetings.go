@@ -35,7 +35,7 @@ import (
 //
 // There is a second lesson, learned from this very file. Declaring the
 // interface is half the work: the adapter satisfying it was written the same
-// day in internal/tenant/integration, and for the six days after that
+// day in internal/workspace/integration, and for the six days after that
 // AsMeetingBooker had no callers — not because nobody wanted a booking, but
 // because there was no way to ask for one. A contract with no way to reach an
 // implementation is a contract nobody can use. Meetings, below, is that way.
@@ -44,13 +44,13 @@ type MeetingBooker interface {
 	// a meeting, or an error when there is none. "First" rather than "the":
 	// choosing between several is a product question nobody has asked yet, and
 	// a module should not be the place it gets answered by accident.
-	FirstMeetingConnector(ctx context.Context, tenantID string) (*MeetingConnector, error)
+	FirstMeetingConnector(ctx context.Context, workspaceID string) (*MeetingConnector, error)
 
 	// CreateMeeting books a slot and returns somewhere to join it. reference is
 	// the caller's own identifier for the thing being booked — an appointment
 	// row, usually — so the two can be reconciled later without the platform
 	// having to know what a module's records look like.
-	CreateMeeting(ctx context.Context, tenantID, integrationID, title string,
+	CreateMeeting(ctx context.Context, workspaceID, integrationID, title string,
 		startsAt time.Time, duration time.Duration, reference string) (*Meeting, error)
 }
 

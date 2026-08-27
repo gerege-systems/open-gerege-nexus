@@ -43,7 +43,7 @@ var policylessModules = map[string]nexus.Module{}
 // There is one entry's worth of history and no entries. esign was here: the PDF
 // rails of the documents app, registering nothing with nexus, listed rather than
 // deleted because the directory was still under internal/apps and the count
-// below reads directories. It is internal/tenant/signing now — a package that
+// below reads directories. It is internal/workspace/signing now — a package that
 // answers none of nexus.Module's methods does not belong in the tree of things
 // that do — so the classification has nothing to say about it.
 //

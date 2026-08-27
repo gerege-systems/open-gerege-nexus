@@ -88,7 +88,7 @@ func TestTenantPoliciesHaveTheShapeOnRecord(t *testing.T) {
 	rows, err := pool.Query(context.Background(), `
 		SELECT tablename, qual LIKE '%allowed_tenants%'
 		  FROM pg_policies
-		 WHERE schemaname IN ('tenant', 'platform') AND policyname = 'tenant_isolation'`)
+		 WHERE schemaname IN ('workspace', 'registry', 'operator') AND policyname = 'tenant_isolation'`)
 	if err != nil {
 		t.Fatal(err)
 	}

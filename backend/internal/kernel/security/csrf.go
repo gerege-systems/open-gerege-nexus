@@ -32,7 +32,7 @@ import (
 const ControlPlaneSessionCookie = "cp_session"
 
 // TenantSessionCookie is the cookie a person signed into an organisation
-// authenticates with. It moved here from internal/tenant/auth for the reason
+// authenticates with. It moved here from internal/workspace/auth for the reason
 // written above: this is the file that decides which cookies need defending,
 // and it cannot decide that about a cookie it has to import a plane to name.
 // auth keeps the name it always had, pointing here.

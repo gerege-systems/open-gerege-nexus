@@ -30,14 +30,14 @@ import (
 // lookup to it — and must decide for itself whether the organisation in
 // question is entitled to the app at all.
 type StaffCredential interface {
-	// Verify returns who presented secret on a device belonging to tenantID.
+	// Verify returns who presented secret on a device belonging to workspaceID.
 	//
 	// ErrStaffCredentialRejected for a secret that does not match, an
 	// organisation that does not have the app, or a credential that is locked
 	// out. Anything else is a fault and is reported as one — the caller
 	// distinguishes "not you" from "we could not tell", because answering the
 	// second as the first is how a database outage becomes a wrong PIN.
-	Verify(ctx context.Context, tenantID, secret string) (StaffIdentity, error)
+	Verify(ctx context.Context, workspaceID, secret string) (StaffIdentity, error)
 }
 
 // StaffIdentity is who a verified credential belongs to.

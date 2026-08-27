@@ -126,7 +126,7 @@ func (g *Guard) Install(cfg *pgxpool.Config) {
 	//
 	// It sits here rather than beside the pool because this is the one place
 	// every pool in this codebase is configured — production's in
-	// pkg/platform/run.go and every database-backed test's — and a second call
+	// pkg/host/run.go and every database-backed test's — and a second call
 	// somebody has to remember is how a timezone bug comes back. It is a
 	// connection parameter rather than a statement, so it is set once when the
 	// connection is made and costs nothing per query.
@@ -147,7 +147,7 @@ func (g *Guard) Install(cfg *pgxpool.Config) {
 			return true, nil
 		}
 		role, tenantID, allowed := "none", "", ""
-		id, idErr := nexus.TenantID(ctx)
+		id, idErr := nexus.WorkspaceID(ctx)
 		switch {
 		case IsOperator(ctx):
 			// Refused rather than quietly served as the login role: falling
@@ -163,7 +163,7 @@ func (g *Guard) Install(cfg *pgxpool.Config) {
 			role, tenantID = TenantRole, id
 			// Only ever widened by the session, and only past the same
 			// membership check that produced the acting tenant.
-			allowed = allowedLiteral(nexus.AllowedTenants(ctx))
+			allowed = allowedLiteral(nexus.AllowedWorkspaces(ctx))
 		}
 		if _, err := conn.Exec(ctx, bindStatement, role, tenantID, allowed); err != nil {
 			// False destroys the connection rather than handing over one whose
@@ -195,7 +195,7 @@ func (g *Guard) Probe(ctx context.Context, pool *pgxpool.Pool) error {
 	err := pool.QueryRow(ctx, `
 		SELECT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = $1),
 		       EXISTS (SELECT 1 FROM pg_policies
-		                WHERE schemaname = 'tenant' AND policyname = 'tenant_isolation')`,
+		                WHERE schemaname = 'workspace' AND policyname = 'tenant_isolation')`,
 		TenantRole).Scan(&roleExists, &policiesExist)
 	if err != nil {
 		return fmt.Errorf("dbguard: could not inspect the database: %w", err)

@@ -113,7 +113,7 @@ func seedTwoTenants(t *testing.T, pool *pgxpool.Pool) (string, string) {
 	for i, target := range []*string{&first, &second} {
 		slug := "guardtest-" + suffix + "-" + string(rune('a'+i))
 		if err := pool.QueryRow(ctx,
-			`INSERT INTO platform.tenants (name, slug) VALUES ($1,$1) RETURNING id::text`, slug).Scan(target); err != nil {
+			`INSERT INTO registry.tenants (name, slug) VALUES ($1,$1) RETURNING id::text`, slug).Scan(target); err != nil {
 			t.Fatal(err)
 		}
 		if _, err := pool.Exec(ctx,
@@ -125,7 +125,7 @@ func seedTwoTenants(t *testing.T, pool *pgxpool.Pool) (string, string) {
 	}
 	t.Cleanup(func() {
 		// Deleting through the platform path: the sweep is not acting for a tenant.
-		_, _ = pool.Exec(context.Background(), `DELETE FROM platform.tenants WHERE id = ANY($1)`,
+		_, _ = pool.Exec(context.Background(), `DELETE FROM registry.tenants WHERE id = ANY($1)`,
 			[]string{first, second})
 	})
 	return first, second
@@ -140,7 +140,7 @@ func TestQueryWithoutATenantClauseSeesOnlyItsOwnTenant(t *testing.T) {
 	const noFilter = `SELECT count(*) FROM dbguard_probe WHERE name LIKE 'contact-guardtest-%'`
 
 	var visible int
-	ctx := nexus.WithTenantID(context.Background(), first)
+	ctx := nexus.WithWorkspaceID(context.Background(), first)
 	if err := pool.QueryRow(ctx, noFilter).Scan(&visible); err != nil {
 		t.Fatal(err)
 	}
@@ -148,7 +148,7 @@ func TestQueryWithoutATenantClauseSeesOnlyItsOwnTenant(t *testing.T) {
 		t.Errorf("acting for the first tenant, an unfiltered query saw %d rows, want 1", visible)
 	}
 
-	ctx = nexus.WithTenantID(context.Background(), second)
+	ctx = nexus.WithWorkspaceID(context.Background(), second)
 	if err := pool.QueryRow(ctx, noFilter).Scan(&visible); err != nil {
 		t.Fatal(err)
 	}
@@ -171,7 +171,7 @@ func TestWritingIntoAnotherTenantIsRefused(t *testing.T) {
 	pool := openGuardedPool(t)
 	first, second := seedTwoTenants(t, pool)
 
-	ctx := nexus.WithTenantID(context.Background(), first)
+	ctx := nexus.WithWorkspaceID(context.Background(), first)
 	_, err := pool.Exec(ctx,
 		`INSERT INTO dbguard_probe (id, tenant_id, name)
 		 VALUES ($1,$2,'planted')`, uuid.NewString(), second)
@@ -203,25 +203,25 @@ func TestPlatformWideRowsStayReadableAndCannotBeForged(t *testing.T) {
 	key := "guardtest-" + strings.ReplaceAll(uuid.NewString(), "-", "")[:10]
 
 	if _, err := pool.Exec(context.Background(),
-		`INSERT INTO tenant.ai_prompts (tenant_id, prompt_key, content, active) VALUES (NULL,$1,'shared',true)`,
+		`INSERT INTO workspace.ai_prompts (tenant_id, prompt_key, content, active) VALUES (NULL,$1,'shared',true)`,
 		key); err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() {
-		_, _ = pool.Exec(context.Background(), `DELETE FROM tenant.ai_prompts WHERE prompt_key=$1`, key)
+		_, _ = pool.Exec(context.Background(), `DELETE FROM workspace.ai_prompts WHERE prompt_key=$1`, key)
 	})
 
-	ctx := nexus.WithTenantID(context.Background(), first)
+	ctx := nexus.WithWorkspaceID(context.Background(), first)
 	var content string
 	if err := pool.QueryRow(ctx,
-		`SELECT content FROM tenant.ai_prompts WHERE prompt_key=$1 AND tenant_id IS NULL`, key).Scan(&content); err != nil {
+		`SELECT content FROM workspace.ai_prompts WHERE prompt_key=$1 AND tenant_id IS NULL`, key).Scan(&content); err != nil {
 		t.Fatalf("a tenant could not read the shared prompt: %v", err)
 	}
 
 	// Readable, but not writable: a tenant that could create a NULL-tenant row
 	// would be publishing a system prompt to every other tenant.
 	if _, err := pool.Exec(ctx,
-		`INSERT INTO tenant.ai_prompts (tenant_id, prompt_key, content, active) VALUES (NULL,$1,'planted',true)`,
+		`INSERT INTO workspace.ai_prompts (tenant_id, prompt_key, content, active) VALUES (NULL,$1,'planted',true)`,
 		key+"-forged"); err == nil {
 		t.Error("a tenant created a platform-wide prompt")
 	}
@@ -239,7 +239,7 @@ func TestConnectionReuseDoesNotLeakTheBinding(t *testing.T) {
 		if round%2 == 1 {
 			want = second
 		}
-		ctx := nexus.WithTenantID(context.Background(), want)
+		ctx := nexus.WithWorkspaceID(context.Background(), want)
 		var seen string
 		if err := pool.QueryRow(ctx,
 			`SELECT tenant_id::text FROM dbguard_probe WHERE name LIKE 'contact-guardtest-%'`).Scan(&seen); err != nil {
@@ -268,7 +268,7 @@ func TestASessionReadsAcrossItsOrganisationsButWritesIntoOne(t *testing.T) {
 	// different app's table. See probeTable.
 	seed := func(tenantID, code string) {
 		t.Helper()
-		if _, err := pool.Exec(nexus.WithoutTenant(ctx),
+		if _, err := pool.Exec(nexus.WithoutWorkspace(ctx),
 			`INSERT INTO dbguard_probe (tenant_id, name) VALUES ($1, $2)`, tenantID, code); err != nil {
 			t.Fatal(err)
 		}
@@ -277,7 +277,7 @@ func TestASessionReadsAcrossItsOrganisationsButWritesIntoOne(t *testing.T) {
 	seed(there, "there-unit")
 
 	// Acting in one organisation and reading across both.
-	both := nexus.WithAllowedTenants(nexus.WithTenantID(ctx, here), []string{here, there})
+	both := nexus.WithAllowedWorkspaces(nexus.WithWorkspaceID(ctx, here), []string{here, there})
 
 	var seen int
 	if err := pool.QueryRow(both,
@@ -309,7 +309,7 @@ func TestASessionReadsAcrossItsOrganisationsButWritesIntoOne(t *testing.T) {
 	// A session that asked for nothing is unchanged: one organisation, exactly
 	// as before this existed.
 	var alone int
-	if err := pool.QueryRow(nexus.WithTenantID(ctx, here),
+	if err := pool.QueryRow(nexus.WithWorkspaceID(ctx, here),
 		`SELECT count(*) FROM dbguard_probe WHERE name IN ('here-unit', 'there-unit')`).Scan(&alone); err != nil {
 		t.Fatal(err)
 	}

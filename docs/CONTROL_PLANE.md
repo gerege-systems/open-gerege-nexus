@@ -1,6 +1,6 @@
 # Control plane — операторын консол
 
-`cp.nexus.gerege.mn` дээрх платформын урсгалыг босгох, хамгаалах, ажиллуулах
+`cp.nexus.gerege.mn` дээрх операторын урсгалыг босгох, хамгаалах, ажиллуулах
 одоогийн заавар. Шинэчлэгдсэн: 2026-08-24.
 
 [Баримт бичгийн төв](README.md) · [Архитектур](ARCHITECTURE_SPECIFICATION.md) ·
@@ -20,9 +20,9 @@
 | Нэвтрэлт | Нууц үг + баталгаажсан TOTP |
 | Cookie | `cp_session`, тенантын `session_token`-оос тусдаа |
 | Session | Дээд тал нь 8 цаг, 30 минут idle, мэдрэмтгий үйлдэлд step-up |
-| Account | `platform.operator_accounts`; `platform.users` биш |
+| Account | `operator.operator_accounts`; `registry.users` биш |
 | DB role | `gerege_nexus_operator` |
-| Audit | `platform.operator_audit`, append-only; write бүртэй нэг transaction |
+| Audit | `operator.operator_audit`, append-only; write бүртэй нэг transaction |
 
 Нэг Go бинарь tenant ба platform plane-ийг зэрэг үйлчилдэг ч origin, identity,
 cookie, DB role, audit нь тусдаа. Энэ хилийг нэгтгэж болохгүй. Оператор
@@ -40,7 +40,7 @@ cookie, DB role, audit нь тусдаа. Энэ хилийг нэгтгэж б�
    Платформ **нээлттэй (public)** горимд байхад энэ шалгалт огт хийгдэхгүй:
    хэн ч бүртгүүлж болдог суулгац операторуудаа хаанаас нэвтрэхийг нь
    зааж чадахгүй. Шийдвэрийг платформ өөрөө, хүсэлт бүр дээр гаргана
-   (`backend/internal/platform/operator/address.go`) — тохиргоог нь харж
+   (`backend/internal/operator/operator/address.go`) — тохиргоог нь харж
    чаддаггүй nginx биш.
 
    nginx-ийн `cp-allowlist.conf` нь хэвээр байгаа бөгөөд хүсвэл ирмэг дээр
@@ -167,7 +167,7 @@ Host != CONTROL_PLANE_HOST
 | `auditor` | Зөвхөн унших |
 
 Үүргүүд шаталсан hierarchy биш. Capability mapping нь
-`backend/internal/platform/operator` package-д төвлөрнө; handler бүр role name
+`backend/internal/operator/operator` package-д төвлөрнө; handler бүр role name
 дахин тайлбарлах ёсгүй. Устгалын хүсэлтийг үүсгэсэн superadmin өөрөө
 зөвшөөрөхгүй.
 
@@ -242,7 +242,7 @@ control-plane-ийн өөрчлөлтөд хамгийн багадаа:
 
 ```bash
 cd backend
-go test ./internal/platform/... ./internal/kernel/security/... ./pkg/platform/...
+go test ./internal/operator/... ./internal/kernel/security/... ./pkg/host/...
 
 cd ../frontend
 npm run test

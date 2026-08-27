@@ -301,7 +301,7 @@ export const coreApi = {
 
   // permissions carries the effective grant of every role the member holds; it
   // is empty for administrators, who bypass the check.
-  getMe: () => request<{ id: string; tenant_id: string; tenant_name: string; name: string; email: string; is_admin: boolean; permissions?: string[]; impersonated?: boolean; notices?: Array<{ kind: string; title: string; body: string }> }>("/auth/me"),
+  getMe: () => request<{ id: string; tenant_id: string; tenant_name: string; workspace_kind?: string; name: string; email: string; is_admin: boolean; permissions?: string[]; impersonated?: boolean; notices?: Array<{ kind: string; title: string; body: string }> }>("/auth/me"),
 
   // The organisations the signed-in person may act for. A membership in one is
   // the common case, so callers should expect a list of one rather than treat
@@ -309,7 +309,7 @@ export const coreApi = {
   getTenants: () =>
     request<{
       current: string;
-      tenants: Array<{ id: string; name: string; slug: string }>;
+      tenants: Array<{ id: string; name: string; slug: string; kind?: string }>;
       // Which of them this session is reading across. Always contains current.
       active: string[];
     }>("/auth/tenants"),

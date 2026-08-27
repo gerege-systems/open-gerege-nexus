@@ -23,7 +23,7 @@ func storeWith(list ...Flag) *Store {
 }
 
 func ctxFor(tenantID string) context.Context {
-	return nexus.WithTenantID(context.Background(), tenantID)
+	return nexus.WithWorkspaceID(context.Background(), tenantID)
 }
 
 // A flag nobody declared is off. The alternative — unknown means on — would

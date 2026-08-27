@@ -5,7 +5,7 @@
  *
  * The boundary at usage_events, from both sides.
  *
- * The platform writes the daily rows (internal/platform/metering) and a tenant
+ * The platform writes the daily rows (internal/operator/metering) and a tenant
  * reads its own month to check a limit against — one of the five tables
  * ownership_test.go marks as the meeting point of the two planes. The names and
  * the read live here because both planes need them and neither owns the other:
@@ -54,7 +54,7 @@ const (
 func MonthToDate(ctx context.Context, db *pgxpool.Pool, tenantID, metric string) (int64, error) {
 	var total int64
 	if err := db.QueryRow(ctx,
-		`SELECT COALESCE(sum(value), 0) FROM platform.usage_events
+		`SELECT COALESCE(sum(value), 0) FROM registry.usage_events
 		  WHERE tenant_id = $1::uuid AND metric = $2
 		    AND day >= date_trunc('month', CURRENT_DATE)`,
 		tenantID, metric).Scan(&total); err != nil {

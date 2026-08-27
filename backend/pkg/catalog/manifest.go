@@ -16,7 +16,7 @@
 // What is here is the schema and its validation. Anything that knows where a
 // catalogue lives on a particular deployment — the bundled file, the disk
 // cache, the signed fetch from a registry — is that deployment's business and
-// stays in internal/platform/appcatalog.
+// stays in internal/operator/appcatalog.
 package catalog
 
 import (

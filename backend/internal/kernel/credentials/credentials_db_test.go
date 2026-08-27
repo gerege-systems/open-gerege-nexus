@@ -62,7 +62,7 @@ func TestAStoredCredentialIsSealedAndResolves(t *testing.T) {
 	var ciphertext []byte
 	var storedHint string
 	if err := tx.QueryRow(ctx,
-		`SELECT ciphertext, hint FROM platform.platform_credentials WHERE name = $1`,
+		`SELECT ciphertext, hint FROM operator.platform_credentials WHERE name = $1`,
 		GeminiAPIKey).Scan(&ciphertext, &storedHint); err != nil {
 		t.Fatalf("read the row: %v", err)
 	}

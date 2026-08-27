@@ -24,7 +24,7 @@ const (
 	// GeminiAPIKey is what the copilot, the voice features and the translation
 	// helper authenticate with.
 	// #nosec G101 -- the name of a credential, not one: the value is sealed in
-	// platform.platform_credentials or read from GEMINI_API_KEY.
+	// operator.platform_credentials or read from GEMINI_API_KEY.
 	GeminiAPIKey = "ai.gemini_api_key"
 	// CoreAPIToken is what the first-run wizard and the organisation screen
 	// search the Gerege Core register with.

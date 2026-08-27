@@ -72,18 +72,18 @@ func Error(w http.ResponseWriter, status int, message string) {
 type contextKey string
 
 const (
-	tenantIDKey contextKey = "tenant_id"
+	workspaceIDKey contextKey = "tenant_id"
 	// allowedKey carries every organisation the caller's session is active in.
 	//
-	// tenantIDKey stays the one they are acting in — the organisation a new row
+	// workspaceIDKey stays the one they are acting in — the organisation a new row
 	// is written into. This is the wider set they may read across, and it is
 	// empty for almost every session.
 	allowedKey     contextKey = "allowed_tenant_ids"
 	userContextKey contextKey = "authenticated_user"
 )
 
-// ErrTenantMissing is returned when a context carries no acting organisation.
-var ErrTenantMissing = errors.New("tenant context is missing")
+// ErrWorkspaceMissing is returned when a context carries no acting organisation.
+var ErrWorkspaceMissing = errors.New("tenant context is missing")
 
 // ErrUnauthenticated is returned when a context carries no caller.
 var ErrUnauthenticated = errors.New("unauthenticated")
@@ -94,18 +94,18 @@ var ErrUnauthenticated = errors.New("unauthenticated")
 // middleware from a session row, and a claim a handler could invent is not a
 // claim.
 type UserClaims struct {
-	UserID   string `json:"user_id"`
-	TenantID string `json:"tenant_id"`
-	Email    string `json:"email"`
-	IsAdmin  bool   `json:"is_admin"`
-	// AllowedTenantIDs is every organisation this session reads across, and
-	// TenantID is always among them. Empty means only TenantID, which is what
+	UserID      string `json:"user_id"`
+	WorkspaceID string `json:"tenant_id"`
+	Email       string `json:"email"`
+	IsAdmin     bool   `json:"is_admin"`
+	// AllowedWorkspaceIDs is every organisation this session reads across, and
+	// WorkspaceID is always among them. Empty means only WorkspaceID, which is what
 	// every session is until somebody asks for more.
 	//
 	// IsAdmin is deliberately not widened with it: being an administrator is a
 	// role held in one organisation, and holding it in the parent says nothing
 	// about the subsidiary.
-	AllowedTenantIDs []string `json:"allowed_tenant_ids,omitempty"`
+	AllowedWorkspaceIDs []string `json:"allowed_tenant_ids,omitempty"`
 	// Impersonated says this session belongs to a platform operator acting as
 	// this person rather than to the person themselves.
 	//
@@ -123,34 +123,34 @@ type UserClaims struct {
 	ImpersonatedBy string `json:"-"`
 }
 
-// WithTenantID injects the acting organisation into a context.
+// WithWorkspaceID injects the acting organisation into a context.
 //
 // Exported because the platform sets it and because a test needs to; a module
 // calling this in a handler is a module deciding which organisation it is
 // acting for, which is the one thing tenant isolation is.
-func WithTenantID(ctx context.Context, tenantID string) context.Context {
-	return context.WithValue(ctx, tenantIDKey, tenantID)
+func WithWorkspaceID(ctx context.Context, workspaceID string) context.Context {
+	return context.WithValue(ctx, workspaceIDKey, workspaceID)
 }
 
-// WithAllowedTenants records the organisations this request may read across.
+// WithAllowedWorkspaces records the organisations this request may read across.
 //
 // The caller is expected to have taken the list from the session row, which is
 // the only place it is written and only after the same membership check that
 // decides the acting tenant. Never build it from something a request said.
-func WithAllowedTenants(ctx context.Context, tenantIDs []string) context.Context {
-	if len(tenantIDs) == 0 {
+func WithAllowedWorkspaces(ctx context.Context, workspaceIDs []string) context.Context {
+	if len(workspaceIDs) == 0 {
 		return ctx
 	}
-	return context.WithValue(ctx, allowedKey, tenantIDs)
+	return context.WithValue(ctx, allowedKey, workspaceIDs)
 }
 
-// AllowedTenants returns the organisations this request may read across, which
+// AllowedWorkspaces returns the organisations this request may read across, which
 // is always at least the one it is acting in.
 //
 // Handlers that mean "this organisation" should keep using RequireTenant. This
 // is for the few lists that are deliberately a group view.
-func AllowedTenants(ctx context.Context) []string {
-	current, _ := ctx.Value(tenantIDKey).(string)
+func AllowedWorkspaces(ctx context.Context) []string {
+	current, _ := ctx.Value(workspaceIDKey).(string)
 	set, _ := ctx.Value(allowedKey).([]string)
 	if len(set) == 0 {
 		if current == "" {
@@ -161,44 +161,44 @@ func AllowedTenants(ctx context.Context) []string {
 	return set
 }
 
-// WithoutTenant strips the tenant from a context, putting the caller back on
+// WithoutWorkspace strips the tenant from a context, putting the caller back on
 // the platform path — outside the row-level policies.
 //
 // It is for the handful of questions that are genuinely about a person rather
 // than about a tenant. Reach for it only where crossing organisations is the
 // point, and never with an id that arrived from a request without a membership
 // check behind it.
-func WithoutTenant(ctx context.Context) context.Context {
+func WithoutWorkspace(ctx context.Context) context.Context {
 	ctx = context.WithValue(ctx, allowedKey, []string(nil))
-	return context.WithValue(ctx, tenantIDKey, "")
+	return context.WithValue(ctx, workspaceIDKey, "")
 }
 
-// TenantID extracts the acting organisation from a context.
+// WorkspaceID extracts the acting organisation from a context.
 //
 // Handlers should reach for RequireTenant instead. This is for callers that
 // have a context but no ResponseWriter to answer on.
-func TenantID(ctx context.Context) (string, error) {
-	tenantID, ok := ctx.Value(tenantIDKey).(string)
-	if !ok || tenantID == "" {
-		return "", ErrTenantMissing
+func WorkspaceID(ctx context.Context) (string, error) {
+	workspaceID, ok := ctx.Value(workspaceIDKey).(string)
+	if !ok || workspaceID == "" {
+		return "", ErrWorkspaceMissing
 	}
-	return tenantID, nil
+	return workspaceID, nil
 }
 
-// RequireTenant resolves the caller's organisation, or answers 401 and reports
+// RequireWorkspace resolves the caller's organisation, or answers 401 and reports
 // false. A handler that gets false has already had its response written and
 // must return.
 //
 // This is not middleware, and there is deliberately none: what guards a request
 // is the session middleware, the only thing that puts a tenant into the
 // context, and the app gate, which refuses the request when this fails.
-func RequireTenant(w http.ResponseWriter, r *http.Request) (string, bool) {
-	tenantID, err := TenantID(r.Context())
+func RequireWorkspace(w http.ResponseWriter, r *http.Request) (string, bool) {
+	workspaceID, err := WorkspaceID(r.Context())
 	if err != nil {
 		Error(w, http.StatusUnauthorized, "unauthorized")
 		return "", false
 	}
-	return tenantID, true
+	return workspaceID, true
 }
 
 // WithUser injects the caller's claims into a context. The platform's session
@@ -262,7 +262,7 @@ var ErrForbidden = errors.New("forbidden: insufficient permissions")
 // The implementation is the platform's — it reads roles, caches per tenant and
 // is invalidated across replicas. A module holds one and asks it.
 type PermissionStore interface {
-	GetUserPermissions(ctx context.Context, tenantID, userID string) (map[string]bool, error)
+	GetUserPermissions(ctx context.Context, workspaceID, userID string) (map[string]bool, error)
 }
 
 // RequirePermission is middleware that refuses a request the caller has no
@@ -284,7 +284,7 @@ func RequirePermission(store PermissionStore, permissionCode string) func(http.H
 				next.ServeHTTP(w, r)
 				return
 			}
-			permissions, err := store.GetUserPermissions(r.Context(), claims.TenantID, claims.UserID)
+			permissions, err := store.GetUserPermissions(r.Context(), claims.WorkspaceID, claims.UserID)
 			if err != nil || !permissions[permissionCode] {
 				Error(w, http.StatusForbidden, "forbidden: permission "+permissionCode+" required")
 				return
@@ -298,7 +298,7 @@ func RequirePermission(store PermissionStore, permissionCode string) func(http.H
 
 // AuditSink is where recorded events go. The platform installs one at startup;
 // see UseAuditSink.
-type AuditSink func(ctx context.Context, tenantID, userID, action, resource string, details map[string]any)
+type AuditSink func(ctx context.Context, workspaceID, userID, action, resource string, details map[string]any)
 
 // UseAuditSink installs the platform's audit recorder.
 //
@@ -319,14 +319,14 @@ func UseAuditSink(sink AuditSink) { Provide[AuditSink](sink) }
 // Best-effort by design: an audit write must not fail the operation it is
 // describing. With no sink installed the event is logged and dropped, which is
 // what happens in a test that constructs a module without a platform.
-func Audit(ctx context.Context, tenantID, userID, action, resource string, details map[string]any) {
+func Audit(ctx context.Context, workspaceID, userID, action, resource string, details map[string]any) {
 	sink, err := Capability[AuditSink]()
 	if err != nil {
-		slog.Info("AUDIT_EVENT_UNSUNK", "tenant_id", tenantID, "user_id", userID,
+		slog.Info("AUDIT_EVENT_UNSUNK", "tenant_id", workspaceID, "user_id", userID,
 			"action", action, "resource", resource)
 		return
 	}
-	sink(ctx, tenantID, userID, action, resource, details)
+	sink(ctx, workspaceID, userID, action, resource, details)
 }
 
 // -------------------------------------------------------------------- wiring
@@ -375,7 +375,7 @@ func (p staticPlatform) Permissions() PermissionStore { return p.permissions }
 //
 // Published here because a module has to be able to say what it is connected
 // to. internal/apps/egov — the app-facing surface of the state integrations —
-// imported internal/platform/staterail for this type and nothing else, and that
+// imported internal/operator/staterail for this type and nothing else, and that
 // package is eight lines of struct: a module was pinned into this repository by
 // a type declaration it could have carried itself.
 //
@@ -493,14 +493,14 @@ func RecordSigned(rail string, ok bool) {
 // name and therefore cannot ask for. That is the same mistake the PDF signing
 // rails made and it surfaced the same way: an app that had left this repository
 // could not fetch the capability the platform was providing.
-type InstalledApps func(ctx context.Context, tenantID string) (map[string]bool, error)
+type InstalledApps func(ctx context.Context, workspaceID string) (map[string]bool, error)
 
 // AppsOf returns which apps an organisation has, from whatever the platform
 // provides.
-func AppsOf(ctx context.Context, tenantID string) (map[string]bool, error) {
+func AppsOf(ctx context.Context, workspaceID string) (map[string]bool, error) {
 	installed, err := Capability[InstalledApps]()
 	if err != nil {
 		return nil, err
 	}
-	return installed(ctx, tenantID)
+	return installed(ctx, workspaceID)
 }

@@ -29,7 +29,7 @@ import { ICONS } from "./icons.generated";
  *
  * The fallback is a real icon rather than nothing: "we did not recognise this
  * name" should look like something, not like a gap. It is also not the whole
- * safety net — backend/internal/platform/menu/icons_test.go fails the build when
+ * safety net — backend/internal/workspace/menu/icons_test.go fails the build when
  * Go names an icon lucide does not have, and CI regenerates this map and fails
  * on a diff.
  */

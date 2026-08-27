@@ -37,18 +37,18 @@ type PeerDirectory interface {
 	//
 	// Revoked links are not returned: a revoked link carries nothing and a
 	// screen that listed it would be offering somebody a peer to send to.
-	Peers(ctx context.Context, tenantID string) ([]Peer, error)
+	Peers(ctx context.Context, workspaceID string) ([]Peer, error)
 
 	// RequestCode returns what a code means to this installation, and false if
 	// this installation has never been told.
-	RequestCode(ctx context.Context, tenantID, code string) (RequestCode, bool, error)
+	RequestCode(ctx context.Context, workspaceID, code string) (RequestCode, bool, error)
 
 	// CodeOpenOn reports whether a code has been announced on one link.
 	//
 	// A parent that has not opened a code on a link must not send work under
 	// it: the other end would receive a task naming a code nobody told it
 	// about, and announcing the vocabulary is what stops it having to guess.
-	CodeOpenOn(ctx context.Context, tenantID, peerID, code string) (bool, error)
+	CodeOpenOn(ctx context.Context, workspaceID, peerID, code string) (bool, error)
 
 	// DeliveryLoad is what actually went over each link in a period.
 	//
@@ -56,7 +56,7 @@ type PeerDirectory interface {
 	// reading urtuu_deliveries, and a count of envelopes is the one question
 	// about the channel that a report can ask and Peers cannot answer: Peers
 	// says what is stuck now, this says what moved between two dates.
-	DeliveryLoad(ctx context.Context, tenantID string, from, to time.Time) ([]PeerLoad, error)
+	DeliveryLoad(ctx context.Context, workspaceID string, from, to time.Time) ([]PeerLoad, error)
 }
 
 // PeerLoad is one link's traffic over a period.
@@ -117,10 +117,10 @@ type RequestCode struct {
 }
 
 // Peers returns this organisation's links from whatever the platform provides.
-func Peers(ctx context.Context, tenantID string) ([]Peer, error) {
+func Peers(ctx context.Context, workspaceID string) ([]Peer, error) {
 	directory, err := Capability[PeerDirectory]()
 	if err != nil {
 		return nil, err
 	}
-	return directory.Peers(ctx, tenantID)
+	return directory.Peers(ctx, workspaceID)
 }

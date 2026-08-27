@@ -43,6 +43,40 @@ distribution байх үед энэ найдвар л тэднийг fork хий
 
 ### Эвдэх шаардлагатай бол
 
+### Хийгдсэн эвдрэл — дараагийн tag нь **v2.0.0**
+
+2026-08-27-нд `pkg/nexus`-ийн `tenant` гэдэг үг бүхэлдээ `workspace` болов.
+`api.txt`-ийн 554 мөрөөс **65 нь дахин бичигдсэн**, нэг ч тэмдэглэгээ
+нэмэгдээгүй, хасагдаагүй. Шалтгаан нь ADR 0006: `tenant` бол байршлын үг
+бөгөөд хувийн муж («гэр») орж ирэх мөчид эцэслэн худал болно.
+
+| Хуучин | Шинэ |
+| --- | --- |
+| `nexus.TenantID(ctx)` | `nexus.WorkspaceID(ctx)` |
+| `nexus.TenantOf(ctx)` | `nexus.WorkspaceOf(ctx)` |
+| `nexus.RequireTenant` | `nexus.RequireWorkspace` |
+| `nexus.WithTenantID` | `nexus.WithWorkspaceID` |
+| `nexus.WithoutTenant` | `nexus.WithoutWorkspace` |
+| `nexus.AllowedTenants` / `WithAllowedTenants` | `nexus.AllowedWorkspaces` / `WithAllowedWorkspaces` |
+| `nexus.ErrTenantMissing` | `nexus.ErrWorkspaceMissing` |
+| `UserClaims.TenantID` / `.AllowedTenantIDs` | `.WorkspaceID` / `.AllowedWorkspaceIDs` |
+| `DirectoryPerson.TenantID` / `.TenantName` | `.WorkspaceID` / `.WorkspaceName` |
+| `SSOClient.TenantID`, `LinkMessage.TenantID` | `.WorkspaceID` |
+| `ReportGrant.GrantorTenantID` / `.GranteeTenantID` | `.GrantorWorkspaceID` / `.GranteeWorkspaceID` |
+
+**Deprecated alias үлдээгээгүй.** Доорх дүрэм нэг major цикл хүлээхийг
+шаарддаг ч энд хүлээх зүйл байхгүй: `Use*` функцүүд нь **нэмэлт** зам байсан
+бөгөөд хуучин нь ажилласаар байж чадна, харин нэр солих нь нэг л нэрийг хоёр
+удаа зарлахыг шаардана. Тиймээс энэ нь v2.0.0-ийн ажил бөгөөд дараагийн tag
+major байна. Дээрх deprecation жагсаалт мөн тэр өдрийн ажил — хоёулаа нэг
+tag дээр гарна.
+
+**Wire format өөрчлөгдөөгүй.** JSON тэмдэглэгээ `tenant_id`, `tenant_name`,
+`allowed_tenant_ids`, `grantor_tenant_id`, `grantee_tenant_id` хэвээр. Go
+дахь нэр домэйний үг, HTTP дахь нэр нийцтэй байдлаар хөлдсөн — frontend,
+native клиент, гадны SSO клиент бүр хуучин талбарыг хардаг. Хоёр гэрээ
+тусдаа, тусдаа хувилбартай.
+
 ### Одоо хүлээгдэж буй deprecation-ууд
 
 | Юу | Оронд нь | Хэзээ устах |
@@ -79,8 +113,7 @@ staticcheck-ийн SA1019 нь яг энэ бичиглэлийг л таньд�
 | --- | --- | --- |
 | `TestTheExportedAPIIsTheOneOnRecord` | Экспортолсон гадаргуугийн **аливаа** өөрчлөлт | `backend/pkg/nexus/testdata/api.txt` |
 | `TestTheSDKDoesNotDependOnInternal` | `pkg/nexus` `internal/` рүү хүрэх | Импортын графыг мөшгинө |
-| `Downstream / Canary distribution` | Бодит бүтээгдэхүүн энэ коммит дээр компиллогдож, тестээ дааж байгаа эсэх | `business-gerege-nexus`-ыг clone хийж `replace`-ээр энэ коммит руу заана |
-| `Downstream / Minimal distribution` | Хамгийн шинэ гадаргуунууд — `Provide`, `Capability`, `Migrations`, `ProvideAssistant`, `DefaultRoles` | `backend/testdata/canary` |
+| `Downstream / Minimal distribution` | SDK-г distribution шиг ашиглах — `Provide`, `Capability`, `Migrations`, `ProvideAssistant`, `DefaultRoles`, мөн handler-ийн `RequireWorkspace`/`UserFromContext`/`WorkspaceOf` | `backend/testdata/canary` |
 
 ### Golden файл юуг барьдаггүй вэ
 
@@ -102,11 +135,29 @@ staticcheck-ийн SA1019 нь яг энэ бичиглэлийг л таньд�
 
 Downstream ажил нь тэр хоёр баганын ялгааны төлөө байгаа.
 
-Хоёр canary байгаа шалтгаан: `business-gerege-nexus` бол бодит бүтээгдэхүүн
-боловч `Provide`, `Capability`, `Migrations`, `ProvideAssistant` үүсэхээс өмнө
-бичигдсэн тул тэдгээрт хүрдэггүй. Яг тэдгээр нь чимээгүй эвдрэх магадлал
-хамгийн өндөртэй гадаргуунууд — репогийн гаднаас **одоохондоо хэн ч** тэдэн
-рүү компайл хийдэггүй.
+### Гуравдагч репог CI-д татдаг байсныг больсон
+
+2026-08-27 хүртэл гурав дахь ажил байсан: `business-gerege-nexus`-ыг clone
+хийж, `replace`-ээр тухайн коммит руу заагаад build хийдэг байв. Бодит
+эвдрэлийг барьдаг байсан ч **хамаарлын чиглэл нь урвуу**: платформ өөрийн
+эзэмшдэггүй репог шинэчилж push хийх хүртэл merge хийж чаддаггүй болно.
+
+Тэр өдөр яг тийм зүйл болов. `pkg/nexus`-ийн `tenant*` нэрс `workspace*`
+болов — §1-д хүснэгттэйгээ бичигдсэн, **зориудаар** хийсэн major өөрчлөлт —
+ажил түүнийг унал гэж мэдээлэв. Тогтсон downstream-ыг компайл хийдэг ажилд
+«энэ эвдрэл нь зорилго мөн» гэж хэлэх арга байхгүй.
+
+Санамсаргүй ба зориудын эвдрэлийг ялгаж чаддаггүй хаалтыг хүмүүс дайруулж
+merge хийж сурдаг, тэгээд зөв байх өдрөө үнэгүй болно. Тиймээс стандартыг
+биш **хамрах хүрээг** нүүлгэв: `backend/testdata/canary` одоо тэр clone
+барьж байсан хүсэлтийн гадаргууг мөн шалгана, бөгөөд өөрчлөлт хийж буй хүн
+нэг PR дотроо түүнийг засна — унасан ажлын мессеж өөрөө үүнийг шаарддаг
+байсан.
+
+**Юу алдагдсан бэ:** өөр хүний дөрвөн модуль энд компайл болохоо больсон тул
+зөвхөн тэдний хэлбэрээр илэрдэг зан төлөвийн өөрчлөлт нь тэднийг шинэчлэх
+өдөр гарч ирнэ. Түүний хариулт нь **хувилбарын дугаар** — major нь «release
+note-оо унш» гэсэн үг — болохоос тэдний build биднийг зогсоох нь биш.
 
 Эхнийх нь хөлдөөлт биш: API өөрчлөх нь зөв байх нь олонтоо. Гагцхүү
 **санамсаргүй** байж болохгүй. Зориудаар өөрчилсөн бол:

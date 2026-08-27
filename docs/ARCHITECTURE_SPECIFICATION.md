@@ -20,15 +20,15 @@ Gerege Nexus нь Go + Next.js + PostgreSQL дээрх **модульт моно
 `cmd/api` бинарь, нэг image, нэг deploy дотор хоёр бие даасан хүсэлтийн урсгал
 ажиллана:
 
-| | Тенантын урсгал | Платформын урсгал |
+| | Тенантын урсгал | Операторын урсгал |
 | --- | --- | --- |
 | Хариуцах зүйл | Нэг байгууллага доторх хэрэглэгчийн ажил | Бүх deployment-ийг оператор удирдах |
 | Origin | `nexus.gerege.mn` | `cp.nexus.gerege.mn` |
 | API | `/api/v1/*` | `/api/platform/v1/*` |
 | Session cookie | `session_token` | `cp_session` |
-| Бүртгэл | `platform.users` + `tenant.memberships` | `platform.operator_accounts` |
+| Бүртгэл | `registry.users` + `tenant.memberships` | `operator.operator_accounts` |
 | DB role | `gerege_nexus_tenant` | `gerege_nexus_operator` |
-| Go package | `internal/tenant/*` | `internal/platform/*` |
+| Go package | `internal/workspace/*` | `internal/operator/*` |
 
 Операторын бүртгэл нь хэрэглэгчийн бүртгэл биш. Нэг хүн хоёр урсгалд зэрэг
 нэвтэрч болох ч тусдаа identity, cookie, эрх, audit ашиглана. Оператор тенантын
@@ -36,16 +36,16 @@ Gerege Nexus нь Go + Next.js + PostgreSQL дээрх **модульт моно
 ашиглана.
 
 ```text
-tenant origin ─┐                         ┌─ internal/tenant/* ─ tenant schema
-               ├─ pkg/platform/server.go ┤
-control origin ┘   shared middleware     └─ internal/platform/* ─ platform schema
+tenant origin ─┐                         ┌─ internal/workspace/* ─ workspace schema
+               ├─ pkg/host/server.go ┤
+control origin ┘   shared middleware     └─ internal/operator/* ─ operator + registry
                           │
                     internal/kernel/*
                           │
                       PostgreSQL
 ```
 
-`backend/pkg/platform/server.go` нь хоёр урсгалын composition root: дундын
+`backend/pkg/host/server.go` нь хоёр урсгалын composition root: дундын
 store, middleware, router-ийг босгож хоёр route table-ийг зэрэг mount хийнэ.
 Хоёр урсгал хоорондоо import хийхгүй; `internal/planes_test.go` үүнийг
 компиляцын граф дээр шалгана.
@@ -55,22 +55,22 @@ store, middleware, router-ийг босгож хоёр route table-ийг зэр
 | Байршил | Хариуцлага |
 | --- | --- |
 | `backend/internal/kernel` | Аль ч урсгалыг import хийдэггүй cache, config, security, telemetry, settings, flags зэрэг суурь primitive |
-| `backend/internal/tenant` | Auth, access, directory, devices, identity, integrations, profile, SSO, app install зэрэг нэг тенантын ажиллагаа |
-| `backend/internal/platform` | Operator session, tenants, approvals, settings, flags, audit, support, metering, backup, catalog, observability |
+| `backend/internal/workspace` | Auth, access, directory, devices, identity, integrations, profile, SSO, app install зэрэг нэг тенантын ажиллагаа |
+| `backend/internal/operator` | Operator session, tenants, approvals, settings, flags, audit, support, metering, backup, catalog, observability |
 | `backend/internal/apps` | Distribution модулийн угсрах цэг. 2026-08-25-нд SSO Clients App Store руу явсны дараа **хоосон** — апп бүр `pkg/nexus`-ээр бүртгэгдэж каталогоор ирнэ |
-| `backend/pkg/platform` | Хоёр урсгалыг нэг HTTP процесст угсрах public host package |
+| `backend/pkg/host` | Хоёр урсгалыг нэг HTTP процесст угсрах public host package |
 | `backend/pkg/nexus` | Гадаад module/distribution-д зориулсан тогтвортой SDK contract |
 
 Plane-ийн үндсэн package нь зөвхөн дэд package-уудаа угсарна. Handler, store,
 бизнес логик шинэчлэгдэхдээ зохих домэйн дэд package-д орно. Одоогийн
-`internal/tenant/service.go` нь дараагийн задралын ажил хэвээр; энэ нь хоёр
+`internal/workspace/service.go` нь дараагийн задралын ажил хэвээр; энэ нь хоёр
 урсгалын import/schema хилийг сулруулах зөвшөөрөл биш.
 
 ## 3. Хүсэлтийн урсгал
 
 ### 3.1 Дундын давхарга
 
-Хоёр урсгал `pkg/platform/server.go` дээр request ID, tracing, structured log,
+Хоёр урсгал `pkg/host/server.go` дээр request ID, tracing, structured log,
 panic recovery, load shedding, metrics, security headers, CORS, CSRF
 middleware-ийг хуваалцана. `/health`, `/ready`, `/metrics` нь аль нэг plane-д
 харьяалагдахгүй process endpoint.
@@ -83,13 +83,13 @@ middleware-ийг хуваалцана. `/health`, `/ready`, `/metrics` нь а�
 4. PostgreSQL RLS ба `tenant_id` тухайн байгууллагын мөрөөр хязгаарлана.
 5. Module route бол `tenant.app_installations` ба kill switch-ийг шалгана.
 
-### 3.3 Платформын хүсэлт
+### 3.3 Операторын хүсэлт
 
 1. `HostGate` зөвхөн `CONTROL_PLANE_HOST` origin-ыг нэвтрүүлнэ.
 2. `cp_session`-ийг шалгаж, нууц үг + TOTP, богино idle timeout болон
    шаардлагатай үед step-up хэрэглэнэ.
 3. Query бүр `gerege_nexus_operator` role-оор ажиллана.
-4. Бичих үйлдэл ба `platform.operator_audit` мөр нэг transaction-д commit
+4. Бичих үйлдэл ба `operator.operator_audit` мөр нэг transaction-д commit
    хийнэ; audit бичигдээгүй write амжилт болохгүй.
 
 Production-д nginx-ийн CIDR allowlist нь HostGate-ээс өмнө ажиллана. Тиймээс
@@ -99,23 +99,32 @@ origin, session, DB role, audit нь тус тусдаа хамгаалалты�
 
 Миграц `00079_two_schemas.sql` хүснэгтүүдийг `platform` ба `tenant` schema-д
 салгаж, `00080_search_path_has_no_public.sql` runtime замаас `public`-ийг
-хассан.
+хассан. `00083_registry_and_operator.sql` нь `platform`-ийг хоёр болгож хуваасан;
+`00084_workspace_schema.sql` нь `tenant`-ийг `workspace` болгосон.
 
 | Schema | Эзэмшдэг өгөгдөл |
 | --- | --- |
-| `platform` | tenants, users, apps, operator account/session/audit, approvals, settings, flags, announcements, quota, usage, backup metadata |
-| `tenant` | memberships, roles, sessions, app installations, profile/directory/device/integration/SSO/audit өгөгдөл |
+| `registry` | tenants, users, identity, apps, permissions, quota, flags, announcements, usage, тохиргооны одоогийн утга |
+| `operator` | operator account/session/audit, approvals, backup metadata, тохиргооны өөрчлөлтийн түүх, битүүмжилсэн credential |
+| `workspace` | memberships, roles, sessions, app installations, profile/directory/device/integration/SSO/audit өгөгдөл |
 | `public` | goose migration ledger болон зориуд үлдээсэн `SECURITY DEFINER` function |
 
-Одоогийн migration inventory нь 27 platform, 40 tenant хүснэгттэй. Энэ тоо
-дангаараа contract биш; `backend/db/migrations/ownership_test.go`-д нэр бүрийн
-эзэмшлийг зарласан бөгөөд `schema_split_test.go` бодит DB-тэй тулгана.
+Одоогийн migration inventory нь 20 registry, 7 operator, 40 workspace хүснэгттэй.
+Энэ тоо дангаараа contract биш; `backend/db/migrations/ownership_test.go`-д нэр
+бүрийн эзэмшлийг зарласан бөгөөд `schema_split_test.go` бодит DB-тэй тулгана.
 
-Тенант role-д `platform` schema-ийн `USAGE` хэрэгтэй: announcements, feature
-flag overrides, operator impersonations, tenant quotas, usage events гэсэн
-таван boundary хүснэгтийг нэрээр нь уншина. Иймээс бодит хил нь schema USAGE
-биш, **хүснэгтийн түвшний grant**. `platform` schema-д шинээр үүсэх хүснэгт
-тенант role-д анхдагчаар хаалттайг DB integration test батална.
+Хоёр урсгал хоёр schema биш, гурав байгаагийн шалтгаан нь хилийн хүснэгтүүд.
+Тенант role-д announcements, feature flag overrides, operator impersonations,
+tenant quotas, usage events гэсэн таван хүснэгтийг нэрээр нь унших хэрэгтэй тул
+тэдгээрийг агуулсан schema-гийн `USAGE`-ийг түүнээс авч чадахгүй. 00083 хүртэл
+тэр schema нь бүх 27 хүснэгтийг агуулсан `platform` байсан бөгөөд хил нь зөвхөн
+**хүснэгтийн түвшний grant** дээр тогтдог байв.
+
+Одоо таван хилийн хүснэгт `registry`-д, тенантын урсгал хэзээ ч хүрдэггүй долоо
+нь `operator`-т байна. Тенант role `operator` дээр `USAGE` **огт аваагүй** тул
+`operator.operator_audit` түүний хувьд нэр ч биш. Хамгаалалт хоёр давхар:
+schema нь нэрийг нуух, хүснэгтийн grant нь мөрийг нээх. `registry`-д шинээр
+үүсэх хүснэгт тенант role-д анхдагчаар хаалттайг DB integration test батална.
 
 Бүх DDL `backend/db/migrations/` дахь goose migration-аар орно. Runtime DDL
 хоригтой; distribution module өөрийн migration-ийг `pkg/nexus` contract-аар
@@ -125,7 +134,7 @@ flag overrides, operator impersonations, tenant quotas, usage events гэсэн
 
 Core нь business app-ийн хүснэгт, handler-ийг эзэмшихгүй. Distribution нь
 module code, manifest, migration-аа нийлүүлж, Nexus SDK contract-аар бүртгэнэ.
-Платформ каталогийг татаж `platform.apps` metadata-г синк хийнэ; тенантын
+Операторын урсгал каталогийг татаж `registry.apps` metadata-г синк хийнэ; тенантын
 суулгалт, хувилбар, төлөв `tenant.app_installations`-д хадгалагдана.
 
 AI stock forecast endpoint ч built-in inventory table ашиглахгүй. Идэвхтэй
@@ -151,7 +160,7 @@ distribution `stock_forecast` capability нийлүүлсэн үед delegation 
 | SQL хүснэгтээ schema-аар тодорхой заана | `backend/db/migrations/qualification_test.go` |
 | Тенант role зөвхөн таван boundary хүснэгт уншина | `schema_split_test.go` |
 | Шинэ platform хүснэгт анхдагчаар хаалттай | `TestNewPlatformTableIsClosedToTenantRole` |
-| API route санамсаргүй өөрчлөгдөхгүй | `backend/pkg/platform/testdata/routes.txt` |
+| API route санамсаргүй өөрчлөгдөхгүй | `backend/pkg/host/testdata/routes.txt` |
 | Origin ба `/cp` host routing | `frontend/tests/control-plane-host.test.mjs`, `frontend/scripts/check-control-plane-host.mjs`, `frontend/scripts/smoke-control-plane-host.mjs` |
 
 Шийдвэрийн үндэслэлийг [хоёр урсгалын санал](TWO_PLANES_PROPOSAL.md),

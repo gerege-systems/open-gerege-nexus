@@ -5,7 +5,7 @@ eID батламжаар** гарын үсэг зуруулдаг. Энэ бич
 хэсгүүдийг — яагаад тийм болсныг — тайлбарлана.
 
 2026-08-23-аас documents module, domain, migration нь `client-gerege-nexus`
-distribution-д байрлана. Энэ цөмд `internal/tenant/signing` rail болон
+distribution-д байрлана. Энэ цөмд `internal/workspace/signing` rail болон
 `pkg/nexus`-ийн `Signer`, `SigningRails`, `DocumentFiler` contract үлдсэн.
 
 ---

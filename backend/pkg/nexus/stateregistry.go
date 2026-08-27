@@ -74,14 +74,14 @@ type AuditEntry struct {
 //
 // Audit has been writable from a module since the SDK existed and readable from
 // one never, which left an app that shows "what have we looked up" reaching
-// into tenant.audit_events with its own SQL — a cross-repository dependency on a
+// into workspace.audit_events with its own SQL — a cross-repository dependency on a
 // platform table, invisible to any compiler. This is the read half.
 //
 // Scoped by action prefix rather than by app id: an app that was renamed still
 // has to find the acts it recorded under its old name, and the tenant's own
 // rows are the only ones any caller can see regardless.
 type AuditReader interface {
-	RecentByPrefix(ctx context.Context, tenantID string, prefixes []string, limit int) ([]AuditEntry, error)
+	RecentByPrefix(ctx context.Context, workspaceID string, prefixes []string, limit int) ([]AuditEntry, error)
 }
 
 // AuditHistory returns the audit reader, or an error naming the contract.

@@ -178,7 +178,7 @@ func reportPanic(ctx context.Context, r *http.Request, recovered any) {
 	}
 	// The tenant, as the "user". It is what turns a list of events into "this
 	// affected four organisations" without naming a person.
-	if tenantID, err := nexus.TenantID(ctx); err == nil {
+	if tenantID, err := nexus.WorkspaceID(ctx); err == nil {
 		hub.Scope().SetUser(sentry.User{ID: tenantID})
 		hub.Scope().SetTag("tenant_id", tenantID)
 	}

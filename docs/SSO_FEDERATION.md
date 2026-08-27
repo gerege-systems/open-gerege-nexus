@@ -1,12 +1,12 @@
 # SSO холбоос: нэг суулгац нөгөөгөө таниулах
 
 Gerege Nexus эхнээсээ **identity provider** байсан: OAuth2 authorization server
-бөгөөд OpenID Connect provider (`backend/internal/tenant/ssoprovider`).
+бөгөөд OpenID Connect provider (`backend/internal/workspace/ssoprovider`).
 Түүн дээр бүртгэлтэй апп, гадаад систем нь энэ платформоор дамжуулан хүнийг
 танидаг.
 
 Одоо нөгөө хагас нь бий: суулгац **өөрөө өөр провайдерийн клиент** байж болно
-(`backend/internal/tenant/ssoclient`). Хоёр хагас нь бие биеэсээ хамааралгүй.
+(`backend/internal/workspace/ssoclient`). Хоёр хагас нь бие биеэсээ хамааралгүй.
 Нэг суулгац дараах гурван байдлын аль нэгээр ажиллана:
 
 | Тохиргоо | Юу болох вэ |

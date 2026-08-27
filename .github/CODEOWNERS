@@ -57,18 +57,17 @@
 # across a network, and the entry point a distribution's main.go calls.
 /backend/pkg/catalog/ @erdenebatt
 /backend/pkg/urtuu/ @erdenebatt
-/backend/pkg/platform/ @erdenebatt
+/backend/pkg/host/ @erdenebatt
 
-# The route table (37 commits) and the bootstrap that builds every module
-# (its signature went from 4 parameters to 9 in eleven days). Both are where an
-# app's need for one more line becomes the platform's permanent surface.
-/backend/internal/platform/server.go @erdenebatt
+# The bootstrap that builds every module (its signature went from 4 parameters
+# to 9 in eleven days): where an app's need for one more line becomes the
+# platform's permanent surface. The route table is /backend/pkg/host/ above.
 /backend/internal/apps/runtime.go @erdenebatt
 
 # What a tenant gets when it installs an app: which permissions exist and which
 # system roles they reach by default (12 commits). A line here changes who can
 # do what, in every deployment, and no test failure looks like it.
-/backend/internal/platform/appinstaller/ @erdenebatt
+/backend/internal/workspace/appinstall/ @erdenebatt
 
 # The platform's schema. 104 tables, and the row-level policies that are the
 # whole of tenant isolation. An app's table added here is an app's table the

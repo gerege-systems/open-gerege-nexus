@@ -154,7 +154,7 @@ grant байвал аль нь үйлчлэхийг шийдэх дүрэм ба
 
 ## 6. Тестүүд
 
-`backend/internal/tenant/reporting/grants_integration_test.go` — бодит
+`backend/internal/workspace/reporting/grants_integration_test.go` — бодит
 өгөгдлийн сан шаардлагатай (`DATABASE_URL`), эс бөгөөс алгасана.
 
 | Тест | Юуг батлав |
