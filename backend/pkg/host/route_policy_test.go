@@ -127,25 +127,23 @@ var publicRoutes = []string{
 	// The distribution needs this guard of its own. It has public routes and
 	// nothing there is checking them.
 
-	// Two landings reached by people who are not signed in and may hold no
-	// account here at all. In both cases a single-use reference in the query is
-	// the whole authority — see handleIntegrationOAuthCallback and
-	// handleVerifyLanded.
-	"/api/v1/integrations/oauth/callback",
+	// A landing reached by somebody who is not signed in and may hold no
+	// account here at all: a single-use reference in the query is the whole
+	// authority — see handleVerifyLanded.
+	//
+	// /api/v1/integrations/oauth/callback was the other one. It left with the
+	// connectors (client-gerege-nexus, modules/integrations), and the name left
+	// with it: a name on this list is a permission, and the distribution that
+	// serves that route needs this guard of its own.
 	"/api/v1/verify/landed",
 
-	// The Өртөө channel. All three are reached by another Gerege Nexus
-	// installation rather than by a person, so a session is not something the
-	// caller could hold. Each carries its own authority: the redemption is
-	// authorised by a single-use invitation code (24 hours, hashed, cleared on
-	// use), and the two exchange endpoints by the link's bearer token — on top
-	// of which every envelope that crosses them is verified against the public
-	// key the two installations swapped when the link was made.
-	"/api/v1/urtuu/peers/redeem",
-	"/api/v1/urtuu/exchange/pull",
-	"/api/v1/urtuu/exchange/push",
-	// The installation's own public key, read before any link exists.
-	"/.well-known/urtuu.json",
+	// The Өртөө channel's four public routes were here — the redemption, the
+	// two exchange endpoints and the installation's own public key. They left
+	// with the channel (client-gerege-nexus, modules/urtuu/channel), and the
+	// names left with them for the reason the App Store's did above: a name on
+	// this list is a permission, and one left behind blesses whatever the next
+	// change happens to mount under it. That distribution needs this guard of
+	// its own.
 }
 
 // isPublic reports whether a chi pattern is on the list.

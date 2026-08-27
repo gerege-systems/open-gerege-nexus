@@ -65,7 +65,7 @@ var (
 // Providing a nil interface withdraws the capability rather than storing an
 // empty one, so Capability keeps answering with an error instead of handing
 // back something that panics on first use. Tests rely on this to undo a
-// Provide: see the t.Cleanup calls in internal/apps/urtuu.
+// Provide — see the t.Cleanup calls in internal/workspace/extra_modules_test.go.
 func Provide[T any](impl T) {
 	key := reflect.TypeFor[T]()
 	boxed := any(impl)

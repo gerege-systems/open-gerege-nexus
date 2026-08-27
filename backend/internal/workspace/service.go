@@ -53,13 +53,11 @@ import (
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/identity/eid"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/identity/eidmongolia"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/identity/gerege"
-	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/integration"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/profile"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/reporting"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/signing"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/ssoclient"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/ssoprovider"
-	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/urtuu"
 	"github.com/gerege-systems/open-gerege-nexus/backend/pkg/nexus"
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -99,12 +97,10 @@ type Service struct {
 	// googleLogin is a button on this platform's own sign-in screen rather than
 	// a replacement for it — see google_login_handlers.go for why the two are
 	// separate despite sharing every line of protocol.
-	googleLogin        *ssoclient.Client
-	geregeSvc          *gerege.GeregeService
-	integrationMgr     *integration.Manager
-	integrationHandler *integration.Handler
-	aiSvc              *ai.Service
-	staffPIN           *staffpin.Service
+	googleLogin *ssoclient.Client
+	geregeSvc   *gerege.GeregeService
+	aiSvc       *ai.Service
+	staffPIN    *staffpin.Service
 	// identity is who somebody is, as told by somebody else: the national eID,
 	// ДАН, Google and whichever provider this deployment federates with.
 	identity *identity.Handlers
@@ -119,12 +115,7 @@ type Service struct {
 	profile *profile.Handlers
 	// devices is the terminals an organisation enrols, and the sign-in a till
 	// offers whoever is standing at it.
-	devices *devices.Handlers
-	// urtuuLink is the Өртөө channel: the links to other installations and the
-	// queues in both directions. A platform service rather than part of the
-	// Өртөө app, because the channel is infrastructure any module may reach for
-	// and the task board is a product a tenant chooses to install.
-	urtuuLink   *urtuu.Service
+	devices     *devices.Handlers
 	permissions *access.SQLPermissionStore
 	appGate     *memo.Cache[bool]
 	// settings and featureFlags are the two things the console can change
@@ -184,15 +175,6 @@ func New(deps Deps) (*Service, error) {
 	// Instantiate compile-time Go modules once. Each constructor registers the
 	// module in the global app registry; calling them twice (here and again in
 	// registerAppModuleRoutes) built two instances per app.
-	// The integration manager is built before the modules that use it: esign
-	// files finished documents through it and gov_services books meetings
-	// through it, so it is a dependency of both rather than a peer.
-	integrationMgr := integration.NewManager(db)
-	// The booking contract, published rather than handed to one module. It was
-	// declared with an adapter and no way to get one; a module that books an
-	// appointment now asks nexus.Meetings() for it. See pkg/nexus/meetings.go.
-	nexus.Provide[nexus.MeetingBooker](integration.AsMeetingBooker(integrationMgr))
-
 	eidMN, err := eidmongolia.New(db)
 	if err != nil {
 		return nil, fmt.Errorf("eID Mongolia service: %w", err)
@@ -211,24 +193,6 @@ func New(deps Deps) (*Service, error) {
 	geregeSvc, eidSvc, danSvc := gerege.NewGeregeService(), eid.NewEIDService(), dan.NewDANService()
 
 	permissions := access.NewSQLPermissionStore(db)
-	// The Өртөө channel, built before the modules because the Өртөө app is
-	// handed it: the app registers the readers for the task envelopes, and a
-	// reader registered after the exchange loop had started would have let a
-	// round of arrivals sit unread.
-	//
-	// Switched off — with a log line — on every deployment that has not been
-	// given a signing key, which is all of them until somebody establishes a
-	// link. The app is still constructed; see apps.Bootstrap.
-	urtuuLink := urtuu.New(db, permissions)
-	// Published for every module, not handed to one. The Өртөө app is its first
-	// caller and should not be its only one: any module with something to say to
-	// another installation asks nexus.Ring() for it. See pkg/nexus/link.go.
-	nexus.Provide[nexus.Link](urtuuLink)
-	// The reading half of the same channel: who is on the other end of a link,
-	// what a request code means, whether it has been announced there. Published
-	// because the task board asked those questions by joining the channel's own
-	// tables — the coupling ADR 0004 named as what kept it in this repository.
-	nexus.Provide[nexus.PeerDirectory](urtuu.AsPeerDirectory(urtuuLink))
 
 	modulePlatform := appinstall.NewModulePlatform(db)
 
@@ -236,7 +200,6 @@ func New(deps Deps) (*Service, error) {
 	// that lending one more is a line here instead of a change to a signature
 	// every distribution would have to chase — see pkg/nexus/capability.go.
 	// All of it before Bootstrap, which asks the registry for each in turn.
-	nexus.Provide(integrationMgr)
 	nexus.Provide(eidMN)
 	nexus.Provide(ssoProvider)
 	nexus.Provide(geregeSvc)
@@ -297,13 +260,19 @@ func New(deps Deps) (*Service, error) {
 	// is the state a module is meant to ask about rather than a nil it has to
 	// guard.
 	nexus.Provide[nexus.Signer](signing.Rail(eidMN))
+	// The deployment's one cipher for credentials at rest, published because a
+	// module that stores somebody else's OAuth token has to encrypt it and must
+	// not decide how. The connectors were the first caller and were in this
+	// repository; they are an app in another one now, and the key is still the
+	// deployment's — see pkg/nexus/secrets.go.
+	nexus.Provide[nexus.SecretSealer](security.Sealer{})
 	// The PDF signing rails, built here rather than in apps.Bootstrap.
 	//
 	// They are what nexus.SigningRails names, and a module that signs a PDF
 	// asks for that in its constructor — so the rails have to exist before any
 	// module does, distribution's or this repository's. Their housekeeping is
 	// appended to the runtime below, where this value is still in scope.
-	esignRails := signing.New(modulePlatform, gerege.NewEsignService(), eidMN, integrationMgr)
+	esignRails := signing.New(modulePlatform, gerege.NewEsignService(), eidMN)
 	// Published rather than handed to documents. The rail is the platform's —
 	// ADR 0002 is about why there is exactly one — and where its routes appear
 	// is the app's; a parameter made the app unable to be built anywhere else.
@@ -440,27 +409,24 @@ func New(deps Deps) (*Service, error) {
 		// Every send is a call to somebody else's service on a shared key, so
 		// there is a cruder guard in front of the per-tenant allowance the
 		// service itself applies: one per second sustained, twenty in a burst.
-		verifyLimiter:      security.NewIPRateLimiter(rate.Limit(float64(auth.VerifyRatePerMinute)/60.0), auth.VerifyBurst),
-		emailVerify:        emailverify.NewService(db),
-		eidSvc:             eidSvc,
-		danSvc:             danSvc,
-		ssoProvider:        ssoProvider,
-		ssoClient:          federatedSignIn,
-		googleLogin:        googleLogin,
-		geregeSvc:          geregeSvc,
-		integrationMgr:     integrationMgr,
-		integrationHandler: integration.NewHandler(integrationMgr),
-		aiSvc:              ai.NewService(db),
-		staffPIN:           staffpin.NewService(db),
-		urtuuLink:          urtuuLink,
-		permissions:        permissions,
-		appGate:            memo.New[bool](appGateTTL),
-		suspended:          memo.New[bool](auth.SuspendedTTL),
-		settings:           deps.Settings,
-		featureFlags:       deps.Flags,
-		bus:                bus,
-		backgroundApps:     appRuntime.Background,
-		eidMN:              eidMN,
+		verifyLimiter:  security.NewIPRateLimiter(rate.Limit(float64(auth.VerifyRatePerMinute)/60.0), auth.VerifyBurst),
+		emailVerify:    emailverify.NewService(db),
+		eidSvc:         eidSvc,
+		danSvc:         danSvc,
+		ssoProvider:    ssoProvider,
+		ssoClient:      federatedSignIn,
+		googleLogin:    googleLogin,
+		geregeSvc:      geregeSvc,
+		aiSvc:          ai.NewService(db),
+		staffPIN:       staffpin.NewService(db),
+		permissions:    permissions,
+		appGate:        memo.New[bool](appGateTTL),
+		suspended:      memo.New[bool](auth.SuspendedTTL),
+		settings:       deps.Settings,
+		featureFlags:   deps.Flags,
+		bus:            bus,
+		backgroundApps: appRuntime.Background,
+		eidMN:          eidMN,
 	}
 
 	s.authn = auth.New(auth.Deps{
@@ -541,6 +507,25 @@ func (s *Service) StartBackgroundJobs(ctx context.Context) {
 	for _, module := range s.backgroundApps {
 		module.StartHousekeeping(ctx)
 	}
+	// The same for a module this repository has never heard of.
+	//
+	// apps.Bootstrap is the platform's own list and it is empty; a
+	// distribution's modules arrive through pkg/host.Options.Modules and had
+	// nowhere to say that they have work of their own to run. Nothing said so
+	// while every module was a screen over a request — the first one that was
+	// not is the Өртөө channel, whose exchange loop is the entire product:
+	// without it a child installation never asks its parent for anything, and
+	// what is broken is a queue that stays full rather than a route that
+	// answers 500.
+	//
+	// An optional interface rather than a seventh method on Module: a module
+	// with no background work should not have to declare an empty one, and a
+	// method every implementation stubs out is a method nobody reads.
+	for _, module := range nexus.List() {
+		if background, ok := module.(interface{ StartHousekeeping(context.Context) }); ok {
+			background.StartHousekeeping(ctx)
+		}
+	}
 	s.eidMN.StartHousekeeping(ctx)
 	// The schedule sweep. It ran because the reports app happened to start it
 	// until 2026-08-23, which made a screen responsible for a deployment's
@@ -578,13 +563,6 @@ func (s *Service) StartBackgroundJobs(ctx context.Context) {
 			}
 		}
 	})
-	// Abandoned connect attempts and the delivery log are the two integration
-	// tables that only ever grow.
-	s.integrationMgr.StartHousekeeping(ctx)
-	// The Өртөө exchange: one loop keeping every link this installation is the
-	// child on in conversation with its parent, and the sweep behind it. Both
-	// return immediately and do nothing at all where Өртөө is unconfigured.
-	s.urtuuLink.StartHousekeeping(ctx)
 	// Links nobody followed have to stop being reported as outstanding, and the
 	// verification trail is an audit record with a retention window, not a
 	// mailing list.
@@ -653,6 +631,14 @@ func (s *Service) InstallAppForTenant(ctx context.Context, tenantID, appSlug, us
 // The global middleware, /health, /ready and /metrics are not here: they belong
 // to the process rather than to either plane, and the console is mounted beside
 // this by the same seam. See pkg/host.
+// AuthMiddleware is "who is making this request, and for which workspace".
+//
+// Exported for one caller: pkg/host, which mounts internal/person behind it.
+// A port rather than an import in the other direction — person asks a question
+// and gets an answer, and does not gain the ability to run this plane's
+// queries. ADR 0001's rule, and the same shape a module's RegisterRoutes takes.
+func (s *Service) AuthMiddleware() func(http.Handler) http.Handler { return s.authn.Middleware }
+
 func (s *Service) Routes(r chi.Router) {
 	// OpenID Connect Provider & OAuth2 Authorization Server.
 	//
@@ -662,12 +648,6 @@ func (s *Service) Routes(r chi.Router) {
 	r.Get("/.well-known/openid-configuration", s.ssoProvider.HandleOIDCDiscovery)
 	r.Get("/.well-known/jwks.json", s.ssoProvider.HandleJWKS)
 
-	// This installation's Өртөө identity: the public key a subordinate
-	// installation verifies its parent's envelopes with. At the root and public
-	// by necessity — it is read before any relationship exists, by a server
-	// that has nothing to authenticate with yet. It carries no secret and
-	// nothing tenant-scoped, and answers 404 where Өртөө is not configured.
-	r.Get("/.well-known/urtuu.json", s.urtuuLink.HandleWellKnown)
 	// The authorization endpoint is a browser destination: it reads the
 	// session cookie itself and answers with redirects, so it must not sit
 	// behind the API's bearer-token middleware.
@@ -699,27 +679,8 @@ func (s *Service) Routes(r chi.Router) {
 			recovery.Get("/auth/credential", s.access.HandleCredentialCheck)
 			recovery.Post("/auth/credential/redeem", s.access.HandleCredentialRedeem)
 			recovery.Post("/auth/impersonation/redeem", s.access.HandleImpersonationRedeem)
-			// Redeeming an Өртөө invitation. Session-less for the same reason
-			// the three above are — the caller is another installation, not a
-			// person — and on the sign-in budget for the same reason too: a
-			// single-use code that can be guessed quickly is a code that can be
-			// guessed. See internal/workspace/urtuu/peers.go.
-			recovery.Post("/urtuu/peers/redeem", s.urtuuLink.HandleRedeem)
 		})
 
-		// The exchange itself. Authenticated by the link's bearer token, which
-		// authMiddleware knows nothing about, so these sit outside it — and
-		// every envelope inside is checked again against the peer's public key,
-		// because a token says who is speaking and only a signature says who
-		// wrote what was said.
-		//
-		// Deliberately not on the poll limiter: the caller is a server holding
-		// a credential this deployment issued, not somebody's browser, and one
-		// child catching up after a week of downtime must not throttle another
-		// out of the channel. What bounds it is batchLimit and the long-poll
-		// window on the other side of the call.
-		api.Get("/urtuu/exchange/pull", s.urtuuLink.HandlePull)
-		api.Post("/urtuu/exchange/push", s.urtuuLink.HandlePush)
 		// Auth with rate limiting
 		// Every path by which this deployment establishes an identity of its
 		// own. On a deployment that federates, requireLocalLogin closes all of
@@ -793,9 +754,6 @@ func (s *Service) Routes(r chi.Router) {
 		// Found by db/migrations/ownership_test.go rather than by anybody
 		// noticing; removed with the rest of the departed apps' remains.
 		api.With(s.devices.Middleware).Post("/devices/telemetry", s.devices.HandleDeviceTelemetry)
-
-		// The OAuth redirect a connected provider sends the browser back to.
-		api.Get("/integrations/oauth/callback", s.integrationHandler.HandleOAuthCallback)
 
 		// Where the verification service returns somebody who has just proved
 		// an address. Unauthenticated on purpose: they have not signed in, and
@@ -871,13 +829,6 @@ func (s *Service) Routes(r chi.Router) {
 				ac.Put("/memberships/{id}/roles", s.access.HandleSetMembershipRoles)
 			})
 
-			// Settings → Өртөө: the links this organisation has to other
-			// installations. A platform screen rather than an app one, because
-			// a channel established by an administrator has to outlive any app
-			// being uninstalled — the tasks in flight over it do not stop
-			// existing because somebody removed the board they are shown on.
-			s.urtuuLink.TenantRoutes(pr)
-
 			// Asking the verification service to write to an address spends a
 			// credential the whole platform shares, so it is a signed-in act.
 			// App modules do not come through here — they hold the service and
@@ -904,19 +855,6 @@ func (s *Service) Routes(r chi.Router) {
 				aair.Put("/prompts/{key}", s.aiSvc.HandleAIUpdatePrompt)
 				aair.Get("/knowledge", s.aiSvc.HandleAIListKnowledge)
 				aair.Post("/knowledge", s.aiSvc.HandleAICreateKnowledge)
-			})
-
-			// Integrations
-			pr.Route("/integrations", func(ir chi.Router) {
-				ir.Use(s.authn.RequireAdmin)
-				ir.Get("/", s.integrationHandler.HandleList)
-				ir.Post("/", s.integrationHandler.HandleRegister)
-				ir.Get("/providers", s.integrationHandler.HandleProviders)
-				ir.Get("/deliveries", s.integrationHandler.HandleDeliveries)
-				ir.Put("/{id}", s.integrationHandler.HandleUpdate)
-				ir.Delete("/{id}", s.integrationHandler.HandleDelete)
-				ir.Post("/{id}/connect", s.integrationHandler.HandleConnect)
-				ir.Post("/{id}/disconnect", s.integrationHandler.HandleDisconnect)
 			})
 
 			// Store — reads are open to any tenant member, mutations are

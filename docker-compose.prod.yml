@@ -232,24 +232,18 @@ services:
       GITHUB_DEPLOY_TOKEN: ${GITHUB_DEPLOY_TOKEN:-}
       GITHUB_REPOSITORY: ${GITHUB_REPOSITORY:-}
       GITHUB_DEPLOY_WORKFLOW: ${GITHUB_DEPLOY_WORKFLOW:-deploy.yml}
-      # Integration connectors. Without the key the server refuses to store a
-      # credential rather than storing it in the clear, so Drive, Dropbox and
-      # Meet simply cannot be saved — which is the visible failure, not a
-      # silent one. Generate with: openssl rand -base64 32
+      # Итгэмжлэлийг битүүмжлэх түлхүүр. Түлхүүргүй бол итгэмжлэл ил хадгалагдах
+      # биш, хадгалалт нь БҮТЭЛГҮЙТНЭ — харагдах алдаа, чимээгүй биш.
+      # Үүсгэх: openssl rand -base64 32
+      #
+      # Холбогчийн апп цөмөөс гарсан ч (2026-08-27) энэ түлхүүр цөмийнх хэвээр:
+      # нэг суулгацад нэг л шифр байх ёстой бөгөөд модуль түүнд
+      # nexus.SecretSealer гэрээгээр хүрнэ. Нэр нь хуучин хэвээр — тэр нь ижил
+      # түлхүүр.
       INTEGRATION_ENCRYPTION_KEY: ${INTEGRATION_ENCRYPTION_KEY:-}
-      # A connector target is an address a tenant types in and this server
-      # connects to, from inside the network. Addresses that belong to the
-      # deployment — loopback, private, link-local, the cloud metadata service —
-      # are refused unless a self-hosted operator deliberately allows them.
-      INTEGRATION_ALLOW_PRIVATE_TARGETS: ${INTEGRATION_ALLOW_PRIVATE_TARGETS:-false}
-      # OAuth clients belong to whoever operates this deployment, not to each
-      # tenant: the consent screen is this platform's. Leave them empty and the
-      # providers report themselves unavailable with the reason, instead of
-      # offering a form that cannot work.
-      GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-}
-      GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET:-}
-      DROPBOX_OAUTH_CLIENT_ID: ${DROPBOX_OAUTH_CLIENT_ID:-}
-      DROPBOX_OAUTH_CLIENT_SECRET: ${DROPBOX_OAUTH_CLIENT_SECRET:-}
+      # INTEGRATION_ALLOW_PRIVATE_TARGETS, GOOGLE_OAUTH_*, DROPBOX_OAUTH_* нь
+      # энд байсан. Холбогчийн апп client-gerege-nexus руу явсан тул тэдгээрийг
+      # тэр distribution-ы deploy/docker-compose.yml уншина.
       # Where the app catalogue comes from. Empty is the file that ships in the
       # image, which is how this deployment has always run; setting both of
       # these puts the registry in front of it, with the disk cache and that
@@ -264,34 +258,10 @@ services:
       APP_CATALOG_TOKEN: ${APP_CATALOG_TOKEN:-}
       CATALOG_SYNC_INTERVAL: ${CATALOG_SYNC_INTERVAL:-1h}
       CATALOG_CACHE_PATH: /var/lib/nexus/catalog.cache.json
-      # «Өртөө» — платформ хоорондын даалгаврын суваг (docs/URTUU.md).
-      #
-      # Түлхүүргүй бол суваг УНТРААЛТТАЙ бөгөөд платформ хэвийн асна: холбоос
-      # үүсгэх боломжгүй, /.well-known/urtuu.json нь "энэ суулгац Өртөө
-      # ажиллуулдаггүй" гэж хариулна. Тавьсан цагаас эхлэн энэ суулгац
-      # өөрийн мөртэй болно — түлхүүрээс гарах суулгацын ID нь даалгаврын
-      # мөчлөгийн хамгаалалт, холбоос бүрийн token хоёрын үндэс.
-      #
-      # Үүсгэх: openssl rand -base64 32
-      #
-      # СОЛИХГҮЙ. Түлхүүр солигдвол суулгацын ID өөрчлөгдөж, одоо байгаа
-      # холбоос бүрийн token хүчингүй болж, нөгөө талын хадгалсан нийтийн
-      # түлхүүр буруу болно. Холбоосын мөр бүр installation_id-тай тул
-      # тэдгээр нь чимээгүй унтрахгүй — аль нь хуучин түлхүүрээрх болохыг
-      # нэрлэнэ — гэхдээ дахин байгуулах хэрэгтэй болно.
-      URTUU_SIGNING_KEY: ${URTUU_SIGNING_KEY:-}
-      # http:// хаягтай холбоос зөвшөөрөх эсэх. Анхдагчаар хаалттай: холбоосын
-      # token нь Authorization толгойгоор явдаг тул http дээр байгуулсан
-      # холбоос түүнийг замд байгаа бүх хүнд өгнө. Төрийн хаалттай сүлжээн
-      # дэх суулгацууд л зориудаар асаана.
-      URTUU_ALLOW_INSECURE_PEERS: ${URTUU_ALLOW_INSECURE_PEERS:-false}
-      # Хүсэлтийн кодын эх сурвалж — ring.dgov.mn (docs/RING_STANDARD.md).
-      # Гурвуулаа хоосон бол импорт унтраалттай, локал кодууд ажиллана.
-      # RING_PUBLIC_KEY-гүй бол импорт БАЙХГҮЙ: шалгагдаагүй бүртгэл нь бүх
-      # суулгац дээрх кодын утга, хугацааны нормыг өөрчлөх эрхтэй баримт.
-      RING_BASE_URL: ${RING_BASE_URL:-}
-      RING_API_KEY: ${RING_API_KEY:-}
-      RING_PUBLIC_KEY: ${RING_PUBLIC_KEY:-}
+      # «Өртөө»-гийн URTUU_SIGNING_KEY, URTUU_ALLOW_INSECURE_PEERS ба RING_*
+      # гурав энд байсан. Суваг нь аппынхаа хамт client-gerege-nexus руу явсан
+      # тул тэдгээрийг тэр distribution-ы deploy/docker-compose.yml уншина —
+      # энд үлдээх нь энэ суулгац Өртөө ажиллуулдаг мэт харагдуулна.
       # Агшинг ӨДӨР болгож бууруулах цагийн бүс: хэрэглээний тоолуур, тайлангийн
       # огнооны муж, cron-ий цаг, бүртгэлийн дугаарын он. Хадгалалт хөндөгдөхгүй
       # — багана бүр timestamptz хэвээр. Өгөгдлийн сангийн session мөн үүгээр

@@ -17,31 +17,26 @@ import (
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/kernel/settings"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/identity/eidmongolia"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/identity/gerege"
-	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/integration"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/ssoprovider"
 	"github.com/gerege-systems/open-gerege-nexus/backend/pkg/nexus"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// A booking contract with nobody providing it is what this test exists for.
+// A booking contract with nobody providing it is what this test used to exist
+// for.
 //
-// MeetingBooker was declared in the SDK, an adapter was written for it the same
-// day, and for six days nothing called either — there was no accessor and
-// nothing published one. The interface compiled, the adapter compiled, and a
-// module asking for a meeting had nowhere to ask. Nothing failed, because
-// nothing ran.
-func TestABuiltServerProvidesTheBookingCapability(t *testing.T) {
-	// Built for its side effects: New is what publishes the capability.
-	_ = serviceUnderTest(t)
-
-	booker, err := nexus.Meetings()
-	if err != nil {
-		t.Fatalf("a built server provides no meeting booker: %v", err)
-	}
-	if booker == nil {
-		t.Fatal("nexus.Meetings returned a nil booker and no error")
-	}
-}
+// nexus.MeetingBooker was declared in the SDK, an adapter was written for it the
+// same day, and for six days nothing called either — there was no accessor and
+// nothing published one. This test was the answer: build a server and check the
+// capability is there.
+//
+// It outlived the thing it guarded. The contract had one implementation, in the
+// connectors, and in a year no module ever asked for a meeting; on 2026-08-27
+// the connectors became an app in another repository and the contract went with
+// them, by the same rule that moved the Өртөө ring — a rail with no second
+// caller is one product's code kept in everybody's binary. What is left of the
+// lesson is the test below, which asserts that everything this server *does*
+// publish is published before any module is built.
 
 // Everything Bootstrap asks the registry for, the server has to have provided.
 //
@@ -56,13 +51,12 @@ func TestTheServerProvidesEverythingBootstrapAsksFor(t *testing.T) {
 
 	// One line per capability rather than a table, because each is a different
 	// type and the type is the whole of what is being asserted.
-	provided[*integration.Manager](t)
 	provided[*eidmongolia.Service](t)
 	provided[*ssoprovider.SSOProvider](t)
 	provided[*gerege.GeregeService](t)
 	provided[nexus.StateRails](t)
-	provided[nexus.Link](t)
 	provided[nexus.Signer](t)
+	provided[nexus.SecretSealer](t)
 	// Keyed on the SDK's type since 2026-08-23, not on internal/apps' alias for
 	// it: a distribution asking for this is asking by the exported name.
 	provided[nexus.InstalledApps](t)

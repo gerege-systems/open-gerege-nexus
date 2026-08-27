@@ -140,10 +140,6 @@ jobs:
       # Every claim in those tests is a claim about what PostgreSQL does.
       REPORTING_TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/platform_test?sslmode=disable
       AUDIT_TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/platform_test?sslmode=disable
-      # Өртөө: the handshake, идемпотент receipt and revocation are a
-      # single-use UPDATE predicate, a unique index and a WHERE clause. Two
-      # installations are stood up in one process against this schema.
-      URTUU_TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/platform_test?sslmode=disable
       TEST_REDIS_URL: redis://localhost:6379/0
     steps:
       - uses: actions/checkout@v7
@@ -303,18 +299,6 @@ jobs:
             ./internal/workspace/reporting/... | tee /tmp/sharing.log
           if grep -q -- '--- SKIP' /tmp/sharing.log; then
             echo "::error::report sharing tests skipped — REPORTING_TEST_DATABASE_URL is not reaching the test"
-            exit 1
-          fi
-      - name: Fail if the Өртөө channel tests were skipped
-        # An invitation is spent by one conditional UPDATE, a repeat delivery is
-        # made free by one unique index, and a revoked link is closed by one
-        # WHERE clause. None of the three is observable without a database, and
-        # skipped they report green having asserted that two servers can start.
-        run: |
-          go test -run 'TestAnInvitationIsSpentOnce|TestWorkTravelsDownAndAnAnswerComesBack|TestARevokedLinkStopsAnswering' -v \
-            ./internal/workspace/urtuu/... | tee /tmp/urtuu.log
-          if grep -q -- '--- SKIP' /tmp/urtuu.log; then
-            echo "::error::Өртөө channel tests skipped — URTUU_TEST_DATABASE_URL is not reaching the test"
             exit 1
           fi
       - name: Fail if the cross-replica tests were skipped

@@ -159,3 +159,15 @@ func ResetEncryptionKeyForTest() {
 	keyVal = nil
 	keyErr = nil
 }
+
+// Sealer presents the three functions above as nexus.SecretSealer.
+//
+// The methods are on a value rather than the package because a capability is
+// asked for by type; there is no state, and two of these are the same one.
+// server.go publishes it while it boots, which is what lets a module in another
+// repository store an OAuth token without carrying a cipher of its own.
+type Sealer struct{}
+
+func (Sealer) Seal(plaintext []byte) ([]byte, error)  { return Seal(plaintext) }
+func (Sealer) Open(ciphertext []byte) ([]byte, error) { return Open(ciphertext) }
+func (Sealer) Configured() bool                       { return EncryptionConfigured() }

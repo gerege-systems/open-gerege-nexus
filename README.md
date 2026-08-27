@@ -41,7 +41,7 @@ compile-time Go module хэлбэрээр distribution репо нэмдэг. Э
 
 | Хэсэг | Одоогийн хэрэгжилт |
 | --- | --- |
-| Tenant plane | Нэвтрэлт, session, tenant membership, RBAC, profile, апп суулгалт/хаалт, integration, AI API, төхөөрөмж, email verification, SSO client/provider, Өртөөний суваг, reporting engine |
+| Tenant plane | Нэвтрэлт, session, tenant membership, RBAC, profile, апп суулгалт/хаалт, AI API, төхөөрөмж, email verification, SSO client/provider, reporting engine |
 | Operator plane | Тенантын lifecycle, операторын TOTP нэвтрэлт, audit, support, quota/metering, feature flag, runtime settings/credentials, announcement, backup/deploy удирдлага |
 | Built-in апп | Байхгүй. Апп бүр каталогоор ирнэ — 2026-08-25-нд `sso_clients` явсны дараа энэ бинарь нэг ч бизнес апп агуулахгүй |
 | Web | Public landing, login/setup, profile, app store, settings, control plane; аппын дэлгэцүүд (SSO клиент, баримт, харилцагч) module-гүйгээ амьгүй байдлаар shell-д үлдсэн |
@@ -63,7 +63,12 @@ compile-time Go module хэлбэрээр distribution репо нэмдэг. Э
   `client-gerege-nexus` distribution-д хараахан байхгүй; endpoint бодитоор
   хариулахгүй бол landing дээр холбоос нь гарахгүй
 - Government services workflow UI/module
-- Өртөөний task board (суваг ба peer/exchange API нь платформд үлдсэн)
+- Өртөө бүхэлдээ — самбар, суваг, peer/exchange API, дугтуйн гэрээ. 2026-08-27-нд
+  сүүлчийн хэсэг нь `client-gerege-nexus` руу явав
+- Гадаад системийн холбогч ба webhook (Google Drive, Dropbox, Meet, захиалагч
+  URL). Мөн 2026-08-27-нд явав; цөмд зөвхөн итгэмжлэл битүүмжлэх шифр үлдсэн
+  (`nexus.SecretSealer`). Гарын үсэг зурсан баримтыг гадагш автоматаар илгээх
+  зан мөн цөмөөс хасагдав
 - Ерөнхий adaptive circuit breaker, singleflight, generic retry engine
 
 Эдгээрийн зарим нь product distribution репо руу салсан. Түүхэн шийдвэр ба
@@ -191,8 +196,7 @@ README дахь API жагсаалт бүрэн contract биш. Кодтой х
 - Тохиргоо: [`.env.example`](.env.example)
 
 Үндсэн public endpoint-д `/health`, `/ready`, `/metrics`, auth, setup,
-OAuth2/OIDC, app store, device enrollment, email verification болон Өртөөний
-exchange орно. Tenant session шаарддаг route-ууд, control plane route-ууд,
+OAuth2/OIDC, app store, device enrollment, email verification орно. Tenant session шаарддаг route-ууд, control plane route-ууд,
 module route-ууд тус тусдаа хамгаалалттай.
 
 ## Тест

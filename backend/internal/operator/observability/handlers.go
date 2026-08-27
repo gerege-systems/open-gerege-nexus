@@ -78,38 +78,12 @@ func (s *Service) backgroundJobs(ctx context.Context) []BackgroundJob {
 		})
 	}
 
-	// The Өртөө channel. Two numbers and no more: how much is queued for
-	// another installation and has not landed, and how many live links have
-	// stopped speaking. Neither reads a task or an envelope — migration 00064
-	// grants the operator role exactly the two tables these come from, and
-	// deliberately not the ones holding what was actually said.
-	//
-	// The hour is the threshold because the delivery backoff caps at six: a
-	// link that has been silent for an hour is not one that is merely between
-	// attempts.
-	var undelivered, silent int
-	if err := s.db.QueryRow(ctx, `
-		SELECT (SELECT count(*) FROM workspace.urtuu_deliveries WHERE delivered_at IS NULL),
-		       (SELECT count(*) FROM workspace.urtuu_peers
-		         WHERE status = 'active' AND revoked_at IS NULL
-		           AND coalesce(last_seen_at, created_at) < NOW() - INTERVAL '1 hour')`).
-		Scan(&undelivered, &silent); err != nil {
-		// A deployment that has never run Өртөө still has the tables — the
-		// migration creates them for everyone — so this really is a fault
-		// rather than an absence, and it is worth a line.
-		slog.Warn("control plane: could not read the Өртөө channel", "error", err)
-	} else if undelivered > 0 || silent > 0 {
-		detail := ""
-		if silent > 0 {
-			detail = fmt.Sprintf("%d link(s) have not been heard from for over an hour", silent)
-		}
-		jobs = append(jobs, BackgroundJob{
-			Name: "urtuu_relay", OK: silent == 0, Detail: detail, Pending: undelivered,
-		})
-	} else {
-		jobs = append(jobs, BackgroundJob{Name: "urtuu_relay", OK: true})
-	}
-
+	// The Өртөө channel used to be reported here — undelivered envelopes and
+	// links that had gone quiet. The channel left this repository with its app
+	// (client-gerege-nexus, modules/urtuu/channel), and so did the two tables
+	// this read. A console that kept the panel would be reporting the health of
+	// something this binary does not run; a deployment that carries the app
+	// reports it through the app's own metrics.
 	// The deletion sweep has no row of its own; what it leaves behind is the
 	// organisations still counting down, which is the useful number anyway.
 	var awaiting int

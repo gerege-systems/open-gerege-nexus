@@ -33,16 +33,23 @@ type InstalledApps = nexus.InstalledApps
 //	appstore_registry, publisher_studio, store_review  appstore-gerege-nexus
 //	egov, documents, organisation, urtuu, reports      client-gerege-nexus (2026-08-23)
 //	sso_clients                                        appstore-gerege-nexus (2026-08-25)
+//	urtuu's channel                                    client-gerege-nexus (2026-08-27)
 //
-// None of them took a rail with it. Өртөө's channel is still the platform's —
-// nexus.Link to send, nexus.PeerDirectory to read — so a link an administrator
-// established keeps carrying what is in flight over it whatever apps come and
-// go. Reports left the screens and kept the engine: the SQL, the export, the
-// sweep that mails a schedule at three in the morning, the check that lets one
-// organisation's report read another's rows, published as nexus.ReportEngine,
-// ReportSchedules and ReportGrants. sso_clients left the screens that register
-// OAuth2 clients and kept the authorization server, published as
-// nexus.SSOClientRegistry.
+// Most of them left a rail behind. Reports left the screens and kept the
+// engine: the SQL, the export, the sweep that mails a schedule at three in the
+// morning, the check that lets one organisation's report read another's rows,
+// published as nexus.ReportEngine, ReportSchedules and ReportGrants.
+// sso_clients left the screens that register OAuth2 clients and kept the
+// authorization server, published as nexus.SSOClientRegistry.
+//
+// Өртөө is the one that did not, in the end. Its channel stayed here for four
+// days on the rule that a link an administrator established keeps carrying what
+// is in flight whatever apps come and go — which is true, and was not the
+// question. The question a rail has to answer is whether more than one thing
+// needs it, and in three months nexus.Link and nexus.PeerDirectory had exactly
+// one caller between them. So the transport, the wire contract and both
+// interfaces followed the app, and the core keeps nothing of Өртөө: no tables
+// (00087), no routes, no environment variables.
 func Bootstrap(p nexus.Platform) Runtime {
 	return Runtime{}
 }

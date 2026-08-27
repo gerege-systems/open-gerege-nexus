@@ -68,8 +68,8 @@ languages; individual technical documents may remain in their source language.
 | [`APPSTORE_OPERATIONS.md`](APPSTORE_OPERATIONS.md) | EN | Апп сторын каталог нийтлэх, хувилбар шилжүүлэх ажиллагаа |
 | [`REPORTS.md`](REPORTS.md) | MN | Core тайлангийн хөдөлгүүр ба `client-gerege-nexus`-ийн report UI модулийн хил |
 | [`REPORT_SHARING.md`](REPORT_SHARING.md) | MN | Тенант дамнасан тайлан: grant, counterparty хүрээ, хоёр талын audit |
-| [`URTUU.md`](URTUU.md) | MN | Core transport ба `client-gerege-nexus`-ийн task app-ийн хил, тохиргоо, runbook |
-| [`RING_STANDARD.md`](RING_STANDARD.md) | MN | Үйлчилгээний процессын бүртгэлийн формат — ring.dgov.mn-д санал болгож буй гэрээ |
+| [`URTUU.md`](https://github.com/gerege-systems/client-gerege-nexus/blob/main/docs/URTUU.md) | MN | **Энэ репод байхаа больсон.** Өртөө — суваг ба самбар хоёул `client-gerege-nexus`-д |
+| [`RING_STANDARD.md`](https://github.com/gerege-systems/client-gerege-nexus/blob/main/docs/RING_STANDARD.md) | MN | **Энэ репод байхаа больсон.** Кодын бүртгэлийн формат Өртөөгийн хамт явав |
 | [`MONITORING.md`](MONITORING.md) | MN | Ажиглалтын стек: асаах, Grafana, лог хайх, шинэ хэмжүүр нэмэх |
 | [`RUNBOOKS.md`](RUNBOOKS.md) | MN | Дохио бүрд: юу болсон, юу шалгах, яаж засах, хэзээ өргөжүүлэх |
 | [`CONTROL_PLANE.md`](CONTROL_PLANE.md) | MN | Операторын консол: босгох, эрх, анхны оператор үүсгэх, аюулгүй байдлын дүрмүүд |
@@ -91,6 +91,7 @@ ADR нь кодын одоогийн хэлбэрийг **яагаад** сон�
 | [`adr/0004-a-pilot-that-did-not-ship.md`](adr/0004-a-pilot-that-did-not-ship.md) | MN | Өртөөний distribution pilot яагаад гараагүй вэ |
 | [`adr/0005-two-planes-one-origin-each.md`](adr/0005-two-planes-one-origin-each.md) | MN | Нэг бинарь, хоёр origin: тенант ба операторын хаалга |
 | [`adr/0006-a-person-owns-a-space.md`](adr/0006-a-person-owns-a-space.md) | MN | Хүн муж эзэмшинэ: `workspace`/`operator`/`registry` нэршил, гэр ба байгууллага, иргэний буулт (нэршил ба гэр хэрэгжсэн; хувийн муж **санал**) |
+| [`adr/0007-a-rail-needs-a-second-caller.md`](adr/0007-a-rail-needs-a-second-caller.md) | MN | Рельс болохын тулд хоёр дахь дуудагч хэрэгтэй: Өртөө ба холбогч цөмөөс бүрэн гарсан шалтгаан |
 
 ## Санал, төлөвлөгөө, ажлын түүх — Historical design records
 
@@ -104,7 +105,7 @@ ADR нь кодын одоогийн хэлбэрийг **яагаад** сон�
 | [`TWO_PLANES_PROPOSAL.md`](TWO_PLANES_PROPOSAL.md) | MN | `tenant`/`platform`/`kernel`, хоёр schema-ийн анхны санал |
 | [`WORKSPACE_NAMING_PROPOSAL.md`](WORKSPACE_NAMING_PROPOSAL.md) | MN | Нэршлийн засвар, хувийн орон зай, эрэлтийн тал (100 нийлүүлэгч), иргэний `/me` буулт — үе A–G (**A, B, C1-lite, E, F, G хэрэгжсэн**) |
 | [`MONITORING_AND_REPORTING_PROPOSAL.md`](MONITORING_AND_REPORTING_PROPOSAL.md) | MN | Ажиглалт ба тайлангийн дизайны санал |
-| [`URTUU_PROPOSAL.md`](URTUU_PROPOSAL.md) | MN | «Өртөө» сувгийн дизайны санал ба үе шатууд |
+| [`URTUU_PROPOSAL.md`](https://github.com/gerege-systems/client-gerege-nexus/blob/main/docs/URTUU_PROPOSAL.md) | MN | **Энэ репод байхаа больсон.** «Өртөө» сувгийн анхны дизайны санал |
 | [`CONTROL_PLANE_PLAN.md`](CONTROL_PLANE_PLAN.md) | MN | Операторын консолын анхны дизайн ба үе шатууд |
 | [`PEER_PROPOSAL.md`](PEER_PROPOSAL.md) | MN | Nexus биш системийг Өртөөний талд оруулах санал |
 | [`APPSTORE_SEPARATION_PLAN.md`](APPSTORE_SEPARATION_PLAN.md) | MN | App Store салгах төлөвлөгөө |

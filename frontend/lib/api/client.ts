@@ -306,6 +306,17 @@ export const coreApi = {
   // The organisations the signed-in person may act for. A membership in one is
   // the common case, so callers should expect a list of one rather than treat
   // it as an error.
+  // What this person asked other organisations for. Empty on a workspace
+  // nothing has published into, which is every organisation and a home whose
+  // requests have not started yet — see backend/db/migrations/00086.
+  getMyItems: () =>
+    request<{
+      items: Array<{
+        id: string; source_app: string; source_ref: string; provider: string;
+        code: string; status: string; answer: string;
+        opened_at: string; updated_at: string;
+      }>;
+    }>("/me/items"),
   getTenants: () =>
     request<{
       current: string;

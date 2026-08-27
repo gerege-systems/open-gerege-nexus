@@ -53,10 +53,10 @@
 /backend/pkg/nexus/ @erdenebatt
 
 # The rest of the published surface: the app manifest schema every catalogue
-# entry is validated against, the Өртөө wire contract two installations speak
-# across a network, and the entry point a distribution's main.go calls.
+# entry is validated against, and the entry point a distribution's main.go
+# calls. The Өртөө wire contract was here too, until the channel left with its
+# app for client-gerege-nexus.
 /backend/pkg/catalog/ @erdenebatt
-/backend/pkg/urtuu/ @erdenebatt
 /backend/pkg/host/ @erdenebatt
 
 # The bootstrap that builds every module (its signature went from 4 parameters

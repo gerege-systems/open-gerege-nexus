@@ -49,7 +49,7 @@ export const LINES: Record<ShellPlatform, LineContent> = {
     actions: [
       { label: "Апп дэлгүүр", hint: "Модуль асаах, унтраах", href: "/apps", icon: "grid" },
       { label: "SSO клиентүүд", hint: "OAuth2 клиент бүртгэл", href: "/sso-clients", icon: "key" },
-      { label: "Холбогч", hint: "Интеграц тохиргоо", href: "/settings/integrations", icon: "link" },
+      { label: "Холбогч", hint: "Интеграц тохиргоо", href: "/module/integrations/connectors", icon: "link" },
       { label: "Төхөөрөмжийн парк", hint: "Бүртгэсэн төхөөрөмжүүд", href: "/settings/devices", icon: "monitor" },
     ],
   },

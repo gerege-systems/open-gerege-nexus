@@ -9,14 +9,12 @@ export const web = {
   },
   "web.menu.app_store": { mn: "Апп Дэлгүүр", en: "App Store" },
   "web.menu.installed_apps": { mn: "Суулгасан аппууд", en: "Installed Apps" },
-  "web.menu.integrations": { mn: "Интеграцууд", en: "Integrations" },
   "web.menu.settings": { mn: "Тохиргоо", en: "Settings" },
   "web.menu.organisation": { mn: "Байгууллага", en: "Organisation" },
   "web.menu.appearance": { mn: "Харагдац", en: "Appearance" },
   "web.menu.preferences": { mn: "Тохиргоо", en: "Preferences" },
   "web.menu.ai_settings": { mn: "AI тохиргоо", en: "AI settings" },
   "web.menu.email_verification": { mn: "И-мэйл баталгаажуулалт", en: "Email verification" },
-  "web.menu.urtuu": { mn: "Өртөө", en: "Urtuu Relay" },
 
   "web.group.modules": { mn: "Модулиуд", en: "Modules" },
   "web.group.settings": { mn: "Тохиргоо", en: "Settings" },
@@ -50,6 +48,10 @@ export const web = {
   // The switcher's second line for a personal workspace. Its slug is derived
   // from a user id and says nothing, so the row says what it is instead.
   "web.label.my_home": { mn: "Миний гэр", en: "My home" },
+  // The rail entry for /me. Only drawn in a personal workspace: an
+  // organisation's members ask through their organisation, so the screen would
+  // be permanently empty for them — see lib/workspaceKind.mjs.
+  "web.menu.my_requests": { mn: "Миний хүсэлтүүд", en: "My requests" },
   "web.message.read_alongside_hint": {
     mn: "Сонгосон байгууллагуудын жагсаалтыг хамт харна. Шинэ бичлэг одоогийн байгууллагад л үүснэ.",
     en: "Lists span the organisations you tick. New records are still created in the one you are working in.",

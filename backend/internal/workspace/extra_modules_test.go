@@ -66,9 +66,8 @@ func TestADistributionsModuleIsBuiltAfterTheCapabilitiesExist(t *testing.T) {
 	withdrawn[nexus.EIDSigner]()
 	withdrawn[nexus.DANAuthenticator]()
 	withdrawn[nexus.Signer]()
+	withdrawn[nexus.SecretSealer]()
 	withdrawn[nexus.RateLimiter]()
-	withdrawn[nexus.MeetingBooker]()
-	withdrawn[nexus.Link]()
 	withdrawn[nexus.SigningRails]()
 	withdrawn[nexus.Quota]()
 
@@ -90,10 +89,9 @@ func TestADistributionsModuleIsBuiltAfterTheCapabilitiesExist(t *testing.T) {
 		provided[nexus.EIDSigner](t)
 		provided[nexus.DANAuthenticator](t)
 		provided[nexus.Signer](t)
+		provided[nexus.SecretSealer](t)
 		provided[nexus.StateRails](t)
 		provided[nexus.RateLimiter](t)
-		provided[nexus.MeetingBooker](t)
-		provided[nexus.Link](t)
 		provided[nexus.SigningRails](t)
 		// The assistant is an app now and asks for this in its constructor; a
 		// distribution's assistant would ask at the same moment.

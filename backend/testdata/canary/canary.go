@@ -144,10 +144,14 @@ func (m *Module) Quote(ctx context.Context, tenantID, sku string) (int64, error)
 	return pricing.Quote(ctx, tenantID, sku)
 }
 
-// Meetings is here to keep an accessor a distribution would plausibly use in the
-// build. It is expected to fail: nothing provides a booker in this module.
-func (m *Module) Meetings() error {
-	_, err := nexus.Meetings()
+// Secrets is here to keep an accessor a distribution would plausibly use in the
+// build. It is expected to fail: nothing publishes a cipher in this module.
+//
+// It was nexus.Meetings until 2026-08-27, when the booking contract left with
+// the connectors app — which is the whole point of this file being a separate
+// module: `go build ./...` from backend/ does not reach it, and CI does.
+func (m *Module) Secrets() error {
+	_, err := nexus.Secrets()
 	return err
 }
 

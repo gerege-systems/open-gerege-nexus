@@ -85,14 +85,8 @@ func TestAMissingCapabilityIsAnErrorAndNotAZeroValue(t *testing.T) {
 	}
 
 	// And the sentinel accessors keep answering the way v1 promised.
-	if _, err := nexus.Ring(); !errors.Is(err, nexus.ErrNoLink) {
-		t.Errorf("Ring on a deployment with no link returned %v, want ErrNoLink", err)
-	}
 	if _, err := nexus.Documents(); !errors.Is(err, nexus.ErrNoDocumentFiler) {
 		t.Errorf("Documents with no filer returned %v, want ErrNoDocumentFiler", err)
-	}
-	if _, err := nexus.Meetings(); err == nil {
-		t.Error("Meetings with no booker returned no error")
 	}
 }
 

@@ -40,6 +40,23 @@ export function organisationScreensVisible(workspaceKind) {
 }
 
 /**
+ * Whether this workspace has the screens that only make sense for one person.
+ *
+ * The mirror of the rule above and deliberately not its negation in the shell:
+ * writing `!organisationScreensVisible(kind)` there would have made an
+ * unanswered kind — the moment before /api/v1/me returns, or a deployment whose
+ * API predates the column — draw a citizen's rail at everybody. Both questions
+ * default to "not this one", which is the only pair of answers that shows
+ * nothing rather than the wrong thing.
+ *
+ * @param {string | undefined | null} workspaceKind
+ * @returns {boolean}
+ */
+export function homeScreensVisible(workspaceKind) {
+  return workspaceKind === PERSONAL;
+}
+
+/**
  * Whether this row in the workspace switcher is the person's own home.
  *
  * @param {{ kind?: string } | null | undefined} option
