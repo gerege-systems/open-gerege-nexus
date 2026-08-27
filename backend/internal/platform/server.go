@@ -1180,20 +1180,17 @@ func (s *Server) setupRoutes() {
 			// itself stayed, because the signing rails file documents through
 			// it and nexus.MeetingBooker is its adapter.
 
-			// Store — reads are open to any tenant member, mutations are
-			// tenant-administrator only. Previously every authenticated user
-			// could install, enable or disable apps for the whole tenant.
-			pr.Get("/store/apps", s.handleListStoreApps)
-			pr.Get("/store/apps/{slug}", s.handleGetStoreApp)
-			pr.Get("/installed-apps", s.handleListInstalledApps)
-			// What changed in an app, and what this organisation did about it.
-			// A member-level read on purpose: "why did this move" is asked by
-			// the people using the app, and the answer names nobody outside
-			// their own tenant.
-			pr.Get("/store/apps/{slug}/history", s.handleAppHistory)
-
 			pr.Group(func(ar chi.Router) {
 				ar.Use(s.requireAdmin)
+				// Store — reads AND mutations are tenant-administrator only.
+				// Which apps a deployment could install is platform
+				// administration, not something a member browses: the shell's
+				// rail runs on /menus, so an ordinary member loses nothing.
+				// (Reads were member-level until 2026-08-27.)
+				ar.Get("/store/apps", s.handleListStoreApps)
+				ar.Get("/store/apps/{slug}", s.handleGetStoreApp)
+				ar.Get("/installed-apps", s.handleListInstalledApps)
+				ar.Get("/store/apps/{slug}/history", s.handleAppHistory)
 				ar.Post("/store/apps/{slug}/install", s.handleInstallApp)
 				ar.Post("/store/apps/{slug}/upgrade", s.handleUpgradeApp)
 				// Whether an app follows the catalogue on its own. Reading it
