@@ -11,7 +11,7 @@
  *
  * It is a public package because a distribution repository — a product built on
  * this platform with its own Go modules — has to start the same platform, and
- * `internal/platform` is closed to it by the language. Without this the SDK let
+ * `internal/operator` is closed to it by the language. Without this the SDK let
  * somebody write a module and gave them nowhere to run it, which is a fork with
  * extra steps.
  *

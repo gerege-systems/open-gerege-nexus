@@ -2,7 +2,7 @@
  * Server-side error reporting for the Next.js process.
  *
  * This is the rendering server, not the API — the Go backend has its own
- * reporting (backend/internal/platform/observability/errortracking.go). What
+ * reporting (backend/internal/operator/observability/errortracking.go). What
  * lands here is a render that threw, which is otherwise visible only as a 500
  * in a container log.
  *

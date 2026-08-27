@@ -5,7 +5,7 @@
  *
  * The boundary at usage_events, from both sides.
  *
- * The platform writes the daily rows (internal/platform/metering) and a tenant
+ * The platform writes the daily rows (internal/operator/metering) and a tenant
  * reads its own month to check a limit against — one of the five tables
  * ownership_test.go marks as the meeting point of the two planes. The names and
  * the read live here because both planes need them and neither owns the other:

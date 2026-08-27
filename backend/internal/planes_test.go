@@ -16,7 +16,7 @@ import (
 // it was written the same way round: the property first, the tree afterwards.
 // The reason to do it in that order is that a move is cheap and a rule is not.
 // While the packages are still where they are, the rule below costs one file;
-// once internal/tenant and internal/platform both exist and the compiler is
+// once internal/tenant and internal/operator both exist and the compiler is
 // happy with whatever imports they happen to have, the same rule costs an
 // argument about which of the imports were meant.
 //
@@ -28,13 +28,13 @@ import (
 //
 // Three rules, from docs/TWO_PLANES_PROPOSAL.md §2.3 and §2.8:
 //
-//	internal/tenant   must not import internal/platform
-//	internal/platform must not import internal/tenant
+//	internal/tenant   must not import internal/operator
+//	internal/operator must not import internal/tenant
 //	internal/kernel   must import neither; both may import it, and pkg/…
 //
 // The third is the one that keeps kernel a floor rather than a third plane. A
 // kernel package that imports a plane has picked a side, and everything under
-// it inherits the choice — which is how internal/platform came to mean "the
+// it inherits the choice — which is how internal/operator came to mean "the
 // rest of the code" in the first place.
 
 const modulePrefix = "github.com/gerege-systems/open-gerege-nexus/backend"
@@ -54,7 +54,7 @@ var crossPlaneExceptions = map[string]map[string]string{}
 
 // Where each file still sitting in a plane's root package is going.
 //
-// internal/platform's 81 packages and files have been dealt with: what is left
+// internal/operator's 81 packages and files have been dealt with: what is left
 // there is one service.go, which is the plane composing its own subpackages
 // rather than a place to put a handler. The tenant plane is one step behind —
 // its 43 handler files arrived together and are being taken apart by domain —
@@ -82,10 +82,10 @@ var plannedTenantPackages = map[string]string{
 	"gate_e2e_test.go":      "tenant (asserts a module's routes are behind the gate, through the assembled router)",
 }
 
-// The root's test builds the whole platform route composition, so it belongs
+// The root's test builds the whole operator route composition, so it belongs
 // beside service.go rather than in one screen's subpackage.
-var plannedPlatformPackages = map[string]string{
-	"service_test.go": "platform (asserts the versioned route and its guarded compatibility address)",
+var plannedOperatorPackages = map[string]string{
+	"service_test.go": "operator (asserts the versioned route and its guarded compatibility address)",
 }
 
 // The floor. These own no table and answer to neither plane, which is what
@@ -98,28 +98,28 @@ var plannedKernelPackages = map[string]string{}
 //
 // server.go was the seam: it built both planes, mounted both route tables and
 // owned the router. It is three files now — internal/tenant/service.go,
-// internal/platform/service.go and pkg/platform/server.go — and the last of
+// internal/operator/service.go and pkg/platform/server.go — and the last of
 // those is where the two planes become one process. The route tests and the
 // golden route table went with it, because the surface they describe is the
 // assembled one.
 var plannedSplitOrRemoved = map[string]string{
-	"service.go": "already three files: internal/tenant, internal/platform and pkg/platform, which is the only one that names both planes",
+	"service.go": "already three files: internal/tenant, internal/operator and pkg/platform, which is the only one that names both planes",
 }
 
-func TestTenantDoesNotImportPlatform(t *testing.T) {
-	assertNoImportsAcross(t, "tenant", "platform",
-		"A tenant plane that imports the platform's packages cannot be reasoned about "+
+func TestTenantDoesNotImportOperator(t *testing.T) {
+	assertNoImportsAcross(t, "tenant", "operator",
+		"A tenant plane that imports the operator plane's packages cannot be reasoned about "+
 			"separately, deployed separately or reviewed separately, which is the whole "+
 			"of what the split buys. Where the planes must meet, they meet through the "+
 			"five boundary tables or a contract in kernel — see ownership_test.go.")
 }
 
-func TestPlatformDoesNotImportTenant(t *testing.T) {
-	assertNoImportsAcross(t, "platform", "tenant",
+func TestOperatorDoesNotImportTenant(t *testing.T) {
+	assertNoImportsAcross(t, "operator", "tenant",
 		"This is the direction that rots quietly: the console needs one thing a tenant "+
 			"handler already does, imports it, and now the operator's code runs a query "+
-			"written for somebody acting inside one organisation. If the platform needs "+
-			"the answer, the platform asks the database for it.")
+			"written for somebody acting inside one organisation. If the operator plane needs "+
+			"the answer, it asks the database for it.")
 }
 
 // The kernel is a floor, not a third plane.
@@ -136,7 +136,7 @@ func TestKernelImportsNeitherPlane(t *testing.T) {
 	}
 	for _, pkg := range pkgs {
 		for _, imported := range directImports(t, pkg) {
-			for _, plane := range []string{"tenant", "platform"} {
+			for _, plane := range []string{"tenant", "operator"} {
 				if !strings.HasPrefix(imported, modulePrefix+"/internal/"+plane+"/") {
 					continue
 				}
@@ -151,15 +151,15 @@ func TestKernelImportsNeitherPlane(t *testing.T) {
 	}
 }
 
-// Every directory and file under internal/platform has somewhere to go.
+// Every directory and file under internal/operator has somewhere to go.
 //
 // The lists above are Үе C's work order, and this is what keeps them being
-// that. A file added to internal/platform while the move is under way is a
+// that. A file added to internal/operator while the move is under way is a
 // file nobody decided about, and the failure names it on the first run after
 // it appears rather than on the day the directory is supposed to be empty.
 func TestEveryRootFileHasAPlannedHome(t *testing.T) {
 	var entries []os.DirEntry
-	for _, plane := range []string{"tenant", "platform"} {
+	for _, plane := range []string{"tenant", "operator"} {
 		found, err := os.ReadDir(plane)
 		if err != nil {
 			t.Fatalf("read internal/%s: %v", plane, err)
@@ -169,7 +169,7 @@ func TestEveryRootFileHasAPlannedHome(t *testing.T) {
 
 	planned := map[string]string{}
 	for _, list := range []map[string]string{
-		plannedTenantPackages, plannedPlatformPackages,
+		plannedTenantPackages, plannedOperatorPackages,
 		plannedKernelPackages, plannedSplitOrRemoved,
 	} {
 		for name, home := range list {
@@ -229,7 +229,7 @@ whole.`, len(unplanned), strings.Join(unplanned, "\n\t"))
 // exactly the work Үе C is. The number is the size of that work, and it should
 // read zero on the day the move lands.
 //
-// It counts at package granularity. The 46 files in internal/platform's root
+// It counts at package granularity. The 46 files in internal/operator's root
 // are one Go package spanning both planes, so nothing can be attributed to a
 // file until server.go splits; those imports are logged separately.
 func TestCountTodaysCrossPlaneImports(t *testing.T) {
@@ -237,8 +237,8 @@ func TestCountTodaysCrossPlaneImports(t *testing.T) {
 	for name := range plannedTenantPackages {
 		plane[name] = "tenant"
 	}
-	for name := range plannedPlatformPackages {
-		plane[name] = "platform"
+	for name := range plannedOperatorPackages {
+		plane[name] = "operator"
 	}
 	for name := range plannedKernelPackages {
 		plane[name] = "kernel"
@@ -249,12 +249,12 @@ func TestCountTodaysCrossPlaneImports(t *testing.T) {
 		if strings.HasSuffix(name, ".go") {
 			continue // a file in the root package, counted below
 		}
-		if !holdsGoFiles(filepath.Join("platform", name)) {
+		if !holdsGoFiles(filepath.Join("operator", name)) {
 			continue // already moved out
 		}
 		seen := map[string]bool{}
-		for _, imported := range directImports(t, modulePrefix+"/internal/platform/"+name) {
-			dep, ok := strings.CutPrefix(imported, modulePrefix+"/internal/platform/")
+		for _, imported := range directImports(t, modulePrefix+"/internal/operator/"+name) {
+			dep, ok := strings.CutPrefix(imported, modulePrefix+"/internal/operator/")
 			if !ok {
 				continue
 			}
@@ -272,18 +272,18 @@ func TestCountTodaysCrossPlaneImports(t *testing.T) {
 	for _, crossing := range crossings {
 		t.Log(crossing)
 	}
-	t.Logf("cross-plane imports between internal/platform's subpackages: %d", len(crossings))
+	t.Logf("cross-plane imports between internal/operator's subpackages: %d", len(crossings))
 
 	// The root package is both planes at once until server.go is split, so its
 	// imports are the work rather than a violation of it.
 	root := map[string]int{}
-	for _, imported := range directImports(t, modulePrefix+"/internal/platform") {
-		if dep, ok := strings.CutPrefix(imported, modulePrefix+"/internal/platform/"); ok {
+	for _, imported := range directImports(t, modulePrefix+"/internal/operator") {
+		if dep, ok := strings.CutPrefix(imported, modulePrefix+"/internal/operator/"); ok {
 			root[plane[strings.SplitN(dep, "/", 2)[0]]]++
 		}
 	}
-	t.Logf("internal/platform (the root package, both planes) imports: %d tenant, %d platform, %d kernel",
-		root["tenant"], root["platform"], root["kernel"])
+	t.Logf("internal/operator (the root package, both planes) imports: %d tenant, %d operator, %d kernel",
+		root["tenant"], root["operator"], root["kernel"])
 }
 
 // assertNoImportsAcross is both directions of the first two rules.
@@ -309,7 +309,7 @@ func assertNoImportsAcross(t *testing.T, from, to, why string) {
 }
 
 // planePackages walks internal/<plane> and every package under it, the same
-// way internal/apps/boundaries_test.go walks internal/platform.
+// way internal/apps/boundaries_test.go walks internal/operator.
 //
 // The tree does not exist yet, and that is a state to report rather than to
 // skip: a skipped test reads as "not applicable here" long after it has become

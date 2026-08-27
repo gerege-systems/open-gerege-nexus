@@ -13,7 +13,7 @@
  * be platform routes reachable by any tenant holding the permission, and the
  * move behind the gate is the thing that changed.
  *
- *	AUTH_TEST_DATABASE_URL=postgres://... go test ./internal/platform/...
+ *	AUTH_TEST_DATABASE_URL=postgres://... go test ./internal/operator/...
  */
 
 package tenant

@@ -23,7 +23,7 @@
  * like one was a directory under internal/apps, a type called `Module` and a
  * method called `RegisterRoutes` — three imitations of a contract it does not
  * implement, and the reason the boundaries test needed an exception to allow
- * `documents` to import it. The precedent is internal/platform/staterail, where
+ * `documents` to import it. The precedent is internal/operator/staterail, where
  * egov.Rail moved for the same reason: the platform builds the value, so the
  * type is the platform's.
  */

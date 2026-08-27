@@ -9,7 +9,7 @@ must never silently open the console; a word that could not be typed by accident
 is a decision somebody made. It renders a snippet with no `deny`, which is what
 a deployment wants when the platform itself is public: the address question is
 then asked by the platform, per request, against its own access mode (see
-backend/internal/platform/operator/address.go), rather than by an edge that
+backend/internal/operator/operator/address.go), rather than by an edge that
 cannot see the setting it would be contradicting.
 """
 

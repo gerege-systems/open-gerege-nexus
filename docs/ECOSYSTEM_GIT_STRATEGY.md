@@ -210,7 +210,7 @@ route redirect. Энэ зардал нь SDK гарсны **дараа** төл�
 
 | Хэсэг | Тайлбар |
 | --- | --- |
-| `internal/tenant/*`, `internal/platform/*`, `internal/kernel/*` бүхэлдээ | tenant/platform хоёр урсгал, plane-neutral kernel, auth, SSO, RBAC, dbguard, app catalog/install, observability, audit, settings, flags, quota, metering, reporting engine, identity rail, email verification, AI ба integration — платформын суурь |
+| `internal/tenant/*`, `internal/operator/*`, `internal/kernel/*` бүхэлдээ | tenant/platform хоёр урсгал, plane-neutral kernel, auth, SSO, RBAC, dbguard, app catalog/install, observability, audit, settings, flags, quota, metering, reporting engine, identity rail, email verification, AI ба integration — платформын суурь |
 | Frontend shell | login/auth/settings/profile/organisation/apps(store UI)/module framework/cp/impersonate/reports + kiosk бүрхүүл (төхөөрөмжийн туршлага нь платформынх) |
 | `native-apps/*`, `catalog/` schema + tooling, `deploy/` суурь | Бүрхүүл, гэрээ, дэд бүтэц |
 

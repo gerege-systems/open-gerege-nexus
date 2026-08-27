@@ -113,7 +113,7 @@ type SigningRails interface {
 
 // SigningRailsOf returns the PDF signing rails this deployment provides.
 //
-// Not `Signing` — internal/platform already has a function by that name for the
+// Not `Signing` — internal/operator already has a function by that name for the
 // Signer capability, and two accessors one letter apart is how the wrong one
 // gets called.
 func SigningRailsOf() (SigningRails, error) { return Capability[SigningRails]() }

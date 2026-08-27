@@ -100,7 +100,7 @@ backend/
   cmd/                  api, migrate, bootstrap, catalog хэрэгслүүд
   db/migrations/        үндсэн PostgreSQL migration-ууд
   internal/kernel/      хоёр plane-д нийтлэг доод түвшний механизм
-  internal/platform/    deployment/operator plane
+  internal/operator/    deployment/operator plane
   internal/tenant/      байгууллагын нэрийн өмнөөс ажиллах plane
   internal/apps/        distribution module-ийн угсрах цэг (одоо хоосон)
   pkg/nexus/            distribution module-ийн нийтийн SDK

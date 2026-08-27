@@ -10,7 +10,7 @@
  * tenant with no apps at all still has a legal name and still has to be able to
  * change it.
  *
- *	AUTH_TEST_DATABASE_URL=postgres://... go test ./internal/platform/...
+ *	AUTH_TEST_DATABASE_URL=postgres://... go test ./internal/operator/...
  */
 
 package profile

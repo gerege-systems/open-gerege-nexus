@@ -5,7 +5,7 @@
  *
  * Gives a fresh deployment its first organisation and the administrator who
  * runs it. There is no sign-up screen, on purpose: see
- * internal/platform/tenants/bootstrap.go.
+ * internal/operator/tenants/bootstrap.go.
  */
 
 package main
@@ -19,7 +19,7 @@ import (
 	"time"
 
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/kernel/security"
-	"github.com/gerege-systems/open-gerege-nexus/backend/internal/platform/tenants"
+	"github.com/gerege-systems/open-gerege-nexus/backend/internal/operator/tenants"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )

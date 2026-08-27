@@ -16,7 +16,7 @@
  * provider is fake; every line of ours between the two is real, including the
  * session, the cookies, the id_token verification and the SQL.
  *
- *	AUTH_TEST_DATABASE_URL=postgres://... go test ./internal/platform/...
+ *	AUTH_TEST_DATABASE_URL=postgres://... go test ./internal/operator/...
  */
 
 package identity

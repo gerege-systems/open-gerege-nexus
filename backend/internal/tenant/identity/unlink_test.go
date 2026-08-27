@@ -10,7 +10,7 @@
  * refusal has to come from the server, and it has to be counted from the
  * database rather than from the list the browser happens to be holding.
  *
- *	AUTH_TEST_DATABASE_URL=postgres://... go test ./internal/platform/...
+ *	AUTH_TEST_DATABASE_URL=postgres://... go test ./internal/operator/...
  */
 
 package identity

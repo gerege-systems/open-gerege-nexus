@@ -16,7 +16,7 @@ import (
 // a JSONB field to the users table that has to survive the value "system"
 // sitting where a UUID otherwise would. Neither is observable without a schema.
 //
-//	AUTH_TEST_DATABASE_URL=postgres://... go test ./internal/platform/...
+//	AUTH_TEST_DATABASE_URL=postgres://... go test ./internal/operator/...
 func historyPool(t *testing.T) *pgxpool.Pool {
 	t.Helper()
 	dsn := os.Getenv("AUTH_TEST_DATABASE_URL")

@@ -29,7 +29,7 @@ import (
 //
 // Empty until a distribution says otherwise, and empty is an ordinary answer —
 // a platform with no apps of its own installs none. Note what empty also
-// switches off: the catalogue-staleness refusal in internal/platform's
+// switches off: the catalogue-staleness refusal in internal/operator's
 // VerifyCatalogVersions is written against this list, so a deployment that
 // declares nothing here is a deployment where a catalogue older than the
 // binary is accepted whole.

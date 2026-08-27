@@ -5,7 +5,7 @@
  *
  * Where the two planes become one process.
  *
- * internal/tenant acts for one organisation and internal/platform acts for the
+ * internal/tenant acts for one organisation and internal/operator acts for the
  * deployment; neither imports the other, and neither owns the router. This
  * does: it builds what they share, hands the same values to both, mounts them
  * side by side, and answers the three routes that belong to the process rather
@@ -35,8 +35,8 @@ import (
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/kernel/security"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/kernel/settings"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/kernel/telemetry"
-	core "github.com/gerege-systems/open-gerege-nexus/backend/internal/platform"
-	"github.com/gerege-systems/open-gerege-nexus/backend/internal/platform/setup"
+	core "github.com/gerege-systems/open-gerege-nexus/backend/internal/operator"
+	"github.com/gerege-systems/open-gerege-nexus/backend/internal/operator/setup"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/tenant"
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"

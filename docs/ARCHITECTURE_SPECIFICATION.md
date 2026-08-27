@@ -28,7 +28,7 @@ Gerege Nexus нь Go + Next.js + PostgreSQL дээрх **модульт моно
 | Session cookie | `session_token` | `cp_session` |
 | Бүртгэл | `platform.users` + `tenant.memberships` | `platform.operator_accounts` |
 | DB role | `gerege_nexus_tenant` | `gerege_nexus_operator` |
-| Go package | `internal/tenant/*` | `internal/platform/*` |
+| Go package | `internal/tenant/*` | `internal/operator/*` |
 
 Операторын бүртгэл нь хэрэглэгчийн бүртгэл биш. Нэг хүн хоёр урсгалд зэрэг
 нэвтэрч болох ч тусдаа identity, cookie, эрх, audit ашиглана. Оператор тенантын
@@ -38,7 +38,7 @@ Gerege Nexus нь Go + Next.js + PostgreSQL дээрх **модульт моно
 ```text
 tenant origin ─┐                         ┌─ internal/tenant/* ─ tenant schema
                ├─ pkg/platform/server.go ┤
-control origin ┘   shared middleware     └─ internal/platform/* ─ platform schema
+control origin ┘   shared middleware     └─ internal/operator/* ─ platform schema
                           │
                     internal/kernel/*
                           │
@@ -56,7 +56,7 @@ store, middleware, router-ийг босгож хоёр route table-ийг зэр
 | --- | --- |
 | `backend/internal/kernel` | Аль ч урсгалыг import хийдэггүй cache, config, security, telemetry, settings, flags зэрэг суурь primitive |
 | `backend/internal/tenant` | Auth, access, directory, devices, identity, integrations, profile, SSO, app install зэрэг нэг тенантын ажиллагаа |
-| `backend/internal/platform` | Operator session, tenants, approvals, settings, flags, audit, support, metering, backup, catalog, observability |
+| `backend/internal/operator` | Operator session, tenants, approvals, settings, flags, audit, support, metering, backup, catalog, observability |
 | `backend/internal/apps` | Distribution модулийн угсрах цэг. 2026-08-25-нд SSO Clients App Store руу явсны дараа **хоосон** — апп бүр `pkg/nexus`-ээр бүртгэгдэж каталогоор ирнэ |
 | `backend/pkg/platform` | Хоёр урсгалыг нэг HTTP процесст угсрах public host package |
 | `backend/pkg/nexus` | Гадаад module/distribution-д зориулсан тогтвортой SDK contract |

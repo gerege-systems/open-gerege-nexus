@@ -16,7 +16,7 @@
  * single time, and a profile that says Google is not connected while the
  * person is looking at the Google account they just used.
  *
- *	AUTH_TEST_DATABASE_URL=postgres://... go test ./internal/platform/...
+ *	AUTH_TEST_DATABASE_URL=postgres://... go test ./internal/operator/...
  */
 
 package identity

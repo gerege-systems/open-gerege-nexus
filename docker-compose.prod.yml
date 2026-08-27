@@ -99,7 +99,7 @@ services:
     pull_policy: always
     environment:
       # The API switches into the unprivileged gerege_nexus_app role for the
-      # duration of every tenant-scoped query (see internal/platform/dbguard),
+      # duration of every tenant-scoped query (see internal/kernel/dbguard),
       # so the row-level policies from migration 00029 apply even though this
       # connects as the owner. That protects against a handler that forgets its
       # WHERE tenant_id, which is what the policies are for.
@@ -214,7 +214,7 @@ services:
       CONTROL_PLANE_HOST: ${CONTROL_PLANE_HOST:-}
       # The addresses the console answers to *while the platform is private*.
       # Empty, or the word "open", means no address restriction — which is what
-      # a public deployment wants. See internal/platform/operator/address.go.
+      # a public deployment wants. See internal/operator/operator/address.go.
       CONTROL_PLANE_ALLOWED_CIDRS: ${CONTROL_PLANE_ALLOWED_CIDRS:-}
       # What the console's front page reads. All optional: without them the
       # page shows the parts that come from this platform's own database and
@@ -372,7 +372,7 @@ services:
       CONTROL_PLANE_HOST: ${CONTROL_PLANE_HOST:-}
       # The addresses the console answers to *while the platform is private*.
       # Empty, or the word "open", means no address restriction — which is what
-      # a public deployment wants. See internal/platform/operator/address.go.
+      # a public deployment wants. See internal/operator/operator/address.go.
       CONTROL_PLANE_ALLOWED_CIDRS: ${CONTROL_PLANE_ALLOWED_CIDRS:-}
       # The brand, read per request rather than baked in — see
       # frontend/lib/brand.ts. This is why the shell's HTML is rendered on

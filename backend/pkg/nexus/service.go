@@ -375,7 +375,7 @@ func (p staticPlatform) Permissions() PermissionStore { return p.permissions }
 //
 // Published here because a module has to be able to say what it is connected
 // to. internal/apps/egov — the app-facing surface of the state integrations —
-// imported internal/platform/staterail for this type and nothing else, and that
+// imported internal/operator/staterail for this type and nothing else, and that
 // package is eight lines of struct: a module was pinned into this repository by
 // a type declaration it could have carried itself.
 //

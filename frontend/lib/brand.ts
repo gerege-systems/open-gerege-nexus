@@ -17,7 +17,7 @@
  * defaults here, so that a client component naming the product does not drag a
  * `process.env` reader into every browser bundle.
  *
- * `BRAND_NAME` is also read by the API (backend/internal/platform/config), for
+ * `BRAND_NAME` is also read by the API (backend/internal/kernel/config), for
  * the two sentences it puts in front of a person. They are two halves of one
  * setting; a deployment that renames only one of them has a sign-in screen and
  * an eID prompt that disagree about which product this is.

@@ -13,7 +13,7 @@ import (
 // the threshold, the window, and the restart after a lapsed lock are all
 // decided by the statement rather than by Go — so it needs a real schema.
 //
-//	AUTH_TEST_DATABASE_URL=postgres://... go test ./internal/platform/...
+//	AUTH_TEST_DATABASE_URL=postgres://... go test ./internal/operator/...
 //
 // Without one these skip, so `go test ./...` stays green on a machine with no
 // database.

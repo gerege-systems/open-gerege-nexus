@@ -133,7 +133,7 @@ the actual answer.
 ### Using platform services
 
 Anything more than one app needs lives in the platform itself — `internal/tenant/`
-for what acts inside one organisation, `internal/platform/` for what acts for the
+for what acts inside one organisation, `internal/operator/` for what acts for the
 deployment, `internal/kernel/` for what neither owns — and reaches a
 module through its constructor, not through a package-level singleton. The
 server builds one instance in `NewServer` and passes it in, the way

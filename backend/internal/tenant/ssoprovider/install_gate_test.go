@@ -14,7 +14,7 @@ import (
 
 // The other half of an external app's install gate: what the authorization
 // endpoint does with the answer. The decision itself is tested without a
-// database in internal/platform; this is the endpoint, against real rows.
+// database in internal/operator; this is the endpoint, against real rows.
 //
 //	OAUTH_TEST_DATABASE_URL=postgres://... go test ./internal/tenant/ssoprovider/...
 

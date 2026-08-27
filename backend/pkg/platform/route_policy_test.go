@@ -64,7 +64,7 @@ var publicRoutes = []string{
 	// in, and the three that act carry the setup token instead — 256 bits,
 	// minted in memory at boot, written once to the log, dropped the moment an
 	// organisation exists. Unarmed, they are 404 rather than 401, so a stranger
-	// is not told there is a token to guess. See internal/platform/setup.
+	// is not told there is a token to guess. See internal/operator/setup.
 	"/api/v1/setup/status",
 	"/api/v1/setup/organisation",
 	"/api/v1/setup/person",
@@ -257,7 +257,7 @@ func TestThePublicListHasNoStaleEntries(t *testing.T) {
 // being checked is the routing table the process actually serves, so it is
 // built by the same constructor the process uses.
 //
-//	AUTH_TEST_DATABASE_URL=postgres://... go test ./internal/platform/...
+//	AUTH_TEST_DATABASE_URL=postgres://... go test ./internal/operator/...
 func routerUnderTest(t *testing.T) chi.Routes {
 	t.Helper()
 	dsn := os.Getenv("AUTH_TEST_DATABASE_URL")

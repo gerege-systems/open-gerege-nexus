@@ -9,7 +9,7 @@
 // Everything here runs on somebody's behalf: a session belongs to a person
 // inside an organisation, every query is bounded by the tenant the request
 // carries, and the row-level policies underneath refuse anything that is not.
-// The other plane — internal/platform — acts for the deployment, on behalf of
+// The other plane — internal/operator — acts for the deployment, on behalf of
 // all of them at once, and the two do not import each other.
 //
 // What they share is underneath both: internal/kernel holds the pool guard, the

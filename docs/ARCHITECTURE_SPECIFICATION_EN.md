@@ -28,7 +28,7 @@ planes:
 | Session cookie | `session_token` | `cp_session` |
 | Account | `platform.users` + `tenant.memberships` | `platform.operator_accounts` |
 | Database role | `gerege_nexus_tenant` | `gerege_nexus_operator` |
-| Go package | `internal/tenant/*` | `internal/platform/*` |
+| Go package | `internal/tenant/*` | `internal/operator/*` |
 
 An operator account is not a user account. A person may be signed into both
 planes, but each has a distinct identity, cookie, privilege set, and audit
@@ -38,7 +38,7 @@ trail. When an operator needs a tenant's view, they use the reason-bound,
 ```text
 tenant origin ─┐                         ┌─ internal/tenant/* ─ tenant schema
                ├─ pkg/platform/server.go ┤
-control origin ┘   shared middleware     └─ internal/platform/* ─ platform schema
+control origin ┘   shared middleware     └─ internal/operator/* ─ platform schema
                           │
                     internal/kernel/*
                           │
@@ -56,7 +56,7 @@ import graph.
 | --- | --- |
 | `backend/internal/kernel` | Plane-neutral cache, config, security, telemetry, settings, flags, and other primitives |
 | `backend/internal/tenant` | Authentication, access, directory, devices, identity, integrations, profile, SSO, and app installation for one tenant |
-| `backend/internal/platform` | Operator sessions, tenants, approvals, settings, flags, audit, support, metering, backup, catalog, and observability |
+| `backend/internal/operator` | Operator sessions, tenants, approvals, settings, flags, audit, support, metering, backup, catalog, and observability |
 | `backend/internal/apps` | Where a distribution's modules are assembled. Empty since 2026-08-25, when SSO Clients left for the App Store — every app now arrives through `pkg/nexus` and a catalogue |
 | `backend/pkg/platform` | Public host package that assembles both planes into one HTTP process |
 | `backend/pkg/nexus` | Stable SDK contract for external modules and distributions |

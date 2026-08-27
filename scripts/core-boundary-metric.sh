@@ -33,7 +33,7 @@ PHASE_0=7423245
 RANGE="${1:-$PHASE_0..HEAD}"
 
 # Цөмийн заадас гэж юуг хэлэх вэ — §2.1-ийн хэмжсэн жагсаалт.
-SEAM='^(backend/internal/platform/|backend/pkg/nexus/|frontend/lib/api.ts|frontend/lib/i18n/|frontend/components/Layout.tsx|catalog/|backend/db/migrations/)'
+SEAM='^(backend/internal/operator/|backend/pkg/nexus/|frontend/lib/api.ts|frontend/lib/i18n/|frontend/components/Layout.tsx|catalog/|backend/db/migrations/)'
 
 total=0
 touched=0
