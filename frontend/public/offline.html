@@ -11,6 +11,11 @@
 
       Both languages appear at once rather than being switched between: the
       chooser lives in the app, and the app is what is unavailable.
+
+      It watches for the network itself. The button is for somebody who wants
+      to press something; without the watcher this page is a dead end, because
+      the failure that puts a phone here is usually over within seconds and
+      nothing tells the page so.
     -->
     <style>
       :root { color-scheme: light dark; }
@@ -65,5 +70,28 @@
       <p>This app needs a connection. Check yours and try again.</p>
       <button type="button" onclick="location.reload()">Дахин оролдох · Retry</button>
     </main>
+    <script>
+      // Come back on our own.
+      //
+      // Two ways, because neither is enough alone. The online event fires when
+      // the operating system changes its mind about the connection — which it
+      // does not do for the case that lands most people here: a radio that was
+      // "connected" throughout and simply dropped the requests. So there is
+      // also a probe — a small file, no HTTP cache, no session, nothing worth
+      // reading in the body. If it arrives, the network is back and so is the
+      // app.
+      //
+      // Only while the page is on screen. A phone in a pocket does not need
+      // this, and every check wakes the radio.
+      function retryWhenTheNetworkIsBack() {
+        if (document.visibilityState !== "visible") return;
+        fetch("/favicon.ico", { cache: "no-store" })
+          .then(function (response) { if (response.ok) location.reload(); })
+          .catch(function () {});
+      }
+      addEventListener("online", function () { location.reload(); });
+      addEventListener("visibilitychange", retryWhenTheNetworkIsBack);
+      setInterval(retryWhenTheNetworkIsBack, 3000);
+    </script>
   </body>
 </html>
