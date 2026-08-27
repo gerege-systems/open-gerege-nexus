@@ -24,7 +24,7 @@
  */
 
 // Bumping this name is what retires everything cached by the previous worker.
-const CACHE = "gerege-nexus-shell-v2";
+const CACHE = "gerege-nexus-shell-v3";
 
 // The offline page is plain HTML with no bundle behind it. It has to render
 // when nothing else can, which rules out anything that needs the app to boot.
@@ -49,7 +49,11 @@ self.addEventListener("activate", (event) => {
     caches
       .keys()
       .then((names) =>
-        Promise.all(names.filter((name) => name !== CACHE).map((name) => caches.delete(name))),
+        Promise.all(
+          names
+            .filter((name) => name !== CACHE)
+            .map((name) => caches.delete(name)),
+        ),
       )
       .then(() => self.clients.claim()),
   );
@@ -82,7 +86,8 @@ self.addEventListener("fetch", (event) => {
 
   // Serving a stale worker or manifest is how an install gets stuck on a
   // version nobody is running any more.
-  if (url.pathname === "/sw.js" || url.pathname === "/manifest.webmanifest") return;
+  if (url.pathname === "/sw.js" || url.pathname === "/manifest.webmanifest")
+    return;
 
   // A request that opts out of the HTTP cache is asking for the network, and a
   // service worker answering it from storage would be overruling that.
@@ -112,18 +117,38 @@ self.addEventListener("fetch", (event) => {
   // depends on who is signed in. The cache is only ever the answer to "there
   // was no network at all".
   //
-  // One retry before that answer, because "the first fetch failed" and "there
-  // is no network" are not the same sentence. A phone waking its radio, a
-  // handover between cells, a browser resuming a backgrounded tab — each
-  // rejects one request and then works. Without the retry the reader gets a
+  // Two retries before that answer, because "the first fetch failed" and
+  // "there is no network" are not the same sentence. A phone waking its radio,
+  // a handover between cells, a browser resuming a backgrounded tab — each
+  // rejects a request and then works. Without the retries the reader gets a
   // full-page "you are offline" over a link that was fine a second later, and
-  // has to press a button to find that out; a real outage costs one extra
-  // request and reads the same.
+  // has to press a button to find that out; a real outage costs two extra
+  // requests and reads the same.
+  //
+  // The delays are the second half of that sentence. One attempt 400ms later
+  // was still inside the same dead window: a radio coming out of idle takes a
+  // second or two, so both requests failed for one cause and the reader was
+  // told the network was gone while it was merely waking. Waiting 1.5s for the
+  // last attempt costs nothing in a real outage — nobody is watching a page
+  // that has already failed twice — and covers the case that actually happens.
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request)
-        .catch(() => new Promise((resolve) => setTimeout(resolve, 400)).then(() => fetch(request)))
-        .catch(() => caches.match(OFFLINE_PAGE).then((page) => page || Response.error())),
+      retrying(request, [400, 1500]).catch(() =>
+        caches.match(OFFLINE_PAGE).then((page) => page || Response.error()),
+      ),
     );
   }
 });
+
+/** Fetch, and after each delay in turn try again. Rejects only if all of them do. */
+function retrying(request, delays) {
+  return delays.reduce(
+    (attempt, delay) =>
+      attempt.catch(() =>
+        new Promise((resolve) => setTimeout(resolve, delay)).then(() =>
+          fetch(request),
+        ),
+      ),
+    fetch(request),
+  );
+}
