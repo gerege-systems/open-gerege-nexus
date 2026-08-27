@@ -32,6 +32,7 @@ func (s *Store) Routes(r chi.Router, gate func(http.Handler) http.Handler) {
 		mr.Use(gate)
 		mr.Get("/items", s.HandleItems)
 		mr.Post("/join-requests", s.HandleAsk)
+		mr.Get("/directory", s.HandleDirectory)
 	})
 }
 
@@ -91,4 +92,22 @@ func (s *Store) HandleAsk(w http.ResponseWriter, r *http.Request) {
 		// endpoint should not decide that for it.
 		httpx.Error(w, http.StatusConflict, err.Error())
 	}
+}
+
+// HandleDirectory answers "who does this".
+//
+// Behind the same gate as the rest: it is a public statement, but a
+// deployment-wide list of every organisation is still something to ask a
+// signed-in person for rather than the open internet.
+func (s *Store) HandleDirectory(w http.ResponseWriter, r *http.Request) {
+	limit := 0
+	if raw := r.URL.Query().Get("limit"); raw != "" {
+		limit, _ = strconv.Atoi(raw)
+	}
+	found, err := s.Directory(r.Context(), r.URL.Query().Get("code"), limit)
+	if err != nil {
+		httpx.Error(w, http.StatusInternalServerError, "failed to search the directory")
+		return
+	}
+	httpx.JSON(w, http.StatusOK, map[string]any{"providers": found})
 }

@@ -309,6 +309,23 @@ export const coreApi = {
   // What this person asked other organisations for. Empty on a workspace
   // nothing has published into, which is every organisation and a home whose
   // requests have not started yet — see backend/db/migrations/00086.
+  // Who provides a service, deployment-wide. Read by anybody signed in: it is
+  // what organisations chose to say in public, and finding one is the point.
+  searchDirectory: (code: string) =>
+    request<{
+      providers: Array<{ slug: string; name: string; code: string; title: string }>;
+    }>(`/me/directory?code=${encodeURIComponent(code)}`),
+  // This organisation's own published services, and publishing or withdrawing
+  // one. Reading is any member's; changing it is the administrator's.
+  getPublishedServices: () =>
+    request<{ services: Array<{ id: string; code: string; title: string }> }>("/tenant/services"),
+  publishService: (code: string, title: string) =>
+    request<{ ok: boolean }>("/tenant/services", {
+      method: "POST",
+      body: JSON.stringify({ code, title }),
+    }),
+  withdrawService: (id: string) =>
+    request<{ ok: boolean }>(`/tenant/services/${id}`, { method: "DELETE" }),
   // Asking an organisation to let you in, by the slug in its address. The
   // reply is a place in its queue; what comes of it arrives in getMyItems.
   askToJoin: (slug: string, message: string) =>
