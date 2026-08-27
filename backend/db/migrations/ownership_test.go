@@ -161,6 +161,11 @@ var platformTables = map[string]table{
 	// registry.publish_person_item. The workspace plane by §2.1 and not a
 	// borderline case: the row exists for one home and no other, which is
 	// exactly what the rule asks. Migration 00086.
+	// A projection of somebody else's row, written into this workspace by
+	// registry.publish_person_item. The workspace plane by §2.1 and not a
+	// borderline case: the row exists for one home and no other, which is
+	// exactly what the rule asks. Migration 00086.
+	"person_items":          {"workspace", "a person's own requests"},
 	"push_tokens":           {"workspace", "devices"},
 	"report_grants":         {"workspace", "report sharing"},
 	"report_schedules":      {"workspace", "reports"},

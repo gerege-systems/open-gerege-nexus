@@ -57,6 +57,7 @@ GET /api/v1/core/me/preferences
 GET /api/v1/core/organisation
 GET /api/v1/devices/me
 GET /api/v1/installed-apps
+GET /api/v1/me/items
 GET /api/v1/menus
 GET /api/v1/oauth2/client-info
 GET /api/v1/oauth2/consent

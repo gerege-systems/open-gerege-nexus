@@ -123,6 +123,13 @@
   PermissionDefinition.Description string
   PermissionDefinition.Name string
   PermissionStore.GetUserPermissions(ctx context.Context, workspaceID, userID string) (map[string]bool, error)
+  PersonFeed.Publish(ctx context.Context, geID int64, item PersonItem) error
+  PersonItem.Answer string
+  PersonItem.Code string
+  PersonItem.ProviderWorkspaceID string
+  PersonItem.SourceApp string
+  PersonItem.SourceRef string
+  PersonItem.Status string
   Platform.DB() DB
   Platform.Permissions() PermissionStore
   Querier.Query(ctx context.Context, sql string, args ...any) (Rows, error)
@@ -443,6 +450,8 @@ type ParamSpec struct
 type Params struct
 type PermissionDefinition struct
 type PermissionStore interface
+type PersonFeed interface
+type PersonItem struct
 type Platform interface
 type Querier interface
 type Quota interface

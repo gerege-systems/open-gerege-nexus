@@ -47,7 +47,7 @@ func schemaPool(t *testing.T) *pgxpool.Pool {
 }
 
 // The database result is checked against the same ownership decision that
-// generated the migration. Counting 31, 20 and 7 is useful in a review, but the
+// generated the migration. Counting 32, 20 and 7 is useful in a review, but the
 // names are the invariant: swapping one table each way would preserve every
 // count and still put both in the wrong schema.
 func TestEveryPlatformMigrationTableLandsOnItsDeclaredSchema(t *testing.T) {
@@ -92,8 +92,8 @@ func TestEveryPlatformMigrationTableLandsOnItsDeclaredSchema(t *testing.T) {
 	// stays legible: twenty of the operator plane's tables are ones a tenant may
 	// also read and seven are not. A number edited alongside a migration is a
 	// number somebody looked at.
-	if counts["workspace"] != 31 || counts["registry"] != 20 || counts["operator"] != 7 {
-		t.Errorf("schema counts: workspace=%d registry=%d operator=%d; want 31, 20 and 7",
+	if counts["workspace"] != 32 || counts["registry"] != 20 || counts["operator"] != 7 {
+		t.Errorf("schema counts: workspace=%d registry=%d operator=%d; want 32, 20 and 7",
 			counts["workspace"], counts["registry"], counts["operator"])
 	}
 }
