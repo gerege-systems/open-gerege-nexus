@@ -58,29 +58,27 @@ func (h *Handlers) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// A user can hold memberships in several tenants. LIMIT 1 without an ORDER
-	// BY let Postgres pick, so the same credentials could land in a different
-	// tenant from one sign-in to the next — and the session, its audit trail
-	// and every subsequent read are scoped to whichever it picked. Oldest
-	// membership first makes it the same tenant every time.
+	// The account, and nothing about where it works.
+	//
+	// This used to be one statement joining memberships, which picked the
+	// oldest one and read is_admin from it. That was wrong from the day
+	// migration 00085 landed: the join is inner, so an account belonging to no
+	// organisation matched no row and the answer was "invalid email or
+	// password" — for the exact people 00085 exists to let in. The eID and
+	// federated paths never had the bug, because they ask FirstTenantFor
+	// instead of joining; this one carried its own copy of the question and so
+	// missed the change to the answer.
+	//
+	// Which workspace this session opens in is asked below, once the password
+	// is known to be right, and by the one function that knows the rule.
 	req.Email = strings.ToLower(strings.TrimSpace(req.Email))
 	var userID, passwordHash, tenantID, name string
 	var isAdmin bool
 	var lockedUntil pgtype.Timestamptz
 	err := h.db.QueryRow(r.Context(),
-		`SELECT u.id, u.password_hash, u.name,
-		        EXISTS (
-		            SELECT 1 FROM workspace.membership_roles mr
-		            JOIN workspace.roles r ON r.id=mr.role_id
-		            WHERE mr.membership_id=m.id AND r.tenant_id=m.tenant_id
-		              AND r.code='admin' AND r.active
-		        ) AS is_admin,
-		        m.tenant_id, u.locked_until
-		 FROM registry.users u
-		 JOIN workspace.memberships m ON m.user_id = u.id
-		 WHERE lower(u.email) = $1
-		 ORDER BY m.created_at, m.tenant_id
-		 LIMIT 1`, req.Email).Scan(&userID, &passwordHash, &name, &isAdmin, &tenantID, &lockedUntil)
+		`SELECT u.id, u.password_hash, u.name, u.locked_until
+		   FROM registry.users u
+		  WHERE lower(u.email) = $1`, req.Email).Scan(&userID, &passwordHash, &name, &lockedUntil)
 
 	if errors.Is(err, pgx.ErrNoRows) {
 		passwordHash = dummyPasswordHash
@@ -100,6 +98,33 @@ func (h *Handlers) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	_, _ = h.db.Exec(r.Context(), `UPDATE registry.users SET failed_login_attempts=0, locked_until=NULL WHERE id=$1`, userID)
+
+	// Where this session opens: the oldest organisation they belong to, or
+	// their own home if they belong to none. Asked after the password rather
+	// than with it, so a wrong password cannot make a workspace as a side
+	// effect of being typed.
+	tenantID, err = h.FirstTenantFor(r.Context(), userID)
+	if err != nil {
+		slog.Error("could not open a workspace for a signed-in account", "user_id", userID, "error", err)
+		httpx.Error(w, http.StatusInternalServerError, "login service unavailable")
+		return
+	}
+	// Administrator of the workspace being opened, which is a question about
+	// that workspace and not about the account. In a home the answer is no:
+	// nobody administers a workspace with one person in it, and there is
+	// nothing there for an administrator to reach.
+	if err := h.db.QueryRow(r.Context(),
+		`SELECT EXISTS (
+		     SELECT 1 FROM workspace.memberships m
+		     JOIN workspace.membership_roles mr ON mr.membership_id = m.id
+		     JOIN workspace.roles ro ON ro.id = mr.role_id
+		    WHERE m.user_id = $1::uuid AND m.tenant_id = $2::uuid
+		      AND ro.tenant_id = m.tenant_id AND ro.code = 'admin' AND ro.active)`,
+		userID, tenantID).Scan(&isAdmin); err != nil {
+		slog.Error("could not read the signed-in account's roles", "user_id", userID, "error", err)
+		httpx.Error(w, http.StatusInternalServerError, "login service unavailable")
+		return
+	}
 
 	token, expiresAt, err := h.IssueSession(r, userID, tenantID, "password")
 	if err != nil {
