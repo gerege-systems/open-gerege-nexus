@@ -161,11 +161,12 @@ var platformTables = map[string]table{
 	// registry.publish_person_item. The workspace plane by §2.1 and not a
 	// borderline case: the row exists for one home and no other, which is
 	// exactly what the rule asks. Migration 00086.
-	// A projection of somebody else's row, written into this workspace by
-	// registry.publish_person_item. The workspace plane by §2.1 and not a
-	// borderline case: the row exists for one home and no other, which is
-	// exactly what the rule asks. Migration 00086.
-	"person_items":          {"workspace", "a person's own requests"},
+	"person_items": {"workspace", "a person's own requests"},
+	// Somebody asking to be let in. The organisation's row, not the asker's:
+	// they are not a member yet, and the decision, the audit and the work are
+	// the organisation's. What the asker sees is the person_items projection
+	// above. Migration 00089.
+	"join_requests":         {"workspace", "access control"},
 	"push_tokens":           {"workspace", "devices"},
 	"report_grants":         {"workspace", "report sharing"},
 	"report_schedules":      {"workspace", "reports"},

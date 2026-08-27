@@ -220,9 +220,31 @@ func TestPublishingToANumberWithNoHomeFails(t *testing.T) {
 	pool := openPool(t)
 	store := person.New(pool)
 
+	// A Gerege number nobody carries at all: the lookup that turns it into an
+	// account finds nothing, and the write never starts.
 	err := store.Publish(context.Background(), 999999999999, item("REQ-NOBODY"))
 	if err == nil {
-		t.Fatal("publishing to a Gerege number with no home succeeded")
+		t.Fatal("publishing to a Gerege number nobody carries succeeded")
+	}
+	if !strings.Contains(err.Error(), "find the person") {
+		t.Errorf("refused for an unexpected reason: %v", err)
+	}
+
+	// And an account that exists with no home of its own, which is the state
+	// of anybody who has not signed in since 00085. The function refuses
+	// rather than opening a workspace on their behalf.
+	suffix := strings.ReplaceAll(uuid.NewString(), "-", "")[:12]
+	var homeless string
+	if err := pool.QueryRow(context.Background(),
+		`INSERT INTO registry.users (email, password_hash, name) VALUES ($1,'x','x') RETURNING id::text`,
+		"homeless-"+suffix+"@example.mn").Scan(&homeless); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM registry.users WHERE id=$1`, homeless) })
+
+	err = store.PublishTo(context.Background(), homeless, item("REQ-HOMELESS"))
+	if err == nil {
+		t.Fatal("publishing to an account with no home succeeded")
 	}
 	if !strings.Contains(err.Error(), "no personal workspace") {
 		t.Errorf("refused for an unexpected reason: %v", err)
@@ -314,7 +336,7 @@ func TestOnlyTheTenantRoleReachesTheFeedAndOnlyThroughTheFunction(t *testing.T) 
 func TestTheOperatorRoleCannotPublish(t *testing.T) {
 	pool := openPool(t)
 	ctx := context.Background()
-	geID, _, _ := seedHome(t, pool)
+	_, userID, _ := seedHome(t, pool)
 
 	tx, err := pool.Begin(ctx)
 	if err != nil {
@@ -325,7 +347,7 @@ func TestTheOperatorRoleCannotPublish(t *testing.T) {
 		t.Fatal(err)
 	}
 	_, err = tx.Exec(ctx,
-		`SELECT registry.publish_person_item($1::bigint, NULL::uuid, 'app', 'ref', 'code', 'status', '')`, geID)
+		`SELECT registry.publish_person_item($1::uuid, NULL::uuid, 'app', 'ref', 'code', 'status', '')`, userID)
 	if err == nil {
 		t.Fatal("the operator role published into a citizen's home")
 	}

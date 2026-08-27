@@ -309,6 +309,13 @@ export const coreApi = {
   // What this person asked other organisations for. Empty on a workspace
   // nothing has published into, which is every organisation and a home whose
   // requests have not started yet — see backend/db/migrations/00086.
+  // Asking an organisation to let you in, by the slug in its address. The
+  // reply is a place in its queue; what comes of it arrives in getMyItems.
+  askToJoin: (slug: string, message: string) =>
+    request<{ ok: boolean }>("/me/join-requests", {
+      method: "POST",
+      body: JSON.stringify({ slug, message }),
+    }),
   getMyItems: () =>
     request<{
       items: Array<{
@@ -351,6 +358,20 @@ export const coreApi = {
     permissions: Array<{ code:string; name:string; description:string; app:string }>;
     members: Array<{ membership_id:string; user_id:string; name:string; email:string; is_admin:boolean; roles:string[] }>;
   }>("/admin/access/overview"),
+  // People waiting at this organisation's door, and the answer. Administrator
+  // only, like the rest of /admin/access: accepting one grants access.
+  getJoinRequests: () =>
+    request<{
+      requests: Array<{
+        id: string; user_id: string; name: string; email: string;
+        message: string; status: string; created_at: string;
+      }>;
+    }>("/admin/access/join-requests"),
+  decideJoinRequest: (id: string, accept: boolean) =>
+    request<{ ok: boolean }>(`/admin/access/join-requests/${id}`, {
+      method: "POST",
+      body: JSON.stringify({ accept }),
+    }),
   createRole: (data:{code:string;name:string;description:string}) => request<{id:string}>("/admin/access/roles",{method:"POST",body:JSON.stringify(data)}),
   updateRole: (id:string,data:{name:string;description:string;active:boolean}) => request(`/admin/access/roles/${id}`,{method:"PUT",body:JSON.stringify(data)}),
   deleteRole: (id:string) => request<void>(`/admin/access/roles/${id}`,{method:"DELETE"}),

@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Inbox } from "lucide-react";
+import { Inbox, Send } from "lucide-react";
 
 import { api } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
-import { Banner, EmptyState, Loading, PageHeader, TableCard, tableHeadClass } from "@/components/ui";
+import { Banner, EmptyState, fieldClass, Loading, PageHeader, TableCard, tableHeadClass } from "@/components/ui";
 
 /**
  * Юу гуйсан, хаана явна.
@@ -49,6 +49,9 @@ export default function MyRequestsPage() {
   const [items, setItems] = useState<Item[] | null>(null);
   const [error, setError] = useState("");
 
+  const [round, setRound] = useState(0);
+  const reload = () => setRound((n) => n + 1);
+
   useEffect(() => {
     let alive = true;
     void api
@@ -58,7 +61,7 @@ export default function MyRequestsPage() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [round]);
 
   return (
     <main className="p-6 space-y-6">
@@ -67,6 +70,8 @@ export default function MyRequestsPage() {
         title={t("me.view.requests_title")}
         subtitle={t("me.view.requests_subtitle")}
       />
+
+      <AskToJoin onAsked={reload} />
 
       {error && <Banner tone="error" message={error} />}
       {!items && !error && <Loading />}
@@ -108,5 +113,70 @@ export default function MyRequestsPage() {
         </TableCard>
       )}
     </main>
+  );
+}
+
+/**
+ * Асуух талбар.
+ *
+ * Байгууллагыг **slug-аар** нэрлэнэ — хүнд «манайд ирээрэй» гэж хэлэхэд өгдөг
+ * нэр, тэдний үйлчилдэг дэлгэц бүрийн хаяган дотор байдаг үг. Сонгох жагсаалт
+ * биш: суулгац дээрх бүх байгууллагын жагсаалт бол **лавлах** бөгөөд иргэн юуг
+ * тоолж болох тухай тусдаа шийдвэр. Тэр өдөр ирэхэд энэ талбар сонголт болно.
+ */
+function AskToJoin({ onAsked }: { onAsked: () => void }) {
+  const { t } = useI18n();
+  const [slug, setSlug] = useState("");
+  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState("");
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    setBusy(true);
+    setFailed("");
+    try {
+      await api.askToJoin(slug.trim(), message.trim());
+      setSlug("");
+      setMessage("");
+      onAsked();
+    } catch (err: unknown) {
+      setFailed(err instanceof Error ? err.message : "—");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form onSubmit={submit} className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-3">
+      <div>
+        <h2 className="text-sm font-bold text-slate-900">{t("me.view.ask_title")}</h2>
+        <p className="text-xs text-slate-500 mt-0.5">{t("me.view.ask_subtitle")}</p>
+      </div>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <input
+          required
+          value={slug}
+          onChange={(e) => setSlug(e.target.value)}
+          placeholder={t("me.field.slug_placeholder")}
+          className={`${fieldClass} sm:w-64`}
+        />
+        <input
+          value={message}
+          maxLength={500}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder={t("me.field.message_placeholder")}
+          className={`${fieldClass} flex-1`}
+        />
+        <button
+          disabled={busy || slug.trim() === ""}
+          className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+        >
+          <Send className="inline w-4 h-4 mr-1" />
+          {t("me.action.ask")}
+        </button>
+      </div>
+      {failed && <Banner tone="error" message={failed} />}
+    </form>
   );
 }

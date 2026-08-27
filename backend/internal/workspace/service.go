@@ -827,6 +827,11 @@ func (s *Service) Routes(r chi.Router) {
 				ac.Delete("/roles/{id}", s.access.HandleDeleteRole)
 				ac.Put("/roles/{id}/permissions", s.access.HandleSetRolePermissions)
 				ac.Put("/memberships/{id}/roles", s.access.HandleSetMembershipRoles)
+				// People asking to join, and the answer. Under the same guard
+				// as the roles: accepting one is granting access, which is
+				// what this whole group is about.
+				ac.Get("/join-requests", s.access.HandleJoinRequests)
+				ac.Post("/join-requests/{id}", s.access.HandleDecideJoinRequest)
 			})
 
 			// Asking the verification service to write to an address spends a
