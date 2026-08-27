@@ -6,6 +6,18 @@
  * registration number is called a registration number, not a "company code".
  */
 export const core = {
+  // Байгууллага юуг олон нийтэд зарлаж байгаа (00090). Хүсэлт хүлээж авах нь
+  // дотоод шийдвэр, лавлахад гарах нь гадаад амлалт — тиймээс тусдаа дэлгэц.
+  "core.view.services_title": { mn: "Нийтэлсэн үйлчилгээ", en: "Published services" },
+  "core.view.services_hint": {
+    mn: "Эдгээр нь суурилуулалт даяарх лавлахад гарч, иргэн танайхыг олж хүсэлт гаргана. Дотоод кодоо (local.) нийтлэх боломжгүй.",
+    en: "These appear in the deployment-wide directory, where a citizen can find you and ask. Your own local. codes cannot be published.",
+  },
+  "core.message.no_services": { mn: "Нийтэлсэн үйлчилгээ алга.", en: "Nothing published yet." },
+  "core.field.service_code": { mn: "код", en: "code" },
+  "core.field.service_title": { mn: "юу гэж нэрлэх вэ", en: "what you call it" },
+  "core.action.publish": { mn: "Нийтлэх", en: "Publish" },
+  "core.action.withdraw": { mn: "Хасах", en: "Withdraw" },
   "core.view.organisation_title": { mn: "Байгууллага", en: "Organisation" },
   "core.view.organisation_subtitle": {
     mn: "Байгууллагын албан ёсны мэдээлэл — баримт бичиг, тайланд хэвлэгдэнэ",

@@ -123,9 +123,13 @@ var platformTables = map[string]table{
 	"platform_settings":         {"operator", "control plane"},
 	"platform_settings_history": {"operator", "control plane"},
 	"store_app_versions":        {"operator", "app store"},
-	"tenant_quotas":             {"operator", "tenants"},
-	"tenants":                   {"operator", "tenants"},
-	"usage_events":              {"operator", "usage"},
+	// Who does what, deployment-wide. In registry because it is neither one
+	// workspace's nor one person's: an organisation publishes into it and
+	// everybody reads it. Migration 00090.
+	"service_directory": {"operator", "directory"},
+	"tenant_quotas":     {"operator", "tenants"},
+	"tenants":           {"operator", "tenants"},
+	"usage_events":      {"operator", "usage"},
 	// A person is one person across the organisations they belong to; the
 	// membership is what is per-tenant, and that is on the other side.
 	"user_eid_identities": {"operator", "identity"},

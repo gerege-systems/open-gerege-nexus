@@ -788,6 +788,13 @@ func (s *Service) Routes(r chi.Router) {
 			// because these fields print on documents.
 			pr.Get("/tenant/profile", s.profile.HandleGetTenantProfile)
 			pr.With(s.authn.RequireAdmin).Put("/tenant/profile", s.profile.HandleUpdateTenantProfile)
+			// What this organisation says it does, in public. Beside the legal
+			// profile because it is the same kind of statement, and behind the
+			// same guard: publishing is a promise made in the organisation's
+			// name.
+			pr.Get("/tenant/services", s.profile.HandlePublishedServices)
+			pr.With(s.authn.RequireAdmin).Post("/tenant/services", s.profile.HandlePublishService)
+			pr.With(s.authn.RequireAdmin).Delete("/tenant/services/{id}", s.profile.HandleWithdrawService)
 			// Refreshing those same fields from the register that holds them.
 			// Behind the same guard as the edit, because it is one: what comes
 			// back overwrites the organisation's legal identity.

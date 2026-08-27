@@ -11,6 +11,7 @@ DELETE /api/platform/v1/tenants/{id}/deletion
 DELETE /api/v1/admin/access/roles/{id}
 DELETE /api/v1/core/me/preferences
 DELETE /api/v1/core/organisation
+DELETE /api/v1/tenant/services/{id}
 DELETE /cp/api
 DELETE /cp/api/*
 DELETE /metrics
@@ -58,6 +59,7 @@ GET /api/v1/core/me/preferences
 GET /api/v1/core/organisation
 GET /api/v1/devices/me
 GET /api/v1/installed-apps
+GET /api/v1/me/directory
 GET /api/v1/me/items
 GET /api/v1/menus
 GET /api/v1/oauth2/client-info
@@ -69,6 +71,7 @@ GET /api/v1/store/apps
 GET /api/v1/store/apps/{slug}
 GET /api/v1/store/apps/{slug}/history
 GET /api/v1/tenant/profile
+GET /api/v1/tenant/services
 GET /api/v1/verify/landed
 GET /cp/api
 GET /cp/api/*
@@ -156,6 +159,7 @@ POST /api/v1/store/apps/{slug}/enable
 POST /api/v1/store/apps/{slug}/install
 POST /api/v1/store/apps/{slug}/upgrade
 POST /api/v1/tenant/profile/sync-core
+POST /api/v1/tenant/services
 POST /api/v1/verify/send
 POST /cp/api
 POST /cp/api/*

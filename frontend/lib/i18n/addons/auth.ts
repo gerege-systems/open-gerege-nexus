@@ -165,6 +165,19 @@ export const auth = {
   "me.field.slug_placeholder": { mn: "байгууллагын богино нэр", en: "organisation short name" },
   "me.field.message_placeholder": { mn: "Хэн болохоо танилцуулна уу (заавал биш)", en: "Say who you are (optional)" },
   "me.action.ask": { mn: "Хүсэлт илгээх", en: "Ask" },
+  // Лавлах: хэнд хандахаа мэдэхгүй хүнд зориулав. Богино нэрийг орлуулахгүй —
+  // олсон нэрийг дээрх талбарт хийж өгнө.
+  "me.view.lookup_hint": {
+    mn: "Хэнд хандахаа мэдэхгүй бол үйлчилгээгээрээ хайна уу.",
+    en: "If you do not know who to ask, look the service up.",
+  },
+  "me.field.lookup_placeholder": { mn: "үйлчилгээний нэр эсвэл код", en: "service name or code" },
+  "me.action.lookup": { mn: "Хайх", en: "Look up" },
+  "me.action.choose": { mn: "Сонгох", en: "Choose" },
+  "me.message.no_providers": {
+    mn: "Ийм үйлчилгээг нийтэлсэн байгууллага алга.",
+    en: "No organisation has published that service.",
+  },
   "profile.stat.organisations": { mn: "Байгууллага", en: "Organisations" },
   "profile.stat.identities": { mn: "Таних тэмдэг", en: "Identities" },
   "profile.stat.sessions": { mn: "Нээлттэй session", en: "Open sessions" },

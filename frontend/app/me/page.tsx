@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Inbox, Send } from "lucide-react";
+import { Inbox, Search, Send } from "lucide-react";
 
 import { api } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
@@ -130,6 +130,21 @@ function AskToJoin({ onAsked }: { onAsked: () => void }) {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState("");
+  // Хайлт нь slug-ийн **тусламж**, орлуулга биш. Байгууллагаа мэддэг хүн
+  // шууд бичээд явна; мэдэхгүй хүн үйлчилгээгээрээ хайж, олсноо талбарт
+  // хийнэ. Хоёр зам нэг товч руу нийлнэ.
+  const [lookingFor, setLookingFor] = useState("");
+  const [found, setFound] = useState<{ slug: string; name: string; code: string; title: string }[] | null>(null);
+
+  async function search(event: React.FormEvent) {
+    event.preventDefault();
+    setFailed("");
+    try {
+      setFound((await api.searchDirectory(lookingFor.trim())).providers || []);
+    } catch (err: unknown) {
+      setFailed(err instanceof Error ? err.message : "—");
+    }
+  }
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -177,6 +192,45 @@ function AskToJoin({ onAsked }: { onAsked: () => void }) {
         </button>
       </div>
       {failed && <Banner tone="error" message={failed} />}
+
+      {/* Хэнд хандахаа мэдэхгүй хүнд зориулсан хайлт. Тусдаа form: Enter
+          дарахад хайх ёстой болохоос хүсэлт илгээх ёсгүй. */}
+      <div className="border-t border-slate-100 pt-3">
+        <p className="text-xs text-slate-500 mb-2">{t("me.view.lookup_hint")}</p>
+        <div className="flex gap-2">
+          <input
+            value={lookingFor}
+            onChange={(e) => setLookingFor(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && void search(e)}
+            placeholder={t("me.field.lookup_placeholder")}
+            className={`${fieldClass} flex-1`}
+          />
+          <button type="button" onClick={(e) => void search(e)} className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-600">
+            <Search className="inline w-4 h-4 mr-1" />
+            {t("me.action.lookup")}
+          </button>
+        </div>
+        {found?.length === 0 && <p className="mt-2 text-xs text-slate-500 italic">{t("me.message.no_providers")}</p>}
+        {found && found.length > 0 && (
+          <ul className="mt-2 divide-y divide-slate-100 rounded-lg border border-slate-200">
+            {found.map((one) => (
+              <li key={one.slug + one.code} className="flex items-center justify-between gap-3 px-3 py-2">
+                <span className="min-w-0">
+                  <strong className="block text-sm truncate">{one.name}</strong>
+                  <small className="text-xs text-slate-500">{one.title || one.code}</small>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => { setSlug(one.slug); setFound(null); }}
+                  className="shrink-0 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-[var(--gerege-blue)]"
+                >
+                  {t("me.action.choose")}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </form>
   );
 }

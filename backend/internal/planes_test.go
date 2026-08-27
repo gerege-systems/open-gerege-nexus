@@ -131,11 +131,13 @@ var plannedPersonPackages = map[string]string{
 	// personal side is the one with room to grow, and the run after a fourth
 	// file appears is the moment to decide which subpackage it opens rather
 	// than the day somebody counts forty.
-	"person.go":         "person (the store and its one statement)",
-	"join.go":           "person (asking an organisation to let you in)",
-	"join_db_test.go":   "person (the four rules of request_to_join, which are database rules)",
-	"handlers.go":       "person (its routes; moves the day there is a second screen)",
-	"person_db_test.go": "person (the four rules of publish_person_item, which are database rules)",
+	"person.go":            "person (the store and its one statement)",
+	"join.go":              "person (asking an organisation to let you in)",
+	"join_db_test.go":      "person (the four rules of request_to_join, which are database rules)",
+	"directory.go":         "person (who provides a service, read from registry)",
+	"directory_db_test.go": "person (what the directory must never show)",
+	"handlers.go":          "person (its routes; moves the day there is a second screen)",
+	"person_db_test.go":    "person (the four rules of publish_person_item, which are database rules)",
 }
 
 // The floor. These own no table and answer to no plane, which is what
