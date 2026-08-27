@@ -517,6 +517,44 @@ func (s *Server) linkEIDIdentity(ctx context.Context, userID string, identity *e
 	}
 }
 
+// eidPlaceholderName нь нэрээ олж чадаагүй eID дансны түр нэр. Дараагийн
+// амжилттай нэрийн лавлагаагаар adoptEIDName үүнийг жинхэнэ нэрээр солино.
+const eidPlaceholderName = "eID Mongolia хэрэглэгч"
+
+// fillEIDNameFromLookup нь identity нэргүй ирсэн үед иргэнийг eID-ийн
+// person/summary-гаас олж нэрийг нь identity дээр нөхнө. Best effort:
+// лавлагаа унасан ч нэвтрэлт зогсохгүй — нэр нь л түр хоосон үлдэнэ.
+func (s *Server) fillEIDNameFromLookup(ctx context.Context, identity *eid.EIDIdentity, subject string) {
+	if identity == nil || strings.TrimSpace(identity.FirstName+identity.LastName) != "" {
+		return
+	}
+	given, surname, err := s.eidSvc.PersonName(ctx, subject)
+	if err != nil {
+		slog.Warn("eID person lookup failed; the account keeps its placeholder name",
+			"error", err)
+		return
+	}
+	identity.FirstName, identity.LastName = given, surname
+}
+
+// adoptEIDName нь нэрээ олоогүй төрсөн дансыг дараагийн нэвтрэлтээр засна:
+// users.name нь placeholder хэвээр л бол жинхэнэ нэрийг олж бичнэ. Хүний
+// өөрөө засаад тавьсан нэрэнд хэзээ ч хүрэхгүй.
+func (s *Server) adoptEIDName(ctx context.Context, userID, currentName string, identity *eid.EIDIdentity, subject string) {
+	trimmed := strings.TrimSpace(currentName)
+	if trimmed != "" && trimmed != eidPlaceholderName {
+		return
+	}
+	s.fillEIDNameFromLookup(ctx, identity, subject)
+	name := strings.TrimSpace(identity.LastName + " " + identity.FirstName)
+	if name == "" {
+		return
+	}
+	if _, err := s.db.Exec(ctx, `UPDATE users SET name=$2 WHERE id=$1`, userID, name); err != nil {
+		slog.Warn("could not adopt the eID name", "user_id", userID, "error", err)
+	}
+}
+
 // resolveOrProvisionEIDUser links an eID subject to a stable, non-PII local
 // identifier. JIT provisioning is opt-in per tenant and always receives the
 // standard user role through the membership_default_role database trigger.
@@ -533,9 +571,13 @@ func (s *Server) resolveOrProvisionEIDUser(ctx context.Context, identity *eid.EI
 	// explains: a citizen whose eID is linked here is the same citizen whether
 	// or not they currently belong to an organisation, and letting the
 	// membership decide made a linked identity read as an unknown one.
+	var currentName string
 	err = s.db.QueryRow(ctx,
-		`SELECT user_id::text FROM user_eid_identities WHERE person_etsi=$1`, personEtsi).Scan(&userID)
+		`SELECT ui.user_id::text, u.name FROM user_eid_identities ui
+		   JOIN users u ON u.id = ui.user_id
+		  WHERE ui.person_etsi=$1`, personEtsi).Scan(&userID, &currentName)
 	if err == nil {
+		s.adoptEIDName(ctx, userID, currentName, identity, subject)
 		tenantID, err = s.firstTenantFor(ctx, userID)
 		if err != nil {
 			return "", "", err
@@ -552,9 +594,10 @@ func (s *Server) resolveOrProvisionEIDUser(ctx context.Context, identity *eid.EI
 	digest := eidLinkingDigest(linkingKey, subject)
 	syntheticEmail := "eid+" + digest[:32] + "@identity.invalid"
 	if err = s.db.QueryRow(ctx,
-		`SELECT u.id::text, m.tenant_id::text FROM users u JOIN memberships m ON m.user_id=u.id WHERE u.email=$1
+		`SELECT u.id::text, m.tenant_id::text, u.name FROM users u JOIN memberships m ON m.user_id=u.id WHERE u.email=$1
 		 ORDER BY m.created_at, m.tenant_id LIMIT 1`,
-		syntheticEmail).Scan(&userID, &tenantID); err == nil {
+		syntheticEmail).Scan(&userID, &tenantID, &currentName); err == nil {
+		s.adoptEIDName(ctx, userID, currentName, identity, subject)
 		return userID, tenantID, nil
 	} else if !errors.Is(err, pgx.ErrNoRows) {
 		return "", "", err
@@ -574,9 +617,12 @@ func (s *Server) resolveOrProvisionEIDUser(ctx context.Context, identity *eid.EI
 	if err = s.db.QueryRow(ctx, `SELECT id::text FROM tenants WHERE slug=$1`, tenantSlug).Scan(&tenantID); err != nil {
 		return "", "", fmt.Errorf("eID provisioning tenant %q is unavailable: %w", tenantSlug, err)
 	}
+	// Session нэр өгөөгүй бол иргэнээ person/summary-гаас олж авна («user
+	// find») — эс бөгөөс данс нэргүй, «eID Mongolia хэрэглэгч» гэж төрнө.
+	s.fillEIDNameFromLookup(ctx, identity, subject)
 	name := strings.TrimSpace(identity.LastName + " " + identity.FirstName)
 	if name == "" {
-		name = "eID Mongolia хэрэглэгч"
+		name = eidPlaceholderName
 	}
 	// The synthetic account has no password login path. Keep the random-looking
 	// preimage within bcrypt's strict 72-byte input limit.

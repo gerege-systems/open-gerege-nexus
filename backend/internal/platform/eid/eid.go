@@ -24,6 +24,7 @@ import (
 
 	coreeid "github.com/gerege-systems/open-gerege-core/pkg/eid"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/platform/config"
+	"github.com/gerege-systems/open-gerege-nexus/backend/internal/platform/eidmongolia"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/platform/observability"
 )
 
@@ -302,6 +303,25 @@ func (s *EIDService) poll(ctx context.Context, sessionID string) (*PollResult, e
 		}
 	}
 	return result, nil
+}
+
+// PersonName нь иргэний нэрийг PKI-ийн person/summary-гаас асууна.
+// Нэвтрэлтийн session нэр өгөлгүй ирэх нь бий — тэр үед данс нэргүй
+// төрөхийн оронд иргэнээ subject-аар нь олж нэрийг нь авна. PKI_READ
+// эрхгүй RP-д ErrPKINotPermitted ирнэ; дуудагч алдааг нэвтрэлт унагахгүй
+// байхаар даана.
+func (s *EIDService) PersonName(ctx context.Context, subject string) (given, surname string, err error) {
+	if s.mockMode {
+		return "", "", nil
+	}
+	sum, err := observability.ObserveExternalValue(ctx, observability.SystemEID, "person_summary",
+		func(ctx context.Context) (*coreeid.PersonSummary, error) {
+			return s.rpClient.PersonSummary(ctx, eidmongolia.PersonEtsi(subject))
+		})
+	if err != nil || sum == nil {
+		return "", "", err
+	}
+	return sum.GivenName, sum.Surname, nil
 }
 
 // GetAuthorizeURL constructs official OAuth2 authorization link for eidmongolia.mn / sso.gov.mn
