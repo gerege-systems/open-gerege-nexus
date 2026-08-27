@@ -264,9 +264,24 @@ func TestASignInFindsALinkedIdentityWithoutAMembership(t *testing.T) {
 	if strings.Contains(landing, "/login/bind") {
 		t.Fatalf("a linked Google account was sent through eID again because the membership was missing: %s", landing)
 	}
-	// It cannot sign in either — there is nothing to sign in to — but it has to
-	// say so rather than pretend the account is new.
-	if !strings.Contains(landing, "no_organisation") {
-		t.Errorf("landed at %q, want a reason naming the missing organisation", landing)
+	// And it signs in. This used to land on `?error=no_organisation`: the link
+	// was found, which was the bug this test was written for, and then the
+	// sign-in was refused anyway because there was no organisation to open. The
+	// second half is what migration 00085 removed — the person opens in their
+	// own home, which they have whether or not anybody has added them to
+	// anything.
+	if strings.Contains(landing, "no_organisation") || strings.Contains(landing, "error=") {
+		t.Errorf("landed at %q; a person with no organisation still has their own home to sign into", landing)
+	}
+
+	var kind string
+	if err := f.pool.QueryRow(context.Background(),
+		`SELECT t.kind FROM registry.tenants t
+		   JOIN workspace.memberships m ON m.tenant_id = t.id
+		  WHERE m.user_id = $1`, f.userID).Scan(&kind); err != nil {
+		t.Fatalf("find the workspace the sign-in opened: %v", err)
+	}
+	if kind != "personal" {
+		t.Errorf("the sign-in opened a %q workspace, want the person's own home", kind)
 	}
 }

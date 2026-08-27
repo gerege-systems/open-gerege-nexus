@@ -61,20 +61,18 @@ func setMode(t *testing.T, pool *pgxpool.Pool, store *settings.Store, mode strin
 func TestAPrivatePlatformProvisionsNobodyThroughEID(t *testing.T) {
 	server, pool := accessModeServer(t, settings.AccessPrivate)
 
-	// A provisioning tenant is configured, so the only thing standing between
-	// this identity and a new account is the mode.
-	slug := fmt.Sprintf("jit-%d", time.Now().UnixNano())
-	var tenantID string
-	if err := pool.QueryRow(context.Background(),
-		`INSERT INTO registry.tenants (slug, name) VALUES ($1, $1) RETURNING id::text`, slug).
-		Scan(&tenantID); err != nil {
-		t.Fatalf("create the provisioning organisation: %v", err)
-	}
-	t.Cleanup(func() {
-		_, _ = pool.Exec(context.Background(), `DELETE FROM registry.tenants WHERE id = $1::uuid`, tenantID)
-	})
-	t.Setenv("EID_JIT_TENANT_SLUG", slug)
+	// Everything else this path needs is present, so the only thing standing
+	// between this identity and a new account is the mode. There is no
+	// provisioning organisation to set up any more: since 00085 a first
+	// sign-in makes the person their own home, which is exactly why the mode
+	// is the whole of the check.
 	t.Setenv("EID_RP_SECRET", "test-linking-key")
+
+	var before int
+	if err := pool.QueryRow(context.Background(),
+		`SELECT count(*) FROM registry.users WHERE email LIKE 'eid+%' OR email LIKE 'ge-%'`).Scan(&before); err != nil {
+		t.Fatalf("count the accounts: %v", err)
+	}
 
 	identity := &eid.EIDIdentity{
 		CivilID:   fmt.Sprintf("ЖИТ%d", time.Now().UnixNano()),
@@ -91,13 +89,16 @@ func TestAPrivatePlatformProvisionsNobodyThroughEID(t *testing.T) {
 		}
 	}
 
-	var people int
+	// Counted at the account rather than at a membership. The refusal used to
+	// be proved by an organisation gaining nobody; since 00085 a first sign-in
+	// makes an account and its own home, so what must not exist is the account.
+	var accounts int
 	if err := pool.QueryRow(context.Background(),
-		`SELECT count(*) FROM workspace.memberships WHERE tenant_id = $1::uuid`, tenantID).Scan(&people); err != nil {
-		t.Fatalf("count the members: %v", err)
+		`SELECT count(*) FROM registry.users WHERE email LIKE 'eid+%' OR email LIKE 'ge-%'`).Scan(&accounts); err != nil {
+		t.Fatalf("count the accounts: %v", err)
 	}
-	if people != 0 {
-		t.Fatalf("%d accounts were created while the platform was private", people)
+	if accounts != before {
+		t.Fatalf("%d accounts were created while the platform was private", accounts-before)
 	}
 }
 

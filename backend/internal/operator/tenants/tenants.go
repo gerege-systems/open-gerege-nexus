@@ -31,6 +31,19 @@ import (
 // be looked at, and holding a connection for it costs the platform's own
 // traffic.
 
+// Homes are not on this screen.
+//
+// A personal workspace is one person's own space, made for them the first time
+// they sign in with no organisation to sign in to (migration 00085). It is a
+// workspace by mechanism and not by purpose: nobody administers it, nobody is
+// invited to it, and an operator scrolling for "which customer is suspended"
+// should not be reading a list that is mostly citizens. The filter is on kind
+// rather than on owner_user_id for the reason FirstOrganisationFor gives.
+//
+// This is also what keeps tenantPageSize honest. The bound below assumes the
+// list is customers; homes would have grown it past 200 on the first busy day
+// and the screen would have started lying by omission instead of paging.
+
 // tenantPageSize bounds the list. Search narrows it; nothing pages yet, because
 // a deployment with more organisations than this is one where the list screen
 // needs rethinking rather than a second page.
@@ -84,10 +97,11 @@ func (s *Service) ListTenants(ctx context.Context, search string) ([]TenantSumma
 		        t.suspended_at, t.suspension_reason, t.deletion_scheduled_at, t.maintenance_at
 		   FROM registry.tenants t
 		   LEFT JOIN workspace.tenant_profiles p ON p.tenant_id = t.id
-		  WHERE $1 = ''
+		  WHERE t.kind = 'organisation'
+		    AND ($1 = ''
 		     OR t.name ILIKE '%' || $1 || '%'
 		     OR t.slug ILIKE '%' || $1 || '%'
-		     OR COALESCE(p.registration_number, '') ILIKE '%' || $1 || '%'
+		     OR COALESCE(p.registration_number, '') ILIKE '%' || $1 || '%')
 		  ORDER BY t.name, t.id
 		  LIMIT $2`, search, tenantPageSize)
 	if err != nil {

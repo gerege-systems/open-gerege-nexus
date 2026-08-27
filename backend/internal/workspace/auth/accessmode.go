@@ -24,11 +24,17 @@ import (
 
 // Access mode (§C of the plan; CP-3 item 0).
 //
-// Until now, whether a first-time visitor became a user of this platform was
-// decided by which environment variables happened to be set: EID_JIT_TENANT_SLUG
-// made eID provision accounts, SSO_CLIENT_TENANT made a federated provider do
-// the same. Two variables in two files, read by two packages, and no single
-// place that answered "can a stranger get in".
+// Until this existed, whether a first-time visitor became a user of this
+// platform was decided by which environment variables happened to be set:
+// EID_JIT_TENANT_SLUG made eID provision accounts, SSO_CLIENT_TENANT made a
+// federated provider do the same. Two variables in two files, read by two
+// packages, and no single place that answered "can a stranger get in".
+//
+// The first of those is gone (migration 00085): it was answering a second
+// question as well — *where* the new account lives — by making the citizen a
+// member of whichever organisation it named. A person's own home is the answer
+// to that one, and it leaves this check with only the question it was written
+// for.
 //
 // This is that place. One check, at the one thing all of those paths do —
 // create an account — and it is closed by default.

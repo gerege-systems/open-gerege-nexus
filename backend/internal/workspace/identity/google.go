@@ -247,16 +247,6 @@ func (h *Handlers) HandleGoogleCallback(w http.ResponseWriter, r *http.Request) 
 
 	userID, tenantID, err := h.resolveGoogleUser(r.Context(), h.googleLogin.Config(), identity)
 	if err != nil {
-		// Checked before the refusal below, and never treated as one. This
-		// account is known and this Google identity is already theirs; what is
-		// missing is an organisation to sign in to. Parking the identity and
-		// asking for eID would prove something nobody is disputing and end in
-		// exactly the same place, which is what it used to do — every time.
-		if errors.Is(err, auth.ErrNoOrganisation) {
-			slog.Info("a linked Google account belongs to nobody's organisation", "email", identity.Email)
-			h.failGoogle(w, r, "no_organisation")
-			return
-		}
 		var refusal auth.SignInError
 		if errors.As(err, &refusal) {
 			// Not a refusal any more. Google has said which Google account this

@@ -595,19 +595,12 @@ func (h *Handlers) ResolveOrProvisionEIDUser(ctx context.Context, identity *eid.
 		return "", "", err
 	}
 
-	// The platform's access mode, before the environment's provisioning
-	// tenant: a deployment that set EID_JIT_TENANT_SLUG once and has since
-	// been closed should stop provisioning, and this is the order in which
-	// that reads correctly.
+	// Whether this deployment opens accounts to strangers at all. It is the
+	// only question left here: where the account then lives used to be the
+	// second one, answered by EID_JIT_TENANT_SLUG, and migration 00085 removed
+	// the need to ask it.
 	if err := MayProvisionAccount("eid"); err != nil {
 		return "", "", err
-	}
-	tenantSlug := strings.TrimSpace(os.Getenv("EID_JIT_TENANT_SLUG"))
-	if tenantSlug == "" {
-		return "", "", SignInError{"eID identity is verified but account provisioning is disabled"}
-	}
-	if err = h.db.QueryRow(ctx, `SELECT id::text FROM registry.tenants WHERE slug=$1`, tenantSlug).Scan(&tenantID); err != nil {
-		return "", "", fmt.Errorf("eID provisioning tenant %q is unavailable: %w", tenantSlug, err)
 	}
 	name := strings.TrimSpace(identity.LastName + " " + identity.FirstName)
 	if name == "" {
@@ -630,16 +623,22 @@ func (h *Handlers) ResolveOrProvisionEIDUser(ctx context.Context, identity *eid.
 		email, passwordHash, name, identity.GeID).Scan(&userID); err != nil {
 		return "", "", err
 	}
-	// See the same check in sso_client_handlers.go: provisioning somebody on
-	// their first eID sign-in is exactly the path by which an organisation
-	// grows without anybody choosing to add a person.
-	if err = h.CheckUserQuota(ctx, tenantID); err != nil {
-		return "", "", SignInError{"Энэ байгууллага хэрэглэгчийн тооны хязгаартаа хүрсэн байна"}
-	}
-	if _, err = tx.Exec(ctx, `INSERT INTO workspace.memberships(tenant_id,user_id) VALUES($1,$2) ON CONFLICT(tenant_id,user_id) DO NOTHING`, tenantID, userID); err != nil {
+	if err = tx.Commit(ctx); err != nil {
 		return "", "", err
 	}
-	if err = tx.Commit(ctx); err != nil {
+
+	// The citizen lands in their own home, and there is no organisation's quota
+	// to check because no organisation gained a member. That check used to be
+	// here with a comment saying what was wrong with the thing it was guarding:
+	//
+	//	provisioning somebody on their first eID sign-in is exactly the path by
+	//	which an organisation grows without anybody choosing to add a person.
+	//
+	// The path is gone rather than guarded. A home is one person by
+	// construction — registry.tenants.owner_user_id, one row per person — so
+	// there is nothing for it to grow.
+	tenantID, err = h.HomeFor(ctx, userID)
+	if err != nil {
 		return "", "", err
 	}
 	return userID, tenantID, nil
@@ -653,9 +652,12 @@ func (h *Handlers) HandleMe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var name, email string
-	var tenantName string
+	var tenantName, workspaceKind string
 	_ = h.db.QueryRow(r.Context(), `SELECT name, email FROM registry.users WHERE id = $1`, claims.UserID).Scan(&name, &email)
-	_ = h.db.QueryRow(r.Context(), `SELECT name FROM registry.tenants WHERE id = $1`, claims.WorkspaceID).Scan(&tenantName)
+	// kind comes back with the name because the shell decides which of two
+	// layouts to draw from it, and a second round trip for one word on the
+	// request every screen makes first is a second round trip on every screen.
+	_ = h.db.QueryRow(r.Context(), `SELECT name, kind FROM registry.tenants WHERE id = $1`, claims.WorkspaceID).Scan(&tenantName, &workspaceKind)
 
 	// The effective grant of every role the member holds, so a screen can hide
 	// what the caller may not do. Administrators bypass the check, so their
@@ -675,10 +677,14 @@ func (h *Handlers) HandleMe(w http.ResponseWriter, r *http.Request) {
 		"id":          claims.UserID,
 		"tenant_id":   claims.WorkspaceID,
 		"tenant_name": tenantName,
-		"name":        name,
-		"email":       email,
-		"is_admin":    claims.IsAdmin,
-		"permissions": granted,
+		// "organisation" or "personal". The wire keeps saying tenant for the
+		// two fields above, which existed before the word changed; this one is
+		// new, so it is named for what the code now calls the thing.
+		"workspace_kind": workspaceKind,
+		"name":           name,
+		"email":          email,
+		"is_admin":       claims.IsAdmin,
+		"permissions":    granted,
 		// What the platform wants to tell this person right now: a Maintenance
 		// window, or an announcement an operator broadcast.
 		"Notices": h.Notices(r.Context(), claims.WorkspaceID),
