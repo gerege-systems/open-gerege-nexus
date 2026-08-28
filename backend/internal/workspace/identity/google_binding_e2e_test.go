@@ -268,35 +268,19 @@ func TestASignInFindsALinkedIdentityWithoutAMembership(t *testing.T) {
 	// was found, which was the bug this test was written for, and then the
 	// sign-in was refused anyway because there was no organisation to open.
 	// 00085 removed the second half by giving everybody a workspace of their
-	// own; 00094 removed it properly, by letting a session carry none.
+	// own, which is the answer this platform keeps.
 	if strings.Contains(landing, "no_organisation") || strings.Contains(landing, "error=") {
 		t.Errorf("landed at %q; belonging to no organisation is not a reason to refuse a sign-in", landing)
 	}
 
-	// And nothing was built to hold them. This is the assertion that would
-	// break if some later change went back to inventing a workspace on the
-	// sign-in path: the landing above would keep passing, because a person put
-	// somewhere is signed in just as much as a person put nowhere.
-	var workspaces int
+	var kind string
 	if err := f.pool.QueryRow(context.Background(),
-		`SELECT count(*) FROM workspace.memberships WHERE user_id = $1`, f.userID).
-		Scan(&workspaces); err != nil {
-		t.Fatal(err)
+		`SELECT t.kind FROM registry.tenants t
+		   JOIN workspace.memberships m ON m.tenant_id = t.id
+		  WHERE m.user_id = $1`, f.userID).Scan(&kind); err != nil {
+		t.Fatalf("find the workspace the sign-in opened: %v", err)
 	}
-	if workspaces != 0 {
-		t.Errorf("the sign-in put a person with no organisation into %d workspace(s)", workspaces)
-	}
-
-	// The session it made is the thing that changed shape, so it is asserted
-	// directly: real, live, and naming no workspace.
-	var sessions int
-	if err := f.pool.QueryRow(context.Background(),
-		`SELECT count(*) FROM workspace.sessions
-		  WHERE user_id = $1 AND tenant_id IS NULL AND revoked_at IS NULL`, f.userID).
-		Scan(&sessions); err != nil {
-		t.Fatal(err)
-	}
-	if sessions == 0 {
-		t.Error("the sign-in left no workspace-less session")
+	if kind != "personal" {
+		t.Errorf("the sign-in opened a %q workspace, want the person's own", kind)
 	}
 }

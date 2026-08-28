@@ -101,10 +101,9 @@ func (h *Handlers) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	_, _ = h.db.Exec(r.Context(), `UPDATE registry.users SET failed_login_attempts=0, locked_until=NULL WHERE id=$1`, userID)
 
-	// Where this session opens: the oldest organisation they belong to, or
-	// nowhere if they belong to none. Asked after the password rather than with
-	// it, so a wrong password cannot start anything as a side effect of being
-	// typed.
+	// Where this session opens: the oldest organisation they belong to, or a
+	// workspace of their own. Asked after the password rather than with it, so
+	// a wrong password cannot make a workspace as a side effect of being typed.
 	tenantID, err = h.FirstTenantFor(r.Context(), userID)
 	if err != nil {
 		slog.Error("could not open a workspace for a signed-in account", "user_id", userID, "error", err)
@@ -112,10 +111,15 @@ func (h *Handlers) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Administrator of the workspace being opened, which is a question about
-	// that workspace and not about the account. Skipped when there is no
-	// workspace: an empty string is not a uuid, and Postgres says so by
-	// refusing the whole statement — which reached production as a 500 on the
-	// sign-in of everybody who belonged to no organisation.
+	// that workspace and not about the account. In a personal workspace the
+	// answer is no: nobody administers a space with one person in it.
+	//
+	// Guarded against an empty id even though FirstTenantFor no longer returns
+	// one. An empty string is not a uuid, and Postgres refuses the whole
+	// statement rather than the row — which reached production as a 500 on the
+	// sign-in of everybody who belonged to no organisation, for the day the
+	// workspace was allowed to be absent. The guard costs a comparison and
+	// makes the failure impossible rather than unlikely.
 	if tenantID != "" {
 		if err := h.db.QueryRow(r.Context(),
 			`SELECT EXISTS (
@@ -631,14 +635,30 @@ func (h *Handlers) ResolveOrProvisionEIDUser(ctx context.Context, identity *eid.
 		email = GeIDEmail(identity.GeID)
 	}
 
+	// Neither lookup below joins memberships, and that is the whole of this
+	// paragraph. Both did, and it made "who is this person" depend on where
+	// they happen to work: an account with no membership matched no row, was
+	// read as a stranger, and fell through to the provisioning branch — which
+	// on a private deployment refuses, so the citizen could not sign in at all.
+	//
+	// It is the third time this repository has made this mistake. HandleLogin
+	// carried an inner join onto memberships and told people with none
+	// "invalid email or password"; the same shape appeared here twice, in two
+	// copies that had to be found separately. Identity is answered by identity;
+	// where somebody stands is a second question with one answer, and
+	// FirstTenantFor is it.
+
 	// By the Gerege number first: it is the identifier the ecosystem shares, so
 	// an account that already carries it is this citizen whatever address it
 	// was opened under.
 	if identity.GeID != 0 {
 		if err = h.db.QueryRow(ctx,
-			`SELECT u.id::text, m.tenant_id::text FROM registry.users u JOIN workspace.memberships m ON m.user_id=u.id
-			  WHERE u.ge_id=$1 ORDER BY m.created_at, m.tenant_id LIMIT 1`,
-			identity.GeID).Scan(&userID, &tenantID); err == nil {
+			`SELECT id::text FROM registry.users WHERE ge_id=$1`,
+			identity.GeID).Scan(&userID); err == nil {
+			tenantID, err = h.FirstTenantFor(ctx, userID)
+			if err != nil {
+				return "", "", err
+			}
 			return userID, tenantID, nil
 		} else if !errors.Is(err, pgx.ErrNoRows) {
 			return "", "", err
@@ -649,9 +669,12 @@ func (h *Handlers) ResolveOrProvisionEIDUser(ctx context.Context, identity *eid.
 	// existed keeps its row and is upgraded in place by rememberGeID, rather
 	// than being left behind as a second copy of the same citizen.
 	if err = h.db.QueryRow(ctx,
-		`SELECT u.id::text, m.tenant_id::text FROM registry.users u JOIN workspace.memberships m ON m.user_id=u.id
-		  WHERE u.email = ANY($1) ORDER BY m.created_at, m.tenant_id LIMIT 1`,
-		[]string{syntheticEmail, email}).Scan(&userID, &tenantID); err == nil {
+		`SELECT id::text FROM registry.users WHERE email = ANY($1) ORDER BY created_at LIMIT 1`,
+		[]string{syntheticEmail, email}).Scan(&userID); err == nil {
+		tenantID, err = h.FirstTenantFor(ctx, userID)
+		if err != nil {
+			return "", "", err
+		}
 		return userID, tenantID, nil
 	} else if !errors.Is(err, pgx.ErrNoRows) {
 		return "", "", err
@@ -724,17 +747,17 @@ func (h *Handlers) ResolveOrProvisionEIDUser(ctx context.Context, identity *eid.
 		return "", "", err
 	}
 
-	// The citizen signs in as themselves, and there is no organisation's quota
-	// to check because no organisation gained a member. That check used to be
-	// here with a comment saying what was wrong with the thing it was guarding:
+	// The citizen lands in a workspace of their own, and there is no
+	// organisation's quota to check because no organisation gained a member.
+	// That check used to be here with a comment saying what was wrong with the
+	// thing it was guarding:
 	//
 	//	provisioning somebody on their first eID sign-in is exactly the path by
 	//	which an organisation grows without anybody choosing to add a person.
 	//
-	// The path is gone rather than guarded, and since 00094 there is not even a
-	// workspace of their own to put them in: an empty workspace id is what a
-	// person with no organisation opens with, and what they can reach is their
-	// own record rather than any workspace's.
+	// The path is gone rather than guarded. A personal workspace is one person
+	// by construction — registry.tenants.owner_user_id, one row per person — so
+	// there is nothing there for it to grow.
 	tenantID, err = h.FirstTenantFor(ctx, userID)
 	if err != nil {
 		return "", "", err
