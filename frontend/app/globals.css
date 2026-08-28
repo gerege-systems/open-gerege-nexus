@@ -191,14 +191,9 @@ html[data-density="compact"] main { padding-top: 1rem; padding-bottom: 1rem; }
 /* Original Theme preserves the repository's original Odoo-inspired shell. */
 html[data-design="original"] .gerege-topbar { background: #0064e1; border-color: #0054c2; color: white; }
 
-/* This bar is Gerege blue in light mode as well as dark, but two dividers drawn on
-   it — the brand cell's right edge and the open app-context block's — asked for
-   --gerege-border, which is the page's near-white #e2e5e9 in light mode. They
-   showed as two bright rules across the blue bar, and looked correct in dark
-   mode only because the token happens to be dark there too. Pointing the bar's
-   own divider token at the bar's border colour fixes both, and any divider
-   added to the bar later. */
-html[data-design="original"] { --gerege-chrome-border: #0054c2; }
+/* The brand cell and the open app-context block use the same translucent white
+   border as the search field, so every separator on the blue bar has one tone. */
+html[data-design="original"] { --gerege-chrome-border: rgb(255 255 255 / 18%); }
 
 /* The bar is saturated here, so its slate utilities are inverted to read against it. */
 html[data-design="original"] .gerege-topbar .text-slate-900,
@@ -206,6 +201,7 @@ html[data-design="original"] .gerege-topbar .text-slate-800 { color: #f8fafc !im
 html[data-design="original"] .gerege-topbar .text-slate-500,
 html[data-design="original"] .gerege-topbar .text-slate-600 { color: rgb(255 255 255 / 68%) !important; }
 html[data-design="original"] .gerege-topbar .border-slate-200 { border-color: rgb(255 255 255 / 18%) !important; }
+html[data-design="original"] .gerege-topbar .gerege-header-context > span:first-child { color: white !important; }
 
 /* Light surfaces anchored inside that blue bar: the user menu, the search
    results, and the account button itself once it opens and fills with
