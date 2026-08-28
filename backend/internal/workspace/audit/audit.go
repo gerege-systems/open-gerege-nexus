@@ -70,6 +70,27 @@ func impersonatedBy(ctx context.Context) string {
 	return operatorID
 }
 
+// NoTenant is the tenantID for an act that belongs to no organisation.
+//
+// The empty string and not a word, because persist casts this column to uuid
+// and NULLIF turns only the empty string into NULL. "unknown" reads perfectly
+// well in a log line and cannot be stored: it sat in two call sites from
+// 2026-08-08, and the effect was that **no failed sign-in was ever written to
+// the audit table** on any deployment. The row went to the log and the insert
+// was refused, once per attempt, under a WARN nobody reads.
+//
+// A named constant rather than a bare "" at the call sites so that the next
+// person writing this has something to reach for that is right, and so that the
+// wrong value has a greppable opposite.
+const NoTenant = ""
+
+// Anonymous is the userID for somebody who has not been identified yet — the
+// failed sign-in, the consent screen before the account is known.
+//
+// A word rather than empty, and it stores: user_id is text precisely so it can
+// say this. The asymmetry with NoTenant is the schema's, not a preference.
+const Anonymous = "anonymous"
+
 func Record(ctx context.Context, tenantID, userID, action, resource string, details map[string]any) {
 	if operatorID := impersonatedBy(ctx); operatorID != "" {
 		if details == nil {

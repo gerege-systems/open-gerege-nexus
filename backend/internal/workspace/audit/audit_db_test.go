@@ -5,6 +5,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/google/uuid"
+
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/audit"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -105,4 +107,53 @@ func TestRecordAcceptsNonUUIDActor(t *testing.T) {
 func TestRecordWithoutDatabaseIsHarmless(t *testing.T) {
 	audit.UseDatabase(nil)
 	audit.Record(context.Background(), "", "someone", "test.no_database", "nothing", nil)
+}
+
+// An act that belongs to no organisation is still written down.
+//
+// The regression: two call sites passed the word "unknown" as the tenant, the
+// column is uuid, and the insert was refused every time — so from 2026-08-08 no
+// failed sign-in and no consent-before-the-account-is-known reached the audit
+// table on any deployment. Nothing surfaced it: audit.Record logs the event
+// before it stores it, so the line an operator would grep for was there, and
+// the only trace of the loss was a WARN beside it.
+//
+// Asserted through Record rather than through the SQL, because the SQL was
+// always right: persist has cast through NULLIF($1, ”) since it was written.
+// What was wrong was the value handed to it, which is the shape of bug that
+// lives at the call site and is invisible one layer down.
+func TestAnActWithNoOrganisationIsStillRecorded(t *testing.T) {
+	pool := openPool(t)
+	audit.UseDatabase(pool)
+	t.Cleanup(func() { audit.UseDatabase(nil) })
+	ctx := context.Background()
+
+	action := "test.no_tenant." + uuid.NewString()[:12]
+	audit.Record(ctx, audit.NoTenant, audit.Anonymous, action, "user",
+		map[string]any{"email": "nobody@example.mn"})
+	t.Cleanup(func() {
+		_, _ = pool.Exec(context.Background(), `DELETE FROM workspace.audit_events WHERE action = $1`, action)
+	})
+
+	var rows int
+	var userID *string
+	var tenantID *string
+	if err := pool.QueryRow(ctx,
+		`SELECT count(*), max(user_id), max(tenant_id::text)
+		   FROM workspace.audit_events WHERE action = $1`, action).
+		Scan(&rows, &userID, &tenantID); err != nil {
+		t.Fatal(err)
+	}
+	if rows != 1 {
+		t.Fatalf("an act with no organisation left %d audit row(s), want one", rows)
+	}
+	if tenantID != nil {
+		t.Errorf("the row names organisation %q; it should name none", *tenantID)
+	}
+	// And the person is still named as far as they are known, which is the
+	// asymmetry the two constants exist to hold: user_id is text and stores the
+	// word, tenant_id is a uuid and cannot.
+	if userID == nil || *userID != audit.Anonymous {
+		t.Errorf("the row's user is %v, want %q", userID, audit.Anonymous)
+	}
 }
