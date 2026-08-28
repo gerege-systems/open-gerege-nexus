@@ -21,7 +21,7 @@ const accents: { value: Accent; label: TranslationKey; color: string }[] = [
 ];
 
 const styles: { value: DesignTheme; name: TranslationKey; hint: TranslationKey; top: string; accent: string }[] = [
-  { value: "original", name: "appearance.style.original", hint: "appearance.view.original_hint", top: "#0f172a", accent: "#6366f1" },
+  { value: "original", name: "appearance.style.original", hint: "appearance.view.original_hint", top: "#0064e1", accent: "#6366f1" },
   { value: "gerege", name: "appearance.style.gerege", hint: "appearance.view.gerege_hint", top: "#ffffff", accent: "#0064e1" },
 ];
 
