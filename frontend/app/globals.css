@@ -189,25 +189,25 @@ html[data-density="compact"] .gerege-topbar { height: 56px; }
 html[data-density="compact"] main { padding-top: 1rem; padding-bottom: 1rem; }
 
 /* Original Theme preserves the repository's original Odoo-inspired shell. */
-html[data-design="original"] .gerege-topbar { background: #0f172a; border-color: #1e293b; color: white; }
+html[data-design="original"] .gerege-topbar { background: #0064e1; border-color: #0054c2; color: white; }
 
-/* This bar is #0f172a in light mode as well as dark, but two dividers drawn on
+/* This bar is Gerege blue in light mode as well as dark, but two dividers drawn on
    it — the brand cell's right edge and the open app-context block's — asked for
    --gerege-border, which is the page's near-white #e2e5e9 in light mode. They
-   showed as two bright rules across the dark bar, and looked correct in dark
+   showed as two bright rules across the blue bar, and looked correct in dark
    mode only because the token happens to be dark there too. Pointing the bar's
    own divider token at the bar's border colour fixes both, and any divider
    added to the bar later. */
-html[data-design="original"] { --gerege-chrome-border: #1e293b; }
+html[data-design="original"] { --gerege-chrome-border: #0054c2; }
 
-/* The bar is dark here, so its slate utilities are inverted to read against it. */
+/* The bar is saturated here, so its slate utilities are inverted to read against it. */
 html[data-design="original"] .gerege-topbar .text-slate-900,
 html[data-design="original"] .gerege-topbar .text-slate-800 { color: #f8fafc !important; }
 html[data-design="original"] .gerege-topbar .text-slate-500,
-html[data-design="original"] .gerege-topbar .text-slate-600 { color: #94a3b8 !important; }
-html[data-design="original"] .gerege-topbar .border-slate-200 { border-color: #334155 !important; }
+html[data-design="original"] .gerege-topbar .text-slate-600 { color: rgb(255 255 255 / 68%) !important; }
+html[data-design="original"] .gerege-topbar .border-slate-200 { border-color: rgb(255 255 255 / 18%) !important; }
 
-/* Light surfaces anchored inside that dark bar: the user menu, the search
+/* Light surfaces anchored inside that blue bar: the user menu, the search
    results, and the account button itself once it opens and fills with
    --gerege-blue-soft. The inversion above would paint their text near-white on
    near-white, so undo it for them and reset the `color: white` the bar hands
@@ -240,7 +240,7 @@ html[data-design="original"] .gerege-topbar .gerege-topbar-onlight .border-slate
    — the hover state of the account button and the menu toggle, and the search
    field's resting background. The inversion above then writes near-white text
    onto them, which is how the account name disappeared on hover exactly as it
-   had with the menu open. Translucent light overlays keep the bar dark and the
+   had with the menu open. Translucent light overlays preserve the blue and keep the
    inverted text legible. */
 html[data-design="original"] .gerege-topbar .hover\:bg-slate-50:hover,
 html[data-design="original"] .gerege-topbar .bg-slate-100\/80 {
@@ -253,7 +253,7 @@ html[data-design="original"] .gerege-topbar input::placeholder { color: rgb(255 
 html[data-design="original"] .gerege-topbar .gerege-topbar-onlight .hover\:bg-slate-50:hover {
   background-color: var(--gerege-surface-2) !important;
 }
-html[data-design="original"] .original-brand-mark { color: #818cf8; background: #1e293b; }
+html[data-design="original"] .original-brand-mark { color: white; background: rgb(255 255 255 / 12%); }
 html[data-design="original"] .gerege-nav-link-active {
   color: var(--gerege-blue);
   background: var(--gerege-blue-soft);
