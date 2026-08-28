@@ -80,6 +80,9 @@ const (
 	// empty for almost every session.
 	allowedKey     contextKey = "allowed_tenant_ids"
 	userContextKey contextKey = "authenticated_user"
+	// personScopeKey says the caller is a person with no organisation, which is
+	// a different thing from an absent workspace: see WithPersonScope.
+	personScopeKey contextKey = "person_scope"
 )
 
 // ErrWorkspaceMissing is returned when a context carries no acting organisation.
@@ -168,9 +171,39 @@ func AllowedWorkspaces(ctx context.Context) []string {
 // than about a tenant. Reach for it only where crossing organisations is the
 // point, and never with an id that arrived from a request without a membership
 // check behind it.
+//
+// It clears the person scope as well, and that is the whole reason the two live
+// in one file. "Which organisations does this account belong to" is asked by
+// the workspace switcher, and it is asked most urgently by somebody who has
+// just been accepted into their first one — a person still signed in with no
+// workspace, whose connection is bound to the tenant role with no tenant, where
+// a query about memberships matches nothing. Leaving the scope set would answer
+// "none" to the one question whose answer had just changed.
 func WithoutWorkspace(ctx context.Context) context.Context {
 	ctx = context.WithValue(ctx, allowedKey, []string(nil))
+	ctx = context.WithValue(ctx, personScopeKey, false)
 	return context.WithValue(ctx, workspaceIDKey, "")
+}
+
+// WithPersonScope marks a request as one person acting for themselves, with no
+// organisation in play.
+//
+// The platform's session middleware sets it, and only when a resolved session
+// carries no workspace. What it buys is the difference between two things that
+// look identical in a context — "nobody is signed in" and "somebody is signed
+// in and belongs to no organisation" — which must not be bound to the database
+// the same way. The first is the platform path and sees everything; the second
+// is the least privileged caller on the system and is bound to the tenant role
+// with no tenant, where every workspace policy refuses and only the rows keyed
+// on the person themselves are readable.
+func WithPersonScope(ctx context.Context) context.Context {
+	return context.WithValue(ctx, personScopeKey, true)
+}
+
+// IsPersonScoped reports whether ctx was marked by WithPersonScope.
+func IsPersonScoped(ctx context.Context) bool {
+	scoped, _ := ctx.Value(personScopeKey).(bool)
+	return scoped
 }
 
 // WorkspaceID extracts the acting organisation from a context.

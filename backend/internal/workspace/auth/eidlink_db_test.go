@@ -147,11 +147,10 @@ func TestAFirstEIDSignInKeepsWhatEIDGave(t *testing.T) {
 	}
 	t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM registry.users WHERE id=$1`, userID) })
 
-	var email, phone, name, kind string
+	var email, phone, name string
 	if err := pool.QueryRow(ctx,
-		`SELECT u.email, u.phone, u.name, t.kind
-		   FROM registry.users u, registry.tenants t
-		  WHERE u.id = $1::uuid AND t.id = $2::uuid`, userID, tenantID).Scan(&email, &phone, &name, &kind); err != nil {
+		`SELECT email, phone, name FROM registry.users WHERE id = $1::uuid`,
+		userID).Scan(&email, &phone, &name); err != nil {
 		t.Fatal(err)
 	}
 	if email != identity.Email {
@@ -163,10 +162,11 @@ func TestAFirstEIDSignInKeepsWhatEIDGave(t *testing.T) {
 	if name != "Ганбат Сарантуяа" {
 		t.Errorf("the name is %q", name)
 	}
-	// And it lands somewhere: a first-time citizen belongs to no organisation,
-	// so the workspace opened for them is their own.
-	if kind != "personal" {
-		t.Errorf("a first eID sign-in opened a %q workspace", kind)
+	// And it lands nowhere, which is the point since 00094: a first-time
+	// citizen belongs to no organisation, and the platform no longer invents
+	// one to put them in. What they can reach is their own record.
+	if tenantID != "" {
+		t.Errorf("a first eID sign-in opened workspace %q; it should open none", tenantID)
 	}
 }
 

@@ -378,6 +378,7 @@ func Documents() (DocumentFiler, error)
 func EID() (EIDSigner, error)
 func Error(w http.ResponseWriter, status int, message string)
 func Get(id string) (Module, bool)
+func IsPersonScoped(ctx context.Context) bool
 func JSON(w http.ResponseWriter, status int, value any)
 func List() []Module
 func LocaleFromRequest(r *http.Request) string
@@ -412,6 +413,7 @@ func UseReportSink(sink func(Report))
 func UserFromContext(ctx context.Context) (UserClaims, error)
 func VerifyModuleExists(id string) error
 func WithAllowedWorkspaces(ctx context.Context, workspaceIDs []string) context.Context
+func WithPersonScope(ctx context.Context) context.Context
 func WithUser(ctx context.Context, claims UserClaims) context.Context
 func WithWorkspaceID(ctx context.Context, workspaceID string) context.Context
 func WithoutWorkspace(ctx context.Context) context.Context

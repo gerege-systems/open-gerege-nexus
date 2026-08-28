@@ -53,6 +53,16 @@ var ErrTenantSuspended = errors.New("this organisation has been suspended")
 // context yet — this is asked during sign-in, before any session exists — and
 // `tenants` carries no tenant_id, so no policy applies to it either way.
 func (h *Handlers) TenantSuspended(ctx context.Context, tenantID string) (bool, string) {
+	// No organisation is not a suspended one. Since 00094 a session may carry
+	// no workspace at all, and asking the database whether the empty string is
+	// suspended got as far as "invalid input syntax for type uuid" — logged at
+	// ERROR, on every request a citizen made, and failing open each time. There
+	// is nothing here to suspend: what such a session can reach is the person's
+	// own record, which no organisation owns and none can close.
+	if tenantID == "" {
+		return false, ""
+	}
+
 	key := memo.Key(tenantID, "")
 	if suspended, cached := h.suspended.Get(key); cached {
 		return suspended, h.suspensionReason(ctx, tenantID, suspended)

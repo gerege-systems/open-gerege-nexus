@@ -144,6 +144,15 @@ func (s *SessionStore) Create(ctx context.Context, userID, tenantID, authMethod,
 		return "", time.Time{}, err
 	}
 
+	// An empty tenant is a person signing in as themselves, and it has to reach
+	// the database as NULL rather than as the empty string: the column is a
+	// uuid, and "" is not one. Since 00094 the column admits NULL, which is how
+	// somebody who belongs to no organisation has a session at all.
+	var workspace any
+	if tenantID != "" {
+		workspace = tenantID
+	}
+
 	expiresAt := time.Now().Add(s.ttl)
 	if authMethod == "" {
 		authMethod = "password"
@@ -152,7 +161,7 @@ func (s *SessionStore) Create(ctx context.Context, userID, tenantID, authMethod,
 	_, err = s.db.Exec(ctx,
 		`INSERT INTO workspace.sessions (token_hash, user_id, tenant_id, auth_method, user_agent, ip_address, expires_at)
 		 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-		hashToken(token), userID, tenantID, authMethod, userAgent, ip, expiresAt)
+		hashToken(token), userID, workspace, authMethod, userAgent, ip, expiresAt)
 	if err != nil {
 		return "", time.Time{}, fmt.Errorf("persist session: %w", err)
 	}
@@ -161,6 +170,14 @@ func (s *SessionStore) Create(ctx context.Context, userID, tenantID, authMethod,
 }
 
 // Resolve validates a token and returns the claims bound to it.
+//
+// The membership join is a check and not a lookup: a session naming an
+// organisation the person has since been removed from must stop working at
+// once, rather than at whatever hour it would have expired. It was an inner
+// join for exactly that, and is now a left join with the same condition spelled
+// out, because since 00094 a session may name no organisation at all — and an
+// inner join answers "no membership" and "no organisation" with the same empty
+// result, which would have signed every citizen out.
 func (s *SessionStore) Resolve(ctx context.Context, token string) (UserClaims, error) {
 	if token == "" {
 		return UserClaims{}, ErrSessionInvalid
@@ -192,7 +209,7 @@ func (s *SessionStore) Resolve(ctx context.Context, token string) (UserClaims, e
 		     WHERE id IN (SELECT id FROM live)
 		       AND last_seen_at < NOW() - $3::interval
 		)
-		SELECT s.user_id::text, s.tenant_id::text, u.email,
+		SELECT s.user_id::text, COALESCE(s.tenant_id::text, ''), u.email,
 		        ARRAY(SELECT a::text FROM unnest(s.allowed_tenant_ids) a) AS allowed,
 		        COALESCE(s.impersonated_by::text, '') AS impersonated_by,
 		        EXISTS (
@@ -205,7 +222,9 @@ func (s *SessionStore) Resolve(ctx context.Context, token string) (UserClaims, e
 		   FROM workspace.sessions s
 		   JOIN live ON live.id = s.id
 		   JOIN registry.users u ON u.id = s.user_id
-		   JOIN workspace.memberships sm ON sm.tenant_id=s.tenant_id AND sm.user_id=s.user_id`,
+		   LEFT JOIN workspace.memberships sm
+		          ON sm.tenant_id = s.tenant_id AND sm.user_id = s.user_id
+		  WHERE s.tenant_id IS NULL OR sm.user_id IS NOT NULL`,
 		hashToken(token), nullableTime(idleCutoff), touchInterval.String()).
 		Scan(&claims.UserID, &claims.WorkspaceID, &claims.Email, &claims.AllowedWorkspaceIDs,
 			&claims.ImpersonatedBy, &claims.IsAdmin)

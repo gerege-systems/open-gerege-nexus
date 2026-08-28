@@ -3,7 +3,8 @@
  * Copyright (c) 2026 Gerege Systems Development Team, Gerege Nomadica Foundation
  * Distributed under the Apache 2.0 License.
  *
- * Nobody is turned away at the door.
+ * Nobody is turned away at the door, and nobody is given a room they never
+ * asked for.
  *
  * Before migration 00085 a person who belonged to no organisation could not
  * sign in at all: FirstTenantFor found no membership and returned
@@ -12,10 +13,14 @@
  * the deployment — so this was the one place where the code refused what the
  * data model allowed.
  *
- * The workaround was EID_JIT_TENANT_SLUG, which answered the question by making
- * the citizen a *member* of whichever organisation an environment variable
- * named: counted against its quota, listed in its directory, given its default
- * role. These tests are what say that path is gone and what replaced it.
+ * 00085 answered it by making every such person a workspace of their own. That
+ * worked, and it put a row in registry.tenants for every human being who ever
+ * authenticated — on the table that is the customer list and the parent of
+ * thirty-nine others. Measured at a million people it was 3.9 GB, most of it
+ * access-control rows for workspaces with one member who owned them.
+ *
+ * 00094 answered it properly: a session may carry no workspace. These tests are
+ * what say the door is still open and that nothing is built behind it.
  */
 
 package auth_test
@@ -46,9 +51,6 @@ func seedPerson(t *testing.T, pool *pgxpool.Pool) string {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() {
-		// The home goes with the person: owner_user_id is ON DELETE CASCADE, so
-		// deleting the account is enough and a test that forgot the workspace
-		// would still leave nothing behind.
 		_, _ = pool.Exec(context.Background(), `DELETE FROM registry.users WHERE id=$1`, userID)
 	})
 	return userID
@@ -58,229 +60,128 @@ func handlersFor(pool *pgxpool.Pool) *auth.Handlers {
 	return auth.New(auth.Deps{DB: pool})
 }
 
-// The whole point: a person in no organisation still gets a workspace.
-func TestSomebodyInNoOrganisationSignsIntoTheirOwnHome(t *testing.T) {
+// The whole point: a person in no organisation signs in, and into nothing.
+//
+// An empty workspace is the answer and not a failure, which is why this asserts
+// the absence of an error as loudly as the absence of an id. The two used to be
+// the same thing — no membership meant ErrNoOrganisation meant no session — and
+// separating them is what let a citizen through the door.
+func TestSomebodyInNoOrganisationSignsInWithNoWorkspace(t *testing.T) {
 	pool := openPool(t)
 	h := handlersFor(pool)
 	userID := seedPerson(t, pool)
-	ctx := context.Background()
 
-	tenantID, err := h.FirstTenantFor(ctx, userID)
+	opened, err := h.FirstTenantFor(context.Background(), userID)
 	if err != nil {
-		t.Fatalf("a person with no organisation could not sign in: %v", err)
+		t.Fatalf("a person in no organisation was refused a workspace to sign in to: %v", err)
 	}
-	if tenantID == "" {
-		t.Fatal("FirstTenantFor returned no workspace and no error")
-	}
-
-	var kind, owner string
-	if err := pool.QueryRow(ctx,
-		`SELECT kind, owner_user_id::text FROM registry.tenants WHERE id = $1::uuid`,
-		tenantID).Scan(&kind, &owner); err != nil {
-		t.Fatal(err)
-	}
-	if kind != "personal" {
-		t.Errorf("the workspace made for a person is %q, not personal", kind)
-	}
-	if owner != userID {
-		t.Errorf("the home is owned by %s, not by %s", owner, userID)
-	}
-
-	// Owning it is not enough. The rest of the platform reads memberships, so a
-	// home without one is a workspace whose owner every screen refuses.
-	var member bool
-	if err := pool.QueryRow(ctx,
-		`SELECT EXISTS (SELECT 1 FROM workspace.memberships WHERE tenant_id=$1::uuid AND user_id=$2::uuid)`,
-		tenantID, userID).Scan(&member); err != nil {
-		t.Fatal(err)
-	}
-	if !member {
-		t.Error("the person owns their home but is not a member of it")
+	if opened != "" {
+		t.Errorf("the sign-in opened workspace %q; somebody who belongs to no "+
+			"organisation should open with none", opened)
 	}
 }
 
-// Signing in twice is one home, not two.
+// And nothing is built for them.
 //
-// The check that matters is the second call taking the first call's row rather
-// than making its own: the index is what enforces it, and a test that only
-// called once would pass with no index at all.
-func TestASecondSignInFindsTheSameHome(t *testing.T) {
+// The assertion 00094 exists for. It is written against registry.tenants rather
+// than against the return value above because the cost this removes was never
+// visible in the return value: 00085 made a workspace, a profile, three roles
+// and seventeen role_permissions per person, and every one of those was correct
+// by its own lights.
+func TestSigningInMakesNoWorkspaceForACitizen(t *testing.T) {
 	pool := openPool(t)
 	h := handlersFor(pool)
+	ctx := context.Background()
 	userID := seedPerson(t, pool)
-	ctx := context.Background()
 
-	first, err := h.FirstTenantFor(ctx, userID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	second, err := h.FirstTenantFor(ctx, userID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if first != second {
-		t.Errorf("two sign-ins opened two homes: %s and %s", first, second)
+	for range 2 {
+		if _, err := h.FirstTenantFor(ctx, userID); err != nil {
+			t.Fatal(err)
+		}
 	}
 
-	var homes int
+	var workspaces, memberships int
 	if err := pool.QueryRow(ctx,
-		`SELECT count(*) FROM registry.tenants WHERE owner_user_id = $1::uuid`, userID).Scan(&homes); err != nil {
+		`SELECT (SELECT count(*) FROM registry.tenants WHERE owner_user_id = $1::uuid),
+		        (SELECT count(*) FROM workspace.memberships WHERE user_id = $1::uuid)`,
+		userID).Scan(&workspaces, &memberships); err != nil {
 		t.Fatal(err)
 	}
-	if homes != 1 {
-		t.Errorf("the person has %d homes", homes)
+	if workspaces != 0 || memberships != 0 {
+		t.Errorf("signing in twice left %d workspace(s) and %d membership(s); want none of either",
+			workspaces, memberships)
 	}
 }
 
-// Somebody who works somewhere still opens at home.
+// Somebody who works somewhere opens there.
 //
-// The rule was the other way round for a day and this test asserted that. It
-// is written out in FirstTenantFor at length; briefly, a person is not their
-// employer's, and the switcher is where work lives. The cost is a click every
-// morning for people signing in to do a job, and it is deliberate.
-func TestEvenAMemberOfAnOrganisationOpensAtHome(t *testing.T) {
+// This has been three things in three days and the history is in FirstTenantFor.
+// Briefly: opening in the organisation was right, then wrong because people
+// with no organisation had nowhere to go, and is right again now that having
+// nowhere to go is a state the platform can hold.
+func TestAMemberOfAnOrganisationOpensInIt(t *testing.T) {
 	pool := openPool(t)
 	h := handlersFor(pool)
 	ctx := context.Background()
-	userID, orgID := seedMember(t, pool)
+	userID := seedPerson(t, pool)
+
+	suffix := strings.ReplaceAll(uuid.NewString(), "-", "")[:12]
+	var orgID string
+	if err := pool.QueryRow(ctx,
+		`INSERT INTO registry.tenants (slug, name) VALUES ($1,$1) RETURNING id::text`,
+		"work-"+suffix).Scan(&orgID); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM registry.tenants WHERE id=$1`, orgID) })
+	if _, err := pool.Exec(ctx,
+		`INSERT INTO workspace.memberships (tenant_id, user_id) VALUES ($1::uuid,$2::uuid)`,
+		orgID, userID); err != nil {
+		t.Fatal(err)
+	}
 
 	opened, err := h.FirstTenantFor(ctx, userID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if opened == orgID {
-		t.Error("a member of an organisation was signed into the organisation")
-	}
-
-	var kind, owner string
-	if err := pool.QueryRow(ctx,
-		`SELECT kind, COALESCE(owner_user_id::text, '') FROM registry.tenants WHERE id = $1::uuid`,
-		opened).Scan(&kind, &owner); err != nil {
-		t.Fatal(err)
-	}
-	if kind != "personal" || owner != userID {
-		t.Errorf("the sign-in opened a %q workspace owned by %q", kind, owner)
-	}
-
-	// And work is still reachable: it is a row in the switcher, which is the
-	// half of this trade that has to keep working.
-	options, err := auth.NewSessionStore(pool, time.Hour).TenantsForUser(ctx, userID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var sawOrg bool
-	for _, one := range options {
-		if one.ID == orgID {
-			sawOrg = true
-		}
-	}
-	if !sawOrg {
-		t.Error("the organisation is not in the switcher, so there is no way back to work")
-	}
-	if len(options) < 2 {
-		t.Errorf("the switcher offers %d workspace(s); it is hidden below two", len(options))
+	if opened != orgID {
+		t.Errorf("an employee opened in %q, want their organisation %q", opened, orgID)
 	}
 }
 
-// The database refuses a second home even if the code stops asking.
+// A person may still own a workspace, and the schema still says what one is.
 //
-// Two tabs signing in at once both see no home and both insert; the partial
-// unique index is what makes the second one lose. Without it the loser would
-// win too, and the person would have two homes with a membership in each.
-func TestTheDatabaseRefusesASecondHome(t *testing.T) {
-	pool := openPool(t)
-	h := handlersFor(pool)
-	userID := seedPerson(t, pool)
-	ctx := context.Background()
-
-	if _, err := h.FirstTenantFor(ctx, userID); err != nil {
-		t.Fatal(err)
-	}
-	_, err := pool.Exec(ctx,
-		`INSERT INTO registry.tenants (slug, name, kind, owner_user_id)
-		 VALUES ($1, 'second', 'personal', $2::uuid)`,
-		"home-second-"+strings.ReplaceAll(userID, "-", ""), userID)
-	if err == nil {
-		t.Fatal("a second home was created for one person")
-	}
-	if !strings.Contains(err.Error(), "tenants_one_home_per_person") {
-		t.Fatalf("the second home was refused for an unexpected reason: %v", err)
-	}
-}
-
-// An organisation may not claim an owner, and a home may not go without one.
+// 00094 stopped *making* personal workspaces; it did not remove the idea. The
+// columns stay because the pattern every comparable platform settles on is to
+// have one — Vercel's hobby team, GitHub's personal account — created when
+// somebody starts using the product rather than when they prove who they are.
+// There is no trigger for that in this codebase yet, and inventing one would be
+// speculation; leaving the schema able to express it costs two columns.
 //
-// Written as one test because it is one decision: kind and owner_user_id agree
-// or the row is meaningless. A row with kind='organisation' and an owner would
-// be filtered off the console's list by nothing and would appear in a person's
-// home lookup by nothing — visible in neither place, which is the worst of the
-// two ways to get this wrong.
+// The constraint is what makes the idea coherent: kind and owner_user_id agree
+// or the row means nothing. A row with kind='organisation' and an owner would
+// be filtered off the console's list by nothing and found by a person's lookup
+// by nothing — visible in neither place, the worst of the two ways to be wrong.
 func TestKindAndOwnerMustAgree(t *testing.T) {
 	pool := openPool(t)
+	ctx := context.Background()
 	userID := seedPerson(t, pool)
-	ctx := context.Background()
+	suffix := strings.ReplaceAll(uuid.NewString(), "-", "")[:12]
 
-	for _, bad := range []struct {
-		name, kind string
-		owner      any
-	}{
-		{"an organisation with an owner", "organisation", userID},
-		{"a home with nobody", "personal", nil},
-	} {
-		_, err := pool.Exec(ctx,
-			`INSERT INTO registry.tenants (slug, name, kind, owner_user_id)
-			 VALUES ($1, $1, $2, $3::uuid)`,
-			"agree-"+strings.ReplaceAll(uuid.NewString(), "-", "")[:12], bad.kind, bad.owner)
-		if err == nil {
-			t.Errorf("%s was accepted", bad.name)
-			continue
-		}
-		if !strings.Contains(err.Error(), "tenants_home_has_an_owner") {
-			t.Errorf("%s was refused for an unexpected reason: %v", bad.name, err)
-		}
-	}
-}
-
-// The switcher can tell the two kinds apart, and the home sorts last.
-//
-// The list is the only place a person sees their workspaces side by side, and
-// after migration 00085 two of them can carry the same name — a citizen who
-// also works somewhere is "Бат Дорж" in one row and their employer in the
-// other. The slug does not help: a home's is derived from a user id. So the
-// kind travels with the row and the shell draws from it.
-//
-// Last rather than first because a home is where somebody ends up when they
-// have nowhere else, not the place they reach for. The same order the sign-in
-// path uses.
-func TestTheSwitcherSeesTheKindAndSortsTheHomeLast(t *testing.T) {
-	pool := openPool(t)
-	h := handlersFor(pool)
-	ctx := context.Background()
-	userID, orgID := seedMember(t, pool)
-
-	home, err := h.HomeFor(ctx, userID)
-	if err != nil {
-		t.Fatal(err)
+	_, err := pool.Exec(ctx,
+		`INSERT INTO registry.tenants (slug, name, kind) VALUES ($1,$1,'personal')`, "orphan-"+suffix)
+	if err == nil {
+		t.Error("a personal workspace was made with no owner")
+	} else if !strings.Contains(err.Error(), "tenants_home_has_an_owner") {
+		t.Errorf("refused for an unexpected reason: %v", err)
 	}
 
-	options, err := auth.NewSessionStore(pool, time.Hour).TenantsForUser(ctx, userID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	kinds := map[string]string{}
-	var order []string
-	for _, option := range options {
-		kinds[option.ID] = option.Kind
-		order = append(order, option.ID)
-	}
-	if kinds[orgID] != "organisation" {
-		t.Errorf("the organisation came back as %q", kinds[orgID])
-	}
-	if kinds[home] != "personal" {
-		t.Errorf("the home came back as %q", kinds[home])
-	}
-	if len(order) < 2 || order[len(order)-1] != home {
-		t.Errorf("the home is not last in %v", order)
+	_, err = pool.Exec(ctx,
+		`INSERT INTO registry.tenants (slug, name, owner_user_id) VALUES ($1,$1,$2::uuid)`,
+		"owned-org-"+suffix, userID)
+	if err == nil {
+		t.Error("an organisation was given an owner")
+	} else if !strings.Contains(err.Error(), "tenants_home_has_an_owner") {
+		t.Errorf("refused for an unexpected reason: %v", err)
 	}
 }
 
@@ -288,14 +189,13 @@ func TestTheSwitcherSeesTheKindAndSortsTheHomeLast(t *testing.T) {
 //
 // The regression this exists for: HandleLogin looked the account up with an
 // inner join onto memberships, so somebody with none matched no row and was
-// told "invalid email or password". Everything else about 00085 worked — the
-// eID and federated paths ask FirstTenantFor — and this one path carried its
-// own copy of the question, so it kept the old answer. It was found on
-// production, by signing in as a citizen for the first time.
+// told "invalid email or password". It was found on production, by signing in
+// as a citizen for the first time.
 //
 // Asserted through the handler rather than through FirstTenantFor, because
 // FirstTenantFor was right the whole time. What was wrong was that nothing
-// called it here.
+// called it here — which is exactly the shape of bug a test one layer down
+// cannot see.
 func TestSomebodyInNoOrganisationCanSignInWithAPassword(t *testing.T) {
 	pool := openPool(t)
 	ctx := context.Background()
@@ -338,17 +238,26 @@ func TestSomebodyInNoOrganisationCanSignInWithAPassword(t *testing.T) {
 	if err := json.Unmarshal(recorder.Body.Bytes(), &answer); err != nil {
 		t.Fatal(err)
 	}
-	var kind string
-	if err := pool.QueryRow(ctx,
-		`SELECT kind FROM registry.tenants WHERE id = $1::uuid`, answer.User.TenantID).Scan(&kind); err != nil {
-		t.Fatalf("the sign-in opened a workspace that is not there: %v", err)
+	if answer.User.TenantID != "" {
+		t.Errorf("the sign-in opened workspace %q; a citizen opens with none", answer.User.TenantID)
 	}
-	if kind != "personal" {
-		t.Errorf("the sign-in opened a %q workspace, want the person's own home", kind)
-	}
-	// Nobody administers a workspace with one person in it, and saying
-	// otherwise would draw an administrator's rail in a home.
+	// Nobody administers nothing, and saying otherwise would draw an
+	// administrator's rail for somebody with no organisation to administer.
 	if answer.User.IsAdmin {
-		t.Error("a citizen is an administrator of their own home")
+		t.Error("a citizen with no organisation is an administrator")
+	}
+
+	// And the session it made is real: resolvable, and carrying no workspace.
+	// A session row is where the change actually lands — sessions.tenant_id
+	// was NOT NULL until 00094 — so a sign-in that returned the right JSON and
+	// wrote a row nothing could read afterwards would pass every line above.
+	var sessions int
+	if err := pool.QueryRow(ctx,
+		`SELECT count(*) FROM workspace.sessions WHERE user_id = $1::uuid AND tenant_id IS NULL`,
+		userID).Scan(&sessions); err != nil {
+		t.Fatal(err)
+	}
+	if sessions != 1 {
+		t.Errorf("the sign-in left %d workspace-less session(s), want exactly one", sessions)
 	}
 }
