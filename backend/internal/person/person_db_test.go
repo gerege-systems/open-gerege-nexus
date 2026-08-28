@@ -3,19 +3,26 @@
  * Copyright (c) 2026 Gerege Systems Development Team, Gerege Nomadica Foundation
  * Distributed under the Apache 2.0 License.
  *
- * The four rules that are the whole of this feature's security.
+ * The rules that are the whole of this feature's security.
  *
  * registry.publish_person_item is SECURITY DEFINER, so it runs as the role that
  * created it and row-level security does not apply to it at all. That is not a
  * weakness to be apologised for — it is the only way a supplier's module can
- * write into a citizen's workspace, and migration 00034 solved the identical
- * problem the identical way years of commits ago. But it does mean the function
- * is the entire attack surface, and that its narrowness is not a style choice.
+ * write a row that belongs to somebody else, and migration 00034 solved the
+ * identical problem the identical way years of commits ago. But it does mean
+ * the function is the entire attack surface, and that its narrowness is not a
+ * style choice.
  *
- * So the narrowness is tested rather than commented: it writes only into a
- * personal workspace, only into the one whose owner carries the Gerege number
- * it was given, only into one table, and only for one role. Every one of those
- * is a line somebody could delete while the feature kept working.
+ * So the narrowness is tested rather than commented: it writes only for the
+ * person it was given, only into one table, and only for one role. Every one of
+ * those is a line somebody could delete while the feature kept working.
+ *
+ * Since 00093 the rows are keyed by the person rather than by their workspace,
+ * and one rule left as a consequence: there is no longer a "wrong kind of
+ * workspace" to write into, because the destination is a foreign key into
+ * registry.users. What replaced it is stricter — a destination that is not a
+ * person is refused by the database rather than by a lookup that could return
+ * nothing quietly.
  */
 
 package person_test
@@ -49,9 +56,13 @@ func openPool(t *testing.T) *pgxpool.Pool {
 	return pool
 }
 
-// seedHome is a citizen: an account with a Gerege number and the personal
-// workspace 00085 gives them.
-func seedHome(t *testing.T, pool *pgxpool.Pool) (geID int64, userID, homeID string) {
+// seedPerson is a citizen: an account with a Gerege number, and nothing else.
+//
+// Deliberately no workspace. Until 00093 one was required — the publish
+// function resolved the person to their home and refused if they had none — and
+// a test that keeps making one would go on passing after the requirement it was
+// covering had gone.
+func seedPerson(t *testing.T, pool *pgxpool.Pool) (geID int64, userID string) {
 	t.Helper()
 	ctx := context.Background()
 	suffix := strings.ReplaceAll(uuid.NewString(), "-", "")[:12]
@@ -71,19 +82,7 @@ func seedHome(t *testing.T, pool *pgxpool.Pool) (geID int64, userID, homeID stri
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM registry.users WHERE id=$1`, userID) })
-
-	if err := pool.QueryRow(ctx,
-		`INSERT INTO registry.tenants (slug, name, kind, owner_user_id)
-		 VALUES ($1, $2, 'personal', $3::uuid) RETURNING id::text`,
-		"home-"+suffix, "Иргэн "+suffix, userID).Scan(&homeID); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := pool.Exec(ctx,
-		`INSERT INTO workspace.memberships (tenant_id, user_id) VALUES ($1::uuid, $2::uuid)`,
-		homeID, userID); err != nil {
-		t.Fatal(err)
-	}
-	return geID, userID, homeID
+	return geID, userID
 }
 
 func seedOrganisation(t *testing.T, pool *pgxpool.Pool) string {
@@ -103,16 +102,16 @@ func item(ref string) nexus.PersonItem {
 	return nexus.PersonItem{SourceApp: "io.gerege.nexus.urtuu", SourceRef: ref, Code: "Д-101", Status: "OPEN"}
 }
 
-// A supplier publishes into the citizen's home, and the citizen reads it.
+// A supplier publishes to the citizen, and the citizen reads it.
 //
 // The round trip in one test because the two halves are only interesting
 // together: a write nobody can read is a write into a hole.
-func TestAPublishedRequestArrivesInThatPersonsHome(t *testing.T) {
+func TestAPublishedRequestArrivesOnThatPerson(t *testing.T) {
 	pool := openPool(t)
 	store := person.New(pool)
 	ctx := context.Background()
 
-	geID, _, homeID := seedHome(t, pool)
+	geID, userID := seedPerson(t, pool)
 	provider := seedOrganisation(t, pool)
 
 	published := item("REQ-1")
@@ -122,14 +121,14 @@ func TestAPublishedRequestArrivesInThatPersonsHome(t *testing.T) {
 		t.Fatalf("publish: %v", err)
 	}
 
-	var tenantID, code, status, answer string
+	var owner, code, status, answer string
 	if err := pool.QueryRow(ctx,
-		`SELECT tenant_id::text, code, status, answer FROM workspace.person_items
-		  WHERE source_ref = 'REQ-1'`).Scan(&tenantID, &code, &status, &answer); err != nil {
+		`SELECT user_id::text, code, status, answer FROM registry.person_items
+		  WHERE source_ref = 'REQ-1'`).Scan(&owner, &code, &status, &answer); err != nil {
 		t.Fatalf("the published row is not there: %v", err)
 	}
-	if tenantID != homeID {
-		t.Errorf("the row landed in %s, not in the person's home %s", tenantID, homeID)
+	if owner != userID {
+		t.Errorf("the row landed on %s, not on the person it was published to, %s", owner, userID)
 	}
 	if code != "Д-101" || status != "OPEN" || answer == "" {
 		t.Errorf("the row is %q/%q/%q", code, status, answer)
@@ -142,7 +141,7 @@ func TestPublishingTheSameRequestTwiceUpdatesOneRow(t *testing.T) {
 	pool := openPool(t)
 	store := person.New(pool)
 	ctx := context.Background()
-	geID, _, homeID := seedHome(t, pool)
+	geID, userID := seedPerson(t, pool)
 
 	if err := store.Publish(ctx, geID, item("REQ-2")); err != nil {
 		t.Fatal(err)
@@ -157,8 +156,8 @@ func TestPublishingTheSameRequestTwiceUpdatesOneRow(t *testing.T) {
 	var rows int
 	var status string
 	if err := pool.QueryRow(ctx,
-		`SELECT count(*), max(status) FROM workspace.person_items WHERE tenant_id = $1::uuid`,
-		homeID).Scan(&rows, &status); err != nil {
+		`SELECT count(*), max(status) FROM registry.person_items WHERE user_id = $1::uuid`,
+		userID).Scan(&rows, &status); err != nil {
 		t.Fatal(err)
 	}
 	if rows != 1 {
@@ -169,19 +168,19 @@ func TestPublishingTheSameRequestTwiceUpdatesOneRow(t *testing.T) {
 	}
 }
 
-// Rule 1, the important one: the Gerege number decides the workspace, and a
-// caller who names somebody else's cannot reach it.
+// The important rule: the Gerege number decides whose row it is, and a caller
+// who names somebody else's cannot reach past it.
 //
 // The function takes no workspace id at all — that is the design — so this
 // asserts the only thing a caller could get wrong: a number that is not this
-// person's writes into that person's home and no other.
-func TestTheGeregeNumberDecidesWhoseHomeItIs(t *testing.T) {
+// person's writes onto that person and no other.
+func TestTheGeregeNumberDecidesWhoseRowItIs(t *testing.T) {
 	pool := openPool(t)
 	store := person.New(pool)
 	ctx := context.Background()
 
-	firstGeID, _, firstHome := seedHome(t, pool)
-	secondGeID, _, secondHome := seedHome(t, pool)
+	firstGeID, firstUser := seedPerson(t, pool)
+	secondGeID, secondUser := seedPerson(t, pool)
 
 	if err := store.Publish(ctx, firstGeID, item("REQ-A")); err != nil {
 		t.Fatal(err)
@@ -190,10 +189,10 @@ func TestTheGeregeNumberDecidesWhoseHomeItIs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	for _, want := range []struct{ home, ref string }{{firstHome, "REQ-A"}, {secondHome, "REQ-B"}} {
+	for _, want := range []struct{ person, ref string }{{firstUser, "REQ-A"}, {secondUser, "REQ-B"}} {
 		var refs []string
 		rows, err := pool.Query(ctx,
-			`SELECT source_ref FROM workspace.person_items WHERE tenant_id = $1::uuid`, want.home)
+			`SELECT source_ref FROM registry.person_items WHERE user_id = $1::uuid`, want.person)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -206,23 +205,27 @@ func TestTheGeregeNumberDecidesWhoseHomeItIs(t *testing.T) {
 		}
 		rows.Close()
 		if len(refs) != 1 || refs[0] != want.ref {
-			t.Errorf("home %s holds %v, want only %s", want.home, refs, want.ref)
+			t.Errorf("person %s holds %v, want only %s", want.person, refs, want.ref)
 		}
 	}
 }
 
-// A Gerege number nobody here carries is an error, not a new home.
+// A Gerege number nobody here carries is an error, not a new account.
 //
-// The alternative — creating the workspace on demand — would let a typo open a
-// space for a person who has never signed in to this deployment, and would make
-// a wrong number indistinguishable from a right one.
-func TestPublishingToANumberWithNoHomeFails(t *testing.T) {
+// The alternative — creating the person on demand — would let a typo open a
+// record for somebody who has never been near this deployment, and would make a
+// wrong number indistinguishable from a right one. The refusal now comes from a
+// foreign key rather than from a lookup: registry.person_items.user_id
+// references registry.users, so a destination that is not a person cannot be
+// written even by the SECURITY DEFINER function that bypasses every policy.
+func TestPublishingToSomebodyWhoDoesNotExistFails(t *testing.T) {
 	pool := openPool(t)
 	store := person.New(pool)
+	ctx := context.Background()
 
-	// A Gerege number nobody carries at all: the lookup that turns it into an
-	// account finds nothing, and the write never starts.
-	err := store.Publish(context.Background(), 999999999999, item("REQ-NOBODY"))
+	// A Gerege number nobody carries: the lookup that turns it into an account
+	// finds nothing, and the write never starts.
+	err := store.Publish(ctx, 999999999999, item("REQ-NOBODY"))
 	if err == nil {
 		t.Fatal("publishing to a Gerege number nobody carries succeeded")
 	}
@@ -230,79 +233,79 @@ func TestPublishingToANumberWithNoHomeFails(t *testing.T) {
 		t.Errorf("refused for an unexpected reason: %v", err)
 	}
 
-	// And an account that exists with no home of its own, which is the state
-	// of anybody who has not signed in since 00085. The function refuses
-	// rather than opening a workspace on their behalf.
-	suffix := strings.ReplaceAll(uuid.NewString(), "-", "")[:12]
-	var homeless string
-	if err := pool.QueryRow(context.Background(),
-		`INSERT INTO registry.users (email, password_hash, name) VALUES ($1,'x','x') RETURNING id::text`,
-		"homeless-"+suffix+"@example.mn").Scan(&homeless); err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM registry.users WHERE id=$1`, homeless) })
-
-	err = store.PublishTo(context.Background(), homeless, item("REQ-HOMELESS"))
+	// And an id that is well-formed and is not a person. This is the state a
+	// bug produces rather than one an API allows, which is exactly why the
+	// database is asked to hold it: an organisation's id here used to be a
+	// silent miss, and is now a foreign key violation.
+	organisation := seedOrganisation(t, pool)
+	err = store.PublishTo(ctx, organisation, item("REQ-NOT-A-PERSON"))
 	if err == nil {
-		t.Fatal("publishing to an account with no home succeeded")
+		t.Fatal("publishing to an organisation's id succeeded")
 	}
-	if !strings.Contains(err.Error(), "no personal workspace") {
+	if !strings.Contains(err.Error(), "person_items_user_id_fkey") &&
+		!strings.Contains(err.Error(), "foreign key") {
 		t.Errorf("refused for an unexpected reason: %v", err)
 	}
 }
 
-// Rule 1's other half: an organisation is not a home, whoever owns it.
+// Somebody with no workspace of their own still receives.
 //
-// Reached by pointing the function at a workspace that exists and is the wrong
-// kind — which is the state a bug would produce, rather than one an API allows.
-func TestAnOrganisationIsNeverPublishedInto(t *testing.T) {
+// This is the change 00093 exists for, stated as a test. Before it, the publish
+// function resolved the person to their personal workspace and refused if they
+// had none — so a citizen who had never signed in, or an employee who only ever
+// worked inside a company, could not be told anything. Their record is theirs
+// now, and it needs no room to be put in.
+func TestAPersonWithNoWorkspaceStillReceives(t *testing.T) {
 	pool := openPool(t)
-	ctx := context.Background()
-	geID, userID, _ := seedHome(t, pool)
-	organisation := seedOrganisation(t, pool)
-
-	// Make the citizen the owner of an organisation as well — the closest a
-	// caller can get to confusing the two — and check the function still picks
-	// the home. owner_user_id on a non-personal row is refused by 00085's
-	// constraint, so the attempt itself is the assertion.
-	_, err := pool.Exec(ctx,
-		`UPDATE registry.tenants SET owner_user_id = $1::uuid WHERE id = $2::uuid`, userID, organisation)
-	if err == nil {
-		t.Fatal("an organisation was given an owner; 00085's constraint is not holding")
-	}
-	if !strings.Contains(err.Error(), "tenants_home_has_an_owner") {
-		t.Fatalf("refused for an unexpected reason: %v", err)
-	}
-
-	// And the positive half: with the organisation unreachable, the number
-	// still resolves to the home.
 	store := person.New(pool)
-	if err := store.Publish(ctx, geID, item("REQ-C")); err != nil {
-		t.Fatal(err)
-	}
-	var kind string
+	ctx := context.Background()
+
+	geID, userID := seedPerson(t, pool)
+
+	// Said out loud, because the whole test rests on it.
+	var workspaces int
 	if err := pool.QueryRow(ctx,
-		`SELECT t.kind FROM workspace.person_items i JOIN registry.tenants t ON t.id = i.tenant_id
-		  WHERE i.source_ref = 'REQ-C'`).Scan(&kind); err != nil {
+		`SELECT count(*) FROM registry.tenants WHERE owner_user_id = $1::uuid`, userID).
+		Scan(&workspaces); err != nil {
 		t.Fatal(err)
 	}
-	if kind != "personal" {
-		t.Errorf("the row landed in a %q workspace", kind)
+	if workspaces != 0 {
+		t.Fatalf("the person under test owns %d workspace(s); the test proves nothing", workspaces)
+	}
+
+	if err := store.Publish(ctx, geID, item("REQ-NO-HOME")); err != nil {
+		t.Fatalf("publishing to a person with no workspace: %v", err)
+	}
+
+	var owner string
+	if err := pool.QueryRow(ctx,
+		`SELECT user_id::text FROM registry.person_items WHERE source_ref = 'REQ-NO-HOME'`).
+		Scan(&owner); err != nil {
+		t.Fatalf("the row is not there: %v", err)
+	}
+	if owner != userID {
+		t.Errorf("the row landed on %s, want %s", owner, userID)
 	}
 }
 
-// Rule 4, and rule 2's consequence: the only way in is the function.
+// The only way in is the function.
 //
 // The tenant role holds SELECT and nothing else, so a module that decided to
-// write the row itself — with the right workspace id, having looked it up — is
-// stopped by the database rather than by review. And the operator role cannot
-// call the function at all: the console has no business publishing into
-// somebody's home, and an operator session that could would be a way to put
-// words in front of a citizen with no module and no audit row behind them.
+// write the row itself — with the right person's id, having looked it up — is
+// stopped by the database rather than by review. It also stops the citizen:
+// this is the grant that keeps somebody from writing "the ministry approved it"
+// into their own record, which row-level security would happily allow, since a
+// policy that isolates people from each other has nothing to say about a person
+// writing their own row.
+//
+// And the operator role cannot call the function at all: the console has no
+// business publishing to a citizen, and an operator session that could would be
+// a way to put words in front of somebody with no module and no audit row
+// behind them.
 func TestOnlyTheTenantRoleReachesTheFeedAndOnlyThroughTheFunction(t *testing.T) {
 	pool := openPool(t)
 	ctx := context.Background()
-	_, _, homeID := seedHome(t, pool)
+	_, userID := seedPerson(t, pool)
 
 	tx, err := pool.Begin(ctx)
 	if err != nil {
@@ -310,22 +313,22 @@ func TestOnlyTheTenantRoleReachesTheFeedAndOnlyThroughTheFunction(t *testing.T) 
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 
-	if _, err := tx.Exec(ctx, `SELECT set_config('app.current_tenant', $1, true)`, homeID); err != nil {
+	if _, err := tx.Exec(ctx, `SELECT set_config('app.current_user', $1, true)`, userID); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := tx.Exec(ctx, `SET LOCAL ROLE gerege_nexus_tenant`); err != nil {
 		t.Fatal(err)
 	}
 
-	// Reading its own workspace: allowed, and the point of the feature.
-	if _, err := tx.Exec(ctx, `SELECT 1 FROM workspace.person_items LIMIT 1`); err != nil {
+	// Reading their own rows: allowed, and the point of the feature.
+	if _, err := tx.Exec(ctx, `SELECT 1 FROM registry.person_items LIMIT 1`); err != nil {
 		t.Fatalf("the tenant role cannot read its own person_items: %v", err)
 	}
 
-	// Writing directly: refused.
+	// Writing directly: refused, even onto themselves.
 	_, err = tx.Exec(ctx,
-		`INSERT INTO workspace.person_items (tenant_id, source_app, source_ref, code, status)
-		 VALUES ($1::uuid, 'a', 'b', 'c', 'd')`, homeID)
+		`INSERT INTO registry.person_items (user_id, source_app, source_ref, code, status)
+		 VALUES ($1::uuid, 'a', 'b', 'c', 'd')`, userID)
 	if err == nil {
 		t.Error("the tenant role inserted into person_items directly")
 	} else if !strings.Contains(err.Error(), "permission denied") {
@@ -336,7 +339,7 @@ func TestOnlyTheTenantRoleReachesTheFeedAndOnlyThroughTheFunction(t *testing.T) 
 func TestTheOperatorRoleCannotPublish(t *testing.T) {
 	pool := openPool(t)
 	ctx := context.Background()
-	_, userID, _ := seedHome(t, pool)
+	_, userID := seedPerson(t, pool)
 
 	tx, err := pool.Begin(ctx)
 	if err != nil {
@@ -349,25 +352,27 @@ func TestTheOperatorRoleCannotPublish(t *testing.T) {
 	_, err = tx.Exec(ctx,
 		`SELECT registry.publish_person_item($1::uuid, NULL::uuid, 'app', 'ref', 'code', 'status', '')`, userID)
 	if err == nil {
-		t.Fatal("the operator role published into a citizen's home")
+		t.Fatal("the operator role published to a citizen")
 	}
 	if !strings.Contains(err.Error(), "permission denied") {
 		t.Errorf("refused for an unexpected reason: %v", err)
 	}
 }
 
-// Row-level security, doing what it already did.
+// Row-level security, now keyed by the person.
 //
-// Nothing in 00086 asked for a new policy shape, and this is the test that says
-// the old one is enough: one citizen's session, bound to their own workspace,
-// sees their row and not the other person's.
+// Until 00093 this worked because each citizen had a workspace of their own, so
+// isolating by workspace isolated by person as a side effect. The key is the
+// person now, and this is the test that says the substitution is real rather
+// than nominal: one citizen's session sees their row and not the other's, with
+// no workspace bound at all.
 func TestOneCitizenDoesNotSeeAnothersRequests(t *testing.T) {
 	pool := openPool(t)
 	store := person.New(pool)
 	ctx := context.Background()
 
-	firstGeID, _, firstHome := seedHome(t, pool)
-	secondGeID, _, _ := seedHome(t, pool)
+	firstGeID, firstUser := seedPerson(t, pool)
+	secondGeID, _ := seedPerson(t, pool)
 	if err := store.Publish(ctx, firstGeID, item("REQ-MINE")); err != nil {
 		t.Fatal(err)
 	}
@@ -380,14 +385,14 @@ func TestOneCitizenDoesNotSeeAnothersRequests(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
-	if _, err := tx.Exec(ctx, `SELECT set_config('app.current_tenant', $1, true)`, firstHome); err != nil {
+	if _, err := tx.Exec(ctx, `SELECT set_config('app.current_user', $1, true)`, firstUser); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := tx.Exec(ctx, `SET LOCAL ROLE gerege_nexus_tenant`); err != nil {
 		t.Fatal(err)
 	}
 
-	rows, err := tx.Query(ctx, `SELECT source_ref FROM workspace.person_items`)
+	rows, err := tx.Query(ctx, `SELECT source_ref FROM registry.person_items`)
 	if err != nil {
 		t.Fatal(err)
 	}

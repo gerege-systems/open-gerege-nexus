@@ -50,12 +50,17 @@ type Item struct {
 	UpdatedAt string `json:"updated_at"`
 }
 
-// Items is everything published into the workspace this request acts for.
+// Items is everything published to the person this request is being made by.
 //
-// No tenant_id in the WHERE clause, and that is not an oversight: the row-level
-// policy on workspace.person_items is what limits this to the caller's own
-// workspace, and writing the condition again here would mean two answers to the
-// same question — one of which somebody could edit.
+// No user_id in the WHERE clause, and that is not an oversight: the row-level
+// policy on registry.person_items is what limits this to the caller's own rows,
+// and writing the condition again here would mean two answers to the same
+// question — one of which somebody could edit.
+//
+// The policy compares against app.current_user, which dbguard binds from the
+// session's claims. Until 00093 it compared against the workspace, which worked
+// only because each person had one of their own; keyed by the person, these
+// rows follow them into an organisation and out the other side.
 //
 // Named columns rather than a star, the way every statement in this repository
 // is written: a column added to the table later should not arrive on a screen
@@ -68,7 +73,7 @@ func (s *Store) Items(ctx context.Context, limit int) ([]Item, error) {
 		SELECT i.id::text, i.source_app, i.source_ref,
 		       COALESCE(t.name, ''), i.code, i.status, i.answer,
 		       i.opened_at, i.updated_at
-		  FROM workspace.person_items i
+		  FROM registry.person_items i
 		  LEFT JOIN registry.tenants t ON t.id = i.provider_tenant_id
 		 ORDER BY i.updated_at DESC, i.id
 		 LIMIT $1`, limit)

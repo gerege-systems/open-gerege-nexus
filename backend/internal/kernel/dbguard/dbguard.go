@@ -15,6 +15,15 @@
 //	tenant in context     → SET ROLE gerege_nexus_tenant, app.current_tenant = <id>
 //	no tenant in context  → SET ROLE NONE (the login role, not subject to the policies)
 //
+// A fourth value rides along: app.current_user, whenever the request has
+// resolved claims. Most policies do not read it — they isolate by organisation,
+// which is what almost everything on this platform belongs to. The ones that do
+// are the tables that belong to a *person* rather than to a workspace, where
+// the thing being isolated is the human being and the isolation key has to be
+// the human being too. It is set on every bound connection rather than only for
+// those, because a binding that is sometimes present is one a policy author has
+// to reason about.
+//
 // The second case is not a gap, it is the platform path, and it is the reason
 // this design needs no change to a single existing query. Signing in has no
 // tenant yet; resolving a session is what discovers the tenant; the OAuth
@@ -85,7 +94,8 @@ func IsOperator(ctx context.Context) bool {
 // parameters: the tenant id arrives from a session row, and building this
 // string by concatenation would put a SET ROLE one quote away from user data.
 const bindStatement = `SELECT set_config('role', $1, false), ` +
-	`set_config('app.current_tenant', $2, false), set_config('app.allowed_tenants', $3, false)`
+	`set_config('app.current_tenant', $2, false), set_config('app.allowed_tenants', $3, false), ` +
+	`set_config('app.current_user', $4, false)`
 
 // allowedLiteral renders the read set as PostgreSQL's array literal, which is
 // what the policy casts. Empty stays empty rather than becoming '{}': the
@@ -147,6 +157,13 @@ func (g *Guard) Install(cfg *pgxpool.Config) {
 			return true, nil
 		}
 		role, tenantID, allowed := "none", "", ""
+		// Empty when nobody is signed in, which is the honest answer and the
+		// safe one: a policy comparing a column to NULL matches no row, so an
+		// unbound connection reads nothing rather than everything.
+		var userID string
+		if claims, err := nexus.UserFromContext(ctx); err == nil {
+			userID = claims.UserID
+		}
 		id, idErr := nexus.WorkspaceID(ctx)
 		switch {
 		case IsOperator(ctx):
@@ -165,7 +182,7 @@ func (g *Guard) Install(cfg *pgxpool.Config) {
 			// membership check that produced the acting tenant.
 			allowed = allowedLiteral(nexus.AllowedWorkspaces(ctx))
 		}
-		if _, err := conn.Exec(ctx, bindStatement, role, tenantID, allowed); err != nil {
+		if _, err := conn.Exec(ctx, bindStatement, role, tenantID, allowed, userID); err != nil {
 			// False destroys the connection rather than handing over one whose
 			// tenant binding is whatever the previous request left behind — the
 			// failure this package exists to prevent. The error travels with it
@@ -221,11 +238,11 @@ func (g *Guard) Probe(ctx context.Context, pool *pgxpool.Pool) error {
 		return fmt.Errorf("dbguard: could not take a connection to verify the role: %w", err)
 	}
 	defer conn.Release()
-	if _, err := conn.Exec(ctx, bindStatement, TenantRole, "", ""); err != nil {
+	if _, err := conn.Exec(ctx, bindStatement, TenantRole, "", "", ""); err != nil {
 		return fmt.Errorf("dbguard: cannot assume %s (grant it to the login role in DATABASE_URL): %w",
 			TenantRole, err)
 	}
-	if _, err := conn.Exec(ctx, bindStatement, "none", "", ""); err != nil {
+	if _, err := conn.Exec(ctx, bindStatement, "none", "", "", ""); err != nil {
 		return fmt.Errorf("dbguard: cannot return to the login role: %w", err)
 	}
 
@@ -249,12 +266,12 @@ func (g *Guard) Probe(ctx context.Context, pool *pgxpool.Pool) error {
 // Probe does it: a pooled connection wearing a role nothing asked for is the
 // binding this package exists to prevent.
 func (g *Guard) probeOperator(ctx context.Context, conn *pgxpool.Conn) {
-	if _, err := conn.Exec(ctx, bindStatement, OperatorRole, "", ""); err != nil {
+	if _, err := conn.Exec(ctx, bindStatement, OperatorRole, "", "", ""); err != nil {
 		slog.Info("dbguard: the control plane's database role is not available",
 			"role", OperatorRole, "reason", err)
 		return
 	}
-	if _, err := conn.Exec(ctx, bindStatement, "none", "", ""); err != nil {
+	if _, err := conn.Exec(ctx, bindStatement, "none", "", "", ""); err != nil {
 		slog.Error("dbguard: could not return the probe connection to the login role", "error", err)
 		return
 	}

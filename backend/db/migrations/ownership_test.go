@@ -123,6 +123,14 @@ var platformTables = map[string]table{
 	"platform_settings":         {"operator", "control plane"},
 	"platform_settings_history": {"operator", "control plane"},
 	"store_app_versions":        {"operator", "app store"},
+	// A projection of somebody else's row, written by
+	// registry.publish_person_item. In registry because it belongs to a person
+	// rather than to a workspace: it follows them into an organisation and out
+	// again, and there is no workspace whose deletion should take it. Its
+	// policy isolates by app.current_user, which is why it is the one table
+	// here that policy_shape_test.go's tenant_isolation list does not name.
+	// Migrations 00086 and 00093.
+	"person_items": {"operator", "a person's own requests"},
 	// Who does what, deployment-wide. In registry because it is neither one
 	// workspace's nor one person's: an organisation publishes into it and
 	// everybody reads it. Migration 00090.
@@ -161,15 +169,10 @@ var platformTables = map[string]table{
 	"oauth2_clients":             {"workspace", "OAuth2 provider"},
 	"oauth2_consents":            {"workspace", "OAuth2 provider"},
 	"oauth2_tokens":              {"workspace", "OAuth2 provider"},
-	// A projection of somebody else's row, written into this workspace by
-	// registry.publish_person_item. The workspace plane by §2.1 and not a
-	// borderline case: the row exists for one home and no other, which is
-	// exactly what the rule asks. Migration 00086.
-	"person_items": {"workspace", "a person's own requests"},
 	// Somebody asking to be let in. The organisation's row, not the asker's:
 	// they are not a member yet, and the decision, the audit and the work are
-	// the organisation's. What the asker sees is the person_items projection
-	// above. Migration 00089.
+	// the organisation's. What the asker sees is the person_items projection,
+	// which is a registry table — see below. Migration 00089.
 	"join_requests":         {"workspace", "access control"},
 	"push_tokens":           {"workspace", "devices"},
 	"report_grants":         {"workspace", "report sharing"},

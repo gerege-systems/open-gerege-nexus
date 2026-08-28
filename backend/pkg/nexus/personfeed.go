@@ -30,12 +30,17 @@ import "context"
 // The documents, the evidence and the personal details stay in the supplier's
 // workspace, where the work is done and where the audit trail is.
 //
-// That line is drawn in the database as well as here: workspace.person_items
+// That line is drawn in the database as well as here: registry.person_items
 // caps the answer's length, so the projection cannot grow into a document
 // store one field at a time. Migration 00086 says why at length — briefly, a
 // table holding every citizen's every request across every supplier is a step
 // toward the central database X-Road was built to avoid, and it is only safe
 // while it stays a summary.
+//
+// The rows belong to the person and not to a workspace (migration 00093), so
+// what a module publishes follows the reader into whatever organisation they
+// join and out again. A module needs to know nothing about that: it names the
+// person, and where the person stands is not its question.
 //
 // # Idempotent by construction
 //

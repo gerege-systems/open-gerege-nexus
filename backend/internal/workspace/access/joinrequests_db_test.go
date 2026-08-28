@@ -115,7 +115,7 @@ func TestAcceptingAJoinRequestAddsTheMemberAndAnswersThem(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err := pool.QueryRow(ctx,
-		`SELECT status FROM workspace.person_items WHERE source_ref = $1`, requestID).Scan(&copyStatus); err != nil {
+		`SELECT status FROM registry.person_items WHERE source_ref = $1`, requestID).Scan(&copyStatus); err != nil {
 		t.Fatalf("the asker was not told: %v", err)
 	}
 	if status != "ACCEPTED" || copyStatus != "ACCEPTED" {
@@ -148,7 +148,7 @@ func TestDecliningAddsNobodyAndStillAnswers(t *testing.T) {
 
 	var copyStatus string
 	if err := pool.QueryRow(ctx,
-		`SELECT status FROM workspace.person_items WHERE source_ref = $1`, requestID).Scan(&copyStatus); err != nil {
+		`SELECT status FROM registry.person_items WHERE source_ref = $1`, requestID).Scan(&copyStatus); err != nil {
 		t.Fatalf("the asker was not told: %v", err)
 	}
 	if copyStatus != "DECLINED" {
