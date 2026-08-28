@@ -11,6 +11,19 @@
 // so a limit on AI calls or storage is enforced against a number somebody can
 // point at rather than one computed differently in each handler.
 //
+// It counts organisations. A person's home is a workspace by mechanism and not
+// by purpose — migration 00085 gives one to everybody who signs in, and since
+// "everybody lands at home" that is everybody, employed or not. Counting them
+// would put a row per citizen per day into the table a bill is read from, which
+// is wrong twice: it grows with the population rather than with the customer
+// list, and "how much was this platform used" starts answering with the
+// country.
+//
+// How many citizens are active is a real question and a different one. It is a
+// property of the deployment rather than of two hundred thousand workspaces,
+// and when something needs it, it belongs on the deployment's own screen rather
+// than as rows here.
+//
 // Three decisions shape it, and each is a road not taken:
 //
 //   - **Not from Prometheus.** The first phase decided that no metric would
@@ -178,6 +191,11 @@ var queries = map[string]string{
 // counting query is free to ignore the day — the storage one does, because it
 // measures what is being kept now rather than what happened then.
 //
+// Homes are dropped here rather than in the five counting queries, and this
+// seam is the point of it: one join instead of five identical ones, a sixth
+// metric added later inherits it, and there is no version of this that counts a
+// citizen because somebody forgot a clause.
+//
 // The day is passed as an *instant* and reduced to a date by Postgres, not
 // formatted here — see the note on `queries` for why the cast has to go through
 // timestamptz for that to actually be true. Formatting it in Go used the
@@ -190,7 +208,9 @@ func (c *Collector) collect(ctx context.Context, metric, query string, day time.
 	// organisation for no reason.
 	_, err := c.db.Exec(ctx, fmt.Sprintf(`
 		INSERT INTO registry.usage_events (tenant_id, day, metric, value, recorded_at)
-		SELECT tenant_id, $1::timestamptz::date, $2, value, NOW() FROM (%s) AS counted(tenant_id, value)
+		SELECT counted.tenant_id, $1::timestamptz::date, $2, counted.value, NOW()
+		  FROM (%s) AS counted(tenant_id, value)
+		  JOIN registry.tenants t ON t.id = counted.tenant_id AND t.kind = 'organisation'
 		ON CONFLICT (tenant_id, day, metric)
 		DO UPDATE SET value = EXCLUDED.value, recorded_at = NOW()`, query),
 		day, metric)

@@ -2,6 +2,7 @@ package metering
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 	"testing"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/operator/operator/optest"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/operator/tenants"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/operator/operator"
@@ -251,4 +253,100 @@ func usageService(t *testing.T, pool *pgxpool.Pool) *Service {
 	t.Helper()
 	op := operator.New(pool)
 	return NewScreen(op, Deps{DB: pool, Tenants: tenants.New(op, tenants.Deps{DB: pool})})
+}
+
+// A home is not counted.
+//
+// Every person on the platform can end up with a personal workspace, and a
+// workspace is what this job counts. Counting them would put a row per person
+// per day into the table a bill is read from — one that then grows with the
+// population rather than with the customer list, and answers "how much was this
+// platform used" with the wrong population.
+//
+// The filter is one join at the collector's insert rather than a clause in each
+// of the five counting queries, so this test is also what holds that seam: a
+// sixth metric added later is covered by it, and a change that moves the filter
+// back into the queries has to keep this passing.
+func TestAPersonsHomeIsNotMetered(t *testing.T) {
+	pool := optest.Pool(t)
+	service := usageService(t, pool)
+	ctx := context.Background()
+
+	// An organisation alongside it, so a run that counted nothing at all — a
+	// broken query, an empty database — cannot pass as one that filtered.
+	orgID, _ := optest.Tenant(t, pool)
+	orgUser, _ := optest.Person(t, pool, orgID)
+
+	suffix := strings.ReplaceAll(uuid.NewString(), "-", "")[:12]
+	var citizenID string
+	if err := pool.QueryRow(ctx,
+		`INSERT INTO registry.users (email, password_hash, name) VALUES ($1,'x',$2) RETURNING id::text`,
+		"metered-"+suffix+"@example.mn", "Иргэн "+suffix).Scan(&citizenID); err != nil {
+		t.Fatalf("make a citizen: %v", err)
+	}
+	t.Cleanup(func() {
+		_, _ = pool.Exec(context.Background(), `DELETE FROM registry.users WHERE id = $1::uuid`, citizenID)
+	})
+
+	var homeID string
+	if err := pool.QueryRow(ctx,
+		`INSERT INTO registry.tenants (slug, name, kind, owner_user_id)
+		 VALUES ($1, $2, 'personal', $3::uuid) RETURNING id::text`,
+		"home-"+suffix, "Иргэн "+suffix, citizenID).Scan(&homeID); err != nil {
+		t.Fatalf("make a home: %v", err)
+	}
+	t.Cleanup(func() {
+		_, _ = pool.Exec(context.Background(), `DELETE FROM registry.tenants WHERE id = $1::uuid`, homeID)
+	})
+
+	// A session's tenant and user have to be a membership (sessions_membership_fk),
+	// and a person is a member of their own home.
+	if _, err := pool.Exec(ctx,
+		`INSERT INTO workspace.memberships (tenant_id, user_id) VALUES ($1::uuid, $2::uuid)`,
+		homeID, citizenID); err != nil {
+		t.Fatalf("make the citizen a member of their own home: %v", err)
+	}
+
+	// The same two acts in each, so the difference in what is counted can only
+	// be the kind of workspace they happened in.
+	for index, place := range []struct{ tenantID, userID string }{{orgID, orgUser}, {homeID, citizenID}} {
+		if _, err := pool.Exec(ctx,
+			`INSERT INTO workspace.audit_events (tenant_id, user_id, action, resource)
+			 VALUES ($1::uuid, $2::uuid, 'contacts.create', 'test')`, place.tenantID, place.userID); err != nil {
+			t.Fatalf("write an audit row: %v", err)
+		}
+		if _, err := pool.Exec(ctx,
+			`INSERT INTO workspace.sessions (token_hash, user_id, tenant_id, expires_at, last_seen_at)
+			 VALUES ($1, $2::uuid, $3::uuid, NOW() + INTERVAL '1 hour', NOW())`,
+			fmt.Sprintf("%02d%s", index, strings.Repeat("c", 62)), place.userID, place.tenantID); err != nil {
+			t.Fatalf("write a session: %v", err)
+		}
+	}
+
+	NewCollector(pool).CollectDay(ctx, time.Now())
+
+	var homeRows int
+	if err := pool.QueryRow(operator.Scoped(ctx),
+		`SELECT count(*) FROM registry.usage_events WHERE tenant_id = $1::uuid`, homeID).
+		Scan(&homeRows); err != nil {
+		t.Fatalf("count the home's usage rows: %v", err)
+	}
+	if homeRows != 0 {
+		t.Errorf("the metering job wrote %d row(s) for a person's home, want none", homeRows)
+	}
+
+	// And the organisation still is, or the filter is refusing everything.
+	usage, err := service.UsageFor(ctx, orgID)
+	if err != nil {
+		t.Fatalf("read the organisation's usage: %v", err)
+	}
+	var counted int64
+	for _, series := range usage.Series {
+		if series.Metric == usagemetric.Actions {
+			counted = series.Total
+		}
+	}
+	if counted == 0 {
+		t.Error("the organisation was not counted either, so the filter is dropping everything")
+	}
 }
