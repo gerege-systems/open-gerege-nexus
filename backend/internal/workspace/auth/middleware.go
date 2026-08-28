@@ -54,6 +54,17 @@ func (h *Handlers) Middleware(next http.Handler) http.Handler {
 			ctx = audit.MarkImpersonated(ctx, claims.ImpersonatedBy)
 		}
 		ctx = nexus.WithWorkspaceID(ctx, claims.WorkspaceID)
+		if claims.WorkspaceID == "" {
+			// Signed in and belonging to no organisation. Without this the
+			// request would be indistinguishable from an unauthenticated one —
+			// both carry no workspace — and dbguard would hand the least
+			// privileged caller on the platform the login role, which is
+			// outside every policy. Marked here rather than on the person
+			// plane's own routes because a citizen reaches more than those:
+			// /auth/me and the profile screen are served by the workspace
+			// plane, through this same middleware.
+			ctx = nexus.WithPersonScope(ctx)
+		}
 		// The organisations this session reads across, straight from the
 		// session row. dbguard turns it into the policy's array; almost every
 		// session carries none and behaves exactly as it always has.

@@ -13,7 +13,8 @@
 // to use it, so it is where the binding is made.
 //
 //	tenant in context     → SET ROLE gerege_nexus_tenant, app.current_tenant = <id>
-//	no tenant in context  → SET ROLE NONE (the login role, not subject to the policies)
+//	person in context     → SET ROLE gerege_nexus_tenant, no tenant at all
+//	neither               → SET ROLE NONE (the login role, not subject to the policies)
 //
 // A fourth value rides along: app.current_user, whenever the request has
 // resolved claims. Most policies do not read it — they isolate by organisation,
@@ -24,12 +25,27 @@
 // those, because a binding that is sometimes present is one a policy author has
 // to reason about.
 //
-// The second case is not a gap, it is the platform path, and it is the reason
-// this design needs no change to a single existing query. Signing in has no
+// The last case is not a gap, it is the platform path, and it is the reason
+// this design needed no change to a single existing query. Signing in has no
 // tenant yet; resolving a session is what discovers the tenant; the OAuth
 // callback and the e-mail verification landing are reached by people who have
 // not signed in; the housekeeping sweeps deliberately cross every tenant. All
-// of those run as the login role and see everything, exactly as they do today.
+// of those run as the login role and see everything, exactly as they always
+// have.
+//
+// The person path is the case that had nowhere to go. Somebody signed in with
+// no organisation is not the platform and must not borrow its role — that would
+// hand the least privileged caller on the system the most privileged connection
+// on it. They are bound to the tenant role with no tenant, which is the
+// strictest binding this package can make: every workspace policy compares a
+// column to a NULL and matches nothing, and the tables that are the person's
+// own match on app.current_user instead. It has to be asked for rather than
+// inferred from "there are claims but no tenant", because that is also the
+// shape of nexus.WithoutWorkspace — a deliberate step onto the platform path,
+// taken by handlers that mean to cross organisations. The marker lives in
+// pkg/nexus beside that function for exactly that reason: WithoutWorkspace has
+// to be able to clear it, or a citizen who has just been accepted into an
+// organisation could never switch into it.
 package dbguard
 
 import (
@@ -181,6 +197,11 @@ func (g *Guard) Install(cfg *pgxpool.Config) {
 			// Only ever widened by the session, and only past the same
 			// membership check that produced the acting tenant.
 			allowed = allowedLiteral(nexus.AllowedWorkspaces(ctx))
+		case nexus.IsPersonScoped(ctx) && userID != "":
+			// The tenant role with nothing to be a tenant of. Deliberately
+			// after the case above: somebody who is in an organisation reads it
+			// as one, and the person plane's marker does not take that away.
+			role = TenantRole
 		}
 		if _, err := conn.Exec(ctx, bindStatement, role, tenantID, allowed, userID); err != nil {
 			// False destroys the connection rather than handing over one whose

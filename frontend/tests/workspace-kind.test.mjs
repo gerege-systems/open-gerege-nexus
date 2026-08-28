@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { homeScreensVisible, isHome, organisationScreensVisible } from "../lib/workspaceKind.mjs";
+import { homeScreensVisible, isHome, organisationScreensVisible, NO_WORKSPACE } from "../lib/workspaceKind.mjs";
 
 test("a home has no app store and no legal identity", () => {
   assert.equal(organisationScreensVisible("personal"), false);
@@ -50,4 +50,27 @@ test("a home has its own screen and a company does not", () => {
   // An organisation member asks through the organisation, so the screen would
   // be permanently empty for them — see the rail entry in Layout.tsx.
   assert.equal(homeScreensVisible("federation"), false);
+});
+
+test("a session in no workspace shows the person's screens and not a company's", () => {
+  assert.equal(homeScreensVisible(NO_WORKSPACE), true);
+  assert.equal(organisationScreensVisible(NO_WORKSPACE), false);
+});
+
+test("the three states stay three: loading is not the same as no workspace", () => {
+  // The failure this catches is the cheap version of NO_WORKSPACE — reporting
+  // an empty string — which makes "still loading" and "no organisation"
+  // indistinguishable, and draws a citizen's rail at everybody for the moment
+  // before /api/v1/me returns.
+  assert.equal(homeScreensVisible(undefined), false);
+  assert.equal(homeScreensVisible(""), false);
+  assert.equal(homeScreensVisible(NO_WORKSPACE), true);
+});
+
+test("a deployment that has not run 00094 yet still shows a citizen their screens", () => {
+  // Personal workspaces still exist there, and are still reported. Answering
+  // "no" would hide the personal side from every citizen on that deployment
+  // until the migration landed.
+  assert.equal(homeScreensVisible("personal"), true);
+  assert.equal(organisationScreensVisible("personal"), false);
 });

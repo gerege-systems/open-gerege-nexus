@@ -101,9 +101,9 @@ func (h *Handlers) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	_, _ = h.db.Exec(r.Context(), `UPDATE registry.users SET failed_login_attempts=0, locked_until=NULL WHERE id=$1`, userID)
 
 	// Where this session opens: the oldest organisation they belong to, or
-	// their own home if they belong to none. Asked after the password rather
-	// than with it, so a wrong password cannot make a workspace as a side
-	// effect of being typed.
+	// nowhere if they belong to none. Asked after the password rather than with
+	// it, so a wrong password cannot start anything as a side effect of being
+	// typed.
 	tenantID, err = h.FirstTenantFor(r.Context(), userID)
 	if err != nil {
 		slog.Error("could not open a workspace for a signed-in account", "user_id", userID, "error", err)
@@ -111,20 +111,23 @@ func (h *Handlers) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Administrator of the workspace being opened, which is a question about
-	// that workspace and not about the account. In a home the answer is no:
-	// nobody administers a workspace with one person in it, and there is
-	// nothing there for an administrator to reach.
-	if err := h.db.QueryRow(r.Context(),
-		`SELECT EXISTS (
-		     SELECT 1 FROM workspace.memberships m
-		     JOIN workspace.membership_roles mr ON mr.membership_id = m.id
-		     JOIN workspace.roles ro ON ro.id = mr.role_id
-		    WHERE m.user_id = $1::uuid AND m.tenant_id = $2::uuid
-		      AND ro.tenant_id = m.tenant_id AND ro.code = 'admin' AND ro.active)`,
-		userID, tenantID).Scan(&isAdmin); err != nil {
-		slog.Error("could not read the signed-in account's roles", "user_id", userID, "error", err)
-		httpx.Error(w, http.StatusInternalServerError, "login service unavailable")
-		return
+	// that workspace and not about the account. Skipped when there is no
+	// workspace: an empty string is not a uuid, and Postgres says so by
+	// refusing the whole statement — which reached production as a 500 on the
+	// sign-in of everybody who belonged to no organisation.
+	if tenantID != "" {
+		if err := h.db.QueryRow(r.Context(),
+			`SELECT EXISTS (
+			     SELECT 1 FROM workspace.memberships m
+			     JOIN workspace.membership_roles mr ON mr.membership_id = m.id
+			     JOIN workspace.roles ro ON ro.id = mr.role_id
+			    WHERE m.user_id = $1::uuid AND m.tenant_id = $2::uuid
+			      AND ro.tenant_id = m.tenant_id AND ro.code = 'admin' AND ro.active)`,
+			userID, tenantID).Scan(&isAdmin); err != nil {
+			slog.Error("could not read the signed-in account's roles", "user_id", userID, "error", err)
+			httpx.Error(w, http.StatusInternalServerError, "login service unavailable")
+			return
+		}
 	}
 
 	token, expiresAt, err := h.IssueSession(r, userID, tenantID, "password")
@@ -720,22 +723,31 @@ func (h *Handlers) ResolveOrProvisionEIDUser(ctx context.Context, identity *eid.
 		return "", "", err
 	}
 
-	// The citizen lands in their own home, and there is no organisation's quota
+	// The citizen signs in as themselves, and there is no organisation's quota
 	// to check because no organisation gained a member. That check used to be
 	// here with a comment saying what was wrong with the thing it was guarding:
 	//
 	//	provisioning somebody on their first eID sign-in is exactly the path by
 	//	which an organisation grows without anybody choosing to add a person.
 	//
-	// The path is gone rather than guarded. A home is one person by
-	// construction — registry.tenants.owner_user_id, one row per person — so
-	// there is nothing for it to grow.
-	tenantID, err = h.HomeFor(ctx, userID)
+	// The path is gone rather than guarded, and since 00094 there is not even a
+	// workspace of their own to put them in: an empty workspace id is what a
+	// person with no organisation opens with, and what they can reach is their
+	// own record rather than any workspace's.
+	tenantID, err = h.FirstTenantFor(ctx, userID)
 	if err != nil {
 		return "", "", err
 	}
 	return userID, tenantID, nil
 }
+
+// WorkspaceKindNone is what /api/v1/auth/me reports for a session standing in
+// no workspace: signed in, belonging to no organisation.
+//
+// A named value because it crosses the wire into the shell, where it decides
+// which rail is drawn. Exported so the tests on both sides of that wire can
+// name it rather than spelling the string twice and finding out in a browser.
+const WorkspaceKindNone = "none"
 
 func (h *Handlers) HandleMe(w http.ResponseWriter, r *http.Request) {
 	claims, err := UserFromContext(r.Context())
@@ -750,7 +762,21 @@ func (h *Handlers) HandleMe(w http.ResponseWriter, r *http.Request) {
 	// kind comes back with the name because the shell decides which of two
 	// layouts to draw from it, and a second round trip for one word on the
 	// request every screen makes first is a second round trip on every screen.
-	_ = h.db.QueryRow(r.Context(), `SELECT name, kind FROM registry.tenants WHERE id = $1`, claims.WorkspaceID).Scan(&tenantName, &workspaceKind)
+	if claims.WorkspaceID != "" {
+		_ = h.db.QueryRow(r.Context(), `SELECT name, kind FROM registry.tenants WHERE id = $1`,
+			claims.WorkspaceID).Scan(&tenantName, &workspaceKind)
+	} else {
+		// Signed in and standing in no workspace, which since 00094 is what
+		// belonging to no organisation looks like.
+		//
+		// A word rather than an empty string, because the shell has to tell
+		// three states apart and two of them are falsy: "the answer has not
+		// arrived", "there is no workspace", and "there is one". An empty
+		// string collapses the first two, and the screen it would draw for a
+		// person who is merely still loading is a citizen's — briefly, on every
+		// sign-in, including an administrator's.
+		workspaceKind = WorkspaceKindNone
+	}
 
 	// The effective grant of every role the member holds, so a screen can hide
 	// what the caller may not do. Administrators bypass the check, so their
@@ -770,9 +796,10 @@ func (h *Handlers) HandleMe(w http.ResponseWriter, r *http.Request) {
 		"id":          claims.UserID,
 		"tenant_id":   claims.WorkspaceID,
 		"tenant_name": tenantName,
-		// "organisation" or "personal". The wire keeps saying tenant for the
-		// two fields above, which existed before the word changed; this one is
-		// new, so it is named for what the code now calls the thing.
+		// "organisation", "personal", or "none" for a session standing in no
+		// workspace at all. The wire keeps saying tenant for the two fields
+		// above, which existed before the word changed; this one is new, so it
+		// is named for what the code now calls the thing.
 		"workspace_kind": workspaceKind,
 		"name":           name,
 		"email":          email,
