@@ -103,9 +103,39 @@ func newOperator(t *testing.T, pool *pgxpool.Pool, role Role) (Operator, string)
 	// below can sign in with the current code and step up with the next one —
 	// without waiting thirty seconds between each, and without pretending a
 	// code can be reused, which is the property being protected.
-	if err := ConfirmSecondFactor(ctx, pool, operator.ID,
-		codeAt(t, enrolment.Secret, time.Now().Add(-TOTPPeriod*time.Second))); err != nil {
-		t.Fatalf("confirm the second factor: %v", err)
+	//
+	// Tried twice, and the second attempt is not superstition. This is the one
+	// call in the file that asks for a code at the *edge* of the skew window,
+	// and the edge can move underneath it: the code is generated here and
+	// judged inside ConfirmSecondFactor against that function's own clock, so
+	// a thirty-second boundary falling in the gap makes "one step back" arrive
+	// as two, which is exactly what the window refuses. The gap is a database
+	// round trip — microseconds on a laptop, long enough on a loaded CI runner
+	// to catch a boundary every few hundred runs.
+	//
+	// Recomputing after the boundary has passed lands in a fresh step, so one
+	// retry is enough; a second failure is a real one and is reported as
+	// before. The alternative, sleeping until the step has room, costs every
+	// test in this file up to thirty seconds to fix a race that costs nothing
+	// to retry.
+	//
+	// The other edge case, `now + TOTPPeriod` in the step-up test, is safe for
+	// the opposite reason: a boundary crossing there moves the code from one
+	// step ahead to the current one, and the window accepts both.
+	var confirmErr error
+	for attempt := range 2 {
+		confirmErr = ConfirmSecondFactor(ctx, pool, operator.ID,
+			codeAt(t, enrolment.Secret, time.Now().Add(-TOTPPeriod*time.Second)))
+		if confirmErr == nil {
+			break
+		}
+		if attempt == 0 {
+			t.Logf("confirming the second factor missed the skew window; a "+
+				"thirty-second boundary fell inside the call. Retrying: %v", confirmErr)
+		}
+	}
+	if confirmErr != nil {
+		t.Fatalf("confirm the second factor: %v", confirmErr)
 	}
 	return operator, enrolment.Secret
 }
