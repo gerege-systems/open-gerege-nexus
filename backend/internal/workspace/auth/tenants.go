@@ -14,6 +14,8 @@ package auth
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -29,33 +31,35 @@ var ErrNoOrganisation = errors.New("this account does not belong to any organisa
 
 // FirstTenantFor is the workspace a session for this person opens in.
 //
-// Their oldest organisation, or none at all.
+// Their oldest organisation, or a workspace of their own.
 //
-// "None at all" is a real answer since 00094 and not a failure: a session may
-// carry no workspace, and somebody who belongs to no organisation signs in to
-// the platform as themselves. What they can reach is their own record — the
-// rows keyed on them by 00093 — and nothing that belongs to a workspace, which
-// is the correct set and is enforced by the database rather than by a screen.
+// This has now been four things, and the last change was mine to argue for and
+// wrong to make. The measurement behind it was real — a million people is a
+// million rows in registry.tenants and, before 00092, 3.9 GB of access-control
+// rows for workspaces with one member who owned them — but a cost is not a
+// verdict. Every platform of this shape settles on giving each person a space
+// of their own: Vercel migrated *to* it, GitHub has always had it, and the
+// reason is that "personal" and "paid team" then differ by a plan rather than
+// by a migration. Taking it away made the schema tidier and the product worse.
 //
-// This has now been three things in three days, and the history is the argument
-// for where it landed. It was the oldest organisation, and people with no
-// organisation could not sign in at all. Then it was a personal workspace
-// always, which fixed that and made a second, worse problem: a row in
-// registry.tenants for every human being who ever authenticated, on a table
-// that is the customer list and is the parent of thirty-nine others. Measured
-// at a million people that was 3.9 GB, most of it access-control rows for
-// workspaces with one member who owned them.
+// So the door opens on an organisation if there is one, and on the person's own
+// workspace if there is not. Nobody is turned away, and nobody stands nowhere.
 //
-// The mistake both times was answering "which workspace" when the honest answer
-// is that a person is not a workspace. A citizen reading what a ministry told
-// them is not acting for an organisation, and inventing one to hold them was a
-// way of avoiding saying so in the schema. Now the schema says it.
+// What survives from the detour is the part that was right on its own terms:
+// registry.person_items is keyed on the person (00093), so what a ministry
+// tells a citizen follows them into a company and out again rather than living
+// in one workspace; 00092 stopped seeding an organisation's three roles into a
+// space with one member; and no sign-in path answers "who is this" by joining
+// memberships any more. None of those depended on the workspace going away.
 func (h *Handlers) FirstTenantFor(ctx context.Context, userID string) (string, error) {
 	tenantID, err := h.FirstOrganisationFor(ctx, userID)
-	if errors.Is(err, ErrNoOrganisation) {
-		return "", nil
+	if err == nil {
+		return tenantID, nil
 	}
-	return tenantID, err
+	if !errors.Is(err, ErrNoOrganisation) {
+		return "", err
+	}
+	return h.HomeFor(ctx, userID)
 }
 
 // FirstOrganisationFor is the oldest organisation this person belongs to.
@@ -75,4 +79,93 @@ func (h *Handlers) FirstOrganisationFor(ctx context.Context, userID string) (str
 		return "", ErrNoOrganisation
 	}
 	return tenantID, err
+}
+
+// HomeFor is this person's own workspace, made on first use.
+//
+// Lazy rather than created with the account, because most accounts are made by
+// an administrator adding somebody to an organisation and a home nobody ever
+// opens is a row, a profile, a set of roles and a quota bucket that exist to be
+// counted. The first sign-in that needs one is the first evidence anybody does.
+//
+// The race is real and is settled by the database: two tabs signing in at once
+// both find no home and both insert. The partial unique index makes the second
+// insert fail, and the loser reads the winner's row — which is why the conflict
+// is handled by re-reading rather than by a lock somebody has to remember.
+func (h *Handlers) HomeFor(ctx context.Context, userID string) (string, error) {
+	var tenantID string
+	err := h.db.QueryRow(ctx,
+		`SELECT id::text FROM registry.tenants WHERE owner_user_id = $1::uuid AND kind = 'personal'`,
+		userID).Scan(&tenantID)
+	if err == nil {
+		// Found, and the membership is checked anyway.
+		//
+		// Owning a workspace and being a member of it are two rows, and
+		// everything downstream reads the second: a home whose membership went
+		// missing — removed by an administrator's sweep, or by a test — locks
+		// its owner out of their own space with no way back, because nothing
+		// else in the platform will ever make it again. Cheap to assert, and
+		// the failure it prevents has no other repair.
+		return tenantID, h.ensureHomeMembership(ctx, tenantID, userID)
+	}
+	if !errors.Is(err, pgx.ErrNoRows) {
+		return "", err
+	}
+
+	tx, err := h.db.Begin(ctx)
+	if err != nil {
+		return "", err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	// The person's own name, so the switcher reads as a place rather than an
+	// identifier. Empty is fine and stays empty: a name is not a precondition
+	// for having somewhere to stand.
+	var name string
+	_ = tx.QueryRow(ctx, `SELECT name FROM registry.users WHERE id = $1::uuid`, userID).Scan(&name)
+	if strings.TrimSpace(name) == "" {
+		name = "Миний гэр"
+	}
+
+	// The slug is derived from the user id rather than from the name: names
+	// collide, are edited, and are somebody's actual name in a URL.
+	slug := "home-" + strings.ReplaceAll(userID, "-", "")
+	err = tx.QueryRow(ctx,
+		`INSERT INTO registry.tenants (slug, name, kind, owner_user_id)
+		 VALUES ($1, $2, 'personal', $3::uuid)
+		 ON CONFLICT DO NOTHING
+		 RETURNING id::text`, slug, name, userID).Scan(&tenantID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		// Somebody else got there first. Their row is as good as ours.
+		if err = tx.QueryRow(ctx,
+			`SELECT id::text FROM registry.tenants WHERE owner_user_id = $1::uuid AND kind = 'personal'`,
+			userID).Scan(&tenantID); err != nil {
+			return "", fmt.Errorf("read the home another sign-in just made: %w", err)
+		}
+	} else if err != nil {
+		return "", fmt.Errorf("make this person a home: %w", err)
+	}
+
+	if err = tx.Commit(ctx); err != nil {
+		return "", err
+	}
+	return tenantID, h.ensureHomeMembership(ctx, tenantID, userID)
+}
+
+// ensureHomeMembership is the second row a home needs.
+//
+// The membership is what the rest of the platform reads; the owner column is
+// only how the home is found. Both, or a person owns a workspace they are not
+// a member of and every screen refuses them — including the sign-in that was
+// trying to open it.
+func (h *Handlers) ensureHomeMembership(ctx context.Context, tenantID, userID string) error {
+	if _, err := h.db.Exec(ctx,
+		`INSERT INTO workspace.memberships (tenant_id, user_id)
+		 SELECT $1::uuid, $2::uuid
+		  WHERE NOT EXISTS (SELECT 1 FROM workspace.memberships
+		                     WHERE tenant_id = $1::uuid AND user_id = $2::uuid)`,
+		tenantID, userID); err != nil {
+		return fmt.Errorf("make this person a member of their own home: %w", err)
+	}
+	return nil
 }

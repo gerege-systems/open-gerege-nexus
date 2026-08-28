@@ -162,11 +162,15 @@ func TestAFirstEIDSignInKeepsWhatEIDGave(t *testing.T) {
 	if name != "Ганбат Сарантуяа" {
 		t.Errorf("the name is %q", name)
 	}
-	// And it lands nowhere, which is the point since 00094: a first-time
-	// citizen belongs to no organisation, and the platform no longer invents
-	// one to put them in. What they can reach is their own record.
-	if tenantID != "" {
-		t.Errorf("a first eID sign-in opened workspace %q; it should open none", tenantID)
+	// And it lands somewhere: a first-time citizen belongs to no organisation,
+	// so the workspace opened for them is their own.
+	var kind string
+	if err := pool.QueryRow(ctx,
+		`SELECT kind FROM registry.tenants WHERE id = $1::uuid`, tenantID).Scan(&kind); err != nil {
+		t.Fatalf("a first eID sign-in opened a workspace that is not there: %v", err)
+	}
+	if kind != "personal" {
+		t.Errorf("a first eID sign-in opened a %q workspace", kind)
 	}
 }
 

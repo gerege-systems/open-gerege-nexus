@@ -275,14 +275,24 @@ func (h *Handlers) resolveOrProvisionSSOUser(ctx context.Context, cfg ssoclient.
 	// has to be one the provider says it verified: a provider that lets people
 	// set an unverified email would otherwise let anyone claim any account by
 	// typing its address into their profile.
+	//
+	// The lookup does not join memberships. It did, and the join answered "who
+	// is this" with "where do they work": an account belonging to no
+	// organisation matched no row, was read as somebody this deployment had
+	// never seen, and went to provisioning — which refuses without
+	// SSO_CLIENT_TENANT. The same shape was in HandleLogin and twice in
+	// ResolveOrProvisionEIDUser. Identity is answered by identity; where they
+	// stand is FirstTenantFor's single answer.
 	email := strings.ToLower(strings.TrimSpace(identity.Email))
 	if email != "" && identity.EmailVerified {
 		if err = h.db.QueryRow(ctx,
-			`SELECT u.id::text, m.tenant_id::text
-			   FROM registry.users u JOIN workspace.memberships m ON m.user_id = u.id
-			  WHERE lower(u.email) = $1
-			  ORDER BY m.created_at, m.tenant_id LIMIT 1`, email).Scan(&userID, &tenantID); err == nil {
+			`SELECT id::text FROM registry.users WHERE lower(email) = $1
+			  ORDER BY created_at LIMIT 1`, email).Scan(&userID); err == nil {
 			h.linkSSOIdentity(ctx, userID, issuer, identity)
+			tenantID, err = h.authn.FirstTenantFor(ctx, userID)
+			if err != nil {
+				return "", "", err
+			}
 			return userID, tenantID, nil
 		} else if !errors.Is(err, pgx.ErrNoRows) {
 			return "", "", err

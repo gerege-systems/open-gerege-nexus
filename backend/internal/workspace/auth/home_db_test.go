@@ -3,8 +3,7 @@
  * Copyright (c) 2026 Gerege Systems Development Team, Gerege Nomadica Foundation
  * Distributed under the Apache 2.0 License.
  *
- * Nobody is turned away at the door, and nobody is given a room they never
- * asked for.
+ * Nobody is turned away at the door.
  *
  * Before migration 00085 a person who belonged to no organisation could not
  * sign in at all: FirstTenantFor found no membership and returned
@@ -13,14 +12,17 @@
  * the deployment — so this was the one place where the code refused what the
  * data model allowed.
  *
- * 00085 answered it by making every such person a workspace of their own. That
- * worked, and it put a row in registry.tenants for every human being who ever
- * authenticated — on the table that is the customer list and the parent of
- * thirty-nine others. Measured at a million people it was 3.9 GB, most of it
- * access-control rows for workspaces with one member who owned them.
+ * 00085 answered it by making every such person a workspace of their own, and
+ * that is the answer this platform keeps. It was taken away for a day on the
+ * strength of a measurement — a million people is 3.9 GB of rows in the
+ * customer table and its children — and put back because a cost is not a
+ * verdict: every platform of this shape gives each person a space, so that
+ * "personal" and "paid team" differ by a plan rather than by a migration.
  *
- * 00094 answered it properly: a session may carry no workspace. These tests are
- * what say the door is still open and that nothing is built behind it.
+ * What the detour left behind is in the tests below: 00092 stopped seeding an
+ * organisation's three roles into a space with one member, and 00093 keyed a
+ * person's own rows on the person rather than on the space, so they follow
+ * their owner into a company and out again.
  */
 
 package auth_test
@@ -60,44 +62,53 @@ func handlersFor(pool *pgxpool.Pool) *auth.Handlers {
 	return auth.New(auth.Deps{DB: pool})
 }
 
-// The whole point: a person in no organisation signs in, and into nothing.
-//
-// An empty workspace is the answer and not a failure, which is why this asserts
-// the absence of an error as loudly as the absence of an id. The two used to be
-// the same thing — no membership meant ErrNoOrganisation meant no session — and
-// separating them is what let a citizen through the door.
-func TestSomebodyInNoOrganisationSignsInWithNoWorkspace(t *testing.T) {
-	pool := openPool(t)
-	h := handlersFor(pool)
-	userID := seedPerson(t, pool)
-
-	opened, err := h.FirstTenantFor(context.Background(), userID)
-	if err != nil {
-		t.Fatalf("a person in no organisation was refused a workspace to sign in to: %v", err)
-	}
-	if opened != "" {
-		t.Errorf("the sign-in opened workspace %q; somebody who belongs to no "+
-			"organisation should open with none", opened)
-	}
-}
-
-// And nothing is built for them.
-//
-// The assertion 00094 exists for. It is written against registry.tenants rather
-// than against the return value above because the cost this removes was never
-// visible in the return value: 00085 made a workspace, a profile, three roles
-// and seventeen role_permissions per person, and every one of those was correct
-// by its own lights.
-func TestSigningInMakesNoWorkspaceForACitizen(t *testing.T) {
+// The whole point: a person in no organisation still gets a workspace.
+func TestSomebodyInNoOrganisationSignsIntoTheirOwn(t *testing.T) {
 	pool := openPool(t)
 	h := handlersFor(pool)
 	ctx := context.Background()
 	userID := seedPerson(t, pool)
 
-	for range 2 {
-		if _, err := h.FirstTenantFor(ctx, userID); err != nil {
-			t.Fatal(err)
-		}
+	opened, err := h.FirstTenantFor(ctx, userID)
+	if err != nil {
+		t.Fatalf("a person in no organisation was refused a workspace to sign in to: %v", err)
+	}
+	if opened == "" {
+		t.Fatal("FirstTenantFor returned no workspace and no error")
+	}
+
+	var kind, owner string
+	if err := pool.QueryRow(ctx,
+		`SELECT kind, COALESCE(owner_user_id::text,'') FROM registry.tenants WHERE id = $1::uuid`,
+		opened).Scan(&kind, &owner); err != nil {
+		t.Fatalf("the sign-in opened a workspace that is not there: %v", err)
+	}
+	if kind != "personal" || owner != userID {
+		t.Errorf("the sign-in opened a %q workspace owned by %q", kind, owner)
+	}
+}
+
+// Signing in twice is one workspace, not two.
+//
+// The check that matters is the second call taking the first call's row rather
+// than making its own: the partial unique index is what enforces it, and a test
+// that only called once would pass with no index at all.
+func TestASecondSignInFindsTheSameWorkspace(t *testing.T) {
+	pool := openPool(t)
+	h := handlersFor(pool)
+	ctx := context.Background()
+	userID := seedPerson(t, pool)
+
+	first, err := h.FirstTenantFor(ctx, userID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := h.FirstTenantFor(ctx, userID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if first != second {
+		t.Errorf("two sign-ins opened two workspaces: %s and %s", first, second)
 	}
 
 	var workspaces, memberships int
@@ -107,18 +118,54 @@ func TestSigningInMakesNoWorkspaceForACitizen(t *testing.T) {
 		userID).Scan(&workspaces, &memberships); err != nil {
 		t.Fatal(err)
 	}
-	if workspaces != 0 || memberships != 0 {
-		t.Errorf("signing in twice left %d workspace(s) and %d membership(s); want none of either",
+	if workspaces != 1 || memberships != 1 {
+		t.Errorf("signing in twice left %d workspace(s) and %d membership(s); want one of each",
 			workspaces, memberships)
 	}
 }
 
-// Somebody who works somewhere opens there.
+// One role, not three.
 //
-// This has been three things in three days and the history is in FirstTenantFor.
-// Briefly: opening in the organisation was right, then wrong because people
-// with no organisation had nowhere to go, and is right again now that having
-// nowhere to go is a state the platform can hold.
+// What 00092 left behind. An organisation gets admin, manager and user so an
+// administrator can hand different levels to different staff; a space with one
+// member who owns it has nobody to hand anything to. The one that survives is
+// the one assign_default_membership_role() looks for, so the owner is no worse
+// off than an employee on their first day.
+func TestAPersonalWorkspaceIsSeededWithOneRole(t *testing.T) {
+	pool := openPool(t)
+	h := handlersFor(pool)
+	ctx := context.Background()
+	userID := seedPerson(t, pool)
+
+	opened, err := h.FirstTenantFor(ctx, userID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var roles, granted int
+	if err := pool.QueryRow(ctx,
+		`SELECT (SELECT count(*) FROM workspace.roles WHERE tenant_id = $1::uuid),
+		        (SELECT count(*) FROM workspace.memberships m
+		           JOIN workspace.membership_roles mr ON mr.membership_id = m.id
+		           JOIN workspace.role_permissions rp ON rp.role_id = mr.role_id
+		          WHERE m.tenant_id = $1::uuid AND m.user_id = $2::uuid)`,
+		opened, userID).Scan(&roles, &granted); err != nil {
+		t.Fatal(err)
+	}
+	if roles != 1 {
+		t.Errorf("a personal workspace was seeded with %d roles, want one", roles)
+	}
+	if granted == 0 {
+		t.Error("the owner holds no permissions in their own workspace")
+	}
+}
+
+// Somebody who works somewhere opens there, and still has their own space.
+//
+// This has been four things and the history is in FirstTenantFor. Briefly: the
+// organisation, then the personal space always, then the organisation with
+// nowhere as the fallback, and now the organisation with a space of their own
+// as the fallback — which is where every comparable platform ends up.
 func TestAMemberOfAnOrganisationOpensInIt(t *testing.T) {
 	pool := openPool(t)
 	h := handlersFor(pool)
@@ -148,14 +195,8 @@ func TestAMemberOfAnOrganisationOpensInIt(t *testing.T) {
 	}
 }
 
-// A person may still own a workspace, and the schema still says what one is.
-//
-// 00094 stopped *making* personal workspaces; it did not remove the idea. The
-// columns stay because the pattern every comparable platform settles on is to
-// have one — Vercel's hobby team, GitHub's personal account — created when
-// somebody starts using the product rather than when they prove who they are.
-// There is no trigger for that in this codebase yet, and inventing one would be
-// speculation; leaving the schema able to express it costs two columns.
+// An organisation may not claim an owner, and a personal space may not go
+// without one.
 //
 // The constraint is what makes the idea coherent: kind and owner_user_id agree
 // or the row means nothing. A row with kind='organisation' and an owner would
@@ -238,26 +279,17 @@ func TestSomebodyInNoOrganisationCanSignInWithAPassword(t *testing.T) {
 	if err := json.Unmarshal(recorder.Body.Bytes(), &answer); err != nil {
 		t.Fatal(err)
 	}
-	if answer.User.TenantID != "" {
-		t.Errorf("the sign-in opened workspace %q; a citizen opens with none", answer.User.TenantID)
-	}
-	// Nobody administers nothing, and saying otherwise would draw an
-	// administrator's rail for somebody with no organisation to administer.
-	if answer.User.IsAdmin {
-		t.Error("a citizen with no organisation is an administrator")
-	}
-
-	// And the session it made is real: resolvable, and carrying no workspace.
-	// A session row is where the change actually lands — sessions.tenant_id
-	// was NOT NULL until 00094 — so a sign-in that returned the right JSON and
-	// wrote a row nothing could read afterwards would pass every line above.
-	var sessions int
+	var kind string
 	if err := pool.QueryRow(ctx,
-		`SELECT count(*) FROM workspace.sessions WHERE user_id = $1::uuid AND tenant_id IS NULL`,
-		userID).Scan(&sessions); err != nil {
-		t.Fatal(err)
+		`SELECT kind FROM registry.tenants WHERE id = $1::uuid`, answer.User.TenantID).Scan(&kind); err != nil {
+		t.Fatalf("the sign-in opened a workspace that is not there: %v", err)
 	}
-	if sessions != 1 {
-		t.Errorf("the sign-in left %d workspace-less session(s), want exactly one", sessions)
+	if kind != "personal" {
+		t.Errorf("the sign-in opened a %q workspace, want the person's own", kind)
+	}
+	// Nobody administers a workspace with one person in it, and saying
+	// otherwise would draw an administrator's rail in it.
+	if answer.User.IsAdmin {
+		t.Error("a citizen is an administrator of their own workspace")
 	}
 }
