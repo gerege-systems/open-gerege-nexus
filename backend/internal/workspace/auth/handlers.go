@@ -93,7 +93,8 @@ func (h *Handlers) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		if userID != "" && !locked {
 			h.recordLoginFailure(r.Context(), userID)
 		}
-		audit.Record(r.Context(), "unknown", "anonymous", "auth.login_failed", "user", map[string]any{"email": req.Email})
+		audit.Record(r.Context(), audit.NoTenant, audit.Anonymous, "auth.login_failed", "user",
+			map[string]any{"email": req.Email})
 		telemetry.RecordLogin(telemetry.LoginPassword, false)
 		httpx.Error(w, http.StatusUnauthorized, "invalid email or password")
 		return

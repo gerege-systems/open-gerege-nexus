@@ -185,7 +185,7 @@ func (h *Handlers) HandleBindingConsent(w http.ResponseWriter, r *http.Request) 
 		httpx.Error(w, http.StatusInternalServerError, "could not record the consent")
 		return
 	}
-	audit.Record(r.Context(), "unknown", "anonymous", "auth.binding_consented", "identity",
+	audit.Record(r.Context(), audit.NoTenant, audit.Anonymous, "auth.binding_consented", "identity",
 		map[string]any{"issuer": binding.Issuer, "email": binding.Email})
 	httpx.JSON(w, http.StatusOK, map[string]any{"consented": true})
 }
