@@ -31,27 +31,42 @@ var ErrNoOrganisation = errors.New("this account does not belong to any organisa
 
 // FirstTenantFor is the workspace a session for this person opens in.
 //
-// Their oldest organisation, or a workspace of their own.
+// Everybody gets a space of their own, and somebody who works somewhere opens
+// at work.
 //
-// This has now been four things, and the last change was mine to argue for and
-// wrong to make. The measurement behind it was real — a million people is a
-// million rows in registry.tenants and, before 00092, 3.9 GB of access-control
-// rows for workspaces with one member who owned them — but a cost is not a
-// verdict. Every platform of this shape settles on giving each person a space
-// of their own: Vercel migrated *to* it, GitHub has always had it, and the
-// reason is that "personal" and "paid team" then differ by a plan rather than
-// by a migration. Taking it away made the schema tidier and the product worse.
+// Those are two decisions and they were run together four times, which is why
+// this took four attempts. "Where does the door open" and "does this person
+// have a personal space" are not the same question, and answering the first
+// kept silently answering the second:
 //
-// So the door opens on an organisation if there is one, and on the person's own
-// workspace if there is not. Nobody is turned away, and nobody stands nowhere.
+//   - the organisation, or refuse — people with no organisation could not sign
+//     in at all;
+//   - a personal space, made only for people with no organisation — so an
+//     employee had none, and the switcher only appears with more than one
+//     workspace, which put the whole personal side out of reach of anybody
+//     with a job;
+//   - the personal space always, for everybody — which fixed that and cost a
+//     click every morning to whoever signed in to do their work;
+//   - nowhere at all for people with no organisation — which fixed the cost and
+//     took the personal space away from everybody.
 //
-// What survives from the detour is the part that was right on its own terms:
-// registry.person_items is keyed on the person (00093), so what a ministry
-// tells a citizen follows them into a company and out again rather than living
-// in one workspace; 00092 stopped seeding an organisation's three roles into a
-// space with one member; and no sign-in path answers "who is this" by joining
-// memberships any more. None of those depended on the workspace going away.
+// Answering them separately makes all four complaints go away at once. The
+// space is made whether or not it is where the session opens; where the session
+// opens prefers work. Anybody who has both sees a switcher, because they have
+// two workspaces, and that is what makes the personal side reachable from an
+// account with a job.
+//
+// The cost is one row in registry.tenants per person, which is what migration
+// 00092 was for: a personal space is seeded with one role rather than an
+// organisation's three, and at a million people that is half the database it
+// would otherwise be.
 func (h *Handlers) FirstTenantFor(ctx context.Context, userID string) (string, error) {
+	// Their own space first, and its error is not fatal to the sign-in. It is
+	// where they end up only if they work nowhere; somebody with an
+	// organisation to open should not be kept out of it because the workspace
+	// they were not going to has failed to be made.
+	home, homeErr := h.HomeFor(ctx, userID)
+
 	tenantID, err := h.FirstOrganisationFor(ctx, userID)
 	if err == nil {
 		return tenantID, nil
@@ -59,7 +74,7 @@ func (h *Handlers) FirstTenantFor(ctx context.Context, userID string) (string, e
 	if !errors.Is(err, ErrNoOrganisation) {
 		return "", err
 	}
-	return h.HomeFor(ctx, userID)
+	return home, homeErr
 }
 
 // FirstOrganisationFor is the oldest organisation this person belongs to.

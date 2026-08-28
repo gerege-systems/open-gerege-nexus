@@ -162,11 +162,13 @@ func TestAPersonalWorkspaceIsSeededWithOneRole(t *testing.T) {
 
 // Somebody who works somewhere opens there, and still has their own space.
 //
-// This has been four things and the history is in FirstTenantFor. Briefly: the
-// organisation, then the personal space always, then the organisation with
-// nowhere as the fallback, and now the organisation with a space of their own
-// as the fallback — which is where every comparable platform ends up.
-func TestAMemberOfAnOrganisationOpensInIt(t *testing.T) {
+// The two halves are one test because separating them is what took four
+// attempts to get right: every earlier version answered "where does the door
+// open" and "does this person have a space" with one query, so fixing either
+// broke the other. An employee who opens at work and owns nothing has no
+// switcher — the switcher needs two workspaces — and the personal side is then
+// unreachable from any account with a job.
+func TestAMemberOfAnOrganisationOpensAtWorkAndStillHasTheirOwnSpace(t *testing.T) {
 	pool := openPool(t)
 	h := handlersFor(pool)
 	ctx := context.Background()
@@ -192,6 +194,23 @@ func TestAMemberOfAnOrganisationOpensInIt(t *testing.T) {
 	}
 	if opened != orgID {
 		t.Errorf("an employee opened in %q, want their organisation %q", opened, orgID)
+	}
+
+	// And the space exists anyway, with a membership — which is what the
+	// switcher lists, and the only thing that makes /me reachable for them.
+	var owned, memberships int
+	if err := pool.QueryRow(ctx,
+		`SELECT (SELECT count(*) FROM registry.tenants WHERE owner_user_id = $1::uuid AND kind='personal'),
+		        (SELECT count(*) FROM workspace.memberships WHERE user_id = $1::uuid)`,
+		userID).Scan(&owned, &memberships); err != nil {
+		t.Fatal(err)
+	}
+	if owned != 1 {
+		t.Errorf("an employee owns %d personal workspace(s), want one — without it the "+
+			"switcher never appears and the personal side cannot be reached", owned)
+	}
+	if memberships != 2 {
+		t.Errorf("an employee holds %d membership(s), want two: their work and their own space", memberships)
 	}
 }
 
