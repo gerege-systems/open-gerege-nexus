@@ -38,14 +38,15 @@ func openOrganisation(t *testing.T, pool *pgxpool.Pool) (id, slug string) {
 
 // The round trip: one person asks, and sees that they asked.
 //
-// Two assertions rather than one because the row and its projection live in
-// different workspaces, and the whole design is that the second exists — a
-// request the asker cannot see is a request they will make again tomorrow.
-func TestAskingPutsTheRequestInTheOrganisationAndTheCopyInTheHome(t *testing.T) {
+// Two assertions rather than one because the row and its projection belong to
+// different parties — the queue row is the organisation's, the copy is the
+// person's — and the whole design is that the second exists: a request the
+// asker cannot see is a request they will make again tomorrow.
+func TestAskingPutsTheRequestInTheOrganisationAndTheCopyOnThePerson(t *testing.T) {
 	pool := openPool(t)
 	store := person.New(pool)
 	ctx := context.Background()
-	_, userID, homeID := seedHome(t, pool)
+	_, userID := seedPerson(t, pool)
 	orgID, slug := openOrganisation(t, pool)
 
 	if err := store.Ask(ctx, userID, slug, "Би энд ажилладаг"); err != nil {
@@ -62,14 +63,14 @@ func TestAskingPutsTheRequestInTheOrganisationAndTheCopyInTheHome(t *testing.T) 
 		t.Errorf("the request is %q in %s with message %q", status, tenantID, message)
 	}
 
-	var copyStatus, copyCode, copyTenant string
+	var copyStatus, copyCode, copyOwner string
 	if err := pool.QueryRow(ctx,
-		`SELECT status, code, tenant_id::text FROM workspace.person_items WHERE source_app = $1`,
-		person.CoreApp).Scan(&copyStatus, &copyCode, &copyTenant); err != nil {
+		`SELECT status, code, user_id::text FROM registry.person_items WHERE source_app = $1`,
+		person.CoreApp).Scan(&copyStatus, &copyCode, &copyOwner); err != nil {
 		t.Fatalf("the asker has no copy of their own request: %v", err)
 	}
-	if copyTenant != homeID {
-		t.Errorf("the copy landed in %s, not in the asker's home %s", copyTenant, homeID)
+	if copyOwner != userID {
+		t.Errorf("the copy landed on %s, not on the asker %s", copyOwner, userID)
 	}
 	if copyStatus != person.StatusPending || copyCode != person.JoinRequestCode {
 		t.Errorf("the copy says %q/%q", copyCode, copyStatus)
@@ -81,7 +82,7 @@ func TestAskingTwiceIsOneRequest(t *testing.T) {
 	pool := openPool(t)
 	store := person.New(pool)
 	ctx := context.Background()
-	_, userID, _ := seedHome(t, pool)
+	_, userID := seedPerson(t, pool)
 	_, slug := openOrganisation(t, pool)
 
 	for range 2 {
@@ -104,7 +105,7 @@ func TestTheDoorRefusesWhatItShould(t *testing.T) {
 	pool := openPool(t)
 	store := person.New(pool)
 	ctx := context.Background()
-	_, userID, _ := seedHome(t, pool)
+	_, userID := seedPerson(t, pool)
 	_, otherHomeSlug := homeSlugOf(t, pool)
 
 	t.Run("a name nobody answers to", func(t *testing.T) {
@@ -160,16 +161,23 @@ func TestTheDoorRefusesWhatItShould(t *testing.T) {
 	})
 }
 
-// homeSlugOf makes a second citizen and returns their home's slug, which is the
-// only way to name a personal workspace from outside.
+// homeSlugOf makes a second citizen with a personal workspace and returns its
+// slug, which is the only way to name one from outside.
+//
+// A workspace is made here by hand rather than by seedPerson, because since
+// 00093 a person does not need one and the helper no longer makes one — and
+// this is the one test that needs a personal workspace to exist, in order to
+// prove that naming it in a join request is refused.
 func homeSlugOf(t *testing.T, pool *pgxpool.Pool) (id, slug string) {
 	t.Helper()
-	_, _, homeID := seedHome(t, pool)
+	_, userID := seedPerson(t, pool)
+	slug = "home-" + strings.ReplaceAll(uuid.NewString(), "-", "")[:12]
 	if err := pool.QueryRow(context.Background(),
-		`SELECT slug FROM registry.tenants WHERE id = $1::uuid`, homeID).Scan(&slug); err != nil {
+		`INSERT INTO registry.tenants (slug, name, kind, owner_user_id)
+		 VALUES ($1, $1, 'personal', $2::uuid) RETURNING id::text`, slug, userID).Scan(&id); err != nil {
 		t.Fatal(err)
 	}
-	return homeID, slug
+	return id, slug
 }
 
 // The queue is not writable from outside the function.
@@ -180,7 +188,7 @@ func homeSlugOf(t *testing.T, pool *pgxpool.Pool) (id, slug string) {
 func TestTheQueueCannotBeWrittenDirectly(t *testing.T) {
 	pool := openPool(t)
 	ctx := context.Background()
-	_, userID, _ := seedHome(t, pool)
+	_, userID := seedPerson(t, pool)
 	orgID, _ := openOrganisation(t, pool)
 
 	tx, err := pool.Begin(ctx)

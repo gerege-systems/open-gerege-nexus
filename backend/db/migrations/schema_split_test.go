@@ -89,11 +89,14 @@ func TestEveryPlatformMigrationTableLandsOnItsDeclaredSchema(t *testing.T) {
 	}
 	// The counts are written down so that a table appearing in the wrong schema
 	// cannot pass by moving another one, and so that the shape of the split
-	// stays legible: twenty of the operator plane's tables are ones a tenant may
-	// also read and seven are not. A number edited alongside a migration is a
-	// number somebody looked at.
-	if counts["workspace"] != 33 || counts["registry"] != 21 || counts["operator"] != 7 {
-		t.Errorf("schema counts: workspace=%d registry=%d operator=%d; want 33, 21 and 7",
+	// stays legible: twenty-two of the operator plane's tables are ones a
+	// tenant may also read and seven are not. A number edited alongside a
+	// migration is a number somebody looked at.
+	//
+	// 00093 moved person_items out of workspace and into registry, which is
+	// where the thirty-third workspace table went.
+	if counts["workspace"] != 32 || counts["registry"] != 22 || counts["operator"] != 7 {
+		t.Errorf("schema counts: workspace=%d registry=%d operator=%d; want 32, 22 and 7",
 			counts["workspace"], counts["registry"], counts["operator"])
 	}
 }

@@ -39,11 +39,13 @@ var narrowPolicies = map[string]string{
 	"push_tokens":             "device scope",
 	"staff_pin_credentials":   "device scope",
 
-	// A home is one person's own space, so "read alongside" has nothing to
-	// reach for: no sibling workspace has any business in this list, and the
-	// wide form would let an organisation session read the rows a citizen's
-	// own home holds simply because the same person belongs to both.
-	"person_items": "a home is one person",
+	// person_items was here, in the narrow form, while it was keyed by the
+	// citizen's own workspace. Migration 00093 keyed it by the citizen instead
+	// and moved it to registry, so it has no tenant_isolation policy to have a
+	// shape: it isolates by app.current_user. The reasoning that put it here
+	// survived the move — no sibling workspace has any business in one person's
+	// list — and is now enforced by a policy that cannot express the wide form
+	// at all, which is stronger than a narrow policy somebody could widen.
 
 	// TODO: unreviewed. These four took the narrow form by copying, not by
 	// deciding, and each needs its own answer before it is widened — an
