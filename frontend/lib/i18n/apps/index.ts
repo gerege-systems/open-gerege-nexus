@@ -51,3 +51,4 @@ import "./integrations";
 import "./documents";
 import "./storefront";
 import "./urtuu";
+import "./kiosk";

@@ -58,6 +58,21 @@ const DEFAULT_LOCALE = DEFAULT_LOCALE_VALUE;
 
 export type { TranslationKey };
 
+/**
+ * A key t() will resolve.
+ *
+ * A platform key is checked at compile time; an app key is a string, because
+ * the app that defines it may not be in this repository. `(string & {})`
+ * rather than `string` so the union still offers the platform keys to an
+ * editor completing one.
+ *
+ * Named rather than written out at each use because screens declare keys in
+ * data as well as passing them to t() — a resource registry that types its
+ * labels `TranslationKey` compiles only for apps that live here, which is the
+ * one thing a shell shared by every distribution must not require.
+ */
+export type DictionaryKey = TranslationKey | (string & {});
+
 interface I18nValue {
   locale: Locale;
   setLocale: (locale: Locale) => void;
@@ -70,7 +85,7 @@ interface I18nValue {
    * the app that defines it may not be in this repository. `(string & {})`
    * rather than `string` so the union still offers the platform keys.
    */
-  t: (key: TranslationKey | (string & {}), vars?: Record<string, string | number>) => string;
+  t: (key: DictionaryKey, vars?: Record<string, string | number>) => string;
 }
 
 const I18nContext = createContext<I18nValue | null>(null);
@@ -178,7 +193,7 @@ export function I18nProvider({
     // beside it, and the header follows the same override (lib/brand.ts).
     const brandName = copy["brand.name"]?.[locale]?.trim() || brand;
 
-    const t = (key: TranslationKey | (string & {}), vars?: Record<string, string | number>) => {
+    const t = (key: DictionaryKey, vars?: Record<string, string | number>) => {
       // Entries are authored with mn and en; the other five locales are filled
       // in progressively, so a lookup is widened to "this locale, maybe".
       const entry = (coreDictionary as Record<string, Partial<Record<Locale, string>> | undefined>)[key];

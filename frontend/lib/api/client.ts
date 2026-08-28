@@ -37,7 +37,13 @@ export async function request<T>(url: string, options: RequestInit = {}): Promis
     let errMessage = "Request failed";
     try {
       const errData = await res.json();
-      errMessage = errData.error || errMessage;
+      // The platform answers {"error": …}. Not everything behind this client
+      // does: an app that mounts an existing service behind the router answers
+      // in that service's dialect, and the kiosk's is {"message": …}. Without
+      // the second key every one of its failures reached the user as the
+      // generic "Request failed" — the reason was on the wire and thrown away
+      // one line before it could be read.
+      errMessage = errData.error || errData.message || errMessage;
     } catch {
       // ignore
     }

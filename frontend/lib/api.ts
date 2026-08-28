@@ -15,6 +15,7 @@ export * from "./api/store";
 export * from "./api/ai";
 export * from "./api/sso-clients";
 export * from "./api/urtuu";
+export * from "./api/kiosk";
 
 import { coreApi } from "./api/client";
 import { integrationsApi } from "./api/integrations";
