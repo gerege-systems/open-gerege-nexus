@@ -15,22 +15,13 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { History, KeyRound, RotateCcw, ToggleLeft, ToggleRight } from "lucide-react";
 
-import Console from "@/components/cp/Console";
 import { useAction } from "@/components/cp/Action";
 import { Badge, Card, formatMoment, Table } from "@/components/cp/ui";
 import { cp, type Credential, type Flag, type Setting, type SettingChange } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 import { Modal } from "@/components/ui";
 
-export default function ControlPlaneConfigPage() {
-  return (
-    <Console>
-      <Configuration />
-    </Console>
-  );
-}
-
-function Configuration() {
+export default function Configuration() {
   const { t, locale } = useI18n();
   const action = useAction();
 

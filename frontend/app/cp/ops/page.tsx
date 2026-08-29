@@ -12,20 +12,11 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { ExternalLink, Gauge as GaugeIcon, RefreshCw } from "lucide-react";
 
-import Console from "@/components/cp/Console";
 import { Badge, Card, Table } from "@/components/cp/ui";
 import { cp, type Overview } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 
-export default function OpsMetricsPage() {
-  return (
-    <Console>
-      <Metrics />
-    </Console>
-  );
-}
-
-function Metrics() {
+export default function Metrics() {
   const { t } = useI18n();
   const [health, setHealth] = useState<Overview | null>(null);
   const [failure, setFailure] = useState("");
