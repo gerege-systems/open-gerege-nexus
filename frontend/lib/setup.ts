@@ -44,3 +44,13 @@ export async function setupRequiredOnServer(): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * The rule the first operator's password is held to.
+ *
+ * Longer than the tenant admin's, and for the reason the server gives
+ * (operator.MinPasswordLength): there are a handful of console accounts and
+ * they are the platform. Repeated here so the form can say the rule before
+ * asking rather than after refusing; the server is still the authority.
+ */
+export const MIN_OPERATOR_PASSWORD = 12;

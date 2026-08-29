@@ -16,13 +16,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Building2, Loader2, Lock, Search, UserRound } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
+import { Building2, Loader2, Lock, Search, ShieldCheck, UserRound } from "lucide-react";
 
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { api, type SetupStatus } from "@/lib/api";
+import { api, type SetupEnrolment, type SetupStatus } from "@/lib/api";
 import { useBrand } from "@/lib/brandContext";
 import { useI18n } from "@/lib/i18n";
-import { MIN_SETUP_PASSWORD } from "@/lib/setup";
+import { MIN_OPERATOR_PASSWORD, MIN_SETUP_PASSWORD } from "@/lib/setup";
 
 export default function SetupPage() {
   const { t } = useI18n();
@@ -37,7 +38,7 @@ export default function SetupPage() {
   // perfectly good link is asked to paste the token they are already holding.
   const [addressRead, setAddressRead] = useState(false);
   const [status, setStatus] = useState<SetupStatus | undefined>();
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -52,6 +53,21 @@ export default function SetupPage() {
 
   const [password, setPassword] = useState("");
   const [again, setAgain] = useState("");
+
+  // The console's first operator. A separate account from the organisation's
+  // administrator by design — different identity, different cookie, different
+  // audit — even when it is the same person, which on a first deployment it
+  // usually is. The fields are seeded from the administrator's for that reason
+  // and can be typed over.
+  const [operatorName, setOperatorName] = useState("");
+  const [operatorEmail, setOperatorEmail] = useState("");
+  const [operatorPassword, setOperatorPassword] = useState("");
+  const [enrolment, setEnrolment] = useState<SetupEnrolment | undefined>();
+  const [code, setCode] = useState("");
+
+  // Whether to offer the console step at all: this deployment must have an
+  // address to serve one on, and must not have an operator already.
+  const consoleOffered = Boolean(status?.console?.host && status.console.empty);
 
   useEffect(() => {
     setToken(new URLSearchParams(location.search).get("token") || "");
@@ -91,8 +107,7 @@ export default function SetupPage() {
     }
   }
 
-  async function finish(e: React.FormEvent) {
-    e.preventDefault();
+  async function finish() {
     setError("");
     if (password !== again) {
       setError(t("setup.message.password_mismatch"));
@@ -106,7 +121,7 @@ export default function SetupPage() {
         { email: adminEmail, name: adminName },
         password,
       );
-      setStep(4);
+      setStep(5);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -114,7 +129,45 @@ export default function SetupPage() {
     }
   }
 
-  if (status && !status.required && step !== 4) {
+  // The console's first account, and the code that proves its authenticator.
+  //
+  // Both run before the organisation is created, and they have to: completing
+  // the wizard drops the token these two calls carry. An enrolment that is
+  // started and not confirmed leaves an account that cannot sign in — the
+  // platform knows that state and the bootstrap command's -confirm finishes it,
+  // which is what the message on a failure here points at.
+  async function createOperator(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setBusy(true);
+    try {
+      setEnrolment(await api.setupCreateOperator(token, {
+        email: operatorEmail,
+        name: operatorName,
+        password: operatorPassword,
+      }));
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function confirmOperator(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setBusy(true);
+    try {
+      await api.setupConfirmOperator(token, operatorEmail, code);
+      await finish();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (status && !status.required && step !== 5) {
     return (
       <Shell brand={brand}>
         <h1 className="signin-card__title">{t("setup.view.title")}</h1>
@@ -124,7 +177,7 @@ export default function SetupPage() {
     );
   }
 
-  if (step === 4) {
+  if (step === 5) {
     return (
       <Shell brand={brand}>
         <h1 className="signin-card__title">{name}</h1>
@@ -190,9 +243,14 @@ export default function SetupPage() {
         <li className={step === 2 ? "is-current" : step > 2 ? "is-done" : ""}>
           <UserRound size={16} /> {t("setup.view.step_admin")}
         </li>
-        <li className={step === 3 ? "is-current" : ""}>
+        <li className={step === 3 ? "is-current" : step > 3 ? "is-done" : ""}>
           <Lock size={16} /> {t("setup.view.step_password")}
         </li>
+        {consoleOffered && (
+          <li className={step === 4 ? "is-current" : ""}>
+            <ShieldCheck size={16} /> {t("setup.view.step_console")}
+          </li>
+        )}
       </ol>
 
       {status && !status.core && <p className="signin-note">{t("setup.message.core_off")}</p>}
@@ -274,7 +332,22 @@ export default function SetupPage() {
       )}
 
       {step === 3 && (
-        <form className="setup-form" onSubmit={finish}>
+        <form
+          className="setup-form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!consoleOffered) {
+              void finish();
+              return;
+            }
+            // Seeded from the administrator, not shared with them: on a first
+            // deployment it is the same person, and making them type the same
+            // address twice is how the two accounts end up one letter apart.
+            setOperatorName(operatorName || adminName);
+            setOperatorEmail(operatorEmail || adminEmail);
+            setStep(4);
+          }}
+        >
           <label>
             <span>{t("auth.field.password")}</span>
             <input
@@ -300,6 +373,85 @@ export default function SetupPage() {
             <button type="button" className="signin-btn signin-btn--quiet" onClick={() => setStep(2)}>
               {t("base.action.previous")}
             </button>
+            <button className="signin-btn signin-btn--primary" type="submit" disabled={busy}>
+              {busy ? <Loader2 size={16} className="animate-spin" /> : null}
+              {consoleOffered ? t("base.action.next") : t("setup.action.finish")}
+            </button>
+          </div>
+        </form>
+      )}
+
+      {step === 4 && !enrolment && (
+        <form className="setup-form" onSubmit={createOperator}>
+          <p className="signin-card__lede">
+            {t("setup.message.console_lede", { host: status?.console?.host ?? "" })}
+          </p>
+          <label>
+            <span>{t("setup.field.admin_name")}</span>
+            <input value={operatorName} onChange={(e) => setOperatorName(e.target.value)} required />
+          </label>
+          <label>
+            <span>{t("auth.field.email")}</span>
+            <input
+              type="email"
+              value={operatorEmail}
+              onChange={(e) => setOperatorEmail(e.target.value)}
+              required
+            />
+          </label>
+          <label>
+            <span>{t("auth.field.password")}</span>
+            <input
+              type="password"
+              value={operatorPassword}
+              onChange={(e) => setOperatorPassword(e.target.value)}
+              minLength={MIN_OPERATOR_PASSWORD}
+              required
+            />
+            <small>{t("setup.message.operator_password_rule")}</small>
+          </label>
+          <div className="setup-actions">
+            {/* Skipping is a first-class answer, not a way out of a form that
+                went wrong: a deployment can open its console later with
+                operator-bootstrap, and one that never opens a console is an
+                ordinary deployment rather than an unfinished one. */}
+            <button
+              type="button"
+              className="signin-btn signin-btn--quiet"
+              onClick={() => void finish()}
+              disabled={busy}
+            >
+              {t("setup.action.skip_console")}
+            </button>
+            <button className="signin-btn signin-btn--primary" type="submit" disabled={busy}>
+              {busy ? <Loader2 size={16} className="animate-spin" /> : null}
+              {t("base.action.next")}
+            </button>
+          </div>
+        </form>
+      )}
+
+      {step === 4 && enrolment && (
+        <form className="setup-form" onSubmit={confirmOperator}>
+          <p className="signin-card__lede">{t("setup.message.enrolment")}</p>
+          {/* Shown once and never again: the secret is in the account's row and
+              nothing here stores it. A deployment that closes this screen
+              without confirming finishes with operator-bootstrap -confirm. */}
+          <div className="setup-enrolment">
+            <QRCodeSVG value={enrolment.uri} size={168} marginSize={2} />
+            <code>{enrolment.secret}</code>
+          </div>
+          <label>
+            <span>{t("setup.field.totp_code")}</span>
+            <input
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              required
+            />
+          </label>
+          <div className="setup-actions">
             <button className="signin-btn signin-btn--primary" type="submit" disabled={busy}>
               {busy ? <Loader2 size={16} className="animate-spin" /> : null}
               {t("setup.action.finish")}

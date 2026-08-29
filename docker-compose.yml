@@ -73,8 +73,8 @@ services:
       PORT: 8080
       ENVIRONMENT: development
       PUBLIC_ORIGIN: http://nexus.localhost:3000
-      ALLOWED_ORIGINS: http://nexus.localhost:3000,http://cp.localhost:3000
-      CONTROL_PLANE_HOST: cp.localhost
+      ALLOWED_ORIGINS: http://nexus.localhost:3000,http://admin.localhost:3000
+      CONTROL_PLANE_HOST: admin.localhost
       # The same name the frontend service is given below. The API uses it in
       # the sentence it shows when linking an eID identity fails and as the
       # relying-party name eID puts in front of a citizen.
@@ -104,7 +104,7 @@ services:
         # Next.js inlines NEXT_PUBLIC_* at build time — passing it only as a
         # runtime env var leaves the bundle pointing at the default URL.
         NEXT_PUBLIC_API_URL: http://nexus.localhost:8080/api/v1
-        NEXT_PUBLIC_CONTROL_PLANE_API_URL: http://cp.localhost:8080/api/platform/v1
+        NEXT_PUBLIC_CONTROL_PLANE_API_URL: http://admin.localhost:8080/api/platform/v1
     container_name: gerege_nexus_frontend
     # The brand is read per request, so unlike the line above it needs no
     # rebuild to try: `BRAND_NAME="Something Else" docker compose up frontend`.
@@ -117,7 +117,7 @@ services:
       # Wording a deployment says differently; see brand/README.md.
       BRAND_COPY_FILE: ${BRAND_COPY_FILE:-}
       BRAND_COPY: ${BRAND_COPY:-}
-      CONTROL_PLANE_HOST: cp.localhost
+      CONTROL_PLANE_HOST: admin.localhost
     volumes:
       - ./brand:/brand:ro
     ports:

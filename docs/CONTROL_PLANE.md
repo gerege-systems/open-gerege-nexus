@@ -66,6 +66,12 @@ HostGate/session/role үлдэнэ; nginx allowlist идэвхтэй бол ап
 
 ### 3.1 DNS, TLS, nginx
 
+Шинэ суулгацын нэршил нь **`admin.<домэйн>`** (жишээ нь `admin.petronet.mn`);
+хөгжүүлэлтийн анхдагч нь `admin.localhost`. `cp.nexus.gerege.mn` нь энэ
+нэршлээс өмнөх бөгөөд хэвээр ажиллана — ажиллаж буй консолын хаягийг солих нь
+DNS, гэрчилгээ, хавчуургыг хамт нүүлгэх ажил тул нэршил шинэ суулгацад
+хамаарна.
+
 `cp.nexus.gerege.mn` DNS нь deployment server-ийг заана. Репогийн
 `deploy/nginx/cp.nexus.gerege.mn.conf` болон
 `deploy/nginx/snippets/cp-allowlist.conf`-ыг идэвхжүүлээд TLS сертификат
@@ -117,7 +123,20 @@ console query login role-оор үргэлжлэхгүй, хаалттай ун�
 
 ### 3.3 Анхны оператор
 
-Вэб бүртгэл байхгүй. DB эрхтэй хүн контейнер дотор bootstrap command ажиллуулна:
+**Шинэ суулгац дээр: анхны тохиргооны шидтэн.** `/setup` дээр байгууллагаа
+үүсгэж буй хүн сүүлийн алхамд консолын эхний бүртгэлийг нээнэ — нэр, и-мэйл,
+нууц үг, дараа нь authenticator-ийн QR ба нэг код. Тэр алхам зөвхөн хоёр
+нөхцөлд гарна: `CONTROL_PLANE_HOST` тохируулагдсан, ба энэ суулгацад оператор
+**огт байхгүй**. Хоёр дахь бүртгэл нь консолынхоо ажил — миграц 00049
+`operator_accounts`-д INSERT хийх эрхийг консолын role-оос зориуд хассаныг
+бодоход, шидтэн хоёр дахийг үүсгэж чаддаг байвал яг тэр цоорхой болно.
+
+Шидтэний эрх нь bootstrap command-ынхтай ижил ангийн: ачаалах үед санах ойд
+үүсч, лог руу нэг удаа бичигдэж, байгууллага үүсмэгц устдаг токен. Ялгаа нь
+зөвхөн тэр эрхийг эдлэх хүнд машин дээр shell хэрэггүй болсонд л байна.
+
+**Бусад тохиолдолд** (шидтэн аль хэдийн дууссан, эсвэл консолыг хожим нээх)
+DB эрхтэй хүн контейнер дотор bootstrap command ажиллуулна:
 
 ```bash
 docker exec -it gerege_nexus_backend /app/operator-bootstrap \
@@ -132,12 +151,12 @@ Command нууц үгийг TTY-ээс хоёр удаа асууж, TOTP secret
 ## 4. Хөгжүүлэлтийн хоёр origin
 
 `.env.example` болон `docker-compose.yml` development-д
-`CONTROL_PLANE_HOST=cp.localhost` ашиглана:
+`CONTROL_PLANE_HOST=admin.localhost` ашиглана:
 
 ```text
 Тенант:   http://nexus.localhost:3000
-Консол:   http://cp.localhost:3000     → 308 → /cp
-CP API:   http://cp.localhost:8080/api/platform/v1
+Консол:   http://admin.localhost:3000     → 308 → /cp
+CP API:   http://admin.localhost:8080/api/platform/v1
 ```
 
 Орчин үеийн browser `*.localhost`-ыг loopback руу шийддэг. Ингэснээр HostGate,

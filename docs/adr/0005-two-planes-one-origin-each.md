@@ -136,7 +136,7 @@ to be written against what the Next.js build actually emits»*) бөгөөд т�
    Tenant host дээр `/cp/*` 404. `app/cp/layout.tsx` server component давхар
    gate хэвээр.
 2. `.env.example` болон `docker-compose.yml` development-д
-   `CONTROL_PLANE_HOST=cp.localhost` ашиглаж, tenant/control frontend ба API-г
+   `CONTROL_PLANE_HOST=admin.localhost` ашиглаж, tenant/control frontend ба API-г
    тусдаа origin-оор ажиллуулна.
 
 Boundary-г дараах тестүүд хамгаална:
