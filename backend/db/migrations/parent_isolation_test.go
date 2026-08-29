@@ -20,7 +20,7 @@ import (
 //
 // ownership_test.go names six such tables; report_grants is the sixth and is
 // not here because it carries two tenant columns of its own and has had a
-// policy since 00071. These five had none at all until 00095.
+// policy since 00071. These five had none at all until 00101.
 var childTables = map[string]string{
 	"esign_batch_items":    "esign_batches",
 	"installation_events":  "app_installations",
