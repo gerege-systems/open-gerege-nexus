@@ -201,7 +201,7 @@ func (s *Service) Read(ctx context.Context, id string) (Detail, error) {
 		  LEFT JOIN registry.user_eid_identities e ON e.user_id = u.id
 		 WHERE u.id = $1::uuid`, id).
 		Scan(&detail.ID, &detail.Email, &detail.Name, &detail.Verified, &detail.Providers,
-			&detail.Organisations, &detail.Person.Sessions, &detail.LastSeenAt,
+			&detail.Organisations, &detail.Sessions, &detail.LastSeenAt,
 			&detail.LockedUntil, &detail.Active, &detail.CreatedAt)
 	switch {
 	case errors.Is(err, pgx.ErrNoRows):
