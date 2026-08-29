@@ -41,6 +41,13 @@ export const setup = {
     mn: "Энэ суулгац аль хэдийн тохируулагдсан байна.",
     en: "This deployment has already been set up.",
   },
+  "setup.field.token": { mn: "Тохиргооны токен", en: "Setup token" },
+  "setup.action.use_token": { mn: "Үргэлжлүүлэх", en: "Continue" },
+  "setup.message.token_missing": {
+    mn: "Энэ суулгацыг нээх токеныг сервер асахдаа лог руугаа нэг удаа бичсэн байгаа. Тэр мөрөөс хуулж энд буулгана уу.",
+    en: "The token that opens this deployment was written once to the server's log at boot. Copy it from that line and paste it here.",
+  },
+
   "setup.message.not_armed": {
     mn: "Тохиргооны токен байхгүй байна. Сервер асахад бичсэн лог мөрөөс хаягийг нь аваарай, эсвэл серверийг дахин асаагаад шинэ токен авна уу.",
     en: "There is no setup token. Take the address from the line the server wrote to its log at boot, or restart it for a new one.",

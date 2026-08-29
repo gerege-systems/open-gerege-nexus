@@ -29,6 +29,13 @@ export default function SetupPage() {
   const brand = useBrand();
 
   const [token, setToken] = useState("");
+  // What somebody types when the address bar carries no token. Kept apart from
+  // `token` so that a half-typed value is never sent as one.
+  const [typedToken, setTypedToken] = useState("");
+  // Whether the address bar has been read yet. Without it the screen below
+  // renders for one frame before the effect runs, so somebody who arrived on a
+  // perfectly good link is asked to paste the token they are already holding.
+  const [addressRead, setAddressRead] = useState(false);
   const [status, setStatus] = useState<SetupStatus | undefined>();
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [busy, setBusy] = useState(false);
@@ -48,6 +55,7 @@ export default function SetupPage() {
 
   useEffect(() => {
     setToken(new URLSearchParams(location.search).get("token") || "");
+    setAddressRead(true);
     // A failure here is not fatal: the wizard refuses on the server anyway, and
     // a screen that renders nothing because one GET was slow is worse than one
     // that shows the form and is told no.
@@ -134,6 +142,36 @@ export default function SetupPage() {
       <Shell brand={brand}>
         <h1 className="signin-card__title">{t("setup.view.title")}</h1>
         <p className="signin-alert">{t("setup.message.not_armed")}</p>
+      </Shell>
+    );
+  }
+
+  // No token in the address bar, so ask for it.
+  //
+  // The wizard used to render its form regardless and let every lookup answer
+  // 404 — the gate refuses without the token and says nothing about why, which
+  // is right for a stranger and useless for the operator. It became the
+  // ordinary way in the moment the landing page started sending people here:
+  // a redirect cannot carry the token (that would publish it to every visitor),
+  // so the person arrives holding nothing and has to be asked.
+  //
+  // Typed rather than pasted into the URL because the address bar is a place
+  // things are remembered — history, sync, a screen share — and this is the
+  // one act the token authorises.
+  if (addressRead && !token) {
+    return (
+      <Shell brand={brand}>
+        <h1 className="signin-card__title">{t("setup.view.title")}</h1>
+        <p className="signin-card__lede">{t("setup.message.token_missing")}</p>
+        <form className="setup-form" onSubmit={(e) => { e.preventDefault(); setToken(typedToken.trim()); }}>
+          <label>
+            <span>{t("setup.field.token")}</span>
+            <input value={typedToken} onChange={(e) => setTypedToken(e.target.value)} autoFocus required />
+          </label>
+          <button className="signin-btn signin-btn--primary" type="submit" disabled={!typedToken.trim()}>
+            {t("setup.action.use_token")}
+          </button>
+        </form>
       </Shell>
     );
   }
