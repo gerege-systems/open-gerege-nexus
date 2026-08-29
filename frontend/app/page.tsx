@@ -1,34 +1,32 @@
-import { Fragment, type ReactNode } from "react";
+import { Fragment } from "react";
 import { redirect } from "next/navigation";
 
-import Applications from "@/components/landing/Applications";
-import Architecture from "@/components/landing/Architecture";
-import Capabilities from "@/components/landing/Capabilities";
-import Hero from "@/components/landing/Hero";
-import PlatformDepth from "@/components/landing/PlatformDepth";
 import SiteFooter from "@/components/landing/SiteFooter";
 import SiteHeader from "@/components/landing/SiteHeader";
 import Storefront from "@/components/landing/Storefront";
-import Technology from "@/components/landing/Technology";
-import Trust from "@/components/landing/Trust";
-import { firstLinkedSection, landingSectionsFromEnv, type LandingSection } from "@/lib/landing";
+import { sectionNodes } from "@/components/landing/sections";
+import { SECTION_LINKS, landingSectionsFromEnv } from "@/lib/landing";
 import { setupRequiredOnServer } from "@/lib/setup";
 import { localSignInEnabledOnServer } from "@/lib/signIn";
 import { fetchStorefrontOnServer } from "@/lib/storefront";
 
 /**
- * The public landing page — the only screen a visitor sees before signing in.
+ * The public landing page — the first screen a visitor sees before signing in.
  *
  * It is composed rather than written out: each section is a self-contained
- * piece of the argument the page makes, and the ones carrying anchors
- * (`#features`, `#trust`, `#technology`) own those ids themselves, so this
- * file keeps working without knowing what is inside them.
+ * piece of the argument the site makes, so this file keeps working without
+ * knowing what is inside them.
+ *
+ * It no longer carries all of them. A section the header menu names now has a
+ * page of its own (app/architecture, /platform, /trust — see
+ * components/landing/SectionScreen.tsx), so this page renders only what is
+ * left: the hero, and the sections that were always read on the way down
+ * rather than jumped to. The menu decides the split — `SECTION_LINKS` is the
+ * one list, so linking a section moves it off this page and unlinking it
+ * brings it back, and no section is ever printed twice on the site.
  *
  * The default order answers questions in the order they are asked. What is
- * this, and how is it built. What do I get. What is underneath it. Only then
- * how identity works — which is why the page closes on the claim that signing
- * in is not a screen but the floor everything above it stands on. Put first,
- * that claim is a detail about a login box; put last, it is the point.
+ * this. What do I get. What is underneath it.
  *
  * Which sections a deployment shows, and in what order, is its own
  * (`LANDING_SECTIONS` — see lib/landing.ts). The reasoning above is the
@@ -52,30 +50,6 @@ import { fetchStorefrontOnServer } from "@/lib/storefront";
  * serves every deployment, so the image cannot know which one it is. The
  * deployment says where its API is (`API_INTERNAL_URL`) and this asks.
  */
-
-/**
- * Every section, by name.
- *
- * A `Record` over the union rather than a lookup that might miss: adding a
- * section to `LANDING_SECTIONS` without giving it a component fails the
- * typecheck here, which is the whole check this pairing needs.
- *
- * A function of the chosen list because the hero's second button points at
- * whatever comes after it, which is not knowable until the list is read — and
- * of `localSignIn`, because a deployment that hands sign-in to somebody else
- * must not draw a sign-in card that answers 403.
- */
-function sectionNodes(sections: LandingSection[], localSignIn: boolean): Record<LandingSection, ReactNode> {
-  return {
-    hero: <Hero seeMoreAnchor={firstLinkedSection(sections)} localSignIn={localSignIn} />,
-    architecture: <Architecture />,
-    applications: <Applications />,
-    platform: <PlatformDepth />,
-    trust: <Trust />,
-    technology: <Technology />,
-    capabilities: <Capabilities />,
-  };
-}
 
 // Rendered per request, not prerendered at build.
 //
@@ -113,6 +87,7 @@ export default async function LandingPage() {
   // brand there: `process.env` in the browser holds only what the build inlined.
   const sections = landingSectionsFromEnv();
   const nodes = sectionNodes(sections, localSignIn);
+  const here = sections.filter((section) => !SECTION_LINKS[section]);
 
   return (
     <div className="gp-landing" id="top">
@@ -121,7 +96,7 @@ export default async function LandingPage() {
         {apps ? (
           <Storefront apps={apps} />
         ) : (
-          sections.map((section) => <Fragment key={section}>{nodes[section]}</Fragment>)
+          here.map((section) => <Fragment key={section}>{nodes[section]}</Fragment>)
         )}
       </main>
       <SiteFooter />
