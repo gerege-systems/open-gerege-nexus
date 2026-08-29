@@ -167,7 +167,7 @@
     {
       "type": "stat",
       "title": "Дахин оролдлого (1ц)",
-      "description": "Одоогоор зөвхөн integration delivery. Өсөх нь захиалагчийн webhook хүлээж авахгүй байгааг илтгэнэ.",
+      "description": "Одоогоор зөвхөн integration delivery. Өсөх нь захиалагчийн webhook хүлээж авахгүй байгааг илтгэнэ. Тэг нь тэг — \"No data\" биш: хэмжигдээгүй байдал эрүүл байдалтай адилхан харагдах ёсгүй.",
       "datasource": {
         "type": "prometheus",
         "uid": "nexus-prometheus"
@@ -185,7 +185,7 @@
             "uid": "nexus-prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(increase(resilience_retry_total[1h]))",
+          "expr": "(sum(increase(resilience_retry_total[1h]))) or vector(0)",
           "legendFormat": "retries",
           "range": true,
           "instant": false,
@@ -231,7 +231,7 @@
     {
       "type": "stat",
       "title": "Гарын үсэг (24ц)",
-      "description": "",
+      "description": " Тэг нь тэг — \"No data\" биш: хэмжигдээгүй байдал эрүүл байдалтай адилхан харагдах ёсгүй.",
       "datasource": {
         "type": "prometheus",
         "uid": "nexus-prometheus"
@@ -249,7 +249,7 @@
             "uid": "nexus-prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(increase(documents_signed_total{result=\"success\"}[24h]))",
+          "expr": "(sum(increase(documents_signed_total{result=\"success\"}[24h]))) or vector(0)",
           "legendFormat": "signed",
           "range": true,
           "instant": false,
@@ -391,7 +391,7 @@
             "uid": "nexus-prometheus"
           },
           "editorMode": "code",
-          "expr": "rate(resilience_load_shed_total[$__rate_interval]) * 60",
+          "expr": "(rate(resilience_load_shed_total[$__rate_interval]) * 60) or vector(0)",
           "legendFormat": "shed/мин",
           "range": true,
           "instant": false,
@@ -429,7 +429,8 @@
           "color": {
             "mode": "palette-classic"
           },
-          "min": 0
+          "min": 0,
+          "noValue": "Хараахан болоогүй"
         },
         "overrides": []
       },
@@ -507,7 +508,8 @@
           "color": {
             "mode": "palette-classic"
           },
-          "min": 0
+          "min": 0,
+          "noValue": "Хараахан болоогүй"
         },
         "overrides": []
       },
@@ -573,7 +575,8 @@
           "color": {
             "mode": "palette-classic"
           },
-          "min": 0
+          "min": 0,
+          "noValue": "Хараахан болоогүй"
         },
         "overrides": []
       },
@@ -652,7 +655,8 @@
           "color": {
             "mode": "palette-classic"
           },
-          "min": 0
+          "min": 0,
+          "noValue": "Хараахан болоогүй — нэхэмжлэхийн модуль суулгаагүй бол мөнхөд хоосон"
         },
         "overrides": []
       },

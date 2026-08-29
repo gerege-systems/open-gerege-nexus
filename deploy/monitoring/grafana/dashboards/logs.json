@@ -137,7 +137,7 @@
     {
       "type": "stat",
       "title": "Алдаа/сек",
-      "description": "level=ERROR. Тэг байх нь хэвийн — тэгээс дээш байвал доорх мөрүүдийг хар.",
+      "description": "level=ERROR. Тэг байх нь хэвийн — тэгээс дээш байвал доорх мөрүүдийг хар. Тэг нь тэг — \"No data\" биш: хэмжигдээгүй байдал эрүүл байдалтай адилхан харагдах ёсгүй.",
       "datasource": {
         "type": "loki",
         "uid": "nexus-loki"
@@ -155,7 +155,7 @@
             "uid": "nexus-loki"
           },
           "editorMode": "code",
-          "expr": "sum(rate({container=~\"$container\", level=\"error\"} |= \"$search\" [$__rate_interval]))",
+          "expr": "(sum(rate({container=~\"$container\", level=\"error\"} |= \"$search\" [$__rate_interval]))) or vector(0)",
           "legendFormat": "",
           "range": true,
           "instant": false,
@@ -209,7 +209,7 @@
     {
       "type": "stat",
       "title": "Сүүлийн цагийн алдаа",
-      "description": "Тоо ширхэгээр — хувь биш. Нэг алдаа ч гэсэн шалтгаантай.",
+      "description": "Тоо ширхэгээр — хувь биш. Нэг алдаа ч гэсэн шалтгаантай. Тэг нь тэг — \"No data\" биш: хэмжигдээгүй байдал эрүүл байдалтай адилхан харагдах ёсгүй.",
       "datasource": {
         "type": "loki",
         "uid": "nexus-loki"
@@ -227,7 +227,7 @@
             "uid": "nexus-loki"
           },
           "editorMode": "code",
-          "expr": "sum(count_over_time({container=~\"$container\", level=\"error\"} |= \"$search\" [1h]))",
+          "expr": "(sum(count_over_time({container=~\"$container\", level=\"error\"} |= \"$search\" [1h]))) or vector(0)",
           "legendFormat": "",
           "range": true,
           "instant": false,
@@ -281,7 +281,7 @@
     {
       "type": "stat",
       "title": "Сүүлийн цагийн warning",
-      "description": "Ихэвчлэн засах шаардлагагүй, гэхдээ давтагдвал шалтгаан бий.",
+      "description": "Ихэвчлэн засах шаардлагагүй, гэхдээ давтагдвал шалтгаан бий. Тэг нь тэг — \"No data\" биш: хэмжигдээгүй байдал эрүүл байдалтай адилхан харагдах ёсгүй.",
       "datasource": {
         "type": "loki",
         "uid": "nexus-loki"
@@ -299,7 +299,7 @@
             "uid": "nexus-loki"
           },
           "editorMode": "code",
-          "expr": "sum(count_over_time({container=~\"$container\", level=\"warn\"} |= \"$search\" [1h]))",
+          "expr": "(sum(count_over_time({container=~\"$container\", level=\"warn\"} |= \"$search\" [1h]))) or vector(0)",
           "legendFormat": "",
           "range": true,
           "instant": false,

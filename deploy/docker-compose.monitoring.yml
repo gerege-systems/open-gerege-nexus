@@ -326,12 +326,33 @@ services:
       - --docker_only=true
       - --housekeeping_interval=15s
       - --disable_metrics=percpu,sched,tcp,udp,advtcp,process,hugetlb,referenced_memory,cpu_topology,resctrl
+      # Read the containers through containerd rather than only through Docker.
+      #
+      # Docker 29 uses the containerd snapshotter, which reports its storage
+      # driver as `overlayfs` and keeps no /var/lib/docker/image/*/layerdb. The
+      # Docker handler needs that file to identify a container's read-write
+      # layer, so it fails for every container with "failed to identify the
+      # read-write layer ID" and then drops it — cAdvisor was scraping happily
+      # and exporting exactly one series, the root cgroup, while every
+      # per-container panel read "No data". A healthy exporter with nothing in
+      # it is the hardest kind of gap to notice.
+      #
+      # The containerd handler has no such dependency. `moby` is the namespace
+      # Docker runs its containers in.
+      - --containerd=/run/containerd/containerd.sock
+      - --containerd-namespace=moby
+    # The host's process namespace, the way node_exporter above already has it.
+    # Without it the containerd handler enumerates the containers and then
+    # exports nothing for them, which looks exactly like the Docker handler
+    # failure it was added to work around.
+    pid: host
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
       - /sys:/sys:ro
       - /var/lib/docker:/var/lib/docker:ro
       - /dev/disk:/dev/disk:ro
+      - /run/containerd/containerd.sock:/run/containerd/containerd.sock:ro
     devices:
       - /dev/kmsg
     ports:
