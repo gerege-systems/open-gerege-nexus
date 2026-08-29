@@ -131,7 +131,7 @@ docker compose up -d
 docker compose ps
 ```
 
-Compose нь PostgreSQL, Redis, MinIO, нэг удаагийн migration, backend, frontend
+Compose нь PostgreSQL, Redis, нэг удаагийн migration, backend, frontend
 асаана. Дараах хаягуудыг ашиглана:
 
 - Tenant web: <http://nexus.localhost:3000>
