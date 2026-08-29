@@ -130,8 +130,18 @@ export default function Console({ children }: { children: React.ReactNode }) {
 
           <div className="flex-1" />
 
-          <span className="hidden sm:block text-sm text-slate-600 truncate max-w-[16rem]">
-            {operator.name} · {t(`cp.role.${operator.role}`)}
+          {/* The chip the product wears, initial and all (components/UserMenu):
+              same circle, same border, same truncation. It does not open a
+              menu — the console has one thing to offer here and it is the
+              button beside it — so it is a span rather than a button, and the
+              role stays visible because on this side of the platform "who is
+              signed in" is half of "what they may do". */}
+          <span className="hidden sm:flex items-center gap-2.5 rounded-full border border-slate-200 py-1 pl-1 pr-2.5">
+            <span className="w-8 h-8 rounded-full bg-[var(--gerege-blue-soft)] text-[var(--gerege-blue)] grid place-items-center text-xs font-bold">
+              {(operator.name || operator.email || "?").slice(0, 1).toUpperCase()}
+            </span>
+            <span className="text-sm font-medium text-slate-800 truncate max-w-40">{operator.name}</span>
+            <span className="hidden lg:block text-xs text-slate-500">{t(`cp.role.${operator.role}`)}</span>
           </span>
           {/* slate-200 and slate-50 rather than 300 and 100: those are the two
               the topbar's own rules recolour on the blue chrome, and the pair
