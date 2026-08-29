@@ -110,6 +110,8 @@ export interface CreatedTenant {
   failed: string[];
   invited: boolean;
   invite_error?: string;
+  /** True when the administrator was chosen rather than invited. */
+  admin_existed?: boolean;
 }
 
 export interface TenantApp {
@@ -295,8 +297,15 @@ export const cp = {
 
   createTenant: (body: {
     name: string; slug: string; legal_name?: string; registration_number?: string;
-    apps?: string[]; admin_email: string; admin_name?: string; reason: string;
+    apps?: string[]; admin_user_id?: string; admin_email?: string; admin_name?: string; reason: string;
   }) => request<CreatedTenant>("/tenants", { method: "POST", body: JSON.stringify(body) }),
+
+  // What the register says about a registration number, and who on this
+  // deployment has proved who they are with eID.
+  findOrganisation: (regNo: string) =>
+    request<DirectoryOrganisation>(`/directory/organisation?reg_no=${encodeURIComponent(regNo)}`),
+  verifiedPeople: (search = "") =>
+    request<{ people: VerifiedPerson[]; directory: boolean }>(`/directory/people?q=${encodeURIComponent(search)}`),
 
   suspend: (id: string, reason: string) =>
     request<{ status: string }>(`/tenants/${id}/suspend`, { method: "POST", body: JSON.stringify({ reason }) }),
@@ -649,4 +658,28 @@ export interface Installation {
   enabled: boolean;
   installed_at: string;
   updated_at: string;
+}
+
+/** What the Gerege Core register says about a registration number. */
+export interface DirectoryOrganisation {
+  core_id: number;
+  name: string;
+  legal_name: string;
+  registration_number: string;
+  suggested_slug: string;
+  email: string;
+  phone: string;
+  address: string;
+}
+
+/** Somebody who has signed in with eID on this deployment. */
+export interface VerifiedPerson {
+  user_id: string;
+  name: string;
+  email: string;
+  reg_number: string;
+  linked_at: string;
+  last_seen_at: string;
+  /** How many organisations they already belong to. */
+  organisations: number;
 }

@@ -57,9 +57,14 @@ type NewTenant struct {
 	// "trade" or "government office" template of §3.A — is a list the console
 	// sends, not a concept the backend needs to know.
 	Apps []string `json:"apps"`
-	// AdminEmail is the person who will run it. They receive an invitation
-	// rather than a password: a password an operator chose is a password an
-	// operator knows.
+	// AdminUserID is the person who will run it, chosen from those this
+	// platform has already watched prove who they are with eID. Preferred over
+	// AdminEmail: an address is typed and a choice is not, and somebody who has
+	// signed in already needs no invitation to find their way back.
+	AdminUserID string `json:"admin_user_id"`
+	// AdminEmail is the same person when nobody has met them yet. They receive
+	// an invitation rather than a password: a password an operator chose is a
+	// password an operator knows.
 	AdminEmail string `json:"admin_email"`
 	AdminName  string `json:"admin_name"`
 	Reason     string `json:"reason"`
@@ -83,6 +88,9 @@ type CreatedTenant struct {
 	// InviteError explains a false Invited to the operator looking at the
 	// screen, rather than only to the log.
 	InviteError string `json:"invite_error,omitempty"`
+	// AdminExisted is true when the administrator was chosen rather than
+	// invited: no mail was sent because none was needed.
+	AdminExisted bool `json:"admin_existed,omitempty"`
 }
 
 // CreateTenant opens an organisation.
@@ -97,6 +105,20 @@ func (s *Service) CreateTenant(ctx context.Context, sess operator.Session, param
 	name := strings.TrimSpace(params.Name)
 	slug := strings.ToLower(strings.TrimSpace(params.Slug))
 	adminEmail := strings.ToLower(strings.TrimSpace(params.AdminEmail))
+	adminName := strings.TrimSpace(params.AdminName)
+
+	// A chosen person answers both fields, and answers them with what this
+	// platform already holds rather than with what somebody typed into a
+	// dialog. The identity is required rather than merely looked up: choosing
+	// from the verified list is the point, and an id for an account that never
+	// signed in with eID has come from somewhere else.
+	if chosen := strings.TrimSpace(params.AdminUserID); chosen != "" {
+		person, err := s.verifiedPerson(ctx, chosen)
+		if err != nil {
+			return CreatedTenant{}, err
+		}
+		adminEmail, adminName = person.Email, person.Name
+	}
 
 	switch {
 	case name == "":
@@ -145,7 +167,7 @@ func (s *Service) CreateTenant(ctx context.Context, sess operator.Session, param
 		}
 
 		var err error
-		adminUserID, err = ensureAdmin(ctx, tx, created.ID, adminEmail, strings.TrimSpace(params.AdminName), "")
+		adminUserID, err = ensureAdmin(ctx, tx, created.ID, adminEmail, adminName, "")
 		return err
 	})
 	if err != nil {
@@ -156,6 +178,14 @@ func (s *Service) CreateTenant(ctx context.Context, sess operator.Session, param
 	// itself. The organisation exists either way; what varies is how complete
 	// it is, and the operator is told which parts landed.
 	created.Installed, created.Failed = s.installApps(ctx, created.ID, adminUserID, params.Apps)
+
+	// Somebody chosen from the verified list has an account and a way into it
+	// already; an invitation would be a second door for a person standing in
+	// front of the first one.
+	if strings.TrimSpace(params.AdminUserID) != "" {
+		created.AdminExisted = true
+		return created, nil
+	}
 
 	if err := s.support.Invite(ctx, created.ID, adminUserID, adminEmail, name, sess); err != nil {
 		created.InviteError = err.Error()

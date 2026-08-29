@@ -223,6 +223,15 @@ func (s *Service) Routes(r chi.Router) {
 	// id is the word "quotas".
 	r.With(s.op.RequireCapability(operator.CapTenantRead)).Get("/tenant-quotas", s.handleListQuotas)
 	r.With(s.op.RequireCapability(operator.CapTenantRead)).Get("/app-installations", s.handleListInstallations)
+
+	// Where a new organisation's details come from, and who may be its first
+	// administrator. Both are reads behind the capability that opens one:
+	// looking up a registration number is what creating an organisation begins
+	// with, and the list of verified people is a list of names and addresses.
+	r.With(s.op.RequireCapability(operator.CapTenantCreate)).
+		Get("/directory/organisation", s.handleFindOrganisation)
+	r.With(s.op.RequireCapability(operator.CapTenantCreate)).
+		Get("/directory/people", s.handleVerifiedPeople)
 	r.With(s.op.RequireCapability(operator.CapTenantRead)).Get("/tenants/{id}", s.handleGetTenant)
 
 	// The organisation's life. Suspension is reversible and needs one
