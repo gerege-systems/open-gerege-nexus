@@ -71,6 +71,16 @@ func otpauthURI(email, secret string) string {
 // is thirty seconds in which somebody who watched it typed can type it again.
 // The caller stores the step and refuses anything that is not strictly later,
 // so a code works once.
+// VerifyTOTP checks a code against a secret now, and answers which step it
+// belonged to.
+//
+// Exported for the screen that enrols an operator: confirming an authenticator
+// is the same check as signing in with it, and a second implementation of a
+// time-window comparison is a second place to get the window wrong.
+func VerifyTOTP(secret, code string) (step int64, ok bool) {
+	return verifyTOTP(secret, code, time.Now())
+}
+
 func verifyTOTP(secret, code string, at time.Time) (step int64, ok bool) {
 	code = strings.TrimSpace(code)
 	if secret == "" || code == "" {

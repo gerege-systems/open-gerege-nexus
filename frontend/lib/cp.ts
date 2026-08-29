@@ -259,7 +259,32 @@ export const cp = {
     return request<{ entries: AuditEntry[] }>(`/audit?${query.toString()}`);
   },
 
-  operators: () => request<{ operators: (Operator & { disabled_at: string | null; last_login_at: string | null; created_at: string })[] }>("/operators"),
+  operators: () => request<{ operators: OperatorSummary[] }>("/operators"),
+
+  // Adding an operator. The answer carries the password and the enrolment once
+  // and is never repeatable: nothing on the server can show them again.
+  addOperator: (body: { email: string; name: string; role: string; reason: string }) =>
+    request<CreatedOperator>("/operators", { method: "POST", body: JSON.stringify(body) }),
+  confirmEnrolment: (id: string, code: string, reason: string) =>
+    request<{ status: string }>(`/operators/${encodeURIComponent(id)}/enrolment`, {
+      method: "POST",
+      body: JSON.stringify({ code, reason }),
+    }),
+  setOperatorEnabled: (id: string, enabled: boolean, reason: string) =>
+    request<{ status: string }>(`/operators/${encodeURIComponent(id)}/${enabled ? "enable" : "disable"}`, {
+      method: "POST",
+      body: JSON.stringify({ reason }),
+    }),
+  setOperatorRole: (id: string, role: string, reason: string) =>
+    request<{ status: string }>(`/operators/${encodeURIComponent(id)}/role`, {
+      method: "POST",
+      body: JSON.stringify({ role, reason }),
+    }),
+  changePassword: (current: string, next: string) =>
+    request<{ status: string }>("/me/password", {
+      method: "POST",
+      body: JSON.stringify({ current, next }),
+    }),
 
   createTenant: (body: {
     name: string; slug: string; legal_name?: string; registration_number?: string;
@@ -575,4 +600,25 @@ export interface BackupEntry {
   detail: string;
   /** Empty for the script's own rows; an operator id for a hand-written one. */
   recorded_by: string;
+}
+
+export interface OperatorSummary extends Operator {
+  disabled_at: string | null;
+  last_login_at: string | null;
+  created_at: string;
+  /** False until somebody proves the authenticator works; such an account cannot sign in. */
+  enrolled: boolean;
+}
+
+/** Shown once, when an operator is added, and never again. */
+export interface CreatedOperator {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  /** The authenticator's secret, and the URI a QR code is drawn from. */
+  secret: string;
+  uri: string;
+  /** Generated here rather than chosen: the first thing it should be used for is changing it. */
+  password: string;
 }
