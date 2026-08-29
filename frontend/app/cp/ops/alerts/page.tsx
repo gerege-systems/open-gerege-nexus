@@ -12,20 +12,11 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { BellRing, ExternalLink, RefreshCw, ShieldAlert, VolumeX } from "lucide-react";
 
-import Console from "@/components/cp/Console";
 import { Badge, Card, formatMoment, Table } from "@/components/cp/ui";
 import { cp, type Overview } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 
-export default function OpsAlertsPage() {
-  return (
-    <Console>
-      <Alerts />
-    </Console>
-  );
-}
-
-function Alerts() {
+export default function Alerts() {
   const { t, locale } = useI18n();
   const [health, setHealth] = useState<Overview | null>(null);
   const [failure, setFailure] = useState("");
