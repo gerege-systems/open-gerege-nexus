@@ -31,12 +31,15 @@ GET /api/platform/v1/credentials
 GET /api/platform/v1/deletions
 GET /api/platform/v1/directory/organisation
 GET /api/platform/v1/directory/people
+GET /api/platform/v1/directory/person
 GET /api/platform/v1/email-verifications
 GET /api/platform/v1/flags
 GET /api/platform/v1/health
 GET /api/platform/v1/me
 GET /api/platform/v1/operators
 GET /api/platform/v1/people
+GET /api/platform/v1/people/roster
+GET /api/platform/v1/people/{id}
 GET /api/platform/v1/report-schedules
 GET /api/platform/v1/settings
 GET /api/platform/v1/settings/history
@@ -128,6 +131,7 @@ POST /api/platform/v1/tenants
 POST /api/platform/v1/tenants/{id}/deletion
 POST /api/platform/v1/tenants/{id}/impersonate
 POST /api/platform/v1/tenants/{id}/maintenance
+POST /api/platform/v1/tenants/{id}/people
 POST /api/platform/v1/tenants/{id}/resume
 POST /api/platform/v1/tenants/{id}/suspend
 POST /api/v1/admin/access/join-requests/{id}

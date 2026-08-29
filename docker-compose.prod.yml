@@ -163,6 +163,13 @@ services:
       # keeps demo data and mock DAN/XYP connectors enabled.
       EID_MOCK_MODE: ${EID_MOCK_MODE:-false}
       EID_BASE_URL: ${EID_BASE_URL:-https://eidmongolia.mn/v3}
+      # The Gerege Core directory: the register lookups behind the first-run
+      # wizard and the organisation screen. One long-lived read-only bearer;
+      # the console can rotate it at runtime as `core.api_token`, and this is
+      # what a deployment starts with. Empty is a deployment where the register
+      # cannot be searched and the fields are typed by hand, which both screens
+      # say rather than failing.
+      GEREGE_CORE_TOKEN: ${GEREGE_CORE_TOKEN:-}
       EID_RP_UUID: ${EID_RP_UUID:-}
       EID_RP_SECRET: ${EID_RP_SECRET:-}
       EID_RP_NAME: ${EID_RP_NAME:-Gerege Nexus}

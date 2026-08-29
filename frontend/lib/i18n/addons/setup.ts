@@ -28,8 +28,8 @@ export const setup = {
   "setup.action.sign_in": { mn: "Нэвтрэх", en: "Sign in" },
 
   "setup.message.slug_hint": {
-    mn: "Хаяг, OAuth audience-д ордог. Жижиг латин үсэг, тоо, зураас.",
-    en: "It appears in URLs and in the OAuth audience. Lowercase letters, digits and hyphens.",
+    mn: "Нэрнээс санал болгосон; засаж болно. Хаяг, OAuth audience-д ордог тул жижиг латин үсэг, тоо, зураас — 3-64 тэмдэгт.",
+    en: "Suggested from the name; edit it freely. It appears in URLs and in the OAuth audience: lowercase letters, digits and hyphens, 3-64 characters.",
   },
   "setup.message.core_off": {
     mn: "GEREGE_CORE_TOKEN тохируулаагүй тул регистрээр хайх боломжгүй. Талбаруудыг гараар бөглөнө үү.",

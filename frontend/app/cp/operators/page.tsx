@@ -14,7 +14,7 @@
  */
 
 import React, { useCallback, useEffect, useState } from "react";
-import { KeyRound, ShieldCheck, UserPlus } from "lucide-react";
+import { KeyRound, Search, ShieldCheck, UserPlus } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 
 import { useAction } from "@/components/cp/Action";
@@ -183,6 +183,9 @@ export default function Operators() {
 
 function AddDialog({ onClose, onAdded }: { onClose: () => void; onAdded: (created: CreatedOperator) => void }) {
   const { t } = useI18n();
+  const [registration, setRegistration] = useState("");
+  const [looking, setLooking] = useState(false);
+  const [found, setFound] = useState(false);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [role, setRole] = useState<string>("operator");
@@ -190,6 +193,27 @@ function AddDialog({ onClose, onAdded }: { onClose: () => void; onAdded: (create
   const [code, setCode] = useState("");
   const [failure, setFailure] = useState("");
   const [busy, setBusy] = useState(false);
+
+  // The register spells the name; a name typed into this dialog is a name
+  // somebody transliterated. The address comes with it when the register holds
+  // one — an operator without an address in the register types their own.
+  async function lookUp() {
+    if (!registration.trim()) return;
+    setLooking(true);
+    setFailure("");
+    try {
+      const person = await cp.findPerson(registration.trim());
+      setName(person.name);
+      if (person.email) setEmail(person.email);
+      setRegistration(person.registration_number);
+      setFound(true);
+    } catch (error) {
+      setFound(false);
+      setFailure(error instanceof Error ? error.message : String(error));
+    } finally {
+      setLooking(false);
+    }
+  }
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -213,6 +237,33 @@ function AddDialog({ onClose, onAdded }: { onClose: () => void; onAdded: (create
         {failure && (
           <p className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
         )}
+        {/* The register first: the two fields below are filled from its
+            answer, and typed over only when it is wrong or silent. */}
+        <div className="flex items-end gap-2">
+          <label className="block text-sm flex-1">
+            <span className="text-slate-600">{t("cp.field.registration")}</span>
+            <input
+              value={registration}
+              onChange={(event) => setRegistration(event.target.value)}
+              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+            />
+          </label>
+          <button
+            type="button"
+            onClick={() => void lookUp()}
+            disabled={looking || !registration.trim()}
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          >
+            <Search className={`w-4 h-4 ${looking ? "animate-pulse" : ""}`} />
+            {t("cp.action.look_up")}
+          </button>
+        </div>
+        {found && (
+          <p className="text-xs rounded-lg bg-[var(--gerege-blue-soft)] text-[var(--gerege-blue)] px-3 py-2">
+            {t("cp.message.from_the_register", { name })}
+          </p>
+        )}
+
         <label className="block text-sm">
           <span className="text-slate-600">{t("cp.field.email")}</span>
           <input

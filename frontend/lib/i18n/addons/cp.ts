@@ -462,6 +462,11 @@ export const cp = {
 
   // Байгууллага нээх: дэлгэрэнгүйг нь бүртгэлээс, эхний админыг нь eID-ээр
   // баталгаажсан хүмүүсээс.
+  "cp.action.add_person": { mn: "Хүн нэмэх", en: "Add person" },
+  "cp.hint.member_is_chosen": {
+    mn: "eID-ээр баталгаажсан хүмүүсээс сонгоно. Тэр хүн платформын хамгийн бага эрхтэйгээр («Хэрэглэгч») орно — түүнээс дээшхийг байгууллагын өөрийнх нь админ өгнө.",
+    en: "Chosen from the people verified with eID. They arrive with the smallest role the platform has — anything above it is granted by the organisation's own administrator.",
+  },
   "cp.action.look_up": { mn: "Бүртгэлээс хайх", en: "Look up" },
   "cp.field.admin": { mn: "Эхний админ", en: "First administrator" },
   "cp.field.search_people": { mn: "Нэр, и-мэйл, эсвэл регистрээр хайх", en: "Search by name, address or register number" },
@@ -474,6 +479,50 @@ export const cp = {
   "cp.message.no_verified_people": {
     mn: "eID-ээр баталгаажсан хэрэглэгч алга. Тэр хүн эхлээд энэ платформ дээр eID-ээр нэг удаа нэвтрэх хэрэгтэй.",
     en: "Nobody has signed in with eID yet. The person has to sign in here once before they can be chosen.",
+  },
+
+  // Хэрэглэгч — платформ дээрх бүх бүртгэл, ба нэгийнх нь бүх зүйл.
+  "cp.group.people": { mn: "Хэрэглэгч", en: "People" },
+  "cp.section.people": { mn: "Бүх хэрэглэгч", en: "Everybody" },
+  "cp.hint.people": {
+    mn: "Энэ суулгац дээр бүртгэлтэй бүх хүн. Дэмжлэгийн дэлгэц нэг хүнийг хайдаг; энэ нь хүн амын тухай асуултад хариулна.",
+    en: "Everybody with an account here. The help desk finds one person; this answers the questions about the population.",
+  },
+  "cp.metric.people": { mn: "Нийт бүртгэл", en: "Accounts" },
+  "cp.metric.verified": { mn: "eID-ээр баталгаажсан", en: "Verified with eID" },
+  "cp.metric.signed_in": { mn: "Нээлттэй session-той", en: "With an open session" },
+  "cp.metric.homeless": { mn: "Байгууллагагүй", en: "In no organisation" },
+  "cp.hint.homeless": {
+    mn: "Бүртгэлтэй ч хэрэглэх газаргүй",
+    en: "An account with nowhere to use it",
+  },
+  "cp.filter.everybody": { mn: "Бүгд", en: "Everybody" },
+  "cp.filter.verified": { mn: "eID-тэй", en: "Verified" },
+  "cp.filter.locked": { mn: "Түгжигдсэн", en: "Locked" },
+  "cp.filter.homeless": { mn: "Байгууллагагүй", en: "No organisation" },
+  "cp.field.identities": { mn: "Нэвтрэх аргууд", en: "Ways in" },
+  "cp.field.organisations": { mn: "Байгууллагууд", en: "Organisations" },
+  "cp.field.sessions": { mn: "Нээлттэй session", en: "Open sessions" },
+  "cp.field.subject": { mn: "Танигч", en: "Subject" },
+  "cp.field.linked": { mn: "Холбогдсон", en: "Linked" },
+  "cp.field.joined": { mn: "Элссэн", en: "Joined" },
+  "cp.field.last_seen": { mn: "Сүүлд харагдсан", en: "Last seen" },
+  "cp.state.password_only": { mn: "зөвхөн нууц үг", en: "password only" },
+  "cp.action.previous": { mn: "Өмнөх", en: "Previous" },
+  "cp.action.next": { mn: "Дараах", en: "Next" },
+  "cp.message.showing": { mn: "{total}-аас {shown} харуулж байна", en: "Showing {shown} of {total}" },
+  "cp.message.password_only": {
+    mn: "Гадаад таних тэмдэг холбогдоогүй — зөвхөн нууц үгээр нэвтэрнэ.",
+    en: "No external identity is linked — this account signs in with a password only.",
+  },
+  "cp.message.no_organisations": {
+    mn: "Ямар ч байгууллагад харьяалагдахгүй байна.",
+    en: "This person is in no organisation.",
+  },
+  "cp.message.no_sessions": { mn: "Нээлттэй session алга.", en: "No session is open." },
+  "cp.message.never_impersonated": {
+    mn: "Энэ хүний нэрээр хэн ч ороогүй байна.",
+    en: "Nobody has looked at the platform as this person.",
   },
 
   "cp.group.watch": { mn: "Ажиглалт", en: "Watch" },
