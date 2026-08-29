@@ -26,6 +26,7 @@ type UserClaims = nexus.UserClaims
 var (
 	HashPassword      = security.HashPassword
 	CheckPasswordHash = security.CheckPasswordHash
+	NeedsRehash       = security.NeedsRehash
 )
 
 // WithUserContext injects the caller's claims into a context.
