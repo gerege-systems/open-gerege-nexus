@@ -23,7 +23,12 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { api, type SetupEnrolment, type SetupStatus } from "@/lib/api";
 import { useBrand } from "@/lib/brandContext";
 import { useI18n } from "@/lib/i18n";
-import { MIN_OPERATOR_PASSWORD, MIN_SETUP_PASSWORD } from "@/lib/setup";
+import {
+  MIN_OPERATOR_PASSWORD,
+  MIN_SETUP_PASSWORD,
+  SETUP_SLUG_PATTERN,
+  isValidSetupSlug,
+} from "@/lib/setup";
 
 export default function SetupPage() {
   const { t } = useI18n();
@@ -37,6 +42,9 @@ export default function SetupPage() {
   // renders for one frame before the effect runs, so somebody who arrived on a
   // perfectly good link is asked to paste the token they are already holding.
   const [addressRead, setAddressRead] = useState(false);
+  // Консолын бүртгэл үүсээд баталгаажсан эсэх. Шидтэн үүнээс цааш дахин тэр
+  // алхмыг санал болгохгүй — бүртгэл нь давхардахгүй.
+  const [operatorDone, setOperatorDone] = useState(false);
   const [status, setStatus] = useState<SetupStatus | undefined>();
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [busy, setBusy] = useState(false);
@@ -147,6 +155,11 @@ export default function SetupPage() {
       setStep(5);
     } catch (err: any) {
       failed(err);
+      // Татгалзсан хариултууд эхний хоёр алхам дээр байдаг (нэр, богино нэр,
+      // и-мэйл). Хүнийг алдааныхаа хамт эхэнд буцаахгүй бол сүүлийн дэлгэц
+      // дээр гарах ч, засах ч аргагүй үлдэнэ. Хуучирсан токен нь өөр асуудал:
+      // тэнд `failed` токеныг цэвэрлэдэг тул хүн эхний хаалган дээрээ буцна.
+      if (err.status !== 404) setStep(1);
     } finally {
       setBusy(false);
     }
@@ -182,6 +195,10 @@ export default function SetupPage() {
     setBusy(true);
     try {
       await api.setupConfirmOperator(token, operatorEmail, code);
+      // Консолын бүртгэл нэг л удаа үүснэ. Үүнийг тэмдэглэхгүй бол доорх
+      // `finish()` унасан тохиолдолд хүн энэ алхам руу дахин ирж, аль хэдийн
+      // үүссэн бүртгэлээ дахин үүсгэх гэж оролдоно.
+      setOperatorDone(true);
       await finish();
     } catch (err: any) {
       failed(err);
@@ -310,6 +327,14 @@ export default function SetupPage() {
           className="setup-form"
           onSubmit={(e) => {
             e.preventDefault();
+            // Хөтчийн `pattern` дээр найдахгүй давхар шалгана: сервер богино
+            // нэрийг л татгалздаг ба тэр татгалзал нь шидтэний хамгийн сүүлд,
+            // консолын бүртгэл үүссэний дараа ирвэл хэтэрхий оройтсон байна.
+            if (!isValidSetupSlug(slug)) {
+              setError(t("setup.message.slug_hint"));
+              return;
+            }
+            setError("");
             setStep(2);
           }}
         >
@@ -336,7 +361,7 @@ export default function SetupPage() {
             <input
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
-              pattern="[a-z0-9][a-z0-9-]{1,62}[a-z0-9]"
+              pattern={SETUP_SLUG_PATTERN}
               required
             />
             <small>{t("setup.message.slug_hint")}</small>
@@ -385,7 +410,7 @@ export default function SetupPage() {
           className="setup-form"
           onSubmit={(e) => {
             e.preventDefault();
-            if (!consoleOffered) {
+            if (!consoleOffered || operatorDone) {
               void finish();
               return;
             }
