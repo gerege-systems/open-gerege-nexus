@@ -23,6 +23,7 @@ GET /api/platform/v1/approvals
 GET /api/platform/v1/assistant/knowledge
 GET /api/platform/v1/assistant/prompts
 GET /api/platform/v1/audit
+GET /api/platform/v1/backups
 GET /api/platform/v1/catalog/overview
 GET /api/platform/v1/catalog/status
 GET /api/platform/v1/credentials
@@ -33,6 +34,7 @@ GET /api/platform/v1/health
 GET /api/platform/v1/me
 GET /api/platform/v1/operators
 GET /api/platform/v1/people
+GET /api/platform/v1/report-schedules
 GET /api/platform/v1/settings
 GET /api/platform/v1/settings/history
 GET /api/platform/v1/tenants
@@ -40,6 +42,7 @@ GET /api/platform/v1/tenants/{id}
 GET /api/platform/v1/tenants/{id}/export
 GET /api/platform/v1/tenants/{id}/usage
 GET /api/platform/v1/tenants/{id}/usage.csv
+GET /api/platform/v1/usage
 GET /api/v1/admin/access/join-requests
 GET /api/v1/admin/access/overview
 GET /api/v1/admin/devices

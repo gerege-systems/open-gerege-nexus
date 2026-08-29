@@ -270,4 +270,6 @@ func (s *Service) Routes(r chi.Router) {
 
 	// The front page, and the operations behind it.
 	r.With(s.op.RequireCapability(operator.CapTenantRead)).Get("/health", s.handleHealth)
+	// Which scheduled report is the one the front page is counting.
+	r.With(s.op.RequireCapability(operator.CapTenantRead)).Get("/report-schedules", s.handleSchedules)
 }
