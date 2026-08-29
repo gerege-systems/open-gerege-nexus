@@ -236,19 +236,44 @@ export default function SetupPage() {
         <p className="signin-card__lede">{t("setup.view.subtitle")}</p>
       </div>
 
+      {/* Шидтэн бол урагшлах зам тул алхмууд нэг мөрөнд зогсоно. Дөрвөн шошго
+          нэг мөрөнд багтдаггүй — «Байгууллага», «Administrator» гэх мэт орчуулга
+          картын өргөнөөс хальдаг — тиймээс шошгыг явж буй алхам дээр нь үзүүлж,
+          бусад нь дүрсээрээ зогсоно. Шошго DOM-д үлдэж байгаа (`sr-only`) тул
+          дэлгэц уншигч алхам бүрийн нэрийг хэвээр уншина. */}
       <ol className="setup-steps">
-        <li className={step === 1 ? "is-current" : step > 1 ? "is-done" : ""}>
-          <Building2 size={16} /> {t("setup.view.step_organisation")}
+        <li
+          className={step === 1 ? "is-current" : step > 1 ? "is-done" : ""}
+          aria-current={step === 1 ? "step" : undefined}
+          title={t("setup.view.step_organisation")}
+        >
+          <Building2 size={16} />
+          <span className={step === 1 ? undefined : "sr-only"}>{t("setup.view.step_organisation")}</span>
         </li>
-        <li className={step === 2 ? "is-current" : step > 2 ? "is-done" : ""}>
-          <UserRound size={16} /> {t("setup.view.step_admin")}
+        <li
+          className={step === 2 ? "is-current" : step > 2 ? "is-done" : ""}
+          aria-current={step === 2 ? "step" : undefined}
+          title={t("setup.view.step_admin")}
+        >
+          <UserRound size={16} />
+          <span className={step === 2 ? undefined : "sr-only"}>{t("setup.view.step_admin")}</span>
         </li>
-        <li className={step === 3 ? "is-current" : step > 3 ? "is-done" : ""}>
-          <Lock size={16} /> {t("setup.view.step_password")}
+        <li
+          className={step === 3 ? "is-current" : step > 3 ? "is-done" : ""}
+          aria-current={step === 3 ? "step" : undefined}
+          title={t("setup.view.step_password")}
+        >
+          <Lock size={16} />
+          <span className={step === 3 ? undefined : "sr-only"}>{t("setup.view.step_password")}</span>
         </li>
         {consoleOffered && (
-          <li className={step === 4 ? "is-current" : ""}>
-            <ShieldCheck size={16} /> {t("setup.view.step_console")}
+          <li
+            className={step === 4 ? "is-current" : ""}
+            aria-current={step === 4 ? "step" : undefined}
+            title={t("setup.view.step_console")}
+          >
+            <ShieldCheck size={16} />
+            <span className={step === 4 ? undefined : "sr-only"}>{t("setup.view.step_console")}</span>
           </li>
         )}
       </ol>

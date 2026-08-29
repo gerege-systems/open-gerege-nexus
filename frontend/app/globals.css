@@ -485,9 +485,14 @@ html[data-theme="dark"] .divide-slate-100 > * { border-color: var(--gerege-borde
 .signin-btn--quiet{background:var(--sg-surface);color:var(--sg-fg);border-color:var(--sg-border)}
 .signin-btn--quiet:hover:not(:disabled){background:var(--sg-surface-2)}
 
+/* Алхмууд нэг мөрөнд: явж буй алхам шошготойгоо мөрийн үлдсэнийг эзэлж, бусад
+   нь дүрсийн хэмжээнд зогсоно (шошго нь `sr-only`, харагдацаас л хасагдана).
+   Дөрвүүлээ шошготой байхад «Байгууллага», «Administrator» зэрэг орчуулга
+   картын өргөнөөс халж хүрээгээ давдаг байв. */
 .setup-steps{display:flex;gap:8px;list-style:none;margin:0;padding:0}
-.setup-steps li{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;min-height:36px;border:1px solid var(--sg-border);border-radius:8px;color:var(--sg-muted);font-size:13px;font-weight:500}
-.setup-steps li.is-current{border-color:var(--sg-blue);color:var(--sg-blue-text);background:var(--sg-blue-soft)}
+.setup-steps li{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:6px;min-height:36px;min-width:36px;padding:0 10px;white-space:nowrap;border:1px solid var(--sg-border);border-radius:8px;color:var(--sg-muted);font-size:13px;font-weight:500}
+.setup-steps li svg{flex:none}
+.setup-steps li.is-current{flex:1 1 auto;border-color:var(--sg-blue);color:var(--sg-blue-text);background:var(--sg-blue-soft)}
 .setup-steps li.is-done{color:var(--sg-fg)}
 
 .setup-form{display:flex;flex-direction:column;gap:16px}
