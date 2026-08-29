@@ -1,4 +1,5 @@
 import { Fragment, type ReactNode } from "react";
+import { redirect } from "next/navigation";
 
 import Applications from "@/components/landing/Applications";
 import Architecture from "@/components/landing/Architecture";
@@ -11,6 +12,7 @@ import Storefront from "@/components/landing/Storefront";
 import Technology from "@/components/landing/Technology";
 import Trust from "@/components/landing/Trust";
 import { firstLinkedSection, landingSectionsFromEnv, type LandingSection } from "@/lib/landing";
+import { setupRequiredOnServer } from "@/lib/setup";
 import { localSignInEnabledOnServer } from "@/lib/signIn";
 import { fetchStorefrontOnServer } from "@/lib/storefront";
 
@@ -89,11 +91,24 @@ function sectionNodes(sections: LandingSection[], localSignIn: boolean): Record<
 export const dynamic = "force-dynamic";
 
 export default async function LandingPage() {
-  // Two questions of the same API, asked together: one page render, one wait.
-  const [apps, localSignIn] = await Promise.all([
+  // Three questions of the same API, asked together: one page render, one wait.
+  const [apps, localSignIn, setupRequired] = await Promise.all([
     fetchStorefrontOnServer(),
     localSignInEnabledOnServer(),
+    setupRequiredOnServer(),
   ]);
+  // A deployment with no organisation has no visitors yet — only the person who
+  // installed it, and the one thing they need is the wizard. Everything this
+  // page would otherwise say is false there: nobody can sign in, the store
+  // cannot be installed from, and the argument the sections make is about a
+  // platform that is not running yet.
+  //
+  // Sent rather than linked, because the state ends the moment the wizard is
+  // finished: a link would be a permanent piece of furniture answering a
+  // question that is asked once. The wizard itself refuses without the token
+  // the operator was given in the log, so this discloses nothing a stranger
+  // could not learn by trying to sign in.
+  if (setupRequired) redirect("/setup");
   // Read on the server and handed down, for the reason app/layout.tsx reads the
   // brand there: `process.env` in the browser holds only what the build inlined.
   const sections = landingSectionsFromEnv();
