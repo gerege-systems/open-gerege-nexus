@@ -21,18 +21,34 @@ jobs:
           # Pinning "1.24" here while go.mod requires 1.25.7 breaks every job.
           go-version-file: backend/go.mod
           cache-dependency-path: backend/go.sum
+      # golangci-lint нь эх кодоос компайл хийгддэг (доорх `install-mode`-ыг үз)
+      # бөгөөд тэр нь гүйлт бүрт 42 секунд авдаг байв. Компайлын үр дүн нь
+      # хувилбар, Go-гийн хувилбар хоёроос л хамаардаг тул кэшлэгдэнэ. Энэ нь
+      # доорх `skip-cache`-тай зөрчилдөхгүй: тэр нь ШИНЖИЛГЭЭНИЙ кэш, энэ нь
+      # хөрвүүлэгдсэн хоёртын файл.
+      - name: Cache the golangci-lint binary
+        id: lint-binary
+        uses: actions/cache@v4
+        with:
+          path: ~/go/bin/golangci-lint
+          key: golangci-v2.1.6-${{ runner.os }}-${{ hashFiles('backend/go.mod') }}
+      - name: Build golangci-lint
+        if: steps.lint-binary.outputs.cache-hit != 'true'
+        run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:
           version: v2.1.6
           working-directory: backend
+          # Дээр суулгасан хоёртын файлыг ашиглана.
           # The published binaries are built with Go 1.24 and refuse to analyse
           # a module targeting a newer language version:
           #   "the Go language version (go1.24) used to build golangci-lint is
           #    lower than the targeted Go version (1.25.x)".
           # Compiling from source with the toolchain from setup-go keeps the two
-          # in step automatically.
-          install-mode: goinstall
+          # in step automatically. The compile itself is cached above; the
+          # reason for compiling at all is unchanged.
+          install-mode: none
           # The analysis cache is not trustworthy here, so it is not kept.
           #
           # On 2026-08-12 a restored cache produced six SA5011 findings —
@@ -193,6 +209,18 @@ jobs:
             ./db/migrations/ | tee /tmp/seedroles.log
           if grep -q -- '--- SKIP' /tmp/seedroles.log; then
             echo "::error::seeded-role tests skipped — TEST_DATABASE_URL is not reaching the test"
+            exit 1
+          fi
+      - name: Fail if the signing store tests were skipped
+        # The e-signature app's isolation is in its WHERE clauses, its batch's
+        # refusal is a subquery's row count, and its archive is a column rather
+        # than a DELETE. Skipped, the package reports green having asserted
+        # nothing about the one app whose output is evidence.
+        run: |
+          go test -run 'TestADocumentIsInvisibleToAnotherOrganisation' -v \
+            ./internal/workspace/signing/ | tee /tmp/signing.log
+          if grep -q -- '--- SKIP' /tmp/signing.log; then
+            echo "::error::signing store tests skipped — no test database is reaching the test"
             exit 1
           fi
       - name: Fail if the route policy test was skipped
@@ -389,5 +417,16 @@ jobs:
           go build -o bin/api ./cmd/api
           go build -o bin/migrate ./cmd/migrate
 
+      # deploy.yml нь image-ээ `type=gha,scope=backend` кэштэй барьдаг. Энэ ажил
+      # ижил Dockerfile-ыг кэшгүй барьж 70 секунд зарцуулж байв — тэр кэшийг
+      # уншаад, бичихгүй: PR-ын гүйлт main-ий кэшийг бохирдуулах ёсгүй.
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
       - name: Build backend Docker image
-        run: docker build -f deploy/Dockerfile -t open-gerege-nexus-backend:ci .
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: deploy/Dockerfile
+          push: false
+          tags: open-gerege-nexus-backend:ci
+          cache-from: type=gha,scope=backend

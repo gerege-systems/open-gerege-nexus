@@ -146,6 +146,22 @@ func (c *Console) HandleLogin(w http.ResponseWriter, r *http.Request) {
 			  WHERE id = $1`, acct.id, step); err != nil {
 			return err
 		}
+		// The password has just been proved, so this is the one moment its
+		// stored hash can be brought up to date without asking for a new one.
+		// Inside the transaction that already writes this row: an operator
+		// sign-in is rare enough that a second statement costs nothing, and a
+		// rehash that half-committed would be worse than none.
+		if security.NeedsRehash(acct.passwordHash) {
+			fresh, err := security.HashPassword(req.Password)
+			if err != nil {
+				return err
+			}
+			if _, err := tx.Exec(ctx,
+				`UPDATE operator.operator_accounts SET password_hash = $2
+				  WHERE id = $1 AND password_hash = $3`, acct.id, fresh, acct.passwordHash); err != nil {
+				return err
+			}
+		}
 		var err error
 		token, expiresAt, err = c.sessions.create(ctx, tx, acct.id, r.UserAgent(), clientIPFrom(ctx), true)
 		return err

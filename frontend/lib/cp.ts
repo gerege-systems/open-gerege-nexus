@@ -57,6 +57,8 @@ export interface Quota {
   users: number;
   /** Which limits this build actually applies; the rest are recorded only. */
   enforced: string[];
+  /** When the limits were last written; the organisation's creation if never. */
+  updated_at: string;
 }
 
 export interface Impersonation {
@@ -108,6 +110,8 @@ export interface CreatedTenant {
   failed: string[];
   invited: boolean;
   invite_error?: string;
+  /** True when the administrator was chosen rather than invited. */
+  admin_existed?: boolean;
 }
 
 export interface TenantApp {
@@ -229,6 +233,11 @@ export const cp = {
 
   tenant: (id: string) => request<TenantDetail>(`/tenants/${encodeURIComponent(id)}`),
 
+  // Across every organisation at once: which limits are set where, and which
+  // app is installed where.
+  quotas: () => request<{ quotas: QuotaLine[] }>("/tenant-quotas"),
+  installations: () => request<{ installations: Installation[] }>("/app-installations"),
+
   // The assistant, as it stands for every organisation: the prompts it carries
   // into a conversation and the corpus it answers from.
   prompts: () => request<{ prompts: Prompt[] }>("/assistant/prompts"),
@@ -261,6 +270,11 @@ export const cp = {
 
   operators: () => request<{ operators: OperatorSummary[] }>("/operators"),
 
+  // Everybody with an account on this deployment, and one of them in full.
+  roster: (search = "", filter = "", offset = 0) =>
+    request<Roster>(`/people/roster?q=${encodeURIComponent(search)}&filter=${encodeURIComponent(filter)}&offset=${offset}`),
+  person: (id: string) => request<PersonDetail>(`/people/${encodeURIComponent(id)}`),
+
   // Adding an operator. The answer carries the password and the enrolment once
   // and is never repeatable: nothing on the server can show them again.
   addOperator: (body: { email: string; name: string; role: string; reason: string }) =>
@@ -288,8 +302,22 @@ export const cp = {
 
   createTenant: (body: {
     name: string; slug: string; legal_name?: string; registration_number?: string;
-    apps?: string[]; admin_email: string; admin_name?: string; reason: string;
+    apps?: string[]; admin_user_id?: string; admin_email?: string; admin_name?: string; reason: string;
   }) => request<CreatedTenant>("/tenants", { method: "POST", body: JSON.stringify(body) }),
+
+  // What the register says about a registration number, and who on this
+  // deployment has proved who they are with eID.
+  findOrganisation: (regNo: string) =>
+    request<DirectoryOrganisation>(`/directory/organisation?reg_no=${encodeURIComponent(regNo)}`),
+  addMember: (tenantID: string, userID: string, reason: string) =>
+    request<{ status: string }>(`/tenants/${encodeURIComponent(tenantID)}/people`, {
+      method: "POST",
+      body: JSON.stringify({ user_id: userID, reason }),
+    }),
+  findPerson: (regNo: string) =>
+    request<DirectoryPerson>(`/directory/person?reg_no=${encodeURIComponent(regNo)}`),
+  verifiedPeople: (search = "") =>
+    request<{ people: VerifiedPerson[]; directory: boolean }>(`/directory/people?q=${encodeURIComponent(search)}`),
 
   suspend: (id: string, reason: string) =>
     request<{ status: string }>(`/tenants/${id}/suspend`, { method: "POST", body: JSON.stringify({ reason }) }),
@@ -621,4 +649,114 @@ export interface CreatedOperator {
   uri: string;
   /** Generated here rather than chosen: the first thing it should be used for is changing it. */
   password: string;
+}
+
+/** One organisation's limits, with the organisation named. */
+export interface QuotaLine extends Quota {
+  tenant_name: string;
+  slug: string;
+  suspended: boolean;
+}
+
+/** One app in one organisation. */
+export interface Installation {
+  tenant_id: string;
+  tenant_name: string;
+  slug: string;
+  app_id: string;
+  app_name: string;
+  installed_version: string;
+  status: string;
+  enabled: boolean;
+  installed_at: string;
+  updated_at: string;
+}
+
+/** What the Gerege Core register says about a registration number. */
+export interface DirectoryOrganisation {
+  core_id: number;
+  name: string;
+  legal_name: string;
+  registration_number: string;
+  suggested_slug: string;
+  email: string;
+  phone: string;
+  address: string;
+}
+
+/** Somebody who has signed in with eID on this deployment. */
+export interface VerifiedPerson {
+  user_id: string;
+  name: string;
+  email: string;
+  reg_number: string;
+  linked_at: string;
+  last_seen_at: string;
+  /** How many organisations they already belong to. */
+  organisations: number;
+}
+
+/** One row of the people roster. */
+export interface RosterPerson {
+  id: string;
+  email: string;
+  name: string;
+  /** Whether eID has ever vouched for this account. */
+  verified: boolean;
+  /** How many federated providers it is linked to. */
+  providers: number;
+  organisations: number;
+  sessions: number;
+  /** The newest session, which is as close to "last here" as the schema holds. */
+  last_seen_at: string | null;
+  locked_until: string | null;
+  active: boolean;
+  created_at: string;
+}
+
+export interface Roster {
+  people: RosterPerson[];
+  total: number;
+  counts: { verified: number; locked: number; homeless: number; signed_in: number };
+}
+
+/** One way into an account: eID, or a federated provider by its issuer. */
+export interface PersonIdentity {
+  kind: string;
+  subject: string;
+  detail: string;
+  linked_at: string;
+  last_seen_at: string | null;
+}
+
+export interface PersonMembership {
+  tenant_id: string;
+  tenant_name: string;
+  slug: string;
+  roles: string[];
+  joined_at: string;
+}
+
+export interface PersonSession {
+  id: string;
+  tenant_id: string | null;
+  created_at: string;
+  last_seen_at: string | null;
+  expires_at: string;
+}
+
+export interface PersonDetail extends RosterPerson {
+  identities: PersonIdentity[];
+  memberships: PersonMembership[];
+  open_sessions: PersonSession[];
+  impersonations: Array<{ operator_email: string; reason: string; created_at: string }>;
+}
+
+/** What the register says about a person's registration number. */
+export interface DirectoryPerson {
+  core_id: number;
+  name: string;
+  email: string;
+  phone: string;
+  registration_number: string;
 }
