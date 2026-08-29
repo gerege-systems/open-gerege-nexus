@@ -134,6 +134,23 @@ func CreateOperator(ctx context.Context, db *pgxpool.Pool, params NewOperator) (
 	return operator, Enrolment{Secret: secret, URI: uri}, nil
 }
 
+// None reports whether this deployment has no operator at all.
+//
+// Asked by the first-run wizard, which may create the console's first account
+// and must never be a way to create its second: the check and the insert are
+// two statements rather than one transaction because the wizard's own gate
+// (a boot token, held only while there is no organisation) is what actually
+// bounds this, and a race between two people holding that token is not a
+// threat model — it is the same person.
+func None(ctx context.Context, db *pgxpool.Pool) (bool, error) {
+	var exists bool
+	if err := db.QueryRow(ctx,
+		`SELECT EXISTS (SELECT 1 FROM operator.operator_accounts)`).Scan(&exists); err != nil {
+		return false, fmt.Errorf("count operators: %w", err)
+	}
+	return !exists, nil
+}
+
 // PendingEnrolment finds an account whose authenticator was never confirmed.
 //
 // It exists because the bootstrap command's own error message promises it: an

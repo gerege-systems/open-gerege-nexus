@@ -503,6 +503,9 @@ html[data-theme="dark"] .divide-slate-100 > * { border-color: var(--gerege-borde
 .setup-lookup button:disabled{opacity:.5;cursor:not-allowed}
 
 .setup-actions{display:flex;gap:10px}
+.setup-enrolment{display:flex;flex-direction:column;align-items:center;gap:12px;padding:16px;background:var(--sg-surface);border:1px solid var(--sg-border);border-radius:8px}
+.setup-enrolment svg{background:#fff;padding:8px;border-radius:6px}
+.setup-enrolment code{font-size:12px;letter-spacing:.04em;color:var(--sg-muted);word-break:break-all;text-align:center}
 
 /* eID картыг энэ дизайны дотор буулгах. EIDLogin өөрөө навигацийн логикоо
    барина — энд зөвхөн харагдац солигдоно. */

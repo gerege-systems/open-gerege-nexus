@@ -45,6 +45,15 @@ func New(db *pgxpool.Pool) *Console {
 	}
 }
 
+// ConfiguredHost is the hostname the console answers on, or empty on a
+// deployment that has none.
+//
+// The same value New reads, through the same normalisation, so that the screen
+// that tells somebody where their console will be cannot disagree with the gate
+// that will refuse them. Exported for the first-run wizard: a deployment with
+// no console address is not offered a console to enable.
+func ConfiguredHost() string { return normaliseHost(os.Getenv("CONTROL_PLANE_HOST")) }
+
 // Sessions is the store the console's own sign-in path issues through.
 func (c *Console) Sessions() *SessionStore { return c.sessions }
 

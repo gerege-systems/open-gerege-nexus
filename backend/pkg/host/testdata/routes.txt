@@ -152,6 +152,8 @@ POST /api/v1/profile/identities/eid
 POST /api/v1/profile/identities/unlink
 POST /api/v1/push-tokens
 POST /api/v1/setup/complete
+POST /api/v1/setup/operator
+POST /api/v1/setup/operator/confirm
 POST /api/v1/setup/organisation
 POST /api/v1/setup/person
 POST /api/v1/store/apps/{slug}/auto-update

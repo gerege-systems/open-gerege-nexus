@@ -68,6 +68,10 @@ var publicRoutes = []string{
 	"/api/v1/setup/status",
 	"/api/v1/setup/organisation",
 	"/api/v1/setup/person",
+	// The console's first operator, on the same token and only while this
+	// deployment has none: see internal/operator/setup.
+	"/api/v1/setup/operator",
+	"/api/v1/setup/operator/confirm",
 	"/api/v1/setup/complete",
 
 	// Signing in, and the identity flows that precede a session by definition.

@@ -11,7 +11,7 @@ const server = spawn(
   process.execPath,
   ["node_modules/next/dist/bin/next", "start", "-p", String(port)],
   {
-    env: { ...process.env, CONTROL_PLANE_HOST: "cp.localhost" },
+    env: { ...process.env, CONTROL_PLANE_HOST: "admin.localhost" },
     stdio: ["ignore", "pipe", "pipe"],
   },
 );
@@ -56,15 +56,15 @@ async function waitUntilReady() {
 try {
   await waitUntilReady();
 
-  const root = await request("cp.localhost", "/");
+  const root = await request("admin.localhost", "/");
   assert.equal(root.status, 308);
   assert.equal(root.location, "/cp");
   assert.match(root.vary, /(?:^|,\s*)Host(?:,|$)/i);
 
-  assert.equal((await request("cp.localhost", "/cp")).status, 200);
-  assert.equal((await request("cp.localhost", "/cp/audit")).status, 200);
-  assert.equal((await request("cp.localhost", "/login")).status, 404);
-  assert.equal((await request("cp.localhost", "/api/v1/auth/login")).status, 404);
+  assert.equal((await request("admin.localhost", "/cp")).status, 200);
+  assert.equal((await request("admin.localhost", "/cp/audit")).status, 200);
+  assert.equal((await request("admin.localhost", "/login")).status, 404);
+  assert.equal((await request("admin.localhost", "/api/v1/auth/login")).status, 404);
 
   assert.equal((await request("nexus.localhost", "/")).status, 200);
   assert.equal((await request("nexus.localhost", "/cp")).status, 404);

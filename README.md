@@ -135,7 +135,7 @@ Compose нь PostgreSQL, Redis, MinIO, нэг удаагийн migration, backen
 асаана. Дараах хаягуудыг ашиглана:
 
 - Tenant web: <http://nexus.localhost:3000>
-- Control plane web: <http://cp.localhost:3000>
+- Control plane web: <http://admin.localhost:3000>
 - API health: <http://localhost:8080/health>
 
 Development demo account:
@@ -160,8 +160,8 @@ DATABASE_URL="postgres://postgres:postgrespassword@localhost:5432/platform_db?ss
   go run ./cmd/migrate up
 
 PUBLIC_ORIGIN=http://nexus.localhost:3000 \
-ALLOWED_ORIGINS=http://nexus.localhost:3000,http://cp.localhost:3000 \
-CONTROL_PLANE_HOST=cp.localhost \
+ALLOWED_ORIGINS=http://nexus.localhost:3000,http://admin.localhost:3000 \
+CONTROL_PLANE_HOST=admin.localhost \
   go run ./cmd/api
 ```
 
@@ -170,9 +170,9 @@ CONTROL_PLANE_HOST=cp.localhost \
 ```bash
 cd frontend
 npm ci
-CONTROL_PLANE_HOST=cp.localhost \
+CONTROL_PLANE_HOST=admin.localhost \
 NEXT_PUBLIC_API_URL=http://nexus.localhost:8080/api/v1 \
-NEXT_PUBLIC_CONTROL_PLANE_API_URL=http://cp.localhost:8080/api/platform/v1 \
+NEXT_PUBLIC_CONTROL_PLANE_API_URL=http://admin.localhost:8080/api/platform/v1 \
   npm run dev
 ```
 

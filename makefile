@@ -3,7 +3,7 @@
 DATABASE_URL ?= postgres://postgres:postgrespassword@localhost:5432/platform_db?sslmode=disable
 DEV_TENANT_HOST ?= nexus.localhost
 DEV_TENANT_ORIGIN ?= http://$(DEV_TENANT_HOST):3000
-DEV_CONTROL_PLANE_HOST ?= cp.localhost
+DEV_CONTROL_PLANE_HOST ?= admin.localhost
 
 dev-backend:
 	cd backend && PUBLIC_ORIGIN="$(DEV_TENANT_ORIGIN)" \

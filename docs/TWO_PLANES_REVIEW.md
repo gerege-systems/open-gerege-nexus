@@ -87,7 +87,7 @@ impersonation.
 
 ### Өмнөх review-оос хэрэгжсэн зүйл
 
-- `CONTROL_PLANE_HOST=cp.localhost` development compose/example-д орсон;
+- `CONTROL_PLANE_HOST=admin.localhost` development compose/example-д орсон;
   browser local дээр ч хоёр origin-оор явна.
 - Control host-ын `/` нь 308-аар `/cp` руу орно.
 - Control host дээр `/cp/*` ба `/api/platform/v1/*`-оос бусад зам `404`.

@@ -11,6 +11,7 @@ export const setup = {
   "setup.view.step_organisation": { mn: "Байгууллага", en: "Organisation" },
   "setup.view.step_admin": { mn: "Админ", en: "Administrator" },
   "setup.view.step_password": { mn: "Нууц үг", en: "Password" },
+  "setup.view.step_console": { mn: "Консол", en: "Console" },
 
   "setup.field.registration_number": { mn: "Регистрийн дугаар", en: "Registration number" },
   "setup.field.person_registration_number": { mn: "Хүний регистрийн дугаар", en: "Person's registration number" },
@@ -19,9 +20,11 @@ export const setup = {
   "setup.field.slug": { mn: "Богино нэр (URL)", en: "Slug (URL)" },
   "setup.field.admin_name": { mn: "Админы нэр", en: "Administrator's name" },
   "setup.field.password_again": { mn: "Нууц үгээ давтах", en: "Repeat the password" },
+  "setup.field.totp_code": { mn: "Authenticator-ийн код", en: "Code from the authenticator" },
 
   "setup.action.lookup": { mn: "Core-оос хайх", en: "Look up in Gerege Core" },
   "setup.action.finish": { mn: "Тохиргоог дуусгах", en: "Finish setup" },
+  "setup.action.skip_console": { mn: "Консолгүйгээр дуусгах", en: "Finish without a console" },
   "setup.action.sign_in": { mn: "Нэвтрэх", en: "Sign in" },
 
   "setup.message.slug_hint": {
@@ -32,6 +35,19 @@ export const setup = {
     mn: "GEREGE_CORE_TOKEN тохируулаагүй тул регистрээр хайх боломжгүй. Талбаруудыг гараар бөглөнө үү.",
     en: "GEREGE_CORE_TOKEN is not set, so the register cannot be searched. Fill the fields in by hand.",
   },
+  "setup.message.console_lede": {
+    mn: "Операторын консол {host} дээр нээгдэнэ. Түүний эхний бүртгэл нь байгууллагын админаас тусдаа: өөр нэвтрэлт, өөр cookie, өөр audit. Нэвтрэхэд нууц үг ба authenticator-ийн код хоёулаа шаардлагатай.",
+    en: "The operator console will answer at {host}. Its first account is separate from the organisation's administrator: its own sign-in, its own cookie, its own audit trail. Signing in needs both a password and a code from an authenticator.",
+  },
+  "setup.message.operator_password_rule": {
+    mn: "Дор хаяж 12 тэмдэгт — консолын бүртгэл платформ өөрөө тул илүү урт.",
+    en: "At least 12 characters — a console account is the platform itself, so the rule is longer.",
+  },
+  "setup.message.enrolment": {
+    mn: "Энэ кодыг authenticator-т нэмээд (1Password, Aegis, Google Authenticator) гарсан зургаан оронтой тоог доор бичнэ үү. Энэ түлхүүр дахин харагдахгүй.",
+    en: "Add this to an authenticator — 1Password, Aegis, Google Authenticator — and type the six digits it shows. This secret is not shown again.",
+  },
+
   "setup.message.password_rule": {
     mn: "Дор хаяж 10 тэмдэгт.",
     en: "At least 10 characters.",

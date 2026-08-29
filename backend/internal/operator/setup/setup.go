@@ -21,6 +21,12 @@
 // organisation exists. That is the same bargain internal/operator/operator
 // makes — authority that comes from already holding the host, and that leaves
 // nothing behind.
+//
+// The same authority is what lets the wizard open the operator console by
+// creating its first account. The console has no sign-up screen and this is not
+// one: it answers only behind that token, only while this deployment has no
+// operator at all, and only where there is a CONTROL_PLANE_HOST for the console
+// to answer on. Every account after the first is the console's own to make.
 package setup
 
 import (
@@ -38,6 +44,7 @@ import (
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/kernel/credentials"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/kernel/geregecore"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/kernel/httpx"
+	"github.com/gerege-systems/open-gerege-nexus/backend/internal/operator/operator"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/operator/tenants"
 
 	"github.com/go-chi/chi/v5"
@@ -140,6 +147,11 @@ func (s *Service) Routes(r chi.Router) {
 			r.Use(s.requireToken)
 			r.Post("/organisation", s.handleFindOrganisation)
 			r.Post("/person", s.handleFindPerson)
+			// The console's first operator, and the code that proves its
+			// authenticator. Both before /complete, never after: completing
+			// disarms the token these two are gated by.
+			r.Post("/operator", s.handleCreateOperator)
+			r.Post("/operator/confirm", s.handleConfirmOperator)
 			r.Post("/complete", s.handleComplete)
 		})
 	})
@@ -173,8 +185,26 @@ func (s *Service) handleStatus(w http.ResponseWriter, r *http.Request) {
 	if !empty {
 		s.disarm()
 	}
+	// Whether a console can be opened here, and whether one is still unclaimed.
+	// A deployment with no CONTROL_PLANE_HOST has nowhere to serve one, and one
+	// that already has an operator is past this door — in both cases the wizard
+	// leaves the step out rather than offering something that will refuse.
+	consoleHost := operator.ConfiguredHost()
+	consoleEmpty := false
+	if consoleHost != "" {
+		if none, err := operator.None(r.Context(), s.db); err == nil {
+			consoleEmpty = none
+		} else {
+			slog.Warn("could not tell whether this deployment has an operator", "error", err)
+		}
+	}
+
 	httpx.JSON(w, http.StatusOK, map[string]any{
 		"required": empty,
+		"console": map[string]any{
+			"host":  consoleHost,
+			"empty": consoleEmpty,
+		},
 		// Whether the wizard can actually be used, as opposed to whether it is
 		// needed. False on a deployment that came up before this release, or
 		// one whose token was lost to a restart: the screen then says to look
@@ -235,6 +265,105 @@ func (s *Service) handleComplete(w http.ResponseWriter, r *http.Request) {
 		"tenant_id": tenantID,
 		"slug":      in.Organisation.Slug,
 	})
+}
+
+// handleCreateOperator opens the control plane by giving it its first account.
+//
+// The console has no sign-up screen and this is not one: it answers only behind
+// the wizard's token — minted in memory at boot, written once to the log, gone
+// the moment an organisation exists — and only while this deployment has no
+// operator at all. That is the same authority operator-bootstrap requires,
+// which is "already holds this deployment", rather than a new one; what changes
+// is that the person exercising it does not need a shell on the box.
+//
+// Two further conditions, both refusals rather than warnings. Without
+// CONTROL_PLANE_HOST there is no address the console would answer on, so an
+// account made here could never sign in. With an operator already present this
+// route would be a way to mint a second, which is the console's own privilege
+// and stays there: migration 00049 withholds INSERT on operator_accounts from
+// the console role precisely so that a flaw in one handler cannot make an
+// operator, and a wizard that could do it twice would be that flaw.
+func (s *Service) handleCreateOperator(w http.ResponseWriter, r *http.Request) {
+	var in struct {
+		Email    string `json:"email"`
+		Name     string `json:"name"`
+		Password string `json:"password"`
+	}
+	if err := httpx.DecodeLimited(r, &in, 1<<14); err != nil {
+		httpx.Error(w, http.StatusBadRequest, "the request could not be read")
+		return
+	}
+
+	if operator.ConfiguredHost() == "" {
+		httpx.Error(w, http.StatusConflict, "this deployment has no console address (CONTROL_PLANE_HOST)")
+		return
+	}
+	none, err := operator.None(r.Context(), s.db)
+	if err != nil {
+		httpx.Error(w, http.StatusServiceUnavailable, "the database is not reachable")
+		return
+	}
+	if !none {
+		httpx.Error(w, http.StatusConflict, "this deployment already has an operator")
+		return
+	}
+
+	// superadmin, and not a choice: it is the first account, so anything less
+	// would leave a console nobody can grant a role from.
+	account, enrolment, err := operator.CreateOperator(r.Context(), s.db, operator.NewOperator{
+		Email:    in.Email,
+		Name:     in.Name,
+		Role:     operator.RoleSuperadmin,
+		Password: in.Password,
+	})
+	if errors.Is(err, operator.ErrOperatorExists) {
+		httpx.Error(w, http.StatusConflict, "an operator with that address already exists")
+		return
+	}
+	if err != nil {
+		httpx.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// The address, but never the secret: the enrolment is what the person is
+	// about to photograph, and a log line is where it would outlive them.
+	slog.Info("the console's first operator was created from the wizard", "operator", account.Email)
+
+	httpx.JSON(w, http.StatusCreated, map[string]any{
+		"secret": enrolment.Secret,
+		"uri":    enrolment.URI,
+		"host":   operator.ConfiguredHost(),
+	})
+}
+
+// handleConfirmOperator finishes the enrolment with a code from the authenticator.
+//
+// The account is found by its address rather than by an id held between the two
+// requests: an unconfirmed enrolment is already a state this platform knows how
+// to find (operator.PendingEnrolment, which the bootstrap command's -confirm
+// uses), and a wizard that carried the id in memory would lose it to the
+// restart that a half-finished enrolment tends to be followed by.
+func (s *Service) handleConfirmOperator(w http.ResponseWriter, r *http.Request) {
+	var in struct {
+		Email string `json:"email"`
+		Code  string `json:"code"`
+	}
+	if err := httpx.DecodeLimited(r, &in, 1<<12); err != nil {
+		httpx.Error(w, http.StatusBadRequest, "the request could not be read")
+		return
+	}
+
+	id, err := operator.PendingEnrolment(r.Context(), s.db, in.Email)
+	if err != nil {
+		httpx.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	if err := operator.ConfirmSecondFactor(r.Context(), s.db, id, strings.TrimSpace(in.Code)); err != nil {
+		httpx.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	slog.Info("the console's first operator confirmed their authenticator", "operator", in.Email)
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // handleFindOrganisation fills the organisation step from the directory.
