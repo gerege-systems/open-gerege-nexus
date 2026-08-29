@@ -460,6 +460,22 @@ export const cp = {
   },
   "cp.message.no_installations": { mn: "Суусан апп алга.", en: "Nothing is installed." },
 
+  // Байгууллага нээх: дэлгэрэнгүйг нь бүртгэлээс, эхний админыг нь eID-ээр
+  // баталгаажсан хүмүүсээс.
+  "cp.action.look_up": { mn: "Бүртгэлээс хайх", en: "Look up" },
+  "cp.field.admin": { mn: "Эхний админ", en: "First administrator" },
+  "cp.field.search_people": { mn: "Нэр, и-мэйл, эсвэл регистрээр хайх", en: "Search by name, address or register number" },
+  "cp.hint.admin_is_chosen": {
+    mn: "eID-ээр нэвтэрч баталгаажсан хүмүүсээс сонгоно. Бичсэн хаяг биш, платформ өөрөө хараад баталсан хүн.",
+    en: "Chosen from the people who have signed in with eID — somebody this platform watched prove who they are, rather than an address typed into a dialog.",
+  },
+  "cp.message.from_the_register": { mn: "Бүртгэлээс: {name}", en: "From the register: {name}" },
+  "cp.message.already_in": { mn: "{count} байгууллагад", en: "in {count} organisations" },
+  "cp.message.no_verified_people": {
+    mn: "eID-ээр баталгаажсан хэрэглэгч алга. Тэр хүн эхлээд энэ платформ дээр eID-ээр нэг удаа нэвтрэх хэрэгтэй.",
+    en: "Nobody has signed in with eID yet. The person has to sign in here once before they can be chosen.",
+  },
+
   "cp.group.watch": { mn: "Ажиглалт", en: "Watch" },
   "cp.group.organisations": { mn: "Байгууллага", en: "Organisations" },
   "cp.group.platform": { mn: "Платформ", en: "Platform" },
