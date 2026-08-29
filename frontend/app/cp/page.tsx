@@ -165,7 +165,9 @@ export default function Health() {
                   <strong className="text-sm text-slate-900">{system.system}</strong>
                 </div>
                 <p className="mt-1 text-xs text-slate-500 tabular-nums">
-                  {(system.error_rate * 100).toFixed(1)}% · {(system.p95_seconds * 1000).toFixed(0)} ms
+                  {system.measured
+                    ? `${(system.error_rate * 100).toFixed(1)}% · ${(system.p95_seconds * 1000).toFixed(0)} ms`
+                    : t("cp.state.unmeasured")}
                 </p>
               </div>
             ))}
@@ -183,8 +185,7 @@ export default function Health() {
               <div key={gauge.name} className="rounded-xl border border-slate-200 px-3 py-2">
                 <p className="text-xs uppercase tracking-wide text-slate-400">{gauge.name}</p>
                 <p className={`mt-1 text-lg tabular-nums ${textFor(gauge.state)}`}>
-                  {gauge.value.toFixed(1)}
-                  {gauge.unit}
+                  {gauge.measured ? `${gauge.value.toFixed(1)}${gauge.unit}` : t("cp.state.unmeasured")}
                 </p>
               </div>
             ))}
@@ -376,9 +377,11 @@ function jobName(name: string, t: Translate): string {
 }
 
 function dot(state: string): string {
+  if (state === "unknown") return "bg-slate-300";
   return state === "red" ? "bg-red-500" : state === "amber" ? "bg-amber-500" : "bg-emerald-500";
 }
 
 function textFor(state: string): string {
+  if (state === "unknown") return "text-slate-400";
   return state === "red" ? "text-red-600" : state === "amber" ? "text-amber-700" : "text-slate-900";
 }
