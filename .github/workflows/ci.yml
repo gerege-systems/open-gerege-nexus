@@ -86,26 +86,22 @@ jobs:
         run: python3 -m unittest discover -s deploy/scripts -p 'test_*.py'
 
   test:
-    name: Test (${{ matrix.shard }}/4)
+    name: Test
     runs-on: ubuntu-latest
-    # Дөрвөн хэсэг, тус бүр өөрийн өгөгдлийн сантай. Хоёр зүйлийн төлөө:
+    # Багцууд цуваа явна (`-p 1`, доор).
     #
-    # ХУРД. `go test -race ./...` 143 секунд авдаг байсан бөгөөд энэ ажил бүх
-    # гүйлтийн шүүрэлт байв. Дөрөв хуваахад хэсэг бүр өөрийн Postgres дээр
-    # зэрэг ажиллана.
+    # Тэд нэг өгөгдлийн санг хуваалцдаг бөгөөд зэрэг явахдаа бие биенийхээ
+    # мөрийг устгаж, түгжиж байв: 2026-08-29-нд `role_permissions`-ийн гадаад
+    # түлхүүрийн зөрчил (Go код огт хөндөөгүй хоёр PR дээр), өмнө нь
+    # `idx_user_eid_identities_etsi`-гийн давхардал, `deadlock detected`
+    # (#280 түүнийг засахыг оролдсон). Гурван PR-ыг зөвхөн дахин ажиллуулснаар
+    # ногоон болгосон нь үр дүн санамсаргүй болсны шинж.
     #
-    # ТОГТВОР. Багцууд нэг сан дээр зэрэг ажиллаж, бие биенийхээ мөрийг
-    # устгаж, түгжиж байв: 2026-08-29-нд `role_permissions`-ийн гадаад
-    # түлхүүрийн зөрчил, `idx_user_eid_identities_etsi`-гийн давхардал, түүнээс
-    # өмнө `deadlock detected` (#280). Хэсэг доторх багцууд `-p 1`-ээр цуваа
-    # явдаг тул нэг сан дээр нэг л багц ажиллана — энэ нь хурдны буулт биш:
-    # цуваа явсан ч дөрвөн хэсэг зэрэг явна.
-    strategy:
-      # Нэг хэсэг унасан ч бусад нь дуустал ажиллана: аль тестүүд унасныг нэг
-      # гүйлтээс бүтнээр нь харах нь дахин ажиллуулахаас хямд.
-      fail-fast: false
-      matrix:
-        shard: [1, 2, 3, 4]
+    # Багцуудыг дөрвөн ажилд хувааж, тус бүрд өөрийн сан өгөх хувилбарыг
+    # хэмжсэн: хурд МУУДСАН (хэсгүүд 196-277с, өмнө нь 235с). Учир нь
+    # зардлын дийлэнх нь тестийн ажиллагаа биш, `-race`-тэй хөрвүүлэлт —
+    # хэсэг бүр хамаарлын графыг бүтнээр нь дахин хөрвүүлдэг (нэг хэсгийн
+    # «Run tests» 128с, багцын дөрөвний нэгтэй). Тиймээс ганц ажил хэвээр.
     defaults:
       run:
         working-directory: backend
@@ -170,22 +166,16 @@ jobs:
       - name: Migrate the test database
         run: go run ./cmd/migrate up
       - name: Run tests
-        # Багцуудыг дөрөвт хуваана: `go list`-ийн дараалал тогтвортой тул хэсэг
-        # бүр гүйлт болгонд ижил багцуудыг авна, шинэ багц гарч ирвэл
-        # жагсаалтад өөрөө орно — гараар бичсэн жагсаалт хуучирдаг.
-        run: |
-          packages=$(go list ./... | awk 'NR % 4 == ${{ matrix.shard }} % 4')
-          echo "$packages"
-          go test -race -p 1 $packages
+        # `-p 1`: нэг сан дээр нэг л багц. Зэрэг явуулах нь хурдны төлөө
+        # тогтвортой байдлыг өгдөг наймаа байсан бөгөөд хурд нь хэмжихэд
+        # ялгаагүй гарсан.
+        run: go test -race -p 1 ./...
       # A guard step of this shape belongs to the package it names, and has to
       # leave with it. The gov_services one outlived its package: the app moved
       # to gerege-gov, `./internal/apps/gov_services/...` matched nothing, and
       # `go test` over no packages is a pass — so the step written to stop a
       # silent skip became one. Removing a package means removing its step.
       - name: Fail if the email verification integration tests were skipped
-        # Зөвхөн нэг хэсэгт: эдгээр нь тухайн тест алгасагдсан эсэхийг
-        # асуудаг тул дөрвүүлэнд давтагдах шаардлагагүй.
-        if: matrix.shard == 1
         # Same reasoning again: a confirmation is claimed by one conditional
         # UPDATE, and a skipped test is how that stops being true without
         # anybody noticing.
@@ -197,9 +187,6 @@ jobs:
             exit 1
           fi
       - name: Fail if the OAuth2 flow tests were skipped
-        # Зөвхөн нэг хэсэгт: эдгээр нь тухайн тест алгасагдсан эсэхийг
-        # асуудаг тул дөрвүүлэнд давтагдах шаардлагагүй.
-        if: matrix.shard == 1
         # An authorization code is spent by an UPDATE predicate and a refresh
         # token family is revoked by another, so the properties that make the
         # provider safe to expose — single use, rotation, replay detection —
@@ -214,12 +201,6 @@ jobs:
           fi
 
       - name: Fail if the seeded-role tests were skipped
-
-        # Зөвхөн нэг хэсэгт: эдгээр нь тухайн тест алгасагдсан эсэхийг
-
-        # асуудаг тул дөрвүүлэнд давтагдах шаардлагагүй.
-
-        if: matrix.shard == 1
         # What a brand-new organisation's manager and user can do is decided by
         # a trigger, not by Go, so nothing else observes it. It named five
         # permissions belonging to an app that left this repository; skipped,
@@ -232,9 +213,6 @@ jobs:
             exit 1
           fi
       - name: Fail if the route policy test was skipped
-        # Зөвхөн нэг хэсэгт: эдгээр нь тухайн тест алгасагдсан эсэхийг
-        # асуудаг тул дөрвүүлэнд давтагдах шаардлагагүй.
-        if: matrix.shard == 1
         # This is the one that decides whether a route is reachable by a
         # stranger. Modules are handed the root router, so mounting a path
         # outside the gate is one line; skipped, that line ships unnoticed.
@@ -246,9 +224,6 @@ jobs:
             exit 1
           fi
       - name: Fail if the route table golden test was skipped
-        # Зөвхөн нэг хэсэгт: эдгээр нь тухайн тест алгасагдсан эсэхийг
-        # асуудаг тул дөрвүүлэнд давтагдах шаардлагагүй.
-        if: matrix.shard == 1
         # The golden file is the only thing that makes adding a route to the
         # core a visible act. It is built from the real router, so it needs the
         # real schema; skipped, the platform's surface can grow a line at a
@@ -261,9 +236,6 @@ jobs:
             exit 1
           fi
       - name: Fail if the capability wiring tests were skipped
-        # Зөвхөн нэг хэсэгт: эдгээр нь тухайн тест алгасагдсан эсэхийг
-        # асуудаг тул дөрвүүлэнд давтагдах шаардлагагүй.
-        if: matrix.shard == 1
         # The eight things Bootstrap needs used to be parameters, so a missing
         # one was a compile error. They are capabilities now and a missing one
         # is a log line and a zero value. These tests are that compile error put
@@ -276,9 +248,6 @@ jobs:
             exit 1
           fi
       - name: Fail if the login lockout tests were skipped
-        # Зөвхөн нэг хэсэгт: эдгээр нь тухайн тест алгасагдсан эсэхийг
-        # асуудаг тул дөрвүүлэнд давтагдах шаардлагагүй.
-        if: matrix.shard == 1
         # The lockout is one UPDATE. Whether a lapsed lock restarts the count or
         # adds to it is the difference between locking an account after five bad
         # passwords and locking it for good after five, and neither is visible
@@ -291,9 +260,6 @@ jobs:
             exit 1
           fi
       - name: Fail if the tenant isolation tests were skipped
-        # Зөвхөн нэг хэсэгт: эдгээр нь тухайн тест алгасагдсан эсэхийг
-        # асуудаг тул дөрвүүлэнд давтагдах шаардлагагүй.
-        if: matrix.shard == 1
         # This is the one that matters most. It is the test that proves a query
         # carrying no WHERE tenant_id returns only the caller's rows — the whole
         # point of the row-level policies. Skipped, the policies could stop
@@ -306,9 +272,6 @@ jobs:
             exit 1
           fi
       - name: Fail if the module migration tests were skipped
-        # Зөвхөн нэг хэсэгт: эдгээр нь тухайн тест алгасагдсан эсэхийг
-        # асуудаг тул дөрвүүлэнд давтагдах шаардлагагүй.
-        if: matrix.shard == 1
         # A module bringing its own schema is the whole of Үе 3, and nothing
         # else exercises it: no app has moved out of db/migrations yet. Skipped,
         # the mechanism ships with no evidence it works.
@@ -320,9 +283,6 @@ jobs:
             exit 1
           fi
       - name: Fail if the tenant policy shape test was skipped
-        # Зөвхөн нэг хэсэгт: эдгээр нь тухайн тест алгасагдсан эсэхийг
-        # асуудаг тул дөрвүүлэнд давтагдах шаардлагагүй.
-        if: matrix.shard == 1
         # Which tables a multi-organisation session can read across, and which
         # ones it cannot. Both shapes are correct somewhere and only one is
         # correct per table; skipped, a new table takes whichever its neighbour
@@ -335,9 +295,6 @@ jobs:
             exit 1
           fi
       - name: Fail if the reporting isolation tests were skipped
-        # Зөвхөн нэг хэсэгт: эдгээр нь тухайн тест алгасагдсан эсэхийг
-        # асуудаг тул дөрвүүлэнд давтагдах шаардлагагүй.
-        if: matrix.shard == 1
         # A report is a query somebody else wrote against tables the platform
         # keeps a tenant apart in. The test that matters proves a report which
         # forgot its WHERE tenant_id returns nothing rather than everyone's
@@ -350,9 +307,6 @@ jobs:
             exit 1
           fi
       - name: Fail if the report sharing tests were skipped
-        # Зөвхөн нэг хэсэгт: эдгээр нь тухайн тест алгасагдсан эсэхийг
-        # асуудаг тул дөрвүүлэнд давтагдах шаардлагагүй.
-        if: matrix.shard == 1
         # The one place this platform deliberately lets one organisation see
         # another's figures. Default deny, immediate revocation, counterparty
         # scope and the two-sided audit are all enforced in SQL; skipped, the
@@ -365,9 +319,6 @@ jobs:
             exit 1
           fi
       - name: Fail if the cross-replica tests were skipped
-        # Зөвхөн нэг хэсэгт: эдгээр нь тухайн тест алгасагдсан эсэхийг
-        # асуудаг тул дөрвүүлэнд давтагдах шаардлагагүй.
-        if: matrix.shard == 1
         # Invalidation reaching another replica, and two replicas sharing one
         # rate-limit budget, are both invisible to a single-process test.
         run: |
