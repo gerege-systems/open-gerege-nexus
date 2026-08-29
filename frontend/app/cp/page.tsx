@@ -27,21 +27,13 @@ import {
   Server,
 } from "lucide-react";
 
-import Console, { useConsole } from "@/components/cp/Console";
+import { useConsole } from "@/components/cp/Console";
 import { useAction } from "@/components/cp/Action";
 import { Badge, Card, formatMoment, Table, type Tone } from "@/components/cp/ui";
 import { cp, type Overview } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 
-export default function ControlPlaneHomePage() {
-  return (
-    <Console>
-      <Health />
-    </Console>
-  );
-}
-
-function Health() {
+export default function Health() {
   const { t, locale } = useI18n();
   const { operator } = useConsole();
   const action = useAction();

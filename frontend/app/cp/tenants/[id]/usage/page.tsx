@@ -30,20 +30,11 @@ import {
   YAxis,
 } from "recharts";
 
-import Console from "@/components/cp/Console";
 import { Badge, Card, formatMoment } from "@/components/cp/ui";
 import { cp, type Usage, type UsageSeries } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 
-export default function ControlPlaneUsagePage() {
-  return (
-    <Console>
-      <UsageScreen />
-    </Console>
-  );
-}
-
-function UsageScreen() {
+export default function UsageScreen() {
   const { t, locale } = useI18n();
   const params = useParams<{ id: string }>();
   const id = params?.id ?? "";
