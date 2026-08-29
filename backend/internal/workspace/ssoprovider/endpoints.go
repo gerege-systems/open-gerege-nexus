@@ -802,27 +802,43 @@ func (s *SSOProvider) grantedRoles(ctx context.Context, tenantID, userID string)
 		return nil, false
 	}
 
-	if !slices.Contains(roles, "admin") {
-		return roles, false
-	}
-
+	// platform_admin asks about the *person*, not about the token.
+	//
+	// The first version asked whether the token's own organisation was the
+	// founding one, which meant the answer moved with whichever workspace the
+	// browser happened to be in: the founder signing in from their personal
+	// workspace — which is where a Nexus session often starts — was not the
+	// platform administrator that minute, and was again the next. Authority
+	// that flickers is worse than authority that is absent, because the person
+	// holding it cannot tell which state they are in.
+	//
 	// `kind = 'organisation'` is load-bearing, not tidiness. Since migration
-	// 00085 every person gets a personal workspace, and those are rows in this
-	// same table — on a deployment where one was created before the wizard ran,
-	// the oldest row is somebody's home rather than the founding organisation,
-	// and nobody would ever be the platform administrator.
+	// 00085 every person gets a personal workspace and those are rows in this
+	// same table, so on a deployment where one was created before the wizard
+	// ran, the oldest row is somebody's home rather than the founding
+	// organisation and nobody would ever be the platform administrator.
 	//
 	// Ordered by created_at with the id as the tie-break, because two
 	// organisations created inside the same clock tick would otherwise make
 	// this answer change between one sign-in and the next.
-	var root string
+	var platformAdmin bool
 	if err := s.store.db.QueryRow(ctx,
-		`SELECT id::text FROM registry.tenants
-		  WHERE kind = 'organisation' ORDER BY created_at, id LIMIT 1`).Scan(&root); err != nil {
-		slog.Warn("could not identify the first organisation", "error", err)
+		`SELECT EXISTS (
+		    SELECT 1
+		      FROM workspace.memberships m
+		      JOIN workspace.membership_roles mr ON mr.membership_id = m.id
+		      JOIN workspace.roles r ON r.id = mr.role_id
+		     WHERE m.user_id = $1::uuid
+		       AND r.code = 'admin'
+		       AND m.tenant_id = (SELECT id FROM registry.tenants
+		                           WHERE kind = 'organisation'
+		                           ORDER BY created_at, id LIMIT 1))`,
+		userID).Scan(&platformAdmin); err != nil {
+		slog.Warn("could not decide whether this person administers the first organisation",
+			"error", err)
 		return roles, false
 	}
-	return roles, root == tenantID
+	return roles, platformAdmin
 }
 
 // mintIDToken builds the OIDC identity assertion. Claims follow the granted

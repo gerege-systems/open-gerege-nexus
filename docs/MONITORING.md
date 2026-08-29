@@ -212,6 +212,26 @@ Prometheus-д ямар ч нэвтрэлт байхгүй бөгөөд түүн�
 байгууллагын админ ч гэсэн Viewer болж орно. Яагаад тэр ялгааг платформ талд
 тавьсныг `internal/workspace/ssoprovider/endpoints.go` дотор бичсэн.
 
+Claim нь *хүний* тухай — токен аль workspace-д зориулагдсанаас хамаарахгүй.
+Хувийн workspace-даасаа нэвтэрсэн ч мөн адил.
+
+**Хэн болохыг шалгах:**
+
+```sql
+SELECT u.email
+  FROM registry.users u
+  JOIN workspace.memberships m ON m.user_id = u.id
+  JOIN workspace.membership_roles mr ON mr.membership_id = m.id
+  JOIN workspace.roles r ON r.id = mr.role_id AND r.code = 'admin'
+ WHERE m.tenant_id = (SELECT id FROM registry.tenants
+                       WHERE kind = 'organisation' ORDER BY created_at, id LIMIT 1);
+```
+
+eID-ээр нэвтэрсэн бүртгэл нь и-мэйлээр нэвтэрсэн бүртгэлээс **өөр данс** байж
+болно: eID-ийн хаяг нь Gerege дугаараас гардаг (`10000263@gemail.com` хэлбэртэй).
+Grafana-д админ болохгүй байгаагийн хамгийн түгээмэл шалтгаан нь энэ бөгөөд
+дээрх query хариуг нь шууд хэлнэ.
+
 `GRAFANA_ADMIN_PASSWORD` хэвээр ажиллана — энэ бол буцах зам. Identity provider
 унасан үед мониторингийн стек нээгдэхгүй байх нь яг түүнийг хамгийн их
 хэрэгтэй мөч.

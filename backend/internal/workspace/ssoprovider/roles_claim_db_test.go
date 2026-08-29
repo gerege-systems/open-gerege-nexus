@@ -31,7 +31,24 @@ func TestRolesClaimNamesTheDeploymentsFirstAdministrator(t *testing.T) {
 	// the shared development database has years of them and a CI database has
 	// none, so a test that relies on what is already there passes in one place
 	// and fails in the other — which is how the first version of this went red.
-	insertTenant(t, f, "organisation", "1970-01-01T00:00:00Z", nil)
+	founding := insertTenant(t, f, "organisation", "1970-01-01T00:00:00Z", nil)
+
+	t.Run("the founder is the platform admin from any workspace", func(t *testing.T) {
+		// The founding organisation, with the fixture's person as its admin —
+		// but the token below is issued for the fixture's *other* organisation.
+		// The claim is about the person, so it must be true anyway. It was not:
+		// the first version compared the token's tenant against the founding
+		// one, and the founder signing in from their personal workspace, which
+		// is where a session often starts, was silently not an administrator.
+		makeAdminOf(t, f, founding)
+		t.Cleanup(func() { removeAdminOf(t, f, founding) })
+
+		claims := verifyIDToken(t, f, idTokenWithRoles(t, f))
+		if claims["platform_admin"] != true {
+			t.Errorf("platform_admin is %v for the founding organisation's admin",
+				claims["platform_admin"])
+		}
+	})
 
 	t.Run("an admin of a later organisation is not the platform admin", func(t *testing.T) {
 		claims := verifyIDToken(t, f, idTokenWithRoles(t, f))
@@ -154,13 +171,19 @@ func insertTenant(t *testing.T, f *fixture, kind, createdAt string, owner *strin
 // account on a deployment.
 func makeTenantAdmin(t *testing.T, f *fixture) {
 	t.Helper()
+	makeAdminOf(t, f, f.tenantID)
+}
+
+// makeAdminOf gives the fixture's user the `admin` role in any organisation.
+func makeAdminOf(t *testing.T, f *fixture, tenantID string) {
+	t.Helper()
 	ctx := context.Background()
 
 	var membershipID string
 	if err := f.pool.QueryRow(ctx,
 		`INSERT INTO workspace.memberships (tenant_id, user_id) VALUES ($1::uuid, $2::uuid)
 		 ON CONFLICT (tenant_id, user_id) DO UPDATE SET tenant_id = EXCLUDED.tenant_id
-		 RETURNING id::text`, f.tenantID, f.userID).Scan(&membershipID); err != nil {
+		 RETURNING id::text`, tenantID, f.userID).Scan(&membershipID); err != nil {
 		t.Fatalf("membership: %v", err)
 	}
 
@@ -168,7 +191,7 @@ func makeTenantAdmin(t *testing.T, f *fixture) {
 	if err := f.pool.QueryRow(ctx,
 		`INSERT INTO workspace.roles (tenant_id, code, name) VALUES ($1::uuid, 'admin', 'Tenant Admin')
 		 ON CONFLICT (tenant_id, code) DO UPDATE SET name = EXCLUDED.name
-		 RETURNING id::text`, f.tenantID).Scan(&roleID); err != nil {
+		 RETURNING id::text`, tenantID).Scan(&roleID); err != nil {
 		t.Fatalf("role: %v", err)
 	}
 
@@ -176,6 +199,20 @@ func makeTenantAdmin(t *testing.T, f *fixture) {
 		`INSERT INTO workspace.membership_roles (membership_id, role_id) VALUES ($1::uuid, $2::uuid)
 		 ON CONFLICT DO NOTHING`, membershipID, roleID); err != nil {
 		t.Fatalf("grant: %v", err)
+	}
+}
+
+// removeAdminOf undoes it, so the subtest that follows sees the person as an
+// ordinary member again.
+func removeAdminOf(t *testing.T, f *fixture, tenantID string) {
+	t.Helper()
+	if _, err := f.pool.Exec(context.Background(),
+		`DELETE FROM workspace.membership_roles mr
+		  USING workspace.memberships m, workspace.roles r
+		  WHERE mr.membership_id = m.id AND mr.role_id = r.id
+		    AND m.tenant_id = $1::uuid AND m.user_id = $2::uuid AND r.code = 'admin'`,
+		tenantID, f.userID); err != nil {
+		t.Fatalf("revoke: %v", err)
 	}
 }
 
