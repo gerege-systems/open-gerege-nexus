@@ -195,6 +195,18 @@ jobs:
             echo "::error::seeded-role tests skipped — TEST_DATABASE_URL is not reaching the test"
             exit 1
           fi
+      - name: Fail if the signing store tests were skipped
+        # The e-signature app's isolation is in its WHERE clauses, its batch's
+        # refusal is a subquery's row count, and its archive is a column rather
+        # than a DELETE. Skipped, the package reports green having asserted
+        # nothing about the one app whose output is evidence.
+        run: |
+          go test -run 'TestADocumentIsInvisibleToAnotherOrganisation' -v \
+            ./internal/workspace/signing/ | tee /tmp/signing.log
+          if grep -q -- '--- SKIP' /tmp/signing.log; then
+            echo "::error::signing store tests skipped — no test database is reaching the test"
+            exit 1
+          fi
       - name: Fail if the route policy test was skipped
         # This is the one that decides whether a route is reachable by a
         # stranger. Modules are handed the root router, so mounting a path
