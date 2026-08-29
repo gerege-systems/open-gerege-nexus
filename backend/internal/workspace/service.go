@@ -627,6 +627,25 @@ func (s *Service) ConfigurationWarnings() []string { return auth.ConfigurationWa
 // records, one place a send is rate limited.
 func (s *Service) Mail() *emailverify.Service { return s.emailVerify }
 
+// MailVerificationHealth answers the console's ledger screen: is a key
+// configured at all, did the provider answer, and where is it administered.
+//
+// Four values rather than a shared type, because the two planes deliberately
+// share no types — the console turns these into its own. The network call is
+// the reason this is not a field the console could read: only this plane holds
+// the client.
+func (s *Service) MailVerificationHealth(ctx context.Context) (configured, reachable bool, detail, providerURL, adminURL string) {
+	configured = emailverify.Configured()
+	providerURL, adminURL = emailverify.ProviderURL(), emailverify.AdminURL
+	if !configured {
+		return configured, false, "", providerURL, adminURL
+	}
+	if err := s.emailVerify.Health(ctx); err != nil {
+		return configured, false, err.Error(), providerURL, adminURL
+	}
+	return configured, true, "", providerURL, adminURL
+}
+
 // InstallAppForTenant installs a catalogue app without a request behind it.
 //
 // It exists for the demo seeder, which needs the same dependency resolution and
@@ -863,9 +882,10 @@ func (s *Service) Routes(r chi.Router) {
 			// call it in process.
 			pr.With(security.SharedRateLimitMiddleware(s.verifyLimiter, s.sharedVerify)).Post("/verify/send", s.emailVerify.HandleVerifySend)
 
-			// Who has been written to is an administrative read: it is a list
-			// of people's addresses and what they were asked to prove.
-			pr.With(s.authn.RequireAdmin).Get("/admin/email-verification/overview", s.emailVerify.HandleOverview)
+			// Who has been written to is no longer answered here. The service
+			// is the platform's — one credential, one provider — so the ledger
+			// is the console's screen now, across every organisation at once:
+			// internal/operator/verifications.
 
 			// AI Copilot, Speech, Translation & Forecasting
 			pr.Route("/ai", func(air chi.Router) {
@@ -877,13 +897,11 @@ func (s *Service) Routes(r chi.Router) {
 				air.With(nexus.RequirePermission(s.permissions, "ai.read"), nexus.QuotaGate("ai")).Get("/stock-forecast", s.aiSvc.HandleAIForecast)
 			})
 
-			pr.Route("/admin/ai", func(aair chi.Router) {
-				aair.Use(s.authn.RequireAdmin)
-				aair.Get("/prompts", s.aiSvc.HandleAIListPrompts)
-				aair.Put("/prompts/{key}", s.aiSvc.HandleAIUpdatePrompt)
-				aair.Get("/knowledge", s.aiSvc.HandleAIListKnowledge)
-				aair.Post("/knowledge", s.aiSvc.HandleAICreateKnowledge)
-			})
+			// The assistant's shared prompts and its knowledge moved to the
+			// console for the same reason: the model, its instructions and the
+			// corpus belong to the deployment, and an organisation editing the
+			// shared prompt was editing what every other organisation would be
+			// answered with. See internal/operator/assistant.
 
 			// Store — reads are open to any tenant member, mutations are
 			// tenant-administrator only. Previously every authenticated user

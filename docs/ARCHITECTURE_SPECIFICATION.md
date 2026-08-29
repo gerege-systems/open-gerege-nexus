@@ -23,7 +23,7 @@ Gerege Nexus нь Go + Next.js + PostgreSQL дээрх **модульт моно
 | | Тенантын урсгал | Операторын урсгал |
 | --- | --- | --- |
 | Хариуцах зүйл | Нэг байгууллага доторх хэрэглэгчийн ажил | Бүх deployment-ийг оператор удирдах |
-| Origin | `nexus.gerege.mn` | `cp.nexus.gerege.mn` |
+| Origin | `nexus.gerege.mn` | `admin.nexus.gerege.mn` |
 | API | `/api/v1/*` | `/api/platform/v1/*` |
 | Session cookie | `session_token` | `cp_session` |
 | Бүртгэл | `registry.users` + `tenant.memberships` | `operator.operator_accounts` |

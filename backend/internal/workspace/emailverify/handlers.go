@@ -155,25 +155,3 @@ h1{font-size:20px;margin:0 0 12px}p{color:#475569;font-size:14px;line-height:1.6
 </head><body><main><h1>%s</h1><p>%s</p></main></body></html>`,
 		html.EscapeString(locale), html.EscapeString(title), html.EscapeString(title), html.EscapeString(body))
 }
-
-// handleEmailVerifyOverview is the settings screen in one request: what has
-// been asked for, and whether the service that sends it is reachable.
-// HandleOverview answers the operator screen.
-func (s *Service) HandleOverview(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := nexus.RequireWorkspace(w, r)
-	if !ok {
-		return
-	}
-	limit := 25
-	if raw := r.URL.Query().Get("limit"); raw != "" {
-		if parsed, convErr := strconv.Atoi(raw); convErr == nil {
-			limit = parsed
-		}
-	}
-	overview, err := s.Overview(r.Context(), tenantID, limit)
-	if err != nil {
-		emailVerifyError(w, err)
-		return
-	}
-	httpx.JSON(w, http.StatusOK, overview)
-}

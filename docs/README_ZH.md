@@ -227,7 +227,7 @@ npm run dev
 | `POST` | `/api/v1/store/apps/{slug}/install` | 安装应用（管理员） |
 | `POST` | `/api/v1/verify/send` | 向托管服务申请电子邮件验证链接 |
 | `GET` | `/api/v1/verify/landed` | 接收已确认地址的用户——仅可使用一次 |
-| `GET` | `/api/v1/admin/email-verification/overview` | 验证记录与服务状态（管理员） |
+| `GET` | `/api/platform/v1/email-verifications` | 验证记录与服务状态（控制台）|
 | `POST` | `/oauth2/token` | OAuth2 client credentials 令牌 |
 
 会话令牌通过 HttpOnly Cookie 或 `Authorization: Bearer <token>` 传递。
