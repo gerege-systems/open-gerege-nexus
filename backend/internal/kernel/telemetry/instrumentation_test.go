@@ -86,6 +86,43 @@ func TestHTTPMetricFollowsSemanticConventions(t *testing.T) {
 	}
 }
 
+// One request, one observation — even though two pieces of middleware in the
+// chain both know how to record an HTTP server metric.
+//
+// otelhttp starts recording `http.server.request.duration` of its own accord
+// the moment a real meter provider exists, under the same name this package
+// uses and with a different label set. Both were live in production for one
+// deploy: every request counted twice, `sum(rate(...))` read double, and the
+// extra series carried `server.address` — a label taken from the request.
+func TestTheHTTPMetricIsRecordedOnce(t *testing.T) {
+	labels := map[string]string{
+		"http_request_method": http.MethodGet,
+		"http_route":          "/api/v1/once/{id}",
+	}
+	before := histogramCount(t, "http_server_request_duration_seconds", labels)
+
+	// The real chain, in the order pkg/host/server.go installs it: the tracing
+	// wrapper outside, the metrics middleware inside.
+	router := chi.NewRouter()
+	router.Use(telemetry.TracingMiddleware)
+	router.Use(telemetry.MetricsMiddleware)
+	router.Get("/api/v1/once/{id}", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	router.ServeHTTP(httptest.NewRecorder(),
+		httptest.NewRequest(http.MethodGet, "/api/v1/once/abc", nil))
+
+	if after := histogramCount(t, "http_server_request_duration_seconds", labels); after != before+1 {
+		t.Errorf("one request produced %d observations, want 1", after-before)
+	}
+	// The label otelhttp adds and this package does not, matched by name with
+	// any value. Its presence means the second recorder is back, whatever the
+	// counts happen to say.
+	if labelExists(t, "http_server_request_duration_seconds", "server_address") {
+		t.Error("a series carrying server_address is being exported: otelhttp is recording metrics again")
+	}
+}
+
 // A method is a token net/http will accept in any shape, so an unrecognised one
 // must not become an attribute value: that is an unbounded series count driven
 // by whoever is sending the requests.
@@ -255,6 +292,29 @@ func findMetric(t *testing.T, name string, labels map[string]string) *dto.Metric
 		}
 	}
 	return nil
+}
+
+// labelExists reports whether any series of a family carries a label with this
+// name, whatever its value.
+func labelExists(t *testing.T, name, label string) bool {
+	t.Helper()
+	families, err := prometheus.DefaultGatherer.Gather()
+	if err != nil {
+		t.Fatalf("gather: %v", err)
+	}
+	for _, family := range families {
+		if family.GetName() != name {
+			continue
+		}
+		for _, metric := range family.GetMetric() {
+			for _, pair := range metric.GetLabel() {
+				if pair.GetName() == label {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
 func matchesLabels(metric *dto.Metric, labels map[string]string) bool {

@@ -25,6 +25,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	noopmetric "go.opentelemetry.io/otel/metric/noop"
 	"go.opentelemetry.io/otel/propagation"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
@@ -165,6 +166,20 @@ func ExternalSpanAttributes(system, operation string) []attribute.KeyValue {
 // stored.
 func TracingMiddleware(next http.Handler) http.Handler {
 	instrumented := otelhttp.NewHandler(next, "http",
+		// Spans only. otelhttp records `http.server.request.duration` of its
+		// own accord as soon as a real meter provider exists, and MetricsMiddleware
+		// records a metric of exactly that name — so with both live, every
+		// request was counted twice under one name with two different label
+		// sets, and `sum(rate(...))` read double. It also labels by
+		// `server.address` and `url.scheme`, which are taken from the request
+		// and add nothing on a single-origin deployment.
+		//
+		// Ours is kept rather than otelhttp's because it is the one with the
+		// cardinality guards — an unroutable path becomes `unmatched`, an
+		// invented HTTP verb becomes `_OTHER` — and because this wrapper is
+		// skipped for /health, /ready and /metrics, so otelhttp's version was
+		// missing those requests anyway.
+		otelhttp.WithMeterProvider(noopmetric.NewMeterProvider()),
 		otelhttp.WithSpanNameFormatter(func(_ string, r *http.Request) string {
 			if rctx := chi.RouteContext(r.Context()); rctx != nil && rctx.RoutePattern() != "" {
 				return r.Method + " " + rctx.RoutePattern()
