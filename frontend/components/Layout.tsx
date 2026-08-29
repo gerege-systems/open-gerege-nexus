@@ -16,7 +16,7 @@ import { currentDeviceLine, type DeviceLine } from "@/lib/deviceLine";
 import { MenuIcon } from "@/lib/icons";
 import { isPublicPath } from "@/lib/publicRoutes";
 import { homeScreensVisible, organisationScreensVisible } from "@/lib/workspaceKind.mjs";
-import { LayoutGrid, Settings, Menu as HamburgerIcon, Palette, Building2, Search, Ellipsis, ShieldCheck, RefreshCw, MailCheck, ChevronDown, ChevronsDownUp, ChevronsUpDown, ExternalLink, Sparkles, Inbox} from "lucide-react";
+import { LayoutGrid, Settings, Menu as HamburgerIcon, Palette, Building2, Megaphone, Search, Ellipsis, ShieldCheck, RefreshCw, MailCheck, ChevronDown, ChevronsDownUp, ChevronsUpDown, ExternalLink, Sparkles, Inbox} from "lucide-react";
 
 // app_order and app_chrome describe the app rather than the entry: where its
 // tile sits in the rail, and whether it has a tile at all. Both come from the
@@ -258,6 +258,13 @@ export default function Layout({children}:{children:React.ReactNode}){
         and edit — the organisation itself — not a switch that changes how the
         platform behaves. */}
     {company&&<NavLink href="/organisation" active={pathname==="/organisation"} icon={<Building2 className="w-5 h-5"/>} label={t("web.menu.organisation")}/>}
+    {/* What the organisation offers the public, beside what it is. It was a
+        card at the bottom of the organisation's own screen, which is where a
+        thing goes when nobody has decided it is a thing: publishing a service
+        is an outward promise — a stranger finds it in the directory and asks —
+        and it deserves the same standing in the menu as the identity above
+        it. */}
+    {company&&<NavLink href="/organisation/services" active={pathname==="/organisation/services"} icon={<Megaphone className="w-5 h-5"/>} label={t("core.view.services_title")}/>}
     {/* Its screens, next in the list rather than nested under it. They were
         indented for a while, which made them look like a second level this
         sidebar does not otherwise have — one entry with children, in a menu
