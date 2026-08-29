@@ -304,6 +304,11 @@ export const cp = {
   // deployment has proved who they are with eID.
   findOrganisation: (regNo: string) =>
     request<DirectoryOrganisation>(`/directory/organisation?reg_no=${encodeURIComponent(regNo)}`),
+  addMember: (tenantID: string, userID: string, reason: string) =>
+    request<{ status: string }>(`/tenants/${encodeURIComponent(tenantID)}/people`, {
+      method: "POST",
+      body: JSON.stringify({ user_id: userID, reason }),
+    }),
   verifiedPeople: (search = "") =>
     request<{ people: VerifiedPerson[]; directory: boolean }>(`/directory/people?q=${encodeURIComponent(search)}`),
 
