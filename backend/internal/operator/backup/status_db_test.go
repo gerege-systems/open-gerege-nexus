@@ -8,6 +8,7 @@ package backup
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -176,7 +177,7 @@ func TestARefusedDeploymentIsNotInTheTrail(t *testing.T) {
 	t.Setenv("GITHUB_DEPLOY_TOKEN", "")
 	t.Setenv("GITHUB_REPOSITORY", "")
 
-	if _, err := service.TriggerDeploy(context.Background(), sess, "main", "release"); err != ErrDeployNotConfigured {
+	if _, err := service.TriggerDeploy(context.Background(), sess, "main", "release"); !errors.Is(err, ErrDeployNotConfigured) {
 		t.Fatalf("a deployment with no token answered %v", err)
 	}
 	if got := optest.AuditCount(t, pool, account.ID, "deploy.trigger"); got != 0 {
