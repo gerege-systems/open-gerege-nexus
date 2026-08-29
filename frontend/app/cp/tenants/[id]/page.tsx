@@ -467,7 +467,7 @@ function QuotaDialog({
           <button
             type="submit"
             disabled={busy}
-            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+            className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60"
           >
             {t("cp.action.confirm")}
           </button>
