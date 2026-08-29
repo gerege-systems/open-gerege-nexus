@@ -37,7 +37,10 @@ export function useTenants(active: boolean) {
   const [tenants, setTenants] = useState<TenantOption[] | null>(null);
   const [activeIDs, setActiveIDs] = useState<string[]>([]);
   const [switching, setSwitching] = useState(false);
-  const [failed, setFailed] = useState(false);
+  // What went wrong, not merely that something did. A switch can be refused
+  // for a reason the person can act on — the organisation is in Maintenance,
+  // they are no longer a member — and "try again" is the wrong advice for both.
+  const [failed, setFailed] = useState("");
 
   useEffect(() => {
     if (!active) return;
@@ -66,7 +69,7 @@ export function useTenants(active: boolean) {
   const switchTo = useCallback(
     async (id: string) => {
       setSwitching(true);
-      setFailed(false);
+      setFailed("");
       try {
         await api.switchTenant(id);
         // Everything on screen was fetched for the workspace being left — the
@@ -81,9 +84,9 @@ export function useTenants(active: boolean) {
         resetAccess();
         forgetTenants();
         window.location.assign(isHome(tenants?.find((option) => option.id === id)) ? "/profile" : "/apps");
-      } catch {
+      } catch (error) {
         setSwitching(false);
-        setFailed(true);
+        setFailed(error instanceof Error && error.message ? error.message : "unknown");
       }
     },
     [tenants],
@@ -96,16 +99,16 @@ export function useTenants(active: boolean) {
   const toggleActive = useCallback(
     async (id: string, current: string) => {
       setSwitching(true);
-      setFailed(false);
+      setFailed("");
       const next = activeIDs.includes(id) ? activeIDs.filter((x) => x !== id) : [...activeIDs, id];
       try {
         await api.setActiveTenants(next.includes(current) ? next : [...next, current]);
         resetAccess();
         forgetTenants();
         window.location.reload();
-      } catch {
+      } catch (error) {
         setSwitching(false);
-        setFailed(true);
+        setFailed(error instanceof Error && error.message ? error.message : "unknown");
       }
     },
     [activeIDs],
@@ -133,7 +136,7 @@ export function TenantChoices({
   tenants: TenantOption[] | null;
   activeIDs?: string[];
   switching: boolean;
-  failed: boolean;
+  failed: string;
   onChoose: (id: string) => void;
   /** Called when the current tenant is picked — nothing to switch, so the host
    *  just closes. */
@@ -206,9 +209,9 @@ export function TenantChoices({
       {tenants?.length === 1 && (
         <p className="px-4 pb-2 pt-1 text-xs text-slate-500">{t("web.message.only_tenant")}</p>
       )}
-      {failed && (
+      {failed !== "" && (
         <p role="alert" className="px-4 pb-2 pt-1 text-xs text-rose-600">
-          {t("web.message.tenant_switch_failed")}
+          {failed === "unknown" ? t("web.message.tenant_switch_failed") : failed}
         </p>
       )}
     </>
