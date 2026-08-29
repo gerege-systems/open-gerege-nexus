@@ -234,8 +234,8 @@
     },
     {
       "type": "stat",
-      "title": "Платформын нэвтрэлт — амжилтгүй хувь (1ц)",
-      "description": "Энд алдаа өдөр болгон гардаг — хүмүүс нууц үгээ буруу бичдэг. Хардах ёстой зүйл нь тоо биш, огцом өөрчлөлт. Тэг нь тэг — \"No data\" биш: хэмжигдээгүй байдал эрүүл байдалтай адилхан харагдах ёсгүй.",
+      "title": "Амжилтгүй нэвтрэлт (1ц)",
+      "description": "Платформ руу нэвтэрч чадаагүй оролдлогын тоо. Хувь биш тоо, учир нь цөөн оролдлого дээр хувь нь утгагүй — найман алдаа амжилттай нэвтрэлтгүйгээр 100% болж, ослын дүр зурдаг. Хүн нууц үгээ андуурдаг тул тэг байх албагүй; хардах ёстой зүйл нь огцом өсөлт.",
       "datasource": {
         "type": "prometheus",
         "uid": "nexus-prometheus"
@@ -253,7 +253,7 @@
             "uid": "nexus-prometheus"
           },
           "editorMode": "code",
-          "expr": "(sum(increase(logins_total{result=\"failure\"}[1h])) / clamp_min(sum(increase(logins_total[1h])), 1)) or vector(0)",
+          "expr": "(sum(increase(logins_total{result=\"failure\"}[1h]))) or vector(0)",
           "legendFormat": "",
           "range": true,
           "instant": false,
@@ -263,8 +263,8 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "percentunit",
-          "decimals": 1,
+          "unit": "short",
+          "decimals": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -274,11 +274,11 @@
               },
               {
                 "color": "yellow",
-                "value": 0.3
+                "value": 25
               },
               {
                 "color": "red",
-                "value": 0.6
+                "value": 100
               }
             ]
           },
@@ -611,7 +611,7 @@
     {
       "type": "logs",
       "title": "Audit",
-      "description": "Хэн юу хийсэн. Энэ мөрүүд өгөгдлийн санд ч бичигддэг — энэ нь хайхад хурдан хувилбар.",
+      "description": "Хэн юу хийсэн. Энэ мөрүүд өгөгдлийн санд ч бичигддэг — энэ нь хайхад хурдан хувилбар. Шүүлт нь `AUDIT_EVENT` — slog яг тэр үгээр бичдэг ба line filter нь том жижиг үсэг ялгадаг.",
       "datasource": {
         "type": "loki",
         "uid": "nexus-loki"
@@ -629,7 +629,7 @@
             "uid": "nexus-loki"
           },
           "editorMode": "code",
-          "expr": "{container=\"gerege_nexus_backend\"} |= \"audit\"",
+          "expr": "{container=\"gerege_nexus_backend\"} |= \"AUDIT_EVENT\"",
           "legendFormat": "",
           "range": true,
           "instant": false,

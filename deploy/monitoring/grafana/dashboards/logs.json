@@ -12,7 +12,7 @@
   "editable": false,
   "refresh": "30s",
   "time": {
-    "from": "now-1h",
+    "from": "now-6h",
     "to": "now"
   },
   "timepicker": {},
@@ -359,8 +359,8 @@
       "title": "Лог урсгал — түвшнээр",
       "description": "Алдааны огцом өсөлт нь ихэвчлэн ослын хамгийн эрт дохио — метрик хөдлөхөөс өмнө лог хөдөлдөг.",
       "datasource": {
-        "type": "prometheus",
-        "uid": "nexus-prometheus"
+        "type": "loki",
+        "uid": "nexus-loki"
       },
       "gridPos": {
         "h": 8,
@@ -425,8 +425,8 @@
       "title": "Лог урсгал — контейнераар",
       "description": "Аль үйлчилгээ ярьж байна. Гэнэт чимээгүй болсон контейнер нь чанга болсонтой адил чухал.",
       "datasource": {
-        "type": "prometheus",
-        "uid": "nexus-prometheus"
+        "type": "loki",
+        "uid": "nexus-loki"
       },
       "gridPos": {
         "h": 8,
@@ -536,12 +536,17 @@
         "enableLogDetails": true,
         "dedupStrategy": "none",
         "sortOrder": "Descending"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "Энэ хугацаанд ийм мөр алга"
+        }
       }
     },
     {
       "type": "logs",
       "title": "Audit — хэн юу хийсэн",
-      "description": "Платформын audit мөрүүд. Хайх талбарт байгууллагын id, хэрэглэгчийн и-мэйл эсвэл үйлдлийн нэрийг бичиж нарийсга.",
+      "description": "Платформын audit мөрүүд. Хайх талбарт байгууллагын id, хэрэглэгчийн и-мэйл эсвэл үйлдлийн нэрийг бичиж нарийсга. Шүүлт нь `AUDIT_EVENT` — slog яг тэр үгээр бичдэг ба line filter нь том жижиг үсэг ялгадаг.",
       "datasource": {
         "type": "loki",
         "uid": "nexus-loki"
@@ -559,7 +564,7 @@
             "uid": "nexus-loki"
           },
           "editorMode": "code",
-          "expr": "{container=~\"$container\"} |= \"audit\" |= \"$search\"",
+          "expr": "{container=~\"$container\"} |= \"AUDIT_EVENT\" |= \"$search\"",
           "legendFormat": "",
           "range": true,
           "instant": false,
@@ -576,6 +581,11 @@
         "enableLogDetails": true,
         "dedupStrategy": "none",
         "sortOrder": "Descending"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "Энэ хугацаанд ийм мөр алга"
+        }
       }
     },
     {
@@ -616,6 +626,11 @@
         "enableLogDetails": true,
         "dedupStrategy": "none",
         "sortOrder": "Descending"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "Энэ хугацаанд ийм мөр алга"
+        }
       }
     }
   ],
