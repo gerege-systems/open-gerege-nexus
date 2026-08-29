@@ -270,6 +270,11 @@ export const cp = {
 
   operators: () => request<{ operators: OperatorSummary[] }>("/operators"),
 
+  // Everybody with an account on this deployment, and one of them in full.
+  roster: (search = "", filter = "", offset = 0) =>
+    request<Roster>(`/people/roster?q=${encodeURIComponent(search)}&filter=${encodeURIComponent(filter)}&offset=${offset}`),
+  person: (id: string) => request<PersonDetail>(`/people/${encodeURIComponent(id)}`),
+
   // Adding an operator. The answer carries the password and the enrolment once
   // and is never repeatable: nothing on the server can show them again.
   addOperator: (body: { email: string; name: string; role: string; reason: string }) =>
@@ -687,4 +692,60 @@ export interface VerifiedPerson {
   last_seen_at: string;
   /** How many organisations they already belong to. */
   organisations: number;
+}
+
+/** One row of the people roster. */
+export interface RosterPerson {
+  id: string;
+  email: string;
+  name: string;
+  /** Whether eID has ever vouched for this account. */
+  verified: boolean;
+  /** How many federated providers it is linked to. */
+  providers: number;
+  organisations: number;
+  sessions: number;
+  /** The newest session, which is as close to "last here" as the schema holds. */
+  last_seen_at: string | null;
+  locked_until: string | null;
+  active: boolean;
+  created_at: string;
+}
+
+export interface Roster {
+  people: RosterPerson[];
+  total: number;
+  counts: { verified: number; locked: number; homeless: number; signed_in: number };
+}
+
+/** One way into an account: eID, or a federated provider by its issuer. */
+export interface PersonIdentity {
+  kind: string;
+  subject: string;
+  detail: string;
+  linked_at: string;
+  last_seen_at: string | null;
+}
+
+export interface PersonMembership {
+  tenant_id: string;
+  tenant_name: string;
+  slug: string;
+  roles: string[];
+  joined_at: string;
+}
+
+export interface PersonSession {
+  id: string;
+  tenant_id: string | null;
+  created_at: string;
+  last_seen_at: string | null;
+  expires_at: string;
+}
+
+export interface PersonDetail extends RosterPerson {
+  identities: PersonIdentity[];
+  memberships: PersonMembership[];
+  open_sessions: PersonSession[];
+  impersonations: Array<{ operator_email: string; reason: string; created_at: string }>;
 }
