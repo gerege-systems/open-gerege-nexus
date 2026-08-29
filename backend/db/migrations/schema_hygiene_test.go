@@ -105,7 +105,7 @@ func TestEveryStringColumnCarriesItsLength(t *testing.T) {
 		  FROM information_schema.columns c
 		  JOIN information_schema.tables t
 		    ON t.table_schema = c.table_schema AND t.table_name = c.table_name
-		 WHERE c.table_schema IN ('registry', 'workspace')
+		 WHERE c.table_schema IN ('registry', 'workspace', 'operator')
 		   AND c.data_type = 'text'
 		   AND t.table_type = 'BASE TABLE'
 		 ORDER BY 1`)
