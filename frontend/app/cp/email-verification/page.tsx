@@ -16,20 +16,11 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { CheckCircle2, Clock, ExternalLink, MailCheck, RefreshCw, XCircle } from "lucide-react";
 
-import Console from "@/components/cp/Console";
 import { Badge, Card, formatMoment, Table } from "@/components/cp/ui";
 import { cp, type VerificationLedger } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 
-export default function ControlPlaneVerificationsPage() {
-  return (
-    <Console>
-      <Verifications />
-    </Console>
-  );
-}
-
-function Verifications() {
+export default function Verifications() {
   const { t, locale } = useI18n();
   const [ledger, setLedger] = useState<VerificationLedger | null>(null);
   const [failure, setFailure] = useState("");

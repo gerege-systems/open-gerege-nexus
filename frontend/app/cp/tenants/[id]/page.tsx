@@ -27,22 +27,14 @@ import {
   Wrench,
 } from "lucide-react";
 
-import Console, { useConsole } from "@/components/cp/Console";
+import { useConsole } from "@/components/cp/Console";
 import { useAction } from "@/components/cp/Action";
 import { Badge, Card, formatMoment, Table } from "@/components/cp/ui";
 import { cp, type Quota, type TenantDetail } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 import { Modal } from "@/components/ui";
 
-export default function ControlPlaneTenantPage() {
-  return (
-    <Console>
-      <Detail />
-    </Console>
-  );
-}
-
-function Detail() {
+export default function Detail() {
   const { t, locale } = useI18n();
   const { operator } = useConsole();
   const params = useParams<{ id: string }>();
