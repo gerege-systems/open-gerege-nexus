@@ -16,7 +16,7 @@ import {safeReturnPath} from "@/lib/safeReturnPath.mjs";
 /** Серверийн богино кодыг хүн уншихаар мессеж болгоно. Танихгүй кодыг — жишээ
     нь провайдерийн өөрийнх нь илгээсэн ер бусын алдааг — ерөнхий мэдэгдэл
     авна: код нь бүртгэлд үлддэг, дэлгэц дээр гарах ёсгүй. */
-const SSO_ERRORS:Record<string,TranslationKey>={no_account:"auth.sso.error_no_account",provider_unreachable:"auth.sso.error_unreachable",stale_request:"auth.sso.error_stale",access_denied:"auth.sso.error_denied",email_unverified:"auth.sso.error_email_unverified",domain_not_allowed:"auth.sso.error_domain_not_allowed"};
+const SSO_ERRORS:Record<string,TranslationKey>={no_account:"auth.sso.error_no_account",binding_failed:"auth.sso.error_binding",provider_unreachable:"auth.sso.error_unreachable",stale_request:"auth.sso.error_stale",access_denied:"auth.sso.error_denied",email_unverified:"auth.sso.error_email_unverified",domain_not_allowed:"auth.sso.error_domain_not_allowed"};
 
 /** Google-ийн албан ёсны дөрвөн өнгийн "G". */
 

@@ -257,7 +257,12 @@ func (h *Handlers) HandleGoogleCallback(w http.ResponseWriter, r *http.Request) 
 			token, bindErr := h.startIdentityBinding(r.Context(), h.googleLogin.Config().Issuer, identity)
 			if bindErr != nil {
 				slog.Error("could not start an identity binding", "error", bindErr)
-				h.failGoogle(w, r, "no_account")
+				// Not "no account": there is no account *yet*, and the screen
+				// that would have made one could not be reached. Saying
+				// no_account here sent somebody to a message telling them to
+				// ask their administrator for an account they were three
+				// clicks away from opening themselves.
+				h.failGoogle(w, r, "binding_failed")
 				return
 			}
 			slog.Info("a first Google sign-in is waiting on eID", "email", identity.Email)

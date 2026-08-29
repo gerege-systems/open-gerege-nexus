@@ -1,5 +1,10 @@
+// @vitest-environment node
+//
+// This file reads a stylesheet as text; it needs no document. Saying so keeps
+// Node's own `URL` in place — jsdom replaces it with the browser's, and
+// `readFileSync(new URL(...))` refuses one of those.
 import assert from "node:assert/strict";
-import test from "node:test";
+import { test } from "vitest";
 import { readFileSync } from "node:fs";
 
 // The mobile drawer opens, asserted as a number rather than as a screenshot.

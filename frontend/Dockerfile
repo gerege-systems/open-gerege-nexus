@@ -1,6 +1,11 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
+# Playwright's postinstall would otherwise fetch three browsers into a layer
+# that only ever runs `next build`. The end-to-end suite is CI's and the
+# developer's; the image does not run it.
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+
 # package-lock.json must be copied too, otherwise `npm ci` is impossible and
 # `npm install` silently resolves different dependency versions per build.
 COPY package.json package-lock.json ./
