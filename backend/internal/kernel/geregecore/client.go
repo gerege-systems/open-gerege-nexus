@@ -189,6 +189,31 @@ func (c *Client) FindPerson(ctx context.Context, search, countryCode string) (Pe
 // rather than with a status, so the body is read before the status is trusted:
 // a decoder that only looked at the code would hand back an empty record and
 // call it a hit.
+// notFoundPhrases are how the directory says it has no such record.
+//
+// It says it in Mongolian, and it says it with a 500: a search for a
+// registration number nobody is registered under answers
+//
+//	HTTP 500 {"message":"Мэдээлэл олдсонгүй"}
+//
+// The English phrase was the only one recognised until this list, so the
+// commonest outcome of a mistyped number — there is no such organisation —
+// reached the wizard as `502 the directory refused: Мэдээлэл олдсонгүй`
+// instead of the 404 the screen has a sentence for. Both are kept: the
+// directory is somebody else's service and its wording is theirs to change.
+var notFoundPhrases = []string{"not found", "олдсонгүй", "бүртгэлгүй"}
+
+// saysNotFound reports whether the directory's message means "no such record".
+func saysNotFound(message string) bool {
+	message = strings.ToLower(strings.TrimSpace(message))
+	for _, phrase := range notFoundPhrases {
+		if strings.Contains(message, phrase) {
+			return true
+		}
+	}
+	return false
+}
+
 func (c *Client) call(ctx context.Context, method, endpoint string, body []byte, out any) error {
 	var reader io.Reader
 	if body != nil {
@@ -218,7 +243,7 @@ func (c *Client) call(ctx context.Context, method, endpoint string, body []byte,
 		Message string `json:"message"`
 	}
 	if err := json.Unmarshal(payload, &problem); err == nil && problem.Message != "" {
-		if strings.Contains(strings.ToLower(problem.Message), "not found") {
+		if saysNotFound(problem.Message) {
 			return ErrNotFound
 		}
 		return fmt.Errorf("the directory refused: %s", problem.Message)
