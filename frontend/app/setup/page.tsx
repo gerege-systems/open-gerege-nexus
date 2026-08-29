@@ -29,6 +29,7 @@ import {
   SETUP_SLUG_PATTERN,
   isValidSetupSlug,
 } from "@/lib/setup";
+import { normaliseSlugInput, slugFromName } from "@/lib/slug.mjs";
 
 export default function SetupPage() {
   const { t } = useI18n();
@@ -42,6 +43,9 @@ export default function SetupPage() {
   // renders for one frame before the effect runs, so somebody who arrived on a
   // perfectly good link is asked to paste the token they are already holding.
   const [addressRead, setAddressRead] = useState(false);
+  // Хүн богино нэрийг өөрөө бичсэн эсэх. Бичсэн бол нэрнээс гарах санал түүнийг
+  // дарж бичихээ болино — санал бол эхлэл цэг, шийдвэр биш.
+  const [slugTouched, setSlugTouched] = useState(false);
   // Консолын бүртгэл үүсээд баталгаажсан эсэх. Шидтэн үүнээс цааш дахин тэр
   // алхмыг санал болгохгүй — бүртгэл нь давхардахгүй.
   const [operatorDone, setOperatorDone] = useState(false);
@@ -94,6 +98,9 @@ export default function SetupPage() {
       setName(found.name);
       setLegalName(found.legal_name);
       setSlug(found.suggested_slug);
+      // Регистрийн дугаараас гарсан санал нь нэрнээс галиглахаас найдвартай
+      // (цор ганц, тогтвортой) тул нэр солигдоход дарагдахгүй.
+      setSlugTouched(true);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -300,7 +307,14 @@ export default function SetupPage() {
           </label>
           <label>
             <span>{t("setup.field.organisation_name")}</span>
-            <input value={name} onChange={(e) => setName(e.target.value)} required />
+            <input
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+                if (!slugTouched) setSlug(slugFromName(e.target.value));
+              }}
+              required
+            />
           </label>
           <label>
             <span>{t("setup.field.legal_name")}</span>
@@ -310,7 +324,10 @@ export default function SetupPage() {
             <span>{t("setup.field.slug")}</span>
             <input
               value={slug}
-              onChange={(e) => setSlug(e.target.value)}
+              onChange={(e) => {
+                setSlugTouched(true);
+                setSlug(normaliseSlugInput(e.target.value));
+              }}
               pattern={SETUP_SLUG_PATTERN}
               required
             />
