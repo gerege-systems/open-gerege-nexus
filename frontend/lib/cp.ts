@@ -306,6 +306,12 @@ export const cp = {
   usageCSVURL: (tenantID: string) => `${BASE}/tenants/${tenantID}/usage.csv`,
 
   health: () => request<Overview>("/health"),
+
+  // System Operations: the three reads its screens stand on. Each one is a
+  // list the front page only counts.
+  platformUsage: () => request<PlatformUsage>("/usage"),
+  reportSchedules: () => request<{ schedules: ReportSchedule[] }>("/report-schedules"),
+  backups: (limit = 50) => request<{ backups: BackupEntry[]; status: Overview["backups"] }>(`/backups?limit=${limit}`),
   catalogStatus: () => request<Overview["catalog"]>("/catalog/status"),
   catalogOverview: () => request<{ catalog: Overview["catalog"]; platform: Overview["version"] }>("/catalog/overview"),
   syncCatalog: (reason: string) =>
@@ -524,4 +530,49 @@ export interface VerificationLedger {
     provider_url: string;
     admin_url: string;
   };
+}
+
+/** One organisation's line in the platform usage report. */
+export interface TenantUsageLine {
+  tenant_id: string;
+  tenant_name: string;
+  slug: string;
+  suspended: boolean;
+  /** Only the metrics counted for this organisation this month. */
+  metrics: Record<string, number>;
+  /** Null is "never counted", which reads differently from a row of zeroes. */
+  collected: string | null;
+}
+
+export interface PlatformUsage {
+  month: string;
+  metrics: string[];
+  tenants: TenantUsageLine[];
+  totals: Record<string, number>;
+}
+
+export interface ReportSchedule {
+  id: string;
+  tenant_id: string;
+  tenant_name: string;
+  name: string;
+  report_key: string;
+  cron: string;
+  format: string;
+  recipients: string[];
+  active: boolean;
+  last_run_at: string | null;
+  last_status: string;
+}
+
+export interface BackupEntry {
+  id: string;
+  kind: "backup" | "restore_test";
+  started_at: string;
+  finished_at: string | null;
+  size_mb: number;
+  ok: boolean;
+  detail: string;
+  /** Empty for the script's own rows; an operator id for a hand-written one. */
+  recorded_by: string;
 }

@@ -22,11 +22,16 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   Activity,
   BrainCircuit,
+  BarChart3,
+  BellRing,
   Building2,
+  CalendarClock,
   CheckCheck,
   ChevronDown,
   ChevronsDownUp,
   ChevronsUpDown,
+  DatabaseBackup,
+  Gauge,
   LayoutGrid,
   LifeBuoy,
   MailCheck,
@@ -34,8 +39,10 @@ import {
   Menu as HamburgerIcon,
   ScrollText,
   Search,
+  ServerCog,
   ShieldCheck,
   SlidersHorizontal,
+  Timer,
 } from "lucide-react";
 
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -45,30 +52,86 @@ import { useI18n } from "@/lib/i18n";
 import { useBrand } from "@/lib/brandContext";
 import { useTheme } from "@/lib/theme";
 
-// The console's modules, in the shape the workspace's panel draws them: a
-// group per section, a destination per row. Ids are the translation keys,
-// which are also what the folded set is remembered by — a stable string that
-// does not change when the operator changes language.
+// The console's apps, in the shape the workspace draws them: a tile in the
+// rail, and under it the groups of destinations its panel shows. Ids are
+// translation keys, which are also what the folded set is remembered by — a
+// stable string that does not change when the operator changes language.
 interface ConsoleDestination { href: string; label: string; icon: React.ReactNode; exact?: boolean }
-const SECTIONS: { id: string; items: ConsoleDestination[] }[] = [
-  { id: "cp.group.watch", items: [
-    { href: "/cp", exact: true, label: "cp.section.health", icon: <Activity className="w-5 h-5" /> },
-  ] },
-  { id: "cp.group.organisations", items: [
-    { href: "/cp/tenants", label: "cp.section.tenants", icon: <Building2 className="w-5 h-5" /> },
-    { href: "/cp/support", label: "cp.section.support", icon: <LifeBuoy className="w-5 h-5" /> },
-    { href: "/cp/approvals", label: "cp.section.approvals", icon: <CheckCheck className="w-5 h-5" /> },
-  ] },
-  { id: "cp.group.platform", items: [
-    { href: "/cp/config", label: "cp.section.config", icon: <SlidersHorizontal className="w-5 h-5" /> },
-    { href: "/cp/announcements", label: "cp.section.announcements", icon: <Megaphone className="w-5 h-5" /> },
-    { href: "/cp/assistant", label: "cp.section.assistant", icon: <BrainCircuit className="w-5 h-5" /> },
-    { href: "/cp/email-verification", label: "cp.section.verifications", icon: <MailCheck className="w-5 h-5" /> },
-  ] },
-  { id: "cp.group.investigation", items: [
-    { href: "/cp/audit", label: "cp.section.audit", icon: <ScrollText className="w-5 h-5" /> },
-  ] },
+interface ConsoleSection { id: string; items: ConsoleDestination[] }
+interface ConsoleApp { id: string; label: string; icon: React.ReactNode; sections: ConsoleSection[] }
+
+const APPS: ConsoleApp[] = [
+  {
+    id: "console",
+    label: "cp.view.title",
+    icon: <LayoutGrid className="w-5 h-5" />,
+    sections: [
+      { id: "cp.group.watch", items: [
+        { href: "/cp", exact: true, label: "cp.section.health", icon: <Activity className="w-5 h-5" /> },
+      ] },
+      { id: "cp.group.organisations", items: [
+        { href: "/cp/tenants", label: "cp.section.tenants", icon: <Building2 className="w-5 h-5" /> },
+        { href: "/cp/support", label: "cp.section.support", icon: <LifeBuoy className="w-5 h-5" /> },
+        { href: "/cp/approvals", label: "cp.section.approvals", icon: <CheckCheck className="w-5 h-5" /> },
+      ] },
+      { id: "cp.group.platform", items: [
+        { href: "/cp/config", label: "cp.section.config", icon: <SlidersHorizontal className="w-5 h-5" /> },
+        { href: "/cp/announcements", label: "cp.section.announcements", icon: <Megaphone className="w-5 h-5" /> },
+        { href: "/cp/assistant", label: "cp.section.assistant", icon: <BrainCircuit className="w-5 h-5" /> },
+        { href: "/cp/email-verification", label: "cp.section.verifications", icon: <MailCheck className="w-5 h-5" /> },
+      ] },
+      { id: "cp.group.investigation", items: [
+        { href: "/cp/audit", label: "cp.section.audit", icon: <ScrollText className="w-5 h-5" /> },
+      ] },
+    ],
+  },
+  {
+    // Running the deployment rather than administering what is on it: the
+    // three questions an operator asks at 3am — is it up, is anything being
+    // produced, and is anything being kept.
+    id: "ops",
+    label: "cp.app.ops",
+    icon: <ServerCog className="w-5 h-5" />,
+    sections: [
+      { id: "cp.group.monitor", items: [
+        { href: "/cp/ops", exact: true, label: "cp.section.metrics", icon: <Gauge className="w-5 h-5" /> },
+        { href: "/cp/ops/alerts", label: "cp.section.alerts", icon: <BellRing className="w-5 h-5" /> },
+        { href: "/cp/ops/jobs", label: "cp.section.jobs", icon: <Timer className="w-5 h-5" /> },
+      ] },
+      { id: "cp.group.report", items: [
+        { href: "/cp/ops/usage", label: "cp.section.usage", icon: <BarChart3 className="w-5 h-5" /> },
+        { href: "/cp/ops/schedules", label: "cp.section.schedules", icon: <CalendarClock className="w-5 h-5" /> },
+      ] },
+      { id: "cp.group.backup", items: [
+        { href: "/cp/ops/backups", label: "cp.section.backups", icon: <DatabaseBackup className="w-5 h-5" /> },
+      ] },
+    ],
+  },
 ];
+
+// Which app the operator is in.
+//
+// The longest matching destination wins, as the workspace's rail decides it:
+// "/cp/ops" and "/cp" both prefix-match a route under ops, and a plain
+// startsWith would light the console tile on every screen in the deployment.
+function appFor(pathname: string): ConsoleApp {
+  let best = APPS[0];
+  let bestLength = -1;
+  for (const app of APPS) {
+    for (const section of app.sections) {
+      for (const item of section.items) {
+        const matches = item.exact
+          ? pathname === item.href
+          : pathname === item.href || pathname.startsWith(item.href + "/");
+        if (matches && item.href.length > bestLength) {
+          best = app;
+          bestLength = item.href.length;
+        }
+      }
+    }
+  }
+  return best;
+}
 
 // Its own keys, not the workspace's: an operator's folded groups and a tenant
 // user's are different opinions that happen to share a browser.
@@ -94,6 +157,8 @@ export default function Console({ children }: { children: React.ReactNode }) {
   const brand = useBrand();
   const theme = useTheme();
   const router = useRouter();
+  const pathname = usePathname();
+  const app = appFor(pathname);
   const [operator, setOperator] = useState<Operator | null>(null);
   const [loading, setLoading] = useState(true);
   const [panelOpen, setPanelOpen] = useState(true);
@@ -118,12 +183,12 @@ export default function Console({ children }: { children: React.ReactNode }) {
   }
   function persistGroups(next: string[]) { setClosedGroups(next); localStorage.setItem(GROUPS_KEY, JSON.stringify(next)); }
   function toggleGroup(id: string) { persistGroups(closedGroups.includes(id) ? closedGroups.filter((x) => x !== id) : [...closedGroups, id]); }
-  const allGroupsOpen = SECTIONS.every((section) => !closedGroups.includes(section.id));
-  function toggleAllGroups() { persistGroups(allGroupsOpen ? SECTIONS.map((section) => section.id) : []); }
+  const allGroupsOpen = app.sections.every((section) => !closedGroups.includes(section.id));
+  function toggleAllGroups() { persistGroups(allGroupsOpen ? app.sections.map((section) => section.id) : []); }
 
   const needle = query.trim().toLocaleLowerCase();
   const results = needle
-    ? SECTIONS.flatMap((section) => section.items.map((item) => ({ ...item, group: section.id })))
+    ? APPS.flatMap((entry) => entry.sections.flatMap((section) => section.items.map((item) => ({ ...item, group: section.id }))))
         .filter((item) => t(item.label).toLocaleLowerCase().includes(needle))
         .slice(0, 8)
     : [];
@@ -201,10 +266,10 @@ export default function Console({ children }: { children: React.ReactNode }) {
             )}
           </Link>
           <div className={`gerege-header-context h-full flex items-center gap-3 overflow-hidden transition-all duration-200 ${panelOpen ? "is-open" : ""}`}>
-            <span className="shrink-0 text-[var(--gerege-blue)]"><ShieldCheck className="w-5 h-5" /></span>
+            <span className="shrink-0 text-[var(--gerege-blue)]">{app.icon}</span>
             <span className="min-w-0">
               <small className="block text-[11px] leading-4 text-slate-500 truncate">{brand.name}</small>
-              <strong className="block text-[15px] leading-5 text-slate-900 truncate">{t("cp.view.title")}</strong>
+              <strong className="block text-[15px] leading-5 text-slate-900 truncate">{t(app.label)}</strong>
             </span>
           </div>
           <div className="gerege-menu-toggle h-full shrink-0 flex items-center justify-center gap-1">
@@ -274,24 +339,30 @@ export default function Console({ children }: { children: React.ReactNode }) {
         <div className="flex flex-1 min-h-0">
           {mobileOpen && <button type="button" className="gerege-mobile-backdrop fixed inset-0 top-16 bg-slate-950/40 z-30" aria-label={t("web.action.close_menu")} onClick={() => setMobileOpen(false)} />}
           <div className={`gerege-sidebar top-16 bottom-0 left-0 z-40 flex overflow-hidden ${mobileOpen ? "is-mobile-open" : ""} ${panelOpen ? "is-desktop-open" : ""}`}>
-            {/* Division one: the app rail. The console is a single app, so it
-                is a single tile — the shape a workspace with nothing installed
-                shows. */}
+            {/* Division one: the app rail, a tile per console app. */}
             <nav className="w-16 min-w-16 shrink-0 py-3 flex flex-col items-center gap-2 border-r border-[var(--gerege-border)]">
-              <Link
-                href="/cp"
-                title={t("cp.view.title")}
-                aria-label={t("cp.view.title")}
-                className="w-11 h-11 rounded-xl grid place-items-center transition bg-[var(--gerege-blue-soft)] text-[var(--gerege-blue)] shadow-sm"
-              >
-                <LayoutGrid className="w-5 h-5" />
-              </Link>
+              {APPS.map((entry) => (
+                <Link
+                  key={entry.id}
+                  href={entry.sections[0].items[0].href}
+                  title={t(entry.label)}
+                  aria-label={t(entry.label)}
+                  aria-current={entry.id === app.id ? "page" : undefined}
+                  className={`w-11 h-11 rounded-xl grid place-items-center transition ${
+                    entry.id === app.id
+                      ? "bg-[var(--gerege-blue-soft)] text-[var(--gerege-blue)] shadow-sm"
+                      : "text-slate-500 hover:bg-[var(--gerege-surface-2)] hover:text-slate-800"
+                  }`}
+                >
+                  {entry.icon}
+                </Link>
+              ))}
             </nav>
-            {/* Division two: that app's modules. */}
+            {/* Division two: the current app's modules. */}
             <aside className="gerege-menu-panel overflow-hidden">
               <div className="w-56 py-4">
                 <nav className="space-y-1 px-2">
-                  {SECTIONS.map((section) => (
+                  {app.sections.map((section) => (
                     <MenuGroup key={section.id} id={section.id} title={t(section.id)} closed={closedGroups.includes(section.id)} onToggle={toggleGroup}>
                       {section.items.map((item) => (
                         <ConsoleLink key={item.href} href={item.href} exact={item.exact} icon={item.icon} label={t(item.label)} />
