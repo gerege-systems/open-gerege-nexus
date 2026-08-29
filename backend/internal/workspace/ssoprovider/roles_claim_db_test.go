@@ -27,6 +27,12 @@ func TestRolesClaimNamesTheDeploymentsFirstAdministrator(t *testing.T) {
 	ctx := context.Background()
 	makeTenantAdmin(t, f)
 
+	// An organisation older than the fixture's. Inserted rather than assumed:
+	// the shared development database has years of them and a CI database has
+	// none, so a test that relies on what is already there passes in one place
+	// and fails in the other — which is how the first version of this went red.
+	insertTenant(t, f, "organisation", "1970-01-01T00:00:00Z", nil)
+
 	t.Run("an admin of a later organisation is not the platform admin", func(t *testing.T) {
 		claims := verifyIDToken(t, f, idTokenWithRoles(t, f))
 
@@ -40,39 +46,20 @@ func TestRolesClaimNamesTheDeploymentsFirstAdministrator(t *testing.T) {
 	})
 
 	t.Run("the admin of the first organisation is", func(t *testing.T) {
-		// The wizard's organisation is the one with no organisation before it.
-		// Backdating is how this test becomes that one without depending on
-		// what else the shared database happens to hold.
+		// Older than the one above, so the fixture's organisation becomes the
+		// deployment's first.
 		if _, err := f.pool.Exec(ctx,
-			`UPDATE registry.tenants SET created_at = '1970-01-01T00:00:00Z' WHERE id = $1::uuid`,
+			`UPDATE registry.tenants SET created_at = '1960-01-01T00:00:00Z' WHERE id = $1::uuid`,
 			f.tenantID); err != nil {
 			t.Fatalf("backdate the organisation: %v", err)
 		}
 
-		// And an older *personal* workspace, which is a row in the same table
-		// and must not count. Without the kind filter this makes the assertion
-		// below fail — which is the point of creating it.
-		var homeUser string
-		if err := f.pool.QueryRow(ctx,
-			`INSERT INTO registry.users (email, password_hash, name)
-			 VALUES ('home-' || substr(gen_random_uuid()::text, 1, 8) || '@example.com', 'x', 'Home')
-			 RETURNING id::text`).Scan(&homeUser); err != nil {
-			t.Fatalf("home owner: %v", err)
-		}
-		var homeTenant string
-		if err := f.pool.QueryRow(ctx,
-			`INSERT INTO registry.tenants (slug, name, kind, owner_user_id, created_at)
-			 VALUES ('home-' || substr(gen_random_uuid()::text, 1, 8), 'Home', 'personal',
-			         $1::uuid, '1960-01-01T00:00:00Z')
-			 RETURNING id::text`, homeUser).Scan(&homeTenant); err != nil {
-			t.Fatalf("home workspace: %v", err)
-		}
-		t.Cleanup(func() {
-			_, _ = f.pool.Exec(context.Background(),
-				`DELETE FROM registry.tenants WHERE id = $1::uuid`, homeTenant)
-			_, _ = f.pool.Exec(context.Background(),
-				`DELETE FROM registry.users WHERE id = $1::uuid`, homeUser)
-		})
+		// And a *personal* workspace older than everything, which is a row in
+		// the same table and must not count. Without the kind filter in
+		// grantedRoles this makes the assertion below fail — which is the point
+		// of creating it.
+		owner := insertUser(t, f)
+		insertTenant(t, f, "personal", "1950-01-01T00:00:00Z", &owner)
 
 		claims := verifyIDToken(t, f, idTokenWithRoles(t, f))
 		if claims["platform_admin"] != true {
@@ -80,6 +67,7 @@ func TestRolesClaimNamesTheDeploymentsFirstAdministrator(t *testing.T) {
 				claims["platform_admin"])
 		}
 	})
+
 }
 
 // userinfo has to answer the same thing as the id_token. Grafana reads whichever
@@ -126,6 +114,40 @@ func TestRolesAreAbsentWithoutTheScope(t *testing.T) {
 }
 
 // helpers
+
+// insertUser adds an account with no membership anywhere.
+func insertUser(t *testing.T, f *fixture) string {
+	t.Helper()
+	var id string
+	if err := f.pool.QueryRow(context.Background(),
+		`INSERT INTO registry.users (email, password_hash, name)
+		 VALUES ('roles-' || substr(gen_random_uuid()::text, 1, 8) || '@example.com', 'x', 'Roles Test')
+		 RETURNING id::text`).Scan(&id); err != nil {
+		t.Fatalf("user: %v", err)
+	}
+	t.Cleanup(func() {
+		_, _ = f.pool.Exec(context.Background(), `DELETE FROM registry.users WHERE id = $1::uuid`, id)
+	})
+	return id
+}
+
+// insertTenant adds an organisation or a personal workspace with an explicit
+// creation time, so "first" is decided by this test rather than by whatever the
+// database already holds.
+func insertTenant(t *testing.T, f *fixture, kind, createdAt string, owner *string) string {
+	t.Helper()
+	var id string
+	if err := f.pool.QueryRow(context.Background(),
+		`INSERT INTO registry.tenants (slug, name, kind, owner_user_id, created_at)
+		 VALUES ('roles-' || substr(gen_random_uuid()::text, 1, 8), 'Roles test', $1, $2, $3::timestamptz)
+		 RETURNING id::text`, kind, owner, createdAt).Scan(&id); err != nil {
+		t.Fatalf("tenant (%s): %v", kind, err)
+	}
+	t.Cleanup(func() {
+		_, _ = f.pool.Exec(context.Background(), `DELETE FROM registry.tenants WHERE id = $1::uuid`, id)
+	})
+	return id
+}
 
 // makeTenantAdmin gives the fixture's user the `admin` role in the fixture's
 // organisation — the three rows tenants.ensureAdmin writes for the first
