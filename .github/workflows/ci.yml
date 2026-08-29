@@ -181,8 +181,9 @@ jobs:
         with:
           go-version-file: backend/go.mod
           cache-dependency-path: backend/go.sum
-      - name: go vet
-        run: go vet ./...
+      # `go vet` энд байхаа больсон: Lint ажлын golangci-lint нь govet-ыг
+      # анхдагчаар агуулдаг тул ижил шинжилгээ хоёр удаа хийгдэж байв. Хэсэг
+      # бүрд 33 секунд — учир нь vet бүх багцыг хөрвүүлдэг.
       - name: Migrate the test database
         run: go run ./cmd/migrate up
       - name: Run tests
