@@ -76,9 +76,9 @@ datasources:
         spanEndTimeShift: "5m"
         queries:
           - name: "Request rate"
-            query: 'sum(rate(http_requests_total[$__rate_interval]))'
+            query: 'sum(rate(http_server_request_duration_seconds_count[$__rate_interval]))'
           - name: "Error rate"
-            query: 'sum(rate(http_requests_total{status=~"5.."}[$__rate_interval]))'
+            query: 'sum(rate(http_server_request_duration_seconds_count{http_response_status_code=~"5.."}[$__rate_interval]))'
       # The service graph Tempo's metrics generator writes into Prometheus.
       serviceMap:
         datasourceUid: nexus-prometheus

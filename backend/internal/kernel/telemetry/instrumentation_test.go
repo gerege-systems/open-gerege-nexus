@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
@@ -18,6 +19,25 @@ import (
 	dto "github.com/prometheus/client_model/go"
 )
 
+// TestMain installs the metric pipeline once for the whole package.
+//
+// Nothing in this package exports anything until it runs: the instruments are
+// created at package initialisation through OpenTelemetry's *global* meter
+// provider, which is a no-op that delegates, and SetupMetrics is what installs
+// the real provider and puts its Prometheus exporter on the default registry.
+// Every assertion below gathers from that registry, so without this they would
+// all read zero — and would go on passing, because zero is what a counter that
+// has never moved also reads.
+func TestMain(m *testing.M) {
+	shutdown, err := telemetry.SetupMetrics("gerege-nexus-test", "test")
+	if err != nil {
+		panic("could not set up metrics: " + err.Error())
+	}
+	code := m.Run()
+	_ = shutdown(context.Background())
+	os.Exit(code)
+}
+
 // The saturation half of the golden signals depends on collectors this package
 // does not register itself. If client_golang ever stops registering them by
 // default, /metrics goes quiet about the runtime with nothing else saying so.
@@ -27,19 +47,65 @@ func TestRuntimeCollectorsAreRegistered(t *testing.T) {
 	}
 }
 
-// A pool collector with no pool must not panic. A test server has no database
-// and still scrapes /metrics.
+// A pool collector with no pool must not panic and must export nothing. A test
+// server has no database and still scrapes /metrics.
 func TestPoolCollectorWithoutPool(t *testing.T) {
-	registry := prometheus.NewPedanticRegistry()
-	if err := registry.Register(telemetry.NewPoolCollector(nil)); err != nil {
-		t.Fatalf("register: %v", err)
+	telemetry.RegisterPoolCollector(nil)
+	if findMetric(t, "pgxpool_max_conns", nil) != nil {
+		t.Fatal("a nil pool exported pgxpool_max_conns")
 	}
-	families, err := registry.Gather()
-	if err != nil {
-		t.Fatalf("gather: %v", err)
+}
+
+// The rename. `http_requests_total` and `http_request_duration_seconds` were
+// this platform's own names; the HTTP semantic conventions call for one
+// histogram, and its `_count` series is the request count. Every alert rule,
+// dashboard panel and console query was moved onto these names at the same
+// time, so a silent revert here — an exporter default changing the translation
+// strategy, say — would blank all three at once with nothing failing.
+func TestHTTPMetricFollowsSemanticConventions(t *testing.T) {
+	labels := map[string]string{
+		"http_request_method":       http.MethodGet,
+		"http_route":                "/api/v1/semconv/{id}",
+		"http_response_status_code": "204",
 	}
-	if len(families) != 0 {
-		t.Fatalf("expected no samples from a nil pool, got %d families", len(families))
+	before := histogramCount(t, "http_server_request_duration_seconds", labels)
+
+	router := chi.NewRouter()
+	router.Use(telemetry.MetricsMiddleware)
+	router.Get("/api/v1/semconv/{id}", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	})
+	router.ServeHTTP(httptest.NewRecorder(),
+		httptest.NewRequest(http.MethodGet, "/api/v1/semconv/abc", nil))
+
+	if after := histogramCount(t, "http_server_request_duration_seconds", labels); after != before+1 {
+		t.Fatalf("http_server_request_duration_seconds did not move: %d → %d", before, after)
+	}
+	if findMetric(t, "http_requests_total", nil) != nil {
+		t.Error("the old http_requests_total is still being exported")
+	}
+}
+
+// A method is a token net/http will accept in any shape, so an unrecognised one
+// must not become an attribute value: that is an unbounded series count driven
+// by whoever is sending the requests.
+func TestInventedMethodsDoNotMintSeries(t *testing.T) {
+	// Straight at the middleware rather than through chi, because chi refuses
+	// to *register* a route for an invented verb — but it still runs the
+	// middleware chain for a request that arrives with one, on its way to the
+	// 405. That is the path this guards.
+	handler := telemetry.MetricsMiddleware(http.HandlerFunc(
+		func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusMethodNotAllowed) }))
+	handler.ServeHTTP(httptest.NewRecorder(),
+		httptest.NewRequest("XYZZY", "/api/v1/invented", nil))
+
+	if findMetric(t, "http_server_request_duration_seconds",
+		map[string]string{"http_request_method": "XYZZY"}) != nil {
+		t.Fatal("an invented HTTP method reached the exposition as its own series")
+	}
+	if findMetric(t, "http_server_request_duration_seconds",
+		map[string]string{"http_request_method": "_OTHER"}) == nil {
+		t.Fatal("the invented method was not folded into _OTHER")
 	}
 }
 

@@ -53,9 +53,10 @@ func NewLoadShedder(maxInFlight int64) *LoadShedder {
 func (ls *LoadShedder) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		current := atomic.AddInt64(&ls.current, 1)
-		telemetry.InFlightRequests.Set(float64(current))
+		telemetry.EnterFlight()
 		defer func() {
-			telemetry.InFlightRequests.Set(float64(atomic.AddInt64(&ls.current, -1)))
+			atomic.AddInt64(&ls.current, -1)
+			telemetry.LeaveFlight()
 		}()
 
 		if current > ls.maxInFlight {

@@ -26,9 +26,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.43.0"
 	"go.opentelemetry.io/otel/trace"
 	"go.opentelemetry.io/otel/trace/noop"
 )
@@ -74,18 +72,13 @@ func SetupTracing(ctx context.Context, serviceName, env string) (ShutdownFunc, e
 		return nil, fmt.Errorf("tracing: could not build the OTLP exporter: %w", err)
 	}
 
-	// The semconv version has to be the one resource.Default() was built
-	// against, or Merge refuses with "conflicting Schema URL" and tracing is
-	// dead on arrival — silently, because the failure is logged and the process
-	// carries on. It was, until running it once caught it. When the otel SDK is
-	// upgraded, this import moves with it.
-	res, err := resource.Merge(resource.Default(), resource.NewWithAttributes(
-		semconv.SchemaURL,
-		semconv.ServiceName(serviceName),
-		semconv.DeploymentEnvironmentNameKey.String(env),
-	))
+	// Shared with the metric pipeline, so a span and a sample agree on which
+	// service, which version and which deployment they came from — which is
+	// what lets Grafana pivot from one to the other. See describeService for
+	// the semconv-version trap it is written to avoid.
+	res, err := describeService(serviceName, env)
 	if err != nil {
-		return nil, fmt.Errorf("tracing: could not describe this service: %w", err)
+		return nil, err
 	}
 
 	provider := sdktrace.NewTracerProvider(

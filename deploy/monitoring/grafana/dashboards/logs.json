@@ -1,0 +1,622 @@
+{
+  "uid": "nexus-logs",
+  "title": "Nexus — Логууд",
+  "description": "Лог хайлт: түвшин, контейнер, чөлөөт текстээр. Хүсэлтийн бүх мөрийг X-Request-Id-ээр, нэг мөрөөс түүний trace руу нэг товшилтоор очно.",
+  "tags": [
+    "nexus",
+    "logs"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": false,
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "graphTooltip": 1,
+  "annotations": {
+    "list": []
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "container",
+        "label": "Контейнер",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "nexus-loki"
+        },
+        "query": {
+          "label": "container",
+          "refId": "LokiVariableQueryEditor-VariableQuery",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "gerege_nexus_backend"
+          ],
+          "value": [
+            "gerege_nexus_backend"
+          ]
+        },
+        "options": [],
+        "sort": 1,
+        "hide": 0,
+        "description": "Аль контейнерийн лог. Өгөгдмөл нь backend — бусад нь сонголтоор."
+      },
+      {
+        "name": "search",
+        "label": "Хайх",
+        "type": "textbox",
+        "query": "",
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "options": [],
+        "hide": 0,
+        "description": "Мөрөнд агуулагдах текст. Хоосон бол шүүлтгүй. request_id, tenant_id, и-мэйл, алдааны текст — ямар ч утга болно."
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Мөр/сек",
+      "description": "Бүх сонгосон контейнерийн лог урсгал.",
+      "datasource": {
+        "type": "loki",
+        "uid": "nexus-loki"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nexus-loki"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate({container=~\"$container\"} |= \"$search\" [$__rate_interval]))",
+          "legendFormat": "",
+          "range": true,
+          "instant": false,
+          "refId": "A",
+          "queryType": "range"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Алдаа/сек",
+      "description": "level=ERROR. Тэг байх нь хэвийн — тэгээс дээш байвал доорх мөрүүдийг хар.",
+      "datasource": {
+        "type": "loki",
+        "uid": "nexus-loki"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nexus-loki"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate({container=~\"$container\", level=\"error\"} |= \"$search\" [$__rate_interval]))",
+          "legendFormat": "",
+          "range": true,
+          "instant": false,
+          "refId": "A",
+          "queryType": "range"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.01
+              },
+              {
+                "color": "red",
+                "value": 0.5
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Сүүлийн цагийн алдаа",
+      "description": "Тоо ширхэгээр — хувь биш. Нэг алдаа ч гэсэн шалтгаантай.",
+      "datasource": {
+        "type": "loki",
+        "uid": "nexus-loki"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nexus-loki"
+          },
+          "editorMode": "code",
+          "expr": "sum(count_over_time({container=~\"$container\", level=\"error\"} |= \"$search\" [1h]))",
+          "legendFormat": "",
+          "range": true,
+          "instant": false,
+          "refId": "A",
+          "queryType": "range"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 50
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Сүүлийн цагийн warning",
+      "description": "Ихэвчлэн засах шаардлагагүй, гэхдээ давтагдвал шалтгаан бий.",
+      "datasource": {
+        "type": "loki",
+        "uid": "nexus-loki"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nexus-loki"
+          },
+          "editorMode": "code",
+          "expr": "sum(count_over_time({container=~\"$container\", level=\"warn\"} |= \"$search\" [1h]))",
+          "legendFormat": "",
+          "range": true,
+          "instant": false,
+          "refId": "A",
+          "queryType": "range"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "type": "row",
+      "title": "Урсгал",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "Лог урсгал — түвшнээр",
+      "description": "Алдааны огцом өсөлт нь ихэвчлэн ослын хамгийн эрт дохио — метрик хөдлөхөөс өмнө лог хөдөлдөг.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nexus-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nexus-loki"
+          },
+          "editorMode": "code",
+          "expr": "sum by (level) (rate({container=~\"$container\"} |= \"$search\" [$__rate_interval]))",
+          "legendFormat": "{{level}}",
+          "range": true,
+          "instant": false,
+          "refId": "A",
+          "queryType": "range"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "mean",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Лог урсгал — контейнераар",
+      "description": "Аль үйлчилгээ ярьж байна. Гэнэт чимээгүй болсон контейнер нь чанга болсонтой адил чухал.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nexus-prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nexus-loki"
+          },
+          "editorMode": "code",
+          "expr": "sum by (container) (rate({container=~\"$container\"} |= \"$search\" [$__rate_interval]))",
+          "legendFormat": "{{container}}",
+          "range": true,
+          "instant": false,
+          "refId": "A",
+          "queryType": "range"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "mean",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "Мөрүүд",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 13
+      },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "logs",
+      "title": "Алдаанууд",
+      "description": "level=ERROR. Мөр бүр trace_id-тай бол баруун талд нь Tempo руу нээх товч гарна — datasource дээрх derivedFields үүнийг хийдэг.",
+      "datasource": {
+        "type": "loki",
+        "uid": "nexus-loki"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 14
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nexus-loki"
+          },
+          "editorMode": "code",
+          "expr": "{container=~\"$container\", level=\"error\"} |= \"$search\"",
+          "legendFormat": "",
+          "range": true,
+          "instant": false,
+          "refId": "A",
+          "queryType": "range"
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": true,
+        "enableLogDetails": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      }
+    },
+    {
+      "type": "logs",
+      "title": "Audit — хэн юу хийсэн",
+      "description": "Платформын audit мөрүүд. Хайх талбарт байгууллагын id, хэрэглэгчийн и-мэйл эсвэл үйлдлийн нэрийг бичиж нарийсга.",
+      "datasource": {
+        "type": "loki",
+        "uid": "nexus-loki"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 24
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nexus-loki"
+          },
+          "editorMode": "code",
+          "expr": "{container=~\"$container\"} |= \"audit\" |= \"$search\"",
+          "legendFormat": "",
+          "range": true,
+          "instant": false,
+          "refId": "A",
+          "queryType": "range"
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": true,
+        "enableLogDetails": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      }
+    },
+    {
+      "type": "logs",
+      "title": "Бүх мөр",
+      "description": "Шүүлтгүй урсгал. Нэг хүсэлтийн бүх мөрийг харах хамгийн хурдан зам нь хариуны X-Request-Id толгойг Хайх талбарт буулгах.",
+      "datasource": {
+        "type": "loki",
+        "uid": "nexus-loki"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 34
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nexus-loki"
+          },
+          "editorMode": "code",
+          "expr": "{container=~\"$container\"} |= \"$search\"",
+          "legendFormat": "",
+          "range": true,
+          "instant": false,
+          "refId": "A",
+          "queryType": "range"
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": true,
+        "enableLogDetails": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      }
+    }
+  ]
+}

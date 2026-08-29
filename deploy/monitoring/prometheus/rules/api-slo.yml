@@ -31,33 +31,33 @@ groups:
       # about what "the error rate" means.
       - record: nexus:request_error_ratio:rate5m
         expr: |
-          sum(rate(http_requests_total{status=~"5.."}[5m]))
+          sum(rate(http_server_request_duration_seconds_count{http_response_status_code=~"5.."}[5m]))
           /
-          clamp_min(sum(rate(http_requests_total[5m])), 0.001)
+          clamp_min(sum(rate(http_server_request_duration_seconds_count[5m])), 0.001)
 
       - record: nexus:request_error_ratio:rate30m
         expr: |
-          sum(rate(http_requests_total{status=~"5.."}[30m]))
+          sum(rate(http_server_request_duration_seconds_count{http_response_status_code=~"5.."}[30m]))
           /
-          clamp_min(sum(rate(http_requests_total[30m])), 0.001)
+          clamp_min(sum(rate(http_server_request_duration_seconds_count[30m])), 0.001)
 
       - record: nexus:request_error_ratio:rate1h
         expr: |
-          sum(rate(http_requests_total{status=~"5.."}[1h]))
+          sum(rate(http_server_request_duration_seconds_count{http_response_status_code=~"5.."}[1h]))
           /
-          clamp_min(sum(rate(http_requests_total[1h])), 0.001)
+          clamp_min(sum(rate(http_server_request_duration_seconds_count[1h])), 0.001)
 
       - record: nexus:request_error_ratio:rate6h
         expr: |
-          sum(rate(http_requests_total{status=~"5.."}[6h]))
+          sum(rate(http_server_request_duration_seconds_count{http_response_status_code=~"5.."}[6h]))
           /
-          clamp_min(sum(rate(http_requests_total[6h])), 0.001)
+          clamp_min(sum(rate(http_server_request_duration_seconds_count[6h])), 0.001)
 
       - record: nexus:request_error_ratio:rate3d
         expr: |
-          sum(rate(http_requests_total{status=~"5.."}[3d]))
+          sum(rate(http_server_request_duration_seconds_count{http_response_status_code=~"5.."}[3d]))
           /
-          clamp_min(sum(rate(http_requests_total[3d])), 0.001)
+          clamp_min(sum(rate(http_server_request_duration_seconds_count[3d])), 0.001)
 
       # 14.4 × 0.001 = 0.0144. At this rate the whole month's budget is gone in
       # roughly two days, and 2% of it in the hour this fires on.
@@ -124,7 +124,7 @@ groups:
         expr: |
           histogram_quantile(0.95,
             sum by (le) (
-              rate(http_request_duration_seconds_bucket{path!~".*/poll"}[10m])
+              rate(http_server_request_duration_seconds_bucket{http_route!~".*/poll"}[10m])
             )
           ) > 2
         for: 10m

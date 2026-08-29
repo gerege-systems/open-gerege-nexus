@@ -12,8 +12,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -50,26 +51,18 @@ var knownSystems = map[string]bool{
 	SystemEmailVerify: true,
 }
 
-// ExternalRequestDuration times outbound calls, by system, operation and
+// metricExternalDuration is exported as `external_request_duration_seconds`.
+// Its buckets are set by a view in otelmetrics.go, which is where the reason
+// they run out to two minutes is written down.
+const metricExternalDuration = "external.request.duration"
+
+// externalRequestDuration times outbound calls, by system, operation and
 // outcome.
 //
-// `operation` is a constant chosen at the call site — "citizen_query",
-// "poll", "sign_pdf" — never anything taken from a request. The buckets run
-// further out than prometheus.DefBuckets because these are the calls that go
-// slow: eID waits on a citizen reaching for their phone, and the HSM's own
-// client allows ninety seconds.
-var ExternalRequestDuration = prometheus.NewHistogramVec(
-	prometheus.HistogramOpts{
-		Name:    "external_request_duration_seconds",
-		Help:    "Latency of calls to systems outside this platform",
-		Buckets: []float64{0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 20, 30, 60, 120},
-	},
-	[]string{"system", "operation", "status"},
-)
-
-func init() {
-	prometheus.MustRegister(ExternalRequestDuration)
-}
+// `operation` is a constant chosen at the call site — "citizen_query", "poll",
+// "sign_pdf" — never anything taken from a request.
+var externalRequestDuration = mustHistogram(metricExternalDuration, "s",
+	"Latency of calls to systems outside this platform")
 
 // ExternalSystem folds an unrecognised name into "other".
 func ExternalSystem(name string) string {
@@ -123,8 +116,13 @@ func ObserveExternalValue[T any](ctx context.Context, system, operation string,
 		// long as Tempo keeps it. RecordError would attach the full string.
 		span.SetStatus(codes.Error, "the call failed")
 	}
-	ExternalRequestDuration.
-		WithLabelValues(ExternalSystem(system), operation, status).
-		Observe(time.Since(start).Seconds())
+	// Recorded with the span's context, so a slow observation carries the
+	// trace id of the call that produced it as an exemplar.
+	externalRequestDuration.Record(ctx, time.Since(start).Seconds(),
+		metric.WithAttributes(
+			attribute.String("system", ExternalSystem(system)),
+			attribute.String("operation", operation),
+			attribute.String("status", status),
+		))
 	return result, err
 }

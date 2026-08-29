@@ -759,6 +759,65 @@ func (s *SSOProvider) tenantSlug(ctx context.Context, tenantID string) string {
 	return slug
 }
 
+// grantedRoles is what the `roles` scope adds to a token: the codes of the
+// roles this person holds in the organisation the token was issued for, and
+// whether they are the administrator this whole deployment was set up by.
+//
+// platform_admin is deliberately narrow. It is not "an admin somewhere" — every
+// organisation on a deployment has an `admin` role, and a relying party that
+// treated all of them as operators of the platform would be handing the keys to
+// whoever signed up most recently. It is `admin` **of the first organisation**:
+// the one internal/operator/tenants.Bootstrap created, which only runs on a
+// deployment that has none, so there is exactly one and it belongs to whoever
+// stood the deployment up.
+//
+// Neither is worth failing a sign-in over. A lookup that errors returns no
+// roles and no claim, the same as a person who holds none — a relying party
+// then sees an ordinary user, which is the safe direction to fail in.
+func (s *SSOProvider) grantedRoles(ctx context.Context, tenantID, userID string) ([]string, bool) {
+	rows, err := s.store.db.Query(ctx,
+		`SELECT r.code
+		   FROM workspace.memberships m
+		   JOIN workspace.membership_roles mr ON mr.membership_id = m.id
+		   JOIN workspace.roles r ON r.id = mr.role_id
+		  WHERE m.tenant_id = $1::uuid AND m.user_id = $2::uuid
+		  ORDER BY r.code`, tenantID, userID)
+	if err != nil {
+		slog.Warn("could not read the roles for a token", "error", err, "tenant_id", tenantID)
+		return nil, false
+	}
+	defer rows.Close()
+
+	var roles []string
+	for rows.Next() {
+		var code string
+		if err := rows.Scan(&code); err != nil {
+			slog.Warn("could not read a role code for a token", "error", err)
+			return nil, false
+		}
+		roles = append(roles, code)
+	}
+	if err := rows.Err(); err != nil {
+		slog.Warn("could not read the roles for a token", "error", err)
+		return nil, false
+	}
+
+	if !slices.Contains(roles, "admin") {
+		return roles, false
+	}
+
+	// Ordered by created_at with the id as the tie-break, because two
+	// organisations created inside the same clock tick would otherwise make
+	// this answer change between one sign-in and the next.
+	var root string
+	if err := s.store.db.QueryRow(ctx,
+		`SELECT id::text FROM registry.tenants ORDER BY created_at, id LIMIT 1`).Scan(&root); err != nil {
+		slog.Warn("could not identify the first organisation", "error", err)
+		return roles, false
+	}
+	return roles, root == tenantID
+}
+
 // mintIDToken builds the OIDC identity assertion. Claims follow the granted
 // scopes: no email scope, no email claim.
 func (s *SSOProvider) mintIDToken(ctx context.Context, client *Client, tenantID, userID string,
@@ -807,6 +866,19 @@ func (s *SSOProvider) mintIDToken(ctx context.Context, client *Client, tenantID,
 		if profile.GeID != 0 {
 			claims["ge_id"] = profile.GeID
 		}
+	}
+
+	if slices.Contains(scopes, "roles") {
+		roles, platformAdmin := s.grantedRoles(ctx, tenantID, userID)
+		// An empty array rather than an absent claim: a relying party writing
+		// `contains(roles, 'admin')` against a missing key gets an error in
+		// some expression languages and silence in others, and neither is
+		// "this person holds no roles".
+		if roles == nil {
+			roles = []string{}
+		}
+		claims["roles"] = roles
+		claims["platform_admin"] = platformAdmin
 	}
 
 	return signJWT(key.KID, key.Private, claims)
@@ -862,6 +934,14 @@ func (s *SSOProvider) HandleUserInfo(w http.ResponseWriter, r *http.Request) {
 	}
 	if profile.GeID != 0 {
 		claims["ge_id"] = profile.GeID
+	}
+	if slices.Contains(token.Scopes, "roles") {
+		roles, platformAdmin := s.grantedRoles(ctx, token.TenantID, *token.UserID)
+		if roles == nil {
+			roles = []string{}
+		}
+		claims["roles"] = roles
+		claims["platform_admin"] = platformAdmin
 	}
 
 	w.Header().Set("Cache-Control", "no-store")

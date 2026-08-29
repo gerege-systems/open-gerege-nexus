@@ -194,7 +194,8 @@
           "range": true,
           "instant": false,
           "refId": "A",
-          "format": "time_series"
+          "format": "time_series",
+          "exemplar": true
         }
       ],
       "fieldConfig": {
@@ -260,7 +261,8 @@
           "range": true,
           "instant": false,
           "refId": "A",
-          "format": "time_series"
+          "format": "time_series",
+          "exemplar": true
         }
       ],
       "fieldConfig": {

@@ -65,7 +65,7 @@ groups:
         # гэсэн үг — өгөгдлийн санд ул мөргүй өөрчлөлт орсон байж болзошгүй.
         # Энэ нь хэрэглэгчийн алдаа биш, кодын алдаа тул ticket.
         expr: >-
-          sum(increase(http_requests_total{path=~"/api/platform/v1.*",status="500"}[15m])) > 0
+          sum(increase(http_server_request_duration_seconds_count{http_route=~"/api/platform/v1.*",http_response_status_code="500"}[15m])) > 0
         for: 0m
         labels:
           severity: ticket
