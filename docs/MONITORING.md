@@ -196,6 +196,13 @@ Prometheus-д ямар ч нэвтрэлт байхгүй бөгөөд түүн�
    - scopes — `openid`, `profile`, `email`, `roles`
 2. Тэр host платформын `OAUTH_REDIRECT_HOSTS`-д байх ёстой. Тэр жагсаалт
    дэд домэйныг өвлүүлдэггүй — `monitor.nexus.gerege.mn` бүтнээрээ бичигдэнэ.
+   Утга нь GitHub-ийн repository **variable** (Settings → Variables), учир нь
+   `.env`-ийг deploy бүр GitHub-ээс шинээр бичдэг: серверт гараар нэмсэн мөр
+   дараагийн deploy хүртэл л амьдарна.
+
+   ```
+   gh variable set OAUTH_REDIRECT_HOSTS -b "nexus.gerege.mn,monitor.nexus.gerege.mn"
+   ```
 3. `.env.monitoring` дотор `GRAFANA_OAUTH_ENABLED=true`, `GRAFANA_OAUTH_CLIENT_ID`,
    `GRAFANA_OAUTH_CLIENT_SECRET`-ийг тавиад Grafana-г дахин эхлүүлнэ.
 

@@ -130,6 +130,13 @@ services:
       # screen disagreeing about which product this is. Unset is Gerege Nexus.
       BRAND_NAME: ${BRAND_NAME:-}
       SSO_ISSUER: ${PUBLIC_ORIGIN:-https://nexus.gerege.mn}
+      # Which hosts an OAuth client may be redirected back to. The list is exact
+      # hostnames and does NOT inherit subdomains — `nexus.gerege.mn` in it does
+      # not admit `monitor.nexus.gerege.mn`, which is the whole point and also
+      # the thing that catches people out. Empty falls back to
+      # `nexus.gerege.mn` alone, which is what every deployment ran on until
+      # Grafana needed a callback of its own.
+      OAUTH_REDIRECT_HOSTS: ${OAUTH_REDIRECT_HOSTS:-}
       SSO_DEFAULT_CLIENT_SECRET: ${SSO_DEFAULT_CLIENT_SECRET:?SSO_DEFAULT_CLIENT_SECRET is required in production}
       # The Google button on this platform's own sign-in screen. Off unless a
       # client id is set, and separate from the connector credentials below on
