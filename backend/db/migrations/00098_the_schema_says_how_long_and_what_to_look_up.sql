@@ -12,8 +12,12 @@
 -- устгах нь 30 хоногийн дараа бодитоор ажилладаг функц (`SweepDeletions`) ба
 -- `tenants` мөр устахад дөчөөд хүүхэд хүснэгт cascade-аар дагадаг.
 --
--- Хоёр `*_probe` хүснэгт орхигдсон: тэдгээр нь миграц ажилласан эсэхийг
--- шалгах хэдэн мөр бөгөөд индекс нь уншихаас нь илүү зардалтай.
+-- `*_probe` хүснэгтүүд энд огт байхгүй: тэдгээрийг миграц биш, тест үүсгэдэг
+-- (00029, 00079-ийн бодлого амьд эсэхийг шалгах хэдэн мөр). Цэвэр схем дээр
+-- байдаггүй тул тэднийг нэрлэсэн ALTER нь миграцыг унагаана — энэ файлын
+-- эхний хувилбар яг тэгсэн: хөгжүүлэгчийн санд байсан тул анзаарагдаагүй,
+-- CI-ийн шинэ санд `relation "workspace.dbguard_probe" does not exist` гэж
+-- зогссон.
 --
 --
 -- 2. ТЕКСТ БАГАНА БҮР УРТТАЙ ТӨРӨЛТЭЙ.
@@ -65,6 +69,7 @@ CREATE INDEX IF NOT EXISTS idx_esign_sign_sessions_signer_user ON workspace.esig
 CREATE INDEX IF NOT EXISTS idx_esign_signature_logs_actor_user ON workspace.esign_signature_logs (actor_user_id);
 CREATE INDEX IF NOT EXISTS idx_join_requests_decided_by ON workspace.join_requests (decided_by);
 CREATE INDEX IF NOT EXISTS idx_join_requests_user ON workspace.join_requests (user_id);
+CREATE INDEX IF NOT EXISTS idx_installation_events_installation ON workspace.installation_events (installation_id);
 CREATE INDEX IF NOT EXISTS idx_membership_roles_role ON workspace.membership_roles (role_id);
 CREATE INDEX IF NOT EXISTS idx_oauth2_access_tokens_client ON workspace.oauth2_access_tokens (client_id);
 CREATE INDEX IF NOT EXISTS idx_oauth2_authorization_codes_user ON workspace.oauth2_authorization_codes (user_id);
@@ -159,10 +164,7 @@ ALTER TABLE workspace.audit_events ALTER COLUMN action TYPE varchar(100);
 ALTER TABLE workspace.audit_events ALTER COLUMN resource TYPE varchar(200);
 ALTER TABLE workspace.audit_events ALTER COLUMN user_id TYPE varchar(64);
 
-ALTER TABLE workspace.dbguard_probe ALTER COLUMN name TYPE varchar(200);
 
-ALTER TABLE workspace.default_app_probe ALTER COLUMN code TYPE varchar(200);
-ALTER TABLE workspace.default_app_probe ALTER COLUMN name TYPE varchar(200);
 
 ALTER TABLE workspace.device_enrollment_codes ALTER COLUMN code_hash TYPE varchar(128);
 
@@ -213,7 +215,6 @@ ALTER TABLE workspace.report_schedules ALTER COLUMN last_status TYPE varchar(32)
 ALTER TABLE workspace.report_schedules ALTER COLUMN name TYPE varchar(200);
 ALTER TABLE workspace.report_schedules ALTER COLUMN report_key TYPE varchar(200);
 
-ALTER TABLE workspace.reporting_probe ALTER COLUMN contact_name TYPE varchar(200);
 
 ALTER TABLE workspace.roles ALTER COLUMN description TYPE varchar(4000);
 
@@ -376,10 +377,7 @@ ALTER TABLE workspace.audit_events ALTER COLUMN action TYPE text;
 ALTER TABLE workspace.audit_events ALTER COLUMN resource TYPE text;
 ALTER TABLE workspace.audit_events ALTER COLUMN user_id TYPE text;
 
-ALTER TABLE workspace.dbguard_probe ALTER COLUMN name TYPE text;
 
-ALTER TABLE workspace.default_app_probe ALTER COLUMN code TYPE text;
-ALTER TABLE workspace.default_app_probe ALTER COLUMN name TYPE text;
 
 ALTER TABLE workspace.device_enrollment_codes ALTER COLUMN code_hash TYPE text;
 
@@ -430,7 +428,6 @@ ALTER TABLE workspace.report_schedules ALTER COLUMN last_status TYPE text;
 ALTER TABLE workspace.report_schedules ALTER COLUMN name TYPE text;
 ALTER TABLE workspace.report_schedules ALTER COLUMN report_key TYPE text;
 
-ALTER TABLE workspace.reporting_probe ALTER COLUMN contact_name TYPE text;
 
 ALTER TABLE workspace.roles ALTER COLUMN description TYPE text;
 
@@ -461,6 +458,7 @@ DROP INDEX IF EXISTS workspace.idx_esign_sign_sessions_signer_user;
 DROP INDEX IF EXISTS workspace.idx_esign_signature_logs_actor_user;
 DROP INDEX IF EXISTS workspace.idx_join_requests_decided_by;
 DROP INDEX IF EXISTS workspace.idx_join_requests_user;
+DROP INDEX IF EXISTS workspace.idx_installation_events_installation;
 DROP INDEX IF EXISTS workspace.idx_membership_roles_role;
 DROP INDEX IF EXISTS workspace.idx_oauth2_access_tokens_client;
 DROP INDEX IF EXISTS workspace.idx_oauth2_authorization_codes_user;
