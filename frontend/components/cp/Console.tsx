@@ -45,6 +45,7 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   Timer,
+  Users,
 } from "lucide-react";
 
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -76,6 +77,9 @@ const APPS: ConsoleApp[] = [
         { href: "/cp/announcements", label: "cp.section.announcements", icon: <Megaphone className="w-5 h-5" /> },
         { href: "/cp/assistant", label: "cp.section.assistant", icon: <BrainCircuit className="w-5 h-5" /> },
         { href: "/cp/email-verification", label: "cp.section.verifications", icon: <MailCheck className="w-5 h-5" /> },
+      ] },
+      { id: "cp.group.people", items: [
+        { href: "/cp/people", label: "cp.section.people", icon: <Users className="w-5 h-5" /> },
       ] },
       { id: "cp.group.investigation", items: [
         { href: "/cp/audit", label: "cp.section.audit", icon: <ScrollText className="w-5 h-5" /> },

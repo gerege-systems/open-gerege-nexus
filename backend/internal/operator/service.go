@@ -65,6 +65,7 @@ import (
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/operator/observability"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/operator/operator"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/operator/operators"
+	"github.com/gerege-systems/open-gerege-nexus/backend/internal/operator/people"
 	platformsettings "github.com/gerege-systems/open-gerege-nexus/backend/internal/operator/settings"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/operator/support"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/operator/tenants"
@@ -135,6 +136,7 @@ type Service struct {
 	announce      *announce.Service
 	assistant     *assistant.Service
 	operators     *operators.Service
+	people        *people.Service
 	verifications *verifications.Service
 	observability *observability.Service
 	backup        *backup.Service
@@ -179,6 +181,7 @@ func New(db *pgxpool.Pool, deps ConsoleDeps) *Service {
 		announce:      announce.New(op, announce.Deps{DB: db}),
 		assistant:     assistant.New(op, assistant.Deps{DB: db}),
 		operators:     operators.New(op, operators.Deps{DB: db}),
+		people:        people.New(op, people.Deps{DB: db}),
 		verifications: verifications.New(op, verifications.Deps{DB: db, Probe: deps.VerificationHealth}),
 		observability: observabilityScreen,
 		backup:        backupScreen,
@@ -269,6 +272,7 @@ func (s *Service) console(r chi.Router) {
 		s.announce.Routes(signedIn)
 		s.assistant.Routes(signedIn)
 		s.operators.Routes(signedIn)
+		s.people.Routes(signedIn)
 		s.verifications.Routes(signedIn)
 	})
 }

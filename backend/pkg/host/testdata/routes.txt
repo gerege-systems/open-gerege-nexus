@@ -37,6 +37,8 @@ GET /api/platform/v1/health
 GET /api/platform/v1/me
 GET /api/platform/v1/operators
 GET /api/platform/v1/people
+GET /api/platform/v1/people/roster
+GET /api/platform/v1/people/{id}
 GET /api/platform/v1/report-schedules
 GET /api/platform/v1/settings
 GET /api/platform/v1/settings/history
