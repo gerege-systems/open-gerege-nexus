@@ -19,7 +19,7 @@ import (
 // A person is isolated by being that person.
 //
 // registry.users and the two identity tables carry no tenant_id, so 00029 never
-// reached them: until 00100 the tenant role could read every account on the
+// reached them: until 00102 the tenant role could read every account on the
 // deployment, every e-mail address, and every eID or SSO link. The application
 // filter was the only thing between a forgotten WHERE and that list.
 //
@@ -229,6 +229,62 @@ func TestTheTenantRoleCannotReachTheSigningKey(t *testing.T) {
 		}
 		if allowed {
 			t.Errorf("the tenant role may %s the deployment's signing key", privilege)
+		}
+	}
+}
+
+// The console still reads the two identity tables.
+//
+// 00099 and 00100 granted gerege_nexus_operator SELECT on them, and the
+// migration above turns row-level security on. A grant with no policy behind it
+// is a screen that answers "nobody is verified" with no error anywhere: the
+// operator picking an organisation's first administrator, and the people screen
+// that says how an account can be signed into, both read exactly these tables.
+// So the grant is restated as a policy, and this is what says it stayed.
+func TestTheConsoleStillReadsTheIdentityTables(t *testing.T) {
+	pool := personPool(t)
+	ctx := context.Background()
+	tx, err := pool.Begin(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	stamp := time.Now().UnixNano()
+	var person string
+	if err := tx.QueryRow(ctx,
+		`INSERT INTO registry.users (email, password_hash, name) VALUES ($1, 'x', 'Verified') RETURNING id::text`,
+		fmt.Sprintf("console-%d@isolation.test", stamp)).Scan(&person); err != nil {
+		t.Fatalf("set up: %v", err)
+	}
+	if _, err := tx.Exec(ctx,
+		`INSERT INTO registry.user_sso_identities (user_id, issuer, subject, email)
+		 VALUES ($1::uuid, 'https://issuer.test', $2, $3)`,
+		person, fmt.Sprintf("console-subject-%d", stamp),
+		fmt.Sprintf("console-%d@isolation.test", stamp)); err != nil {
+		t.Fatalf("link a federated identity: %v", err)
+	}
+	if _, err := tx.Exec(ctx,
+		`INSERT INTO registry.user_eid_identities (user_id, civil_id, reg_number, person_etsi)
+		 VALUES ($1::uuid, $2, $3, $4)`,
+		person, fmt.Sprintf("civil-%d", stamp), fmt.Sprintf("reg-%d", stamp),
+		fmt.Sprintf("etsi-%d", stamp)); err != nil {
+		t.Fatalf("link an eID identity: %v", err)
+	}
+
+	if _, err := tx.Exec(ctx, `SET LOCAL ROLE gerege_nexus_operator`); err != nil {
+		t.Fatalf("become the operator role: %v", err)
+	}
+	for table, query := range map[string]string{
+		"user_sso_identities": `SELECT count(*) FROM registry.user_sso_identities WHERE user_id = $1::uuid`,
+		"user_eid_identities": `SELECT count(*) FROM registry.user_eid_identities WHERE user_id = $1::uuid`,
+	} {
+		var n int
+		if err := tx.QueryRow(ctx, query, person).Scan(&n); err != nil {
+			t.Fatalf("the console cannot read %s: %v", table, err)
+		}
+		if n != 1 {
+			t.Errorf("the console reads %d rows from %s, want 1", n, table)
 		}
 	}
 }

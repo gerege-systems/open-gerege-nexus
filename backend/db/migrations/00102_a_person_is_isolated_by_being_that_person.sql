@@ -88,6 +88,20 @@ CREATE POLICY console_reads_people ON registry.users FOR SELECT TO gerege_nexus_
 CREATE POLICY console_invites_people ON registry.users FOR INSERT TO gerege_nexus_operator WITH CHECK (true);
 CREATE POLICY console_unlocks_people ON registry.users FOR UPDATE TO gerege_nexus_operator USING (true) WITH CHECK (true);
 
+-- Танилтын хоёр хүснэгт дээрх консолын уншилт.
+--
+-- 00099, 00100 нь консолд `user_eid_identities`, `user_sso_identities` дээр
+-- SELECT эрх өгсөн: «баталгаажсан хүмүүсээс байгууллагын эхний админыг сонгох»
+-- ба «энэ бүртгэл ямар аргаар нэвтэрдэг вэ» гэсэн хоёр дэлгэц түүгээр
+-- ажилладаг (internal/operator/tenants/directory.go, internal/operator/people).
+-- Дээр RLS-ийг FORCE болгосон тул бодлогогүй роль юу ч харахгүй болно —
+-- эрх нь хэвээр атлаа хариу нь хоосон, ямар ч алдаагүй. Тиймээс тэр эрхийг
+-- бодлого болгон давтана: SELECT, өөр юу ч биш.
+CREATE POLICY console_reads_eid_identities ON registry.user_eid_identities
+    FOR SELECT TO gerege_nexus_operator USING (true);
+CREATE POLICY console_reads_sso_identities ON registry.user_sso_identities
+    FOR SELECT TO gerege_nexus_operator USING (true);
+
 -- Суулгацын хувийн түлхүүр. Уншдаг хоёр газар (JWKS, id_token) session-гүй
 -- ажилладаг тул тенантын ролид энэ хүснэгт хэрэггүй.
 REVOKE ALL ON registry.oauth2_signing_keys FROM gerege_nexus_tenant;
@@ -96,6 +110,8 @@ REVOKE ALL ON registry.oauth2_signing_keys FROM gerege_nexus_tenant;
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON registry.oauth2_signing_keys TO gerege_nexus_tenant;
 
+DROP POLICY IF EXISTS console_reads_sso_identities ON registry.user_sso_identities;
+DROP POLICY IF EXISTS console_reads_eid_identities ON registry.user_eid_identities;
 DROP POLICY IF EXISTS console_unlocks_people ON registry.users;
 DROP POLICY IF EXISTS console_invites_people ON registry.users;
 DROP POLICY IF EXISTS console_reads_people ON registry.users;
