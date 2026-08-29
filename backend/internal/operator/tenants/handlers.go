@@ -218,6 +218,32 @@ func (s *Service) handleTenantMaintenance(w http.ResponseWriter, r *http.Request
 func (s *Service) Routes(r chi.Router) {
 
 	r.With(s.op.RequireCapability(operator.CapTenantRead)).Get("/tenants", s.handleListTenants)
+	// Across every organisation at once. Separate paths rather than
+	// /tenants/quotas, which a router is free to read as an organisation whose
+	// id is the word "quotas".
+	r.With(s.op.RequireCapability(operator.CapTenantRead)).Get("/tenant-quotas", s.handleListQuotas)
+	r.With(s.op.RequireCapability(operator.CapTenantRead)).Get("/app-installations", s.handleListInstallations)
+
+	// Where a new organisation's details come from, and who may be its first
+	// administrator. Both are reads behind the capability that opens one:
+	// looking up a registration number is what creating an organisation begins
+	// with, and the list of verified people is a list of names and addresses.
+	r.With(s.op.RequireCapability(operator.CapTenantCreate)).
+		Get("/directory/organisation", s.handleFindOrganisation)
+	r.With(s.op.RequireCapability(operator.CapTenantCreate)).
+		Get("/directory/people", s.handleVerifiedPeople)
+	// One person by registration number, straight from the register. It sits
+	// with its two siblings rather than with the operator screen that uses it:
+	// this plane has one directory client, and the screens that need a name
+	// spelled the way the register spells it ask the same route for it.
+	r.With(s.op.RequireCapability(operator.CapTenantCreate)).
+		Get("/directory/person", s.handleFindPerson)
+	// Staffing an organisation after it is open. The second factor for the
+	// same reason as opening one: it hands somebody the keys to an
+	// organisation's data, and a borrowed console session should not be
+	// enough for that.
+	r.With(s.op.RequireCapability(operator.CapTenantCreate), s.op.RequireStepUp).
+		Post("/tenants/{id}/people", s.handleAddMember)
 	r.With(s.op.RequireCapability(operator.CapTenantRead)).Get("/tenants/{id}", s.handleGetTenant)
 
 	// The organisation's life. Suspension is reversible and needs one

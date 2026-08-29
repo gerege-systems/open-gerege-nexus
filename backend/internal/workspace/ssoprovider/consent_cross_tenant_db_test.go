@@ -49,7 +49,13 @@ func TestConsentPromptFindsAnotherTenantsClient(t *testing.T) {
 	if err != nil {
 		t.Fatalf("connect: %v", err)
 	}
-	defer pool.Close()
+	// t.Cleanup rather than defer, and registered before anything that has a
+	// row to remove: deferred calls run when the test function returns, which
+	// is *before* its cleanups, so a deferred Close leaves every cleanup below
+	// talking to a closed pool. They discard their errors, so the failure is
+	// silent and the rows stay — this test was leaving two organisations and an
+	// account behind in every database it had ever been run against.
+	t.Cleanup(pool.Close)
 	probeCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	if err := guard.Probe(probeCtx, pool); err != nil {
@@ -69,7 +75,12 @@ func TestConsentPromptFindsAnotherTenantsClient(t *testing.T) {
 		NewIdentifier(8)).Scan(&userID); err != nil {
 		t.Fatalf("user: %v", err)
 	}
-	t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM registry.users WHERE id = $1`, userID) })
+	// `::uuid`, because userID is a string and `uuid = text` has no operator.
+	// Without the cast the cleanup fails, the error is discarded, and every run
+	// of this test leaves an account behind in whatever database it ran against.
+	t.Cleanup(func() {
+		_, _ = pool.Exec(context.Background(), `DELETE FROM registry.users WHERE id = $1::uuid`, userID)
+	})
 
 	provider := &SSOProvider{store: NewStore(pool), issuer: testIssuer}
 	provider.AttachSessions(&fakeSessions{claims: auth.UserClaims{
@@ -120,6 +131,8 @@ func makeTenant(t *testing.T, pool *pgxpool.Pool) string {
 		Scan(&id); err != nil {
 		t.Fatalf("tenant: %v", err)
 	}
-	t.Cleanup(func() { _, _ = pool.Exec(context.Background(), `DELETE FROM registry.tenants WHERE id = $1`, id) })
+	t.Cleanup(func() {
+		_, _ = pool.Exec(context.Background(), `DELETE FROM registry.tenants WHERE id = $1::uuid`, id)
+	})
 	return id
 }
