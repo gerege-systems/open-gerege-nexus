@@ -113,50 +113,6 @@ func (s *store) lastSendTo(ctx context.Context, tenantID, email string) (*time.T
 	return last, err
 }
 
-func (s *store) recent(ctx context.Context, tenantID string, limit int) ([]Verification, error) {
-	rows, err := s.db.Query(ctx, `
-		SELECT `+verificationColumns+`
-		FROM workspace.email_verifications
-		WHERE tenant_id = $1
-		ORDER BY created_at DESC
-		LIMIT $2`, tenantID, limit)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	list := make([]Verification, 0, limit)
-	for rows.Next() {
-		verification, scanErr := scanVerification(rows)
-		if scanErr != nil {
-			return nil, scanErr
-		}
-		list = append(list, *verification)
-	}
-	return list, rows.Err()
-}
-
-// stats counts a tenant's verifications in one pass. A pending row whose
-// deadline has passed is reported as expired even before the sweep rewrites it,
-// so the screen never claims somebody is still able to act on a dead link.
-func (s *store) stats(ctx context.Context, tenantID string) (*Stats, error) {
-	var st Stats
-	err := s.db.QueryRow(ctx, `
-		SELECT
-			COUNT(*),
-			COUNT(*) FILTER (WHERE status = 'VERIFIED'),
-			COUNT(*) FILTER (WHERE status = 'PENDING' AND expires_at > NOW()),
-			COUNT(*) FILTER (WHERE status = 'EXPIRED' OR (status = 'PENDING' AND expires_at <= NOW())),
-			COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '24 hours')
-		FROM workspace.email_verifications
-		WHERE tenant_id = $1`, tenantID).
-		Scan(&st.Total, &st.Verified, &st.Pending, &st.Expired, &st.Last24h)
-	if err != nil {
-		return nil, err
-	}
-	return &st, nil
-}
-
 func (s *store) expirePending(ctx context.Context) (int64, error) {
 	tag, err := s.db.Exec(ctx, `
 		UPDATE workspace.email_verifications

@@ -56,6 +56,7 @@ import (
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/kernel/settings"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/operator/announce"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/operator/approvals"
+	"github.com/gerege-systems/open-gerege-nexus/backend/internal/operator/assistant"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/operator/audit"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/operator/backup"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/operator/catalog"
@@ -66,6 +67,7 @@ import (
 	platformsettings "github.com/gerege-systems/open-gerege-nexus/backend/internal/operator/settings"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/operator/support"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/operator/tenants"
+	"github.com/gerege-systems/open-gerege-nexus/backend/internal/operator/verifications"
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/time/rate"
@@ -102,6 +104,11 @@ type ConsoleDeps struct {
 	// Warnings are the deployment's own complaints about its configuration. A
 	// callback for the same reason: the answer lives in the other plane.
 	Warnings func() []string
+	// VerificationHealth is what the shared address-verification service says
+	// about itself. A callback for the same reason again: its client is the
+	// other plane's, and the console shows the answer rather than holding a
+	// second copy of the connection. Nil is a deployment that cannot be asked.
+	VerificationHealth verifications.Probe
 	// CatalogStatus is when the app catalogue was last fetched, whether it
 	// worked, and why not. The other plane holds it in memory; this one shows
 	// it.
@@ -125,6 +132,8 @@ type Service struct {
 	settings      *platformsettings.Service
 	flags         *platformflags.Service
 	announce      *announce.Service
+	assistant     *assistant.Service
+	verifications *verifications.Service
 	observability *observability.Service
 	backup        *backup.Service
 	metering      *metering.Service
@@ -166,6 +175,8 @@ func New(db *pgxpool.Pool, deps ConsoleDeps) *Service {
 		}),
 		flags:         platformflags.New(op, platformflags.Deps{Flags: deps.Flags}),
 		announce:      announce.New(op, announce.Deps{DB: db}),
+		assistant:     assistant.New(op, assistant.Deps{DB: db}),
+		verifications: verifications.New(op, verifications.Deps{DB: db, Probe: deps.VerificationHealth}),
 		observability: observabilityScreen,
 		backup:        backupScreen,
 		metering:      metering.NewScreen(op, metering.Deps{DB: db, Tenants: tenantScreen}),
@@ -253,6 +264,8 @@ func (s *Service) console(r chi.Router) {
 		s.catalog.Routes(signedIn)
 		s.backup.Routes(signedIn)
 		s.announce.Routes(signedIn)
+		s.assistant.Routes(signedIn)
+		s.verifications.Routes(signedIn)
 	})
 }
 

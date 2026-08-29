@@ -9,15 +9,12 @@ package ai
 import (
 	"encoding/json"
 	"net/http"
-	"strings"
-	"time"
 
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/kernel/httpx"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/kernel/telemetry"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/audit"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/auth"
 	"github.com/gerege-systems/open-gerege-nexus/backend/pkg/nexus"
-	"github.com/go-chi/chi/v5"
 )
 
 // Service provides the platform's AI capabilities.
@@ -155,110 +152,11 @@ func (s *Service) HandleAITranslate(w http.ResponseWriter, r *http.Request) {
 	httpx.JSON(w, http.StatusOK, result)
 }
 
-func (s *Service) HandleAIListPrompts(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := nexus.RequireWorkspace(w, r)
-	if !ok {
-		return
-	}
-	rows, err := s.db.Query(r.Context(), `SELECT prompt_key,content,active,tenant_id IS NULL FROM workspace.ai_prompts WHERE tenant_id IS NULL OR tenant_id=$1 ORDER BY prompt_key,tenant_id NULLS FIRST`, tenantID)
-	if err != nil {
-		httpx.Error(w, 500, "failed to load AI prompts")
-		return
-	}
-	defer rows.Close()
-	items := []map[string]any{}
-	for rows.Next() {
-		var key, content string
-		var active, global bool
-		if err := rows.Scan(&key, &content, &active, &global); err != nil {
-			httpx.Error(w, 500, "failed to read AI prompts")
-			return
-		}
-		items = append(items, map[string]any{"key": key, "content": content, "active": active, "global": global})
-	}
-	if err := rows.Err(); err != nil {
-		httpx.Error(w, 500, "failed to read AI prompts")
-		return
-	}
-	httpx.JSON(w, 200, items)
-}
-
-func (s *Service) HandleAIUpdatePrompt(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := nexus.RequireWorkspace(w, r)
-	if !ok {
-		return
-	}
-	key := chi.URLParam(r, "key")
-	if key != "scope" && key != "instructions" {
-		httpx.Error(w, 400, "invalid prompt key")
-		return
-	}
-	var req struct {
-		Content string `json:"content"`
-		Active  bool   `json:"active"`
-	}
-	if httpx.DecodeLimited(r, &req, 32<<10) != nil || strings.TrimSpace(req.Content) == "" {
-		httpx.Error(w, 400, "content is required")
-		return
-	}
-	_, err := s.db.Exec(r.Context(), `INSERT INTO workspace.ai_prompts(tenant_id,prompt_key,content,active) VALUES($1,$2,$3,$4) ON CONFLICT(tenant_id,prompt_key) DO UPDATE SET content=EXCLUDED.content,active=EXCLUDED.active,updated_at=NOW()`, tenantID, key, req.Content, req.Active)
-	if err != nil {
-		httpx.Error(w, 500, "failed to save AI prompt")
-		return
-	}
-	httpx.JSON(w, 200, map[string]string{"status": "saved"})
-}
-
-func (s *Service) HandleAIListKnowledge(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := nexus.RequireWorkspace(w, r)
-	if !ok {
-		return
-	}
-	rows, err := s.db.Query(r.Context(), `SELECT id,title,content,source_url,updated_at FROM workspace.ai_knowledge WHERE tenant_id=$1 ORDER BY updated_at DESC LIMIT 100`, tenantID)
-	if err != nil {
-		httpx.Error(w, 500, "failed to load knowledge")
-		return
-	}
-	defer rows.Close()
-	items := []map[string]any{}
-	for rows.Next() {
-		var id, title, content, url string
-		var updated time.Time
-		if err := rows.Scan(&id, &title, &content, &url, &updated); err != nil {
-			httpx.Error(w, 500, "failed to read knowledge")
-			return
-		}
-		items = append(items, map[string]any{"id": id, "title": title, "content": content, "source_url": url, "updated_at": updated})
-	}
-	if err := rows.Err(); err != nil {
-		httpx.Error(w, 500, "failed to read knowledge")
-		return
-	}
-	httpx.JSON(w, 200, items)
-}
-
-func (s *Service) HandleAICreateKnowledge(w http.ResponseWriter, r *http.Request) {
-	tenantID, ok := nexus.RequireWorkspace(w, r)
-	if !ok {
-		return
-	}
-	var req struct {
-		Title     string `json:"title"`
-		Content   string `json:"content"`
-		SourceURL string `json:"source_url"`
-	}
-	if httpx.DecodeLimited(r, &req, 256<<10) != nil || strings.TrimSpace(req.Title) == "" || strings.TrimSpace(req.Content) == "" {
-		httpx.Error(w, 400, "title and content are required")
-		return
-	}
-	var id string
-	err := s.db.QueryRow(r.Context(), `INSERT INTO workspace.ai_knowledge(tenant_id,title,content,source_url) VALUES($1,$2,$3,$4) RETURNING id`, tenantID, req.Title, req.Content, req.SourceURL).Scan(&id)
-	if err != nil {
-		httpx.Error(w, 500, "failed to save knowledge")
-		return
-	}
-	httpx.JSON(w, 201, map[string]string{"id": id})
-}
+// The assistant's shared prompts and its knowledge are administered in the
+// console now — internal/operator/assistant — because they are the
+// deployment's rather than any one organisation's. What stays here is the
+// reading side: the copilot still takes the shared row first and an
+// organisation's own after it.
 
 func aiStatus(error) int { return http.StatusBadGateway }
 

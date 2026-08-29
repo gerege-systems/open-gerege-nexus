@@ -41,9 +41,24 @@ func (s *Service) handleUsageCSV(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// handlePlatformUsage answers the platform-wide report: every organisation,
+// month to date, in one table.
+func (s *Service) handlePlatformUsage(w http.ResponseWriter, r *http.Request) {
+	report, err := s.PlatformUsageReport(r.Context())
+	if err != nil {
+		fail(w, err, "could not read the platform usage")
+		return
+	}
+	httpx.JSON(w, http.StatusOK, report)
+}
+
 // Routes are this screen's, mounted on the console's signed-in group. The
 // capability each one asks for is the decision about who may see or do it.
 func (s *Service) Routes(r chi.Router) {
+
+	// Every organisation at once, for the month in progress.
+	r.With(s.op.RequireCapability(operator.CapTenantRead)).
+		Get("/usage", s.handlePlatformUsage)
 
 	// What each organisation used, and the same thing as a spreadsheet.
 	r.With(s.op.RequireCapability(operator.CapTenantRead)).
