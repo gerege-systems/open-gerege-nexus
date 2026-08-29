@@ -63,6 +63,32 @@ func (s *Service) FindOrganisation(ctx context.Context, regNo string) (Directory
 	}, nil
 }
 
+// DirectoryPerson is what the register says about a person's registration
+// number. It is not an account on this platform and may never become one: the
+// operator screen uses it to fill in a name and an address that are spelled
+// the way the register spells them.
+type DirectoryPerson struct {
+	CoreID             int64  `json:"core_id"`
+	Name               string `json:"name"`
+	Email              string `json:"email"`
+	Phone              string `json:"phone"`
+	RegistrationNumber string `json:"registration_number"`
+}
+
+// FindPerson asks the Gerege Core directory about one registration number.
+func (s *Service) FindPerson(ctx context.Context, regNo string) (DirectoryPerson, error) {
+	// The country code is required by the endpoint and would otherwise come
+	// back as a complaint about a field the caller never saw.
+	person, err := s.core.FindPerson(ctx, strings.TrimSpace(regNo), "MN")
+	if err != nil {
+		return DirectoryPerson{}, err
+	}
+	return DirectoryPerson{
+		CoreID: person.ID, Name: person.FullName(), Email: person.Email,
+		Phone: person.PhoneNo, RegistrationNumber: person.RegNo,
+	}, nil
+}
+
 // VerifiedPerson is somebody who has signed in with eID on this deployment.
 type VerifiedPerson struct {
 	UserID    string    `json:"user_id"`
@@ -129,6 +155,22 @@ func (s *Service) handleFindOrganisation(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	httpx.JSON(w, http.StatusOK, org)
+}
+
+func (s *Service) handleFindPerson(w http.ResponseWriter, r *http.Request) {
+	person, err := s.FindPerson(r.Context(), r.URL.Query().Get("reg_no"))
+	if err != nil {
+		switch {
+		case errors.Is(err, geregecore.ErrNotFound):
+			httpx.Error(w, http.StatusNotFound, "the Gerege Core directory has no person with that number")
+		case errors.Is(err, geregecore.ErrNotConfigured):
+			httpx.Error(w, http.StatusServiceUnavailable, err.Error())
+		default:
+			httpx.Error(w, http.StatusBadGateway, err.Error())
+		}
+		return
+	}
+	httpx.JSON(w, http.StatusOK, person)
 }
 
 func (s *Service) handleVerifiedPeople(w http.ResponseWriter, r *http.Request) {

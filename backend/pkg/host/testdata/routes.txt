@@ -31,6 +31,7 @@ GET /api/platform/v1/credentials
 GET /api/platform/v1/deletions
 GET /api/platform/v1/directory/organisation
 GET /api/platform/v1/directory/people
+GET /api/platform/v1/directory/person
 GET /api/platform/v1/email-verifications
 GET /api/platform/v1/flags
 GET /api/platform/v1/health
