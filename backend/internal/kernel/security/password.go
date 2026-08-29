@@ -55,6 +55,12 @@ const (
 	argonTime    = 2
 	argonKeyLen  = 32
 	argonSaltLen = 16
+
+	// The range a stored key's length may be in. HashPassword writes
+	// argonKeyLen; these bound what CheckPasswordHash will derive against a
+	// value that came out of a column.
+	argonMinKeyLen = 16
+	argonMaxKeyLen = 64
 )
 
 // argonLanes is the parallelism parameter, kept at one lane unless the machine
@@ -128,9 +134,18 @@ func checkArgon2id(password, hash string) bool {
 		return false
 	}
 	want, err := base64.RawStdEncoding.DecodeString(fields[5])
-	if err != nil || len(want) == 0 {
+	if err != nil {
 		return false
 	}
+	// The stored key's length decides how much key to derive, and it is read
+	// from a column — so it is bounded here rather than trusted. Sixteen bytes
+	// is below anything this package has ever written; sixty-four is above it,
+	// and a value outside that range is a row nobody made.
+	if len(want) < argonMinKeyLen || len(want) > argonMaxKeyLen {
+		return false
+	}
+	// #nosec G115 -- the length is bounded to [16, 64] three lines above, which
+	// is the check the rule is asking for; it cannot see it.
 	got := argon2.IDKey([]byte(password), salt, timeCost, memory, lanes, uint32(len(want)))
 	return subtle.ConstantTimeCompare(got, want) == 1
 }
