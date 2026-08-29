@@ -33,6 +33,14 @@ func TestTheHistoryCarriesBothKindsAndTheSize(t *testing.T) {
 		"restored onto a scratch database", "prove the history"); err != nil {
 		t.Fatalf("record a restore test: %v", err)
 	}
+	// The row this writes has no id to hand, so it is removed by who wrote it.
+	// Without this the history grows by one line every time the suite runs, and
+	// the deployment's own restore-test date becomes a test's.
+	t.Cleanup(func() {
+		_, _ = pool.Exec(context.Background(),
+			`DELETE FROM operator.platform_backups WHERE kind = 'restore_test' AND recorded_by = $1::uuid`,
+			account.ID)
+	})
 
 	history, err := service.History(ctx, 50)
 	if err != nil {
