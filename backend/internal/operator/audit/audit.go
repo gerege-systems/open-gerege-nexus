@@ -59,6 +59,11 @@ type OperatorSummary struct {
 	DisabledAt  *time.Time `json:"disabled_at"`
 	LastLoginAt *time.Time `json:"last_login_at"`
 	CreatedAt   time.Time  `json:"created_at"`
+	// Enrolled is whether the authenticator was ever confirmed. An account
+	// where it was not cannot sign in, which the roster has to say: it is the
+	// state a console-created operator sits in until somebody finishes the
+	// enrolment, and it looks like a working account otherwise.
+	Enrolled bool `json:"enrolled"`
 }
 
 // ListOperators is the roster: who can reach this console at all.
@@ -67,7 +72,8 @@ func (s *Service) ListOperators(ctx context.Context) ([]OperatorSummary, error) 
 	defer cancel()
 
 	rows, err := s.db.Query(ctx,
-		`SELECT id::text, email, name, role, disabled_at, last_login_at, created_at
+		`SELECT id::text, email, name, role, disabled_at, last_login_at, created_at,
+		        totp_confirmed_at IS NOT NULL
 		   FROM operator.operator_accounts
 		  ORDER BY email`)
 	if err != nil {
@@ -80,7 +86,7 @@ func (s *Service) ListOperators(ctx context.Context) ([]OperatorSummary, error) 
 		var row OperatorSummary
 		var role string
 		if err := rows.Scan(&row.ID, &row.Email, &row.Name, &role,
-			&row.DisabledAt, &row.LastLoginAt, &row.CreatedAt); err != nil {
+			&row.DisabledAt, &row.LastLoginAt, &row.CreatedAt, &row.Enrolled); err != nil {
 			return nil, fmt.Errorf("control plane: read an operator: %w", err)
 		}
 		row.Role = operator.Role(role)

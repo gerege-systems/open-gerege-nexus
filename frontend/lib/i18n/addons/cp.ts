@@ -41,6 +41,8 @@ export const cp = {
   "cp.field.installed": { mn: "Суусан", en: "Installed" },
   "cp.field.roles": { mn: "Үүрэг", en: "Roles" },
   "cp.field.action": { mn: "Үйлдэл", en: "Action" },
+  "cp.field.role": { mn: "Эрх", en: "Role" },
+  "cp.field.last_login": { mn: "Сүүлд нэвтэрсэн", en: "Last sign-in" },
   "cp.field.operator": { mn: "Оператор", en: "Operator" },
   "cp.field.reason": { mn: "Шалтгаан", en: "Reason" },
   "cp.field.when": { mn: "Хэзээ", en: "When" },
@@ -395,6 +397,41 @@ export const cp = {
     mn: "Нөөцлөлт хэзээ ч бүртгэгдээгүй байна. deploy/scripts/backup.sh-г cron-д тавина уу.",
     en: "No backup has ever been recorded. Install deploy/scripts/backup.sh in cron.",
   },
+
+  // Who may reach this console — the screen that replaced a shell on the
+  // production host for everybody after the first operator.
+  "cp.section.operators": { mn: "Операторууд", en: "Operators" },
+  "cp.hint.operators": {
+    mn: "Энэ консолд хэн хүрч болох вэ. Оператор нэмэх нь бүх бусад үйлдлийг хийж чадах хүмүүсийг өргөжүүлдэг тул зөвхөн ерөнхий админ, хоёр дахь хүчин зүйлтэй, бүртгэл үлдээж хийнэ.",
+    en: "Who can reach this console. Adding one widens the set of people who can do everything else, so it is superadmin only, with a second factor, and it leaves a record.",
+  },
+  "cp.action.add_operator": { mn: "Оператор нэмэх", en: "Add operator" },
+  "cp.action.change_password": { mn: "Нууц үг солих", en: "Change password" },
+  "cp.action.change_role": { mn: "Эрх солих", en: "Change role" },
+  "cp.action.disable": { mn: "Идэвхгүй болгох", en: "Disable" },
+  "cp.action.enable": { mn: "Идэвхжүүлэх", en: "Enable" },
+  "cp.field.secret": { mn: "Нууц түлхүүр", en: "Secret" },
+  "cp.field.current_password": { mn: "Одоогийн нууц үг", en: "Current password" },
+  "cp.field.new_password": { mn: "Шинэ нууц үг", en: "New password" },
+  "cp.field.repeat_password": { mn: "Дахин", en: "Repeat" },
+  "cp.state.disabled": { mn: "Идэвхгүй", en: "Disabled" },
+  "cp.state.enrolment_pending": { mn: "Баталгаажаагүй", en: "Not enrolled" },
+  "cp.state.you": { mn: "та", en: "you" },
+  "cp.view.handover": { mn: "Шинэ операторт дамжуулах", en: "Hand this over" },
+  "cp.message.handover_once": {
+    mn: "Эдгээр утга зөвхөн ОДОО харагдана. Нууц үг ба түлхүүрийг сервер дахин харуулж чадахгүй — хаавал дахин үүсгэхээс өөр арга байхгүй.",
+    en: "These values exist only now. Nothing on the server can show the password or the secret again — close this and the account has to be created afresh.",
+  },
+  "cp.hint.confirm_enrolment": {
+    mn: "Шинэ оператор QR-аа уншуулаад аппаасаа код оруулна. Үүнийг хийх хүртэл тэр хүн нэвтэрч чадахгүй.",
+    en: "The new operator scans the QR and types the code their app shows. Until that is done they cannot sign in.",
+  },
+  "cp.hint.step_up": {
+    mn: "Оператор нэмэхийн өмнө өөрийн баталгаажуулагчийн кодыг оруулна.",
+    en: "Confirm your own authenticator before adding an operator.",
+  },
+  "cp.message.enrolled": { mn: "Баталгаажлаа. Тэр хүн одоо нэвтэрч чадна.", en: "Enrolled. They can sign in now." },
+  "cp.message.passwords_differ": { mn: "Хоёр нууц үг таарахгүй байна.", en: "The two passwords are not the same." },
 
   "cp.group.watch": { mn: "Ажиглалт", en: "Watch" },
   "cp.group.organisations": { mn: "Байгууллага", en: "Organisations" },
