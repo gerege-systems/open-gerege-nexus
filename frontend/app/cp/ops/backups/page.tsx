@@ -13,21 +13,12 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { DatabaseBackup, RefreshCw, ShieldCheck } from "lucide-react";
 
-import Console from "@/components/cp/Console";
 import { useAction } from "@/components/cp/Action";
 import { Badge, Card, formatMoment, Table } from "@/components/cp/ui";
 import { cp, type BackupEntry, type Overview } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 
-export default function OpsBackupsPage() {
-  return (
-    <Console>
-      <Backups />
-    </Console>
-  );
-}
-
-function Backups() {
+export default function Backups() {
   const { t, locale } = useI18n();
   const action = useAction();
   const [history, setHistory] = useState<BackupEntry[]>([]);

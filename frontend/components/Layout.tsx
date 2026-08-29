@@ -14,6 +14,7 @@ import AICopilot from "@/components/AICopilot";
 import { invokeShell, useShell, SHELL_EVENTS, SHELL_METHODS, type ShellNavigatePayload, type ShellSearchPayload } from "@/lib/shell";
 import { currentDeviceLine, type DeviceLine } from "@/lib/deviceLine";
 import { MenuIcon } from "@/lib/icons";
+import { SECTION_PATHS } from "@/lib/landing";
 import { homeScreensVisible, organisationScreensVisible } from "@/lib/workspaceKind.mjs";
 import { LayoutGrid, Settings, Menu as HamburgerIcon, Palette, Building2, Search, Ellipsis, ShieldCheck, RefreshCw, MailCheck, ChevronDown, ChevronsDownUp, ChevronsUpDown, ExternalLink, Sparkles, Inbox} from "lucide-react";
 
@@ -44,7 +45,11 @@ const PUBLIC_ROUTES=["/","/login","/setup","/auth/eid/callback","/oauth/consent"
 // tenant shell — which asks /api/v1/me on mount, gets a 401 because an operator
 // holds no tenant session, and redirects the console to the platform's login
 // screen before it can draw its own.
-const isPublicPath=(path:string)=>PUBLIC_ROUTES.includes(path)||path.startsWith("/line/")||path==="/cp"||path.startsWith("/cp/");
+// The landing page's menu items are pages of their own now (app/[section]),
+// and they are as public as the page they were carved out of. Left out, the
+// shell asked /api/v1/me for a visitor who has no session, took the 401 and
+// redirected the front door's own menu to a sign-in screen.
+const isPublicPath=(path:string)=>PUBLIC_ROUTES.includes(path)||SECTION_PATHS.includes(path)||path.startsWith("/line/")||path==="/cp"||path.startsWith("/cp/");
 // The platform groups are the only ones not backed by a server menu row, so
 // they need ids of their own. Not the translated title: the collapsed set is
 // remembered across sessions and a Mongolian operator who switches to English

@@ -82,6 +82,7 @@ const APPS: ConsoleApp[] = [
       ] },
       { id: "cp.group.investigation", items: [
         { href: "/cp/audit", label: "cp.section.audit", icon: <ScrollText className="w-5 h-5" /> },
+        { href: "/cp/operators", label: "cp.section.operators", icon: <ShieldCheck className="w-5 h-5" /> },
       ] },
     ],
   },

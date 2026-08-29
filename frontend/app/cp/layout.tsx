@@ -1,6 +1,8 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
+import Console from "@/components/cp/Console";
+
 /**
  * The operator console's routes exist only on the console's hostname.
  *
@@ -14,6 +16,14 @@ import { notFound } from "next/navigation";
  * because a NEXT_PUBLIC_ value is compiled into the bundle every visitor
  * downloads, and the console's hostname is not something the public build
  * should be carrying around.
+ *
+ * The frame is here rather than inside each page. A layout survives a
+ * navigation between the routes under it, so moving between screens now
+ * redraws the work area and nothing else: the header, the rail and the module
+ * panel keep their state, and the session is read once rather than on every
+ * click. Every /cp page used to open with `<Console>` around it, which made
+ * each click a fresh mount of the whole shell — an unavoidable flash of the
+ * loading state, and a `cp.me()` per screen.
  */
 export default async function ControlPlaneLayout({
   children,
@@ -34,7 +44,11 @@ export default async function ControlPlaneLayout({
     notFound();
   }
 
-  return <div className="cp-root min-h-screen">{children}</div>;
+  return (
+    <div className="cp-root min-h-screen">
+      <Console>{children}</Console>
+    </div>
+  );
 }
 
 function stripPort(host: string): string {

@@ -18,11 +18,12 @@ import {LOCALES, useI18n} from "@/lib/i18n";
  * rather than behind the header button: the shortest path from landing to
  * signed-in is worth keeping even when it is no longer the argument.
  *
- * `seeMoreAnchor` is where the second button goes — the first section below
- * this one, decided by the page rather than written in here, because a
- * deployment may not render the section this used to point at. Absent, there
- * is nothing below the hero and the button is not drawn: a page whose only
- * call to action scrolls nowhere is worse than one with a single button.
+ * `seeMoreAnchor` is where the second button goes — the first section the menu
+ * links, which is a page of its own (`app/[section]`) named by that same word.
+ * It is decided by the page rather than written in here, because a deployment
+ * may not render the section this used to point at. Absent, the menu links
+ * nothing and the button is not drawn: a page whose only call to action leads
+ * nowhere is worse than one with a single button.
  *
  * `localSignIn` is whether this deployment signs people in itself. False means
  * it is a client of somebody else's provider, and then the eID card here is a
@@ -105,9 +106,9 @@ export default function Hero({
                 {t("website.action.open_platform")}
               </Link>
             ) : seeMoreAnchor ? (
-              <a href={`#${seeMoreAnchor}`} className="gp-outline">
+              <Link href={`/${seeMoreAnchor}`} className="gp-outline">
                 {t("website.action.see_features")}
-              </a>
+              </Link>
             ) : null}
           </div>
           <div className="gp-stats">
