@@ -152,38 +152,6 @@ type RateLimitedError struct {
 
 func (e *RateLimitedError) Error() string { return e.msg }
 
-// Stats is the Overview screen's header.
-type Stats struct {
-	Total       int     `json:"total"`
-	Verified    int     `json:"verified"`
-	Pending     int     `json:"pending"`
-	Expired     int     `json:"expired"`
-	Last24h     int     `json:"last_24h"`
-	VerifiedPct float64 `json:"verified_pct"`
-}
-
-// Overview is what one screen needs in one request.
-type Overview struct {
-	Stats  Stats          `json:"stats"`
-	Recent []Verification `json:"recent"`
-
-	// Configured is whether a key is present at all. The key itself is never
-	// echoed — not a prefix of it, not a length: nothing on this screen needs
-	// it, and a browser is not where it belongs.
-	Configured bool `json:"configured"`
-	// Reachable is the provider's own health check, and Health is what it said
-	// when it was not. An administrator seeing no verifications should be able
-	// to tell "nobody asked" from "the service is down".
-	Reachable bool   `json:"reachable"`
-	Health    string `json:"health,omitempty"`
-
-	ProviderURL string `json:"provider_url"`
-	AdminURL    string `json:"admin_url"`
-	// ReturnURL is what the provider sends people back to. Useful to an
-	// administrator diagnosing a deployment whose PUBLIC_ORIGIN is wrong.
-	ReturnURL string `json:"return_url"`
-}
-
 // Service is the whole capability: a client of the hosted service plus this
 // platform's own record of what it asked for.
 type Service struct {
@@ -473,44 +441,6 @@ func (s *Service) checkQuota(ctx context.Context, tenantID, address string) erro
 		}
 	}
 	return nil
-}
-
-// Overview is the settings screen in one request.
-func (s *Service) Overview(ctx context.Context, tenantID string, limit int) (*Overview, error) {
-	if limit <= 0 || limit > 200 {
-		limit = 25
-	}
-	stats, err := s.store.stats(ctx, tenantID)
-	if err != nil {
-		return nil, err
-	}
-	recent, err := s.store.recent(ctx, tenantID, limit)
-	if err != nil {
-		return nil, err
-	}
-	if stats.Total > 0 {
-		stats.VerifiedPct = float64(stats.Verified) / float64(stats.Total) * 100
-	}
-
-	overview := &Overview{
-		Stats:       *stats,
-		Recent:      recent,
-		Configured:  Configured(),
-		ProviderURL: ProviderURL(),
-		AdminURL:    AdminURL,
-		ReturnURL:   ReturnURL(),
-	}
-	// The health check is a network call on a screen load, so it is bounded
-	// tightly: a slow provider should make this screen say "unreachable", not
-	// make it hang.
-	healthCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-	if err := s.Health(healthCtx); err != nil {
-		overview.Health = err.Error()
-	} else {
-		overview.Reachable = true
-	}
-	return overview, nil
 }
 
 // StartHousekeeping ages out links nobody followed and drops history past the

@@ -301,6 +301,101 @@ export const cp = {
     en: "Nothing has been counted yet — the collection runs nightly.",
   },
 
+  // The two screens the console took over from the workspace: the assistant
+  // every organisation meets, and the ledger of addresses the platform was
+  // asked to write to.
+  "cp.section.assistant": { mn: "AI туслах", en: "Assistant" },
+  "cp.hint.assistant": {
+    mn: "Бүх байгууллагад нийтлэг үйлчлэх заавар ба мэдлэгийн сан. Байгууллага өөрийн зааврыг бичээгүй үед туслах эдгээрийг хэрэглэнэ.",
+    en: "The instructions and the corpus every organisation shares. An organisation that has written none of its own is answered with these.",
+  },
+  "cp.section.verifications": { mn: "И-мэйл баталгаажуулалт", en: "Email verification" },
+  "cp.hint.verifications": {
+    mn: "Платформ хэнд бичсэн, үйлчилгээ нь ажиллаж байна уу — бүх байгууллагыг нэг дор.",
+    en: "Who the platform has written to, and whether the service is answering — every organisation at once.",
+  },
+  "cp.hint.tenants_touched": { mn: "{count} байгууллага", en: "{count} organisations" },
+  "cp.field.active": { mn: "Идэвхтэй", en: "Active" },
+  "cp.state.never": { mn: "хэзээ ч", en: "never" },
+  "cp.state.deleted": { mn: "устсан байгууллага", en: "deleted organisation" },
+
+  // System Operations — консолын хоёр дахь апп: байрлуулалтаа ажиллуулах
+  // (хяналт), юу үйлдвэрлэгдэж байгаа (тайлан), юу хадгалагдаж байгаа (нөөц).
+  "cp.app.ops": { mn: "Системийн үйл ажиллагаа", en: "System Operations" },
+  "cp.group.monitor": { mn: "Хяналт", en: "Monitor" },
+  "cp.group.report": { mn: "Тайлан", en: "Report" },
+  "cp.group.backup": { mn: "Нөөцлөлт", en: "Backup" },
+
+  "cp.section.metrics": { mn: "Үзүүлэлт", en: "Metrics" },
+  "cp.section.jobs": { mn: "Арын ажлууд", en: "Background jobs" },
+  "cp.section.schedules": { mn: "Товлосон тайлан", en: "Scheduled reports" },
+  "cp.section.infrastructure": { mn: "Дэд бүтэц", en: "Infrastructure" },
+  "cp.section.firing": { mn: "Идэвхтэй сэрэмжлүүлэг", en: "Firing" },
+  "cp.section.warnings": { mn: "Тохиргооны анхааруулга", en: "Configuration warnings" },
+  "cp.section.by_organisation": { mn: "Байгууллагаар", en: "By organisation" },
+  "cp.section.history": { mn: "Түүх", en: "History" },
+
+  "cp.hint.metrics": {
+    mn: "API-ийн гурван тоо, хамаарах гадаад системүүд, чимээгүй дүүрдэг дөрвөн хэмжүүр.",
+    en: "The API's own three numbers, the systems it depends on, and the four gauges that fill up quietly.",
+  },
+  "cp.hint.alerts": {
+    mn: "Одоо асаж буй сэрэмжлүүлэг ба платформын өөрийн тохиргооны гомдол — хоёр өөр зүйл, нэг мөчид уншигддаг.",
+    en: "What is firing now, and what the platform says about its own configuration — two different things, read at the same moment.",
+  },
+  "cp.hint.jobs": {
+    mn: "Өөрөө ажиллах ёстой бүхэн. Эдгээр нь чимээгүй уналттай: ажиллахаа больсныг долоо хоногийн дараа хүн анзаарна.",
+    en: "Everything that should run on its own. These fail silently: somebody notices a week later.",
+  },
+  "cp.hint.usage": {
+    mn: "Бүх байгууллагын энэ сарын хэрэглээ. Тоолуур бүр өөрийн утгаараа нэгтгэгдэнэ:",
+    en: "Every organisation this month. Each metric is rolled up the way it means:",
+  },
+  "cp.hint.schedules": {
+    mn: "Нүүр хуудсан дээрх тоо аль хуваарийнх болохыг энд харна. Асуудалтай нь эхэндээ.",
+    en: "Which schedule the front page is counting. The ones in trouble come first.",
+  },
+  "cp.hint.backups": {
+    mn: "Юу хадгалагдсан, хэн нь сэргээж үзсэн. Туршиж үзээгүй нөөц бол нөөц биш.",
+    en: "What has been kept, and whether anybody has checked that it restores. An untested backup is not a backup.",
+  },
+
+  "cp.metric.rps": { mn: "Хүсэлт/сек", en: "Requests/sec" },
+  "cp.metric.error_rate": { mn: "Алдааны хувь", en: "Error rate" },
+  "cp.metric.p95": { mn: "P95 хугацаа", en: "P95 latency" },
+
+  "cp.field.gauge": { mn: "Хэмжүүр", en: "Gauge" },
+  "cp.field.warning_at": { mn: "Анхааруулах босго", en: "Warns at" },
+  "cp.field.system": { mn: "Систем", en: "System" },
+  "cp.field.since": { mn: "Хэзээнээс", en: "Since" },
+  "cp.field.pending": { mn: "Хүлээгдэж буй", en: "Pending" },
+  "cp.field.sample": { mn: "Жишээ", en: "Sample" },
+  "cp.field.collected": { mn: "Тоологдсон", en: "Counted" },
+  "cp.field.report": { mn: "Тайлан", en: "Report" },
+  "cp.field.cron": { mn: "Хуваарь", en: "Schedule" },
+  "cp.field.recipients": { mn: "Хүлээн авагч", en: "Recipients" },
+  "cp.field.size": { mn: "Хэмжээ", en: "Size" },
+  "cp.field.detail": { mn: "Тайлбар", en: "Detail" },
+  "cp.kind.backup": { mn: "Нөөц", en: "Backup" },
+  "cp.kind.restore_test": { mn: "Сэргээлтийн турших", en: "Restore test" },
+  "cp.action.runbook": { mn: "Заавар", en: "Runbook" },
+
+  "cp.state.normal": { mn: "Хэвийн", en: "Normal" },
+  "cp.state.never_counted": { mn: "тоологдоогүй", en: "never counted" },
+
+  "cp.message.nothing_firing": { mn: "Одоогоор асаж буй сэрэмжлүүлэг алга.", en: "Nothing is firing." },
+  "cp.message.no_warnings": { mn: "Тохиргооны анхааруулга алга.", en: "No configuration warnings." },
+  "cp.message.no_trouble": { mn: "Давтагдсан алдаатай байгууллага алга.", en: "No organisation is failing repeatedly." },
+  "cp.message.no_schedules": { mn: "Товлосон тайлан алга.", en: "Nothing is scheduled." },
+  "cp.message.schedules_trouble": {
+    mn: "{failing} хуваарь алдаатай, {never} нь хэзээ ч ажиллаж үзээгүй.",
+    en: "{failing} schedules are failing and {never} have never run.",
+  },
+  "cp.message.no_backups_configured": {
+    mn: "Нөөцлөлт хэзээ ч бүртгэгдээгүй байна. deploy/scripts/backup.sh-г cron-д тавина уу.",
+    en: "No backup has ever been recorded. Install deploy/scripts/backup.sh in cron.",
+  },
+
   "cp.group.watch": { mn: "Ажиглалт", en: "Watch" },
   "cp.group.organisations": { mn: "Байгууллага", en: "Organisations" },
   "cp.group.platform": { mn: "Платформ", en: "Platform" },

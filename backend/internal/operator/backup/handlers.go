@@ -20,6 +20,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -75,6 +76,71 @@ func (s *Service) StatusOf(ctx context.Context) Status {
 		slog.Warn("control plane: could not read the restore tests", "error", err)
 	}
 	return status
+}
+
+// Entry is one line of the backup history: a run of the script, or a restore
+// test somebody wrote down.
+type Entry struct {
+	ID         string     `json:"id"`
+	Kind       string     `json:"kind"`
+	StartedAt  time.Time  `json:"started_at"`
+	FinishedAt *time.Time `json:"finished_at"`
+	SizeMB     float64    `json:"size_mb"`
+	OK         bool       `json:"ok"`
+	Detail     string     `json:"detail"`
+	// RecordedBy is the operator who wrote the line by hand, empty for the
+	// script's own rows.
+	RecordedBy string `json:"recorded_by"`
+}
+
+// History is the last of them, newest first.
+//
+// The health screen shows the latest of each kind, which answers "was there a
+// backup last night". It does not answer "has this ever failed", and that is
+// the question somebody asks the morning they need one.
+func (s *Service) History(ctx context.Context, limit int) ([]Entry, error) {
+	if limit <= 0 || limit > 200 {
+		limit = 50
+	}
+	rows, err := s.db.Query(operator.Scoped(ctx),
+		`SELECT id::text, kind, started_at, finished_at, size_bytes, ok, detail,
+		        COALESCE(recorded_by::text, '')
+		   FROM operator.platform_backups
+		  ORDER BY started_at DESC LIMIT $1`, limit)
+	if err != nil {
+		return nil, fmt.Errorf("control plane: read the backup history: %w", err)
+	}
+	defer rows.Close()
+
+	history := make([]Entry, 0, 16)
+	for rows.Next() {
+		var entry Entry
+		var size *int64
+		if err := rows.Scan(&entry.ID, &entry.Kind, &entry.StartedAt, &entry.FinishedAt,
+			&size, &entry.OK, &entry.Detail, &entry.RecordedBy); err != nil {
+			return nil, fmt.Errorf("control plane: read a backup row: %w", err)
+		}
+		if size != nil {
+			entry.SizeMB = float64(*size) / (1024 * 1024)
+		}
+		history = append(history, entry)
+	}
+	return history, rows.Err()
+}
+
+func (s *Service) handleHistory(w http.ResponseWriter, r *http.Request) {
+	limit := 50
+	if raw := r.URL.Query().Get("limit"); raw != "" {
+		if parsed, err := strconv.Atoi(raw); err == nil {
+			limit = parsed
+		}
+	}
+	history, err := s.History(r.Context(), limit)
+	if err != nil {
+		fail(w, err, "could not read the backup history")
+		return
+	}
+	httpx.JSON(w, http.StatusOK, map[string]any{"backups": history, "status": s.StatusOf(r.Context())})
 }
 
 // RecordRestoreTest writes down that somebody restored a backup and it worked.
@@ -218,6 +284,8 @@ func (s *Service) Routes(r chi.Router) {
 		Post("/deploy", s.handleDeploy)
 	r.With(s.op.RequireCapability(operator.CapSettingsWrite)).
 		Post("/backups/restore-test", s.handleRestoreTest)
+	r.With(s.op.RequireCapability(operator.CapTenantRead)).
+		Get("/backups", s.handleHistory)
 }
 
 // firstNonEmpty is the first of its arguments that says anything.

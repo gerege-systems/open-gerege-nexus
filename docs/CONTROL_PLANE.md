@@ -1,6 +1,6 @@
 # Control plane — операторын консол
 
-`cp.nexus.gerege.mn` дээрх операторын урсгалыг босгох, хамгаалах, ажиллуулах
+`admin.nexus.gerege.mn` дээрх операторын урсгалыг босгох, хамгаалах, ажиллуулах
 одоогийн заавар. Шинэчлэгдсэн: 2026-08-24.
 
 [Баримт бичгийн төв](README.md) · [Архитектур](ARCHITECTURE_SPECIFICATION.md) ·
@@ -13,7 +13,7 @@
 
 | Талбар | Утга |
 | --- | --- |
-| Origin | `https://cp.nexus.gerege.mn` |
+| Origin | `https://admin.nexus.gerege.mn` |
 | Frontend | `/` нь 308-аар `/cp` руу; UI нь `/cp/*` |
 | Canonical API | `/api/platform/v1/*` — одоогоор 44 route |
 | Legacy API | `/cp/api/*` нь HostGate-ийн ард 308; vNEXT-д устгана |
@@ -66,32 +66,31 @@ HostGate/session/role үлдэнэ; nginx allowlist идэвхтэй бол ап
 
 ### 3.1 DNS, TLS, nginx
 
-Шинэ суулгацын нэршил нь **`admin.<домэйн>`** (жишээ нь `admin.petronet.mn`);
-хөгжүүлэлтийн анхдагч нь `admin.localhost`. `cp.nexus.gerege.mn` нь энэ
-нэршлээс өмнөх бөгөөд хэвээр ажиллана — ажиллаж буй консолын хаягийг солих нь
-DNS, гэрчилгээ, хавчуургыг хамт нүүлгэх ажил тул нэршил шинэ суулгацад
-хамаарна.
+Нэршил нь **`admin.<домэйн>`** (жишээ нь `admin.petronet.mn`); хөгжүүлэлтийн
+анхдагч нь `admin.localhost`. Энэ репогийн үндсэн суулгац 2026-08-29-нд
+`cp.nexus.gerege.mn`-ээс `admin.nexus.gerege.mn` рүү нүүсэн; хуучин хост
+гэрчилгээгээ хадгалж, зөвхөн 301-ээр шинэ нэр рүү заана.
 
-`cp.nexus.gerege.mn` DNS нь deployment server-ийг заана. Репогийн
-`deploy/nginx/cp.nexus.gerege.mn.conf` болон
+`admin.nexus.gerege.mn` DNS нь deployment server-ийг заана. Репогийн
+`deploy/nginx/admin.nexus.gerege.mn.conf` болон
 `deploy/nginx/snippets/cp-allowlist.conf`-ыг идэвхжүүлээд TLS сертификат
 олгоно:
 
 ```bash
-sudo cp deploy/nginx/cp.nexus.gerege.mn.conf /etc/nginx/sites-available/
+sudo cp deploy/nginx/admin.nexus.gerege.mn.conf /etc/nginx/sites-available/
 sudo cp deploy/nginx/snippets/cp-allowlist.conf /etc/nginx/snippets/
-sudo ln -s /etc/nginx/sites-available/cp.nexus.gerege.mn.conf \
-  /etc/nginx/sites-enabled/cp.nexus.gerege.mn.conf
+sudo ln -s /etc/nginx/sites-available/admin.nexus.gerege.mn.conf \
+  /etc/nginx/sites-enabled/admin.nexus.gerege.mn.conf
 sudo nginx -t
 sudo systemctl reload nginx
-sudo certbot --nginx -d cp.nexus.gerege.mn
+sudo certbot --nginx -d admin.nexus.gerege.mn
 ```
 
 GitHub Actions production deploy дараах тохиргоог хэрэглэнэ:
 
 | GitHub тохиргоо | Жишээ | Үүрэг |
 | --- | --- | --- |
-| Repository variable `CONTROL_PLANE_HOST` | `cp.nexus.gerege.mn` | Backend/frontend-ийн origin gate |
+| Repository variable `CONTROL_PLANE_HOST` | `admin.nexus.gerege.mn` | Backend/frontend-ийн origin gate |
 | Secret `CONTROL_PLANE_ALLOWED_CIDRS` | `203.0.113.10/32, 2001:db8:1::/64` | nginx allowlist үүсгэх |
 
 Тогтмол office/VPN хаягийг аль болох CIDR-аар оруул. Түр зуурын нэг IPv4
@@ -110,7 +109,7 @@ invalid CIDR, host bit зөрсөн network, бүх интернетийг нэ�
 Production env-д дор хаяж:
 
 ```dotenv
-CONTROL_PLANE_HOST=cp.nexus.gerege.mn
+CONTROL_PLANE_HOST=admin.nexus.gerege.mn
 ```
 
 Энэ утга backend болон frontend хоёрт ижил очих ёстой. Compose startup goose
@@ -242,6 +241,10 @@ manifest compatibility-г шалгана.
 - `/cp/approvals` — хоёр хүний шийдвэр;
 - `/cp/config` — settings, flags, maintenance;
 - `/cp/announcements` — tenant banner;
+- `/cp/assistant` — бүх байгууллагад нийтлэг AI заавар ба мэдлэгийн сан
+  (2026-08-29-нд ажлын мужийн `/settings/ai`-аас нүүсэн);
+- `/cp/email-verification` — и-мэйл баталгаажуулалтын бүртгэл, үйлчилгээний
+  төлөв, бүх байгууллагаар (мөн тэр өдөр `/settings/email-verification`-оос);
 - `/cp/audit` — append-only operator audit хайлт ба өөрчлөлтийн snapshot.
 
 API-д байгаа боловч тусдаа UI дэлгэцгүй contract:
