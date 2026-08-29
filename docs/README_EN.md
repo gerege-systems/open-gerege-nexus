@@ -282,7 +282,7 @@ See [`.env.example`](../.env.example) for the complete list.
 | `POST` | `/api/v1/store/apps/{slug}/install` | Install an app (admin) |
 | `POST` | `/api/v1/verify/send` | Ask the hosted service for an email verification link |
 | `GET` | `/api/v1/verify/landed` | Receive somebody who confirmed — good exactly once |
-| `GET` | `/api/v1/admin/email-verification/overview` | Verification history and service health (admin) |
+| `GET` | `/api/platform/v1/email-verifications` | Verification ledger and service health (console) |
 | `POST` | `/oauth2/token` | OAuth2 client credentials token |
 
 Session tokens travel either in the HttpOnly cookie or as

@@ -205,7 +205,6 @@ export default function Layout({children}:{children:React.ReactNode}){
     {label:t("web.menu.app_store"),app:t("web.label.platform"),path:"/apps",icon:"grid"},
     {label:t("web.menu.appearance"),app:t("web.label.platform"),path:"/settings/appearance",icon:"palette"},
     {label:t("web.menu.installed_apps"),app:t("web.label.platform"),path:"/settings/apps",icon:"settings"},
-    {label:t("web.menu.email_verification"),app:t("web.label.platform"),path:"/settings/email-verification",icon:"mail-check"},
     ...apps.flatMap(app=>app.menus.filter(m=>m.path).map(m=>({label:m.label,app:app.name,path:m.path!,icon:m.icon})))
   ],[apps,t]);
   const results=query.trim()?searchIndex.filter(x=>(x.label+" "+x.app).toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())).slice(0,8):[];
@@ -294,13 +293,11 @@ export default function Layout({children}:{children:React.ReactNode}){
         somebody to hold two answers for where the same page is. */}
     {company&&<NavLink href="/settings/apps" active={pathname==="/settings/apps"} icon={<Settings className="w-5 h-5"/>} label={t("web.menu.installed_apps")}/>}
     <NavLink href="/settings/appearance" active={pathname==="/settings/appearance"} icon={<Palette className="w-5 h-5"/>} label={t("web.menu.appearance")}/>
-    {user?.is_admin&&<NavLink href="/settings/ai" active={pathname==="/settings/ai"} icon={<Sparkles className="w-5 h-5"/>} label={t("ai.view.settings_title")}/>}
     {chromeEntries("settings").map(item=>
       <NavLink key={item.id} href={item.path!} active={item.path===pathname}
         icon={<MenuIcon name={item.icon} className="w-5 h-5"/>} label={item.label}/>)}
     {/* Issuing a key that sends mail in the tenant's name is administrative, and
         the API behind this screen is admin-only, so the link follows it. */}
-    {user?.is_admin&&<NavLink href="/settings/email-verification" active={pathname==="/settings/email-verification"} icon={<MailCheck className="w-5 h-5"/>} label={t("web.menu.email_verification")}/>}
     {user?.is_admin&&<NavLink href="/settings/access" active={pathname==="/settings/access"} icon={<ShieldCheck className="w-5 h-5"/>} label={t("access.view.title")}/>}
   </MenuGroup></>;
 

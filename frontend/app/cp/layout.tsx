@@ -34,7 +34,7 @@ export default async function ControlPlaneLayout({
     notFound();
   }
 
-  return <div className="cp-root min-h-screen bg-slate-100">{children}</div>;
+  return <div className="cp-root min-h-screen">{children}</div>;
 }
 
 function stripPort(host: string): string {

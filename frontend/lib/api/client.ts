@@ -87,26 +87,6 @@ export interface EmailVerification {
   created_at: string;
 }
 
-export interface EmailVerifyOverview {
-  stats: {
-    total: number;
-    verified: number;
-    pending: number;
-    expired: number;
-    last_24h: number;
-    verified_pct: number;
-  };
-  recent: EmailVerification[];
-  /** Whether a service key is present at all. The key itself never comes back. */
-  configured: boolean;
-  /** The service's own health check, and what it said when it failed. */
-  reachable: boolean;
-  health?: string;
-  provider_url: string;
-  admin_url: string;
-  return_url: string;
-}
-
 export type OAuth2Scope = {
   name: string;
   description: string;
@@ -486,8 +466,6 @@ export const coreApi = {
     request("/profile/preferences", { method: "PUT", body: JSON.stringify(patch) }),
 
   // Contacts App
-  getEmailVerifyOverview: (limit = 25) =>
-    request<EmailVerifyOverview>(`/admin/email-verification/overview?limit=${limit}`),
 
   // Ask the service for a link. App modules call the Go service directly; this
   // is for the product's own screens.

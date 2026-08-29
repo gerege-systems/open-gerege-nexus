@@ -244,7 +244,7 @@ npm run dev
 | `POST` | `/api/v1/store/apps/{slug}/install` | Установка приложения (админ) |
 | `POST` | `/api/v1/verify/send` | Запросить ссылку подтверждения у хостинговой службы |
 | `GET` | `/api/v1/verify/landed` | Принять того, кто подтвердил адрес — срабатывает один раз |
-| `GET` | `/api/v1/admin/email-verification/overview` | История подтверждений и состояние службы (админ) |
+| `GET` | `/api/platform/v1/email-verifications` | Журнал подтверждений и состояние службы (консоль) |
 | `POST` | `/oauth2/token` | Токен OAuth2 client credentials |
 
 Токен сессии передаётся в HttpOnly cookie либо в заголовке
