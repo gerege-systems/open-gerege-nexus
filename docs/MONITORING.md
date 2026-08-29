@@ -411,14 +411,29 @@ docker run -d --restart unless-stopped \
 ### Асаах
 
 Tempo нь мониторингийн стектэй хамт үргэлж асдаг ч **платформ түүн рүү юу ч
-илгээхгүй** — тэр нь платформын шийдвэр. Асаахын тулд үндсэн стекийн `.env`-д:
+илгээхгүй** — тэр нь платформын шийдвэр.
+
+Утга нь GitHub-ийн repository **variable** (Settings → Variables), нууц биш.
+`.env`-ийг deploy бүр GitHub-ээс шинээр бичдэг тул серверт гараар нэмсэн мөр
+дараагийн deploy хүртэл л амьдарна:
 
 ```bash
-OTEL_EXPORTER_OTLP_ENDPOINT=http://gerege_nexus_tempo:4318
-OTEL_TRACES_SAMPLER_ARG=0.1
+gh variable set OTEL_EXPORTER_OTLP_ENDPOINT -b "http://gerege_nexus_tempo:4318"
+gh variable set OTEL_TRACES_SAMPLER_ARG -b "0.1"
 ```
 
-...дараа нь backend-ыг дахин асаана. Хоосон бол tracing нь **үнэхээр**
+...дараа нь дараагийн deploy backend-ыг шинэ утгатай эхлүүлнэ. Хувьсагч
+нэмэхэд гурван газар засвар шаардлагатай — `docker-compose.prod.yml`-ийн
+backend env, `deploy.yml`-ийн `env:` / `envs:` / `.env` heredoc, ба variable
+өөрөө. Аль нэг нь дутвал чимээгүй ажиллахгүй.
+
+**Асаалттай эсэхийг шалгах:**
+
+```bash
+docker exec gerege_nexus_backend printenv OTEL_EXPORTER_OTLP_ENDPOINT
+docker logs gerege_nexus_backend 2>&1 | grep "tracing is"
+curl -s localhost:3200/api/search?tags= | head -c 200        # Tempo-д trace ирсэн эсэх
+``` Хоосон бол tracing нь **үнэхээр**
 унтарсан: exporter байхгүй, batch processor байхгүй, background goroutine
 байхгүй, код доторх span бүр no-op. Tempo огт ажиллуулахгүй суулгац
 хэмжигдэхүйц зардал төлөхгүй.

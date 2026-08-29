@@ -137,6 +137,20 @@ services:
       # `nexus.gerege.mn` alone, which is what every deployment ran on until
       # Grafana needed a callback of its own.
       OAUTH_REDIRECT_HOSTS: ${OAUTH_REDIRECT_HOSTS:-}
+      # Traces. Empty is off, and genuinely off — no exporter, no batch
+      # processor, no background goroutine, every span a no-op. Point it at
+      # Tempo, which the monitoring stack publishes on this same network:
+      #
+      #   OTEL_EXPORTER_OTLP_ENDPOINT=http://gerege_nexus_tempo:4318
+      #
+      # Turning it on is also what makes the exemplars real: the histogram
+      # samples carry a trace id only while the context they were recorded with
+      # belongs to a sampled span, so with tracing off the metric-to-trace link
+      # in Grafana points at nothing.
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      # One request in ten, which is the default the code applies anyway. Named
+      # here so a deployment can lower it without a release.
+      OTEL_TRACES_SAMPLER_ARG: ${OTEL_TRACES_SAMPLER_ARG:-}
       SSO_DEFAULT_CLIENT_SECRET: ${SSO_DEFAULT_CLIENT_SECRET:?SSO_DEFAULT_CLIENT_SECRET is required in production}
       # The Google button on this platform's own sign-in screen. Off unless a
       # client id is set, and separate from the connector credentials below on
