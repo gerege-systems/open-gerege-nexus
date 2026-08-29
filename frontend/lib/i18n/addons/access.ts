@@ -39,6 +39,10 @@ export const access = {
   "access.message.saved": { mn: "Эрхүүд хадгалагдлаа", en: "Rights saved" },
   "access.message.role_created": { mn: "Role үүслээ", en: "Role created" },
   "access.message.role_deleted": { mn: "Role устлаа", en: "Role deleted" },
+  "access.message.confirm_admin": {
+    mn: "{name}-г админ болгох уу? Админ нь гишүүд, эрх, тохиргоог удирдаж, байгууллагын бүх өгөгдөлд хүрнэ.",
+    en: "Make {name} an administrator? An administrator manages members, roles and settings, and reaches everything the organisation keeps.",
+  },
   "access.message.member_updated": { mn: "Хэрэглэгчийн role шинэчлэгдлээ", en: "Member roles updated" },
   "access.message.error_load": { mn: "Эрхийн мэдээлэл ачаалж чадсангүй", en: "Could not load access settings" },
   "access.message.error_save": { mn: "Хадгалж чадсангүй", en: "Could not save" },

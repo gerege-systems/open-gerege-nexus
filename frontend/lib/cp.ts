@@ -488,8 +488,9 @@ export interface Overview {
   monitoring: boolean;
   grafana_url: string;
   api: { requests_per_second: number; error_rate: number; p95_seconds: number; read: boolean };
-  external: Array<{ system: string; error_rate: number; p95_seconds: number; state: string }>;
-  infra: Array<{ name: string; value: number; unit: string; warning: number; state: string }>;
+  /** state is green, amber, red — or unknown, when nothing has measured it. */
+  external: Array<{ system: string; error_rate: number; p95_seconds: number; state: string; measured: boolean }>;
+  infra: Array<{ name: string; value: number; unit: string; warning: number; state: string; measured: boolean }>;
   alerts: Array<{
     name: string; severity: string; summary: string;
     starts_at: string; runbook: string; silenced: boolean;

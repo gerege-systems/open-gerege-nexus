@@ -178,3 +178,42 @@ func TestARequestIsAnsweredOnlyOnce(t *testing.T) {
 		t.Errorf("the second answer failed for an unexpected reason: %v", err)
 	}
 }
+
+// An approved request makes somebody a member and nothing more.
+//
+// The role comes from 00008's trigger — `user`, the smallest the platform has
+// — and nothing in this path adds to it. The check is here because the
+// opposite is invisible until it matters: an approval that quietly granted
+// `admin` would look exactly like this one until the day somebody deleted an
+// organisation's data.
+func TestAnApprovedRequestGrantsOnlyTheSmallestRole(t *testing.T) {
+	pool := joinPool(t)
+	ctx := context.Background()
+	userID, tenantID, requestID := asker(t, pool)
+
+	if err := handlersFor(pool).Decide(ctx, requestID, userID, true); err != nil {
+		t.Fatalf("approve the request: %v", err)
+	}
+
+	rows, err := pool.Query(ctx, `
+		SELECT r.code FROM workspace.memberships m
+		  JOIN workspace.membership_roles mr ON mr.membership_id = m.id
+		  JOIN workspace.roles r ON r.id = mr.role_id
+		 WHERE m.tenant_id = $1::uuid AND m.user_id = $2::uuid
+		 ORDER BY r.code`, tenantID, userID)
+	if err != nil {
+		t.Fatalf("read the roles: %v", err)
+	}
+	defer rows.Close()
+	var codes []string
+	for rows.Next() {
+		var code string
+		if err := rows.Scan(&code); err != nil {
+			t.Fatalf("read a role: %v", err)
+		}
+		codes = append(codes, code)
+	}
+	if len(codes) != 1 || codes[0] != "user" {
+		t.Fatalf("an approved request granted %v, want exactly the user role", codes)
+	}
+}

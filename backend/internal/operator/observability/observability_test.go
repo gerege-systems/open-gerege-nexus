@@ -120,3 +120,50 @@ func TestToneMatchesTheThresholds(t *testing.T) {
 		}
 	}
 }
+
+// A system nobody has called is not a system that is well.
+//
+// Prometheus holds no series for it, every query answers with an empty vector,
+// and the screen used to render that as 0.00% errors and a green light — the
+// most reassuring possible way to say "nothing is watching this". Six external
+// systems sat green on nexus.gerege.mn for as long as the panel had existed.
+func TestAnUnmeasuredSystemIsNotGreen(t *testing.T) {
+	prometheus := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`{"status":"success","data":{"resultType":"vector","result":[]}}`))
+	}))
+	defer prometheus.Close()
+	t.Setenv("PROMETHEUS_URL", prometheus.URL)
+
+	service := New(nil, Deps{})
+	for _, dot := range service.externalSystems(context.Background()) {
+		if dot.State != "unknown" || dot.Measured {
+			t.Fatalf("%s reads %+v with nothing measured", dot.System, dot)
+		}
+	}
+	for _, gauge := range service.infrastructure(context.Background()) {
+		if gauge.State != "unknown" || gauge.Measured {
+			t.Fatalf("%s reads %+v with nothing measured", gauge.Name, gauge)
+		}
+	}
+}
+
+// And a system that is measured keeps its colour: the fix must not turn a
+// working panel into a screen of question marks.
+func TestAMeasuredSystemKeepsItsColour(t *testing.T) {
+	prometheus := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`{"status":"success","data":{"result":[{"value":[1,"0.01"]}]}}`))
+	}))
+	defer prometheus.Close()
+	t.Setenv("PROMETHEUS_URL", prometheus.URL)
+
+	service := New(nil, Deps{})
+	dots := service.externalSystems(context.Background())
+	if len(dots) == 0 {
+		t.Fatal("no external systems came back")
+	}
+	for _, dot := range dots {
+		if !dot.Measured || dot.State != "green" {
+			t.Fatalf("%s reads %+v with a one-percent error rate", dot.System, dot)
+		}
+	}
+}

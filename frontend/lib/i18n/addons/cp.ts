@@ -382,6 +382,13 @@ export const cp = {
   "cp.kind.restore_test": { mn: "Сэргээлтийн турших", en: "Restore test" },
   "cp.action.runbook": { mn: "Заавар", en: "Runbook" },
 
+  // The four states the monitoring panels speak in. "unknown" is a system
+  // Prometheus holds no sample for, and it is not a colour of health.
+  "cp.state.green": { mn: "Хэвийн", en: "Green" },
+  "cp.state.amber": { mn: "Анхаар", en: "Amber" },
+  "cp.state.red": { mn: "Ноцтой", en: "Red" },
+  "cp.state.unknown": { mn: "Хэмжигдээгүй", en: "Not measured" },
+  "cp.state.unmeasured": { mn: "хэмжигдээгүй", en: "not measured" },
   "cp.state.normal": { mn: "Хэвийн", en: "Normal" },
   "cp.state.never_counted": { mn: "тоологдоогүй", en: "never counted" },
 

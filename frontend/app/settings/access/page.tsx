@@ -40,7 +40,16 @@ export default function AccessSettingsPage(){
   async function savePermissions(){if(!current)return;setSaving(true);setError("");try{await api.setRolePermissions(current.id,draft);await load();flash(t("access.message.saved"))}catch(e){setError(e instanceof Error?e.message:t("access.message.error_save"))}finally{setSaving(false)}}
   async function createRole(){setSaving(true);setError("");try{const created=await api.createRole(newRole);setNewRole({code:"",name:"",description:""});await load();setSelected(created.id);flash(t("access.message.role_created"))}catch(e){setError(e instanceof Error?e.message:t("access.message.error_create"))}finally{setSaving(false)}}
   async function removeRole(role:Role){if(role.system||!confirm(t("access.message.confirm_delete",{name:role.name})))return;setSaving(true);try{await api.deleteRole(role.id);await load();flash(t("access.message.role_deleted"))}catch(e){setError(e instanceof Error?e.message:t("access.message.error_delete"))}finally{setSaving(false)}}
-  async function toggleMemberRole(member:Member,roleID:string){const next=member.roles.includes(roleID)?member.roles.filter(id=>id!==roleID):[...member.roles,roleID];setMembers(all=>all.map(m=>m.membership_id===member.membership_id?{...m,roles:next}:m));try{await api.setMembershipRoles(member.membership_id,next);flash(t("access.message.member_updated"))}catch(e){setError(e instanceof Error?e.message:t("access.message.error_assign"));await load()}}
+  // Granting `admin` is asked about; every other role is one click.
+  //
+  // These chips sit side by side and the strongest of them used to be as easy
+  // to press by accident as the weakest. Two people on nexus.gerege.mn became
+  // administrators of organisations they had just been let into, twenty
+  // seconds after their requests were approved, and nothing on the screen had
+  // asked whether that was meant.
+  async function toggleMemberRole(member:Member,roleID:string){const role=roles.find(r=>r.id===roleID);const adding=!member.roles.includes(roleID);
+    if(adding&&role?.code==="admin"&&!confirm(t("access.message.confirm_admin",{name:member.name||member.email})))return;
+    const next=member.roles.includes(roleID)?member.roles.filter(id=>id!==roleID):[...member.roles,roleID];setMembers(all=>all.map(m=>m.membership_id===member.membership_id?{...m,roles:next}:m));try{await api.setMembershipRoles(member.membership_id,next);flash(t("access.message.member_updated"))}catch(e){setError(e instanceof Error?e.message:t("access.message.error_assign"));await load()}}
 
   if(loading)return <div className="p-8 text-slate-500">{t("access.message.loading")}</div>;
   return <div className="w-full space-y-6">
