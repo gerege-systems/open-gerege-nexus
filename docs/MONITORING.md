@@ -41,6 +41,7 @@ nginx-ээр гарсан Grafana (§4) эсвэл SSH tunnel.
 | --- | --- |
 | `http_server_request_duration_seconds{http_request_method,http_route,http_response_status_code}` | OpenTelemetry-ийн HTTP semantic convention. `http_route` нь chi-ийн routed pattern — түүхий URL биш. **Хүсэлтийн тоо нь энэ гистограммын `_count` цуврал** — тусад нь counter байхгүй |
 | `pgxpool_*` | Холболтын pool: эзлэгдсэн, сул, нийт, хүлээлт |
+| `db_client_operation_duration_seconds{pgx_operation_type}` | Өгөгдлийн сангийн үйлдлийн хугацаа: query, prepare, acquire, connect. Үүнийг otelpgx гаргадаг ба **зөвхөн trace асаалттай үед** гарна — meter provider үүсэхэд тэр өөрөө бүртгүүлдэг |
 | `external_request_duration_seconds{system,operation,status}` | ХУР, eID, ДАН, eSign, Gemini, и-мэйл баталгаажуулалт |
 | `logins_total{method,result}` | password, eid, dan, google, sso |
 | `invoices_created_total` | |
@@ -61,6 +62,12 @@ endpoint дээр үлдэнэ.
 **Trace-тай холбоос — exemplar.** Гистограммын сэмпл бүр trace_id авч явна
 (`--enable-feature=exemplar-storage` Prometheus дээр асаалттай). Grafana-ийн
 latency график дээрх удаан цэг дээр дарвал яг тэр удаашруулсан trace нээгдэнэ.
+
+Энэ нь **trace асаалттай үед л** ажиллана: сэмпл нь бичигдсэн контекст нь
+sample хийгдсэн span-д харьяалагдаж байж trace_id авч явдаг. §11-ийг үз.
+2026-08-29-нд бүх гинжийг шалгасан: exemplar → Prometheus-ийн
+`/api/v1/query_exemplars` → Tempo дахь trace, дотор нь `query SELECT`,
+`pool.acquire` спанууд.
 
 **Аль ч label-д тенант байхгүй.** Тенант ID эсвэл slug нь label болвол
 time series-ийн тоо байгууллагын тоогоор үржинэ, гарсан байгууллагын series нь
