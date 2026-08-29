@@ -52,9 +52,12 @@ services:
       # dropped them — without this flag Prometheus does not ask for the
       # OpenMetrics format, which is the only one exemplars travel in, and the
       # exemplarTraceIdDestinations in the Grafana datasource pointed at
-      # nothing. Storage is a fixed-size in-memory ring, not the TSDB.
+      # nothing.
+      # Storage is a fixed-size in-memory ring — 100,000 exemplars by default,
+      # set in the config file rather than here if it ever needs changing.
+      # There is no CLI flag for it, and Prometheus refuses to start on an
+      # unknown one.
       - --enable-feature=exemplar-storage
-      - --storage.exemplars.exemplars-limit=100000
       # ${DEPLOYMENT_NAME} in external_labels is expanded by this flag and by
       # nothing else — Prometheus does not otherwise read the environment.
       - --enable-feature=expand-external-labels
