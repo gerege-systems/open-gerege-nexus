@@ -13,20 +13,11 @@ import React, { useCallback, useEffect, useState } from "react";
 import { CalendarClock, RefreshCw } from "lucide-react";
 import Link from "next/link";
 
-import Console from "@/components/cp/Console";
 import { Badge, Card, formatMoment, Table } from "@/components/cp/ui";
 import { cp, type ReportSchedule } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 
-export default function OpsSchedulesPage() {
-  return (
-    <Console>
-      <Schedules />
-    </Console>
-  );
-}
-
-function Schedules() {
+export default function Schedules() {
   const { t, locale } = useI18n();
   const [schedules, setSchedules] = useState<ReportSchedule[]>([]);
   const [failure, setFailure] = useState("");

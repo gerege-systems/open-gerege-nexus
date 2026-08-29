@@ -13,22 +13,13 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Megaphone } from "lucide-react";
 
-import Console from "@/components/cp/Console";
 import { useAction } from "@/components/cp/Action";
 import { Badge, Card, formatMoment, Table } from "@/components/cp/ui";
 import { cp, type Announcement } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 import { Modal } from "@/components/ui";
 
-export default function ControlPlaneAnnouncementsPage() {
-  return (
-    <Console>
-      <Announcements />
-    </Console>
-  );
-}
-
-function Announcements() {
+export default function Announcements() {
   const { t, locale } = useI18n();
   const action = useAction();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);

@@ -17,20 +17,11 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { BarChart3, RefreshCw } from "lucide-react";
 import Link from "next/link";
 
-import Console from "@/components/cp/Console";
 import { Badge, Card, formatMoment, Table } from "@/components/cp/ui";
 import { cp, type PlatformUsage } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 
-export default function OpsUsagePage() {
-  return (
-    <Console>
-      <Usage />
-    </Console>
-  );
-}
-
-function Usage() {
+export default function Usage() {
   const { t, locale } = useI18n();
   const [report, setReport] = useState<PlatformUsage | null>(null);
   const [failure, setFailure] = useState("");

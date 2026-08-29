@@ -108,6 +108,12 @@ POST /api/platform/v1/backups/restore-test
 POST /api/platform/v1/catalog/sync
 POST /api/platform/v1/deploy
 POST /api/platform/v1/flags
+POST /api/platform/v1/me/password
+POST /api/platform/v1/operators
+POST /api/platform/v1/operators/{id}/disable
+POST /api/platform/v1/operators/{id}/enable
+POST /api/platform/v1/operators/{id}/enrolment
+POST /api/platform/v1/operators/{id}/role
 POST /api/platform/v1/people/{id}/credential-link
 POST /api/platform/v1/people/{id}/sessions/revoke
 POST /api/platform/v1/people/{id}/unlock

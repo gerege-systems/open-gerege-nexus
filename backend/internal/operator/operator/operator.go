@@ -35,6 +35,11 @@ const (
 	// CapOperatorRead is the roster of operators. Who can reach this platform
 	// is itself a thing to be able to check.
 	CapOperatorRead Capability = "operator.read"
+	// CapOperatorWrite adds an operator, takes one out, or changes what one
+	// may do. Superadmin only, with a second factor: this is the one action
+	// that widens the set of people who can perform every other action, so a
+	// borrowed console session must not be enough for it.
+	CapOperatorWrite Capability = "operator.write"
 
 	// CapTenantCreate opens an organisation on this deployment.
 	CapTenantCreate Capability = "tenant.create"
@@ -104,7 +109,7 @@ var capabilities = map[Role]map[Capability]bool{
 		CapTenantCreate: true, CapTenantSuspend: true, CapTenantDelete: true,
 		CapApprove: true, CapQuotaWrite: true, CapSupport: true, CapImpersonate: true,
 		CapSettingsWrite: true, CapFlagsWrite: true, CapAnnounce: true,
-		CapDeploy: true,
+		CapDeploy: true, CapOperatorWrite: true,
 	},
 	RoleOperator: {
 		CapTenantRead: true, CapAuditRead: true, CapOperatorRead: true,

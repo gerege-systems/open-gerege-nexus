@@ -14,21 +14,12 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { BookOpen, BrainCircuit, Plus, Save, Trash2 } from "lucide-react";
 
-import Console from "@/components/cp/Console";
 import { useAction } from "@/components/cp/Action";
 import { Card, formatMoment } from "@/components/cp/ui";
 import { cp, type Knowledge, type Prompt } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 
-export default function ControlPlaneAssistantPage() {
-  return (
-    <Console>
-      <Assistant />
-    </Console>
-  );
-}
-
-function Assistant() {
+export default function Assistant() {
   const { t, locale } = useI18n();
   const action = useAction();
   const [prompts, setPrompts] = useState<Prompt[]>([]);
