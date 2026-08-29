@@ -96,51 +96,91 @@ func TestAnAddressIsTakenOnlyOnce(t *testing.T) {
 }
 
 // A console that can lock itself out is a console somebody eventually locks
-// themselves out of. Both halves are refused: the last superadmin who can sign
-// in cannot be disabled, and cannot be demoted.
-func TestTheLastSuperadminIsKept(t *testing.T) {
+// themselves out of. The refusal has nothing to do with how many other
+// superadmins there are: the session doing it would keep working until it
+// expired, so the operator would appear to have succeeded and would find out at
+// the worst moment.
+func TestAnOperatorCannotLockThemselvesOut(t *testing.T) {
 	pool := optest.Pool(t)
 	service, sess := screen(t, pool)
 	ctx := context.Background()
 
-	// A second superadmin who has not enrolled cannot sign in, so it does not
-	// count: the platform would still be locked out.
-	half, err := service.Create(ctx, sess, NewOperator{
-		Email: fmt.Sprintf("half+%d@controlplane.test", time.Now().UnixNano()),
-		Name:  "Half Enrolled",
-		Role:  string(operator.RoleSuperadmin),
-	}, "an enrolment nobody finished")
-	if err != nil {
-		t.Fatalf("create the operator: %v", err)
-	}
-	forget(t, pool, half.ID)
-
-	other, _ := optest.Account(t, pool, operator.RoleSuperadmin)
-	// Disabling every other signed-in superadmin leaves the session's own
-	// account as the last one.
-	if err := service.SetEnabled(ctx, sess, other.ID, false, "clear the field"); err != nil {
-		t.Fatalf("disable the other superadmin: %v", err)
-	}
-
 	if err := service.SetEnabled(ctx, sess, sess.ID, false, "lock myself out"); err == nil {
-		t.Fatal("an operator disabled their own account")
+		t.Error("an operator disabled their own account")
 	}
 	if err := service.SetRole(ctx, sess, sess.ID, operator.RoleAuditor, "demote myself"); err == nil {
-		t.Fatal("an operator demoted their own account")
+		t.Error("an operator demoted their own account")
+	}
+}
+
+// One of two may go. This is the other side of the guard below, and the one
+// that would be missed by a rule written as "a superadmin cannot be disabled".
+func TestOneOfTwoSuperadminsMayBeDisabled(t *testing.T) {
+	pool := optest.Pool(t)
+	service, sess := screen(t, pool)
+	ctx := context.Background()
+
+	other, _ := optest.Account(t, pool, operator.RoleSuperadmin)
+	if err := service.SetEnabled(ctx, sess, other.ID, false, "one of several"); err != nil {
+		t.Fatalf("disabling one of several superadmins was refused: %v", err)
+	}
+}
+
+// The last superadmin who can sign in is kept, whether the change is a
+// disable or a demotion.
+//
+// Asked of the guard inside a transaction that is rolled back, rather than of
+// the screen. The rule counts every superadmin on the deployment, so a test
+// that drove the screen could only make the count reach one by disabling the
+// accounts already there — which on a developer's own database means the
+// operator they signed in with. It reported green on an empty database and red
+// on a real one, which is the wrong way round for a test of a lockout.
+//
+// Counted as "enabled and enrolled": an account whose authenticator was never
+// confirmed cannot sign in either, and a console that mints accounts creates
+// exactly that state.
+func TestTheLastSuperadminIsKept(t *testing.T) {
+	pool := optest.Pool(t)
+	ctx := context.Background()
+	keeper, _ := optest.Account(t, pool, operator.RoleSuperadmin)
+	spare, _ := optest.Account(t, pool, operator.RoleSuperadmin)
+
+	tx, err := pool.Begin(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Nothing here is committed: the accounts this disables include whichever
+	// ones the deployment already had.
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	if _, err := tx.Exec(ctx,
+		`UPDATE operator.operator_accounts SET disabled_at = NOW()
+		  WHERE role = 'superadmin' AND disabled_at IS NULL
+		    AND totp_confirmed_at IS NOT NULL AND id <> $1::uuid`, keeper.ID); err != nil {
+		t.Fatalf("leave one superadmin standing: %v", err)
 	}
 
-	// And through another superadmin's session, the guard is the count rather
-	// than the identity.
-	third, _ := optest.Account(t, pool, operator.RoleSuperadmin)
-	thirdSession := optest.Session(third)
-	if err := service.SetEnabled(ctx, thirdSession, sess.ID, false, "take the last one out"); err != nil {
-		t.Fatalf("disabling one of two superadmins was refused: %v", err)
+	if err := lastSuperadminGuard(ctx, tx, keeper.ID); err == nil {
+		t.Error("the last superadmin who can sign in was allowed to go")
 	}
-	if err := service.SetEnabled(ctx, sess, third.ID, false, "and the other"); err == nil {
-		t.Fatal("the last superadmin who can sign in was disabled")
+
+	// A second one who can sign in makes the same change fine.
+	if _, err := tx.Exec(ctx,
+		`UPDATE operator.operator_accounts SET disabled_at = NULL WHERE id = $1::uuid`, spare.ID); err != nil {
+		t.Fatalf("bring the spare back: %v", err)
 	}
-	if err := service.SetRole(ctx, sess, third.ID, operator.RoleSupport, "demote the last one"); err == nil {
-		t.Fatal("the last superadmin who can sign in was demoted")
+	if err := lastSuperadminGuard(ctx, tx, keeper.ID); err != nil {
+		t.Errorf("one of two superadmins was refused: %v", err)
+	}
+
+	// An enrolment nobody finished does not count: that account cannot sign in
+	// either, and it is the state the console's own screen leaves behind.
+	if _, err := tx.Exec(ctx,
+		`UPDATE operator.operator_accounts SET totp_confirmed_at = NULL WHERE id = $1::uuid`, spare.ID); err != nil {
+		t.Fatalf("un-enrol the spare: %v", err)
+	}
+	if err := lastSuperadminGuard(ctx, tx, keeper.ID); err == nil {
+		t.Error("a half-finished enrolment was counted as a superadmin who can sign in")
 	}
 }
 
