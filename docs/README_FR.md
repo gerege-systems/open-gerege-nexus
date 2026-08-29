@@ -283,7 +283,7 @@ Voir [`.env.example`](../.env.example) pour la liste complète.
 | `POST` | `/api/v1/store/apps/{slug}/install` | Installer une application (admin) |
 | `POST` | `/api/v1/verify/send` | Demander un lien de vérification au service hébergé |
 | `GET` | `/api/v1/verify/landed` | Recevoir la personne qui a confirmé — valable une seule fois |
-| `GET` | `/api/v1/admin/email-verification/overview` | Historique des vérifications et état du service (admin) |
+| `GET` | `/api/platform/v1/email-verifications` | Registre des vérifications et état du service (console) |
 | `POST` | `/oauth2/token` | Jeton OAuth2 client credentials |
 
 Les jetons de session circulent soit dans le cookie HttpOnly, soit via

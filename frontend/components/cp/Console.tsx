@@ -21,6 +21,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Activity,
+  BrainCircuit,
   Building2,
   CheckCheck,
   ChevronDown,
@@ -28,6 +29,7 @@ import {
   ChevronsUpDown,
   LayoutGrid,
   LifeBuoy,
+  MailCheck,
   Megaphone,
   Menu as HamburgerIcon,
   ScrollText,
@@ -60,6 +62,8 @@ const SECTIONS: { id: string; items: ConsoleDestination[] }[] = [
   { id: "cp.group.platform", items: [
     { href: "/cp/config", label: "cp.section.config", icon: <SlidersHorizontal className="w-5 h-5" /> },
     { href: "/cp/announcements", label: "cp.section.announcements", icon: <Megaphone className="w-5 h-5" /> },
+    { href: "/cp/assistant", label: "cp.section.assistant", icon: <BrainCircuit className="w-5 h-5" /> },
+    { href: "/cp/email-verification", label: "cp.section.verifications", icon: <MailCheck className="w-5 h-5" /> },
   ] },
   { id: "cp.group.investigation", items: [
     { href: "/cp/audit", label: "cp.section.audit", icon: <ScrollText className="w-5 h-5" /> },

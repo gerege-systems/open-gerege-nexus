@@ -8,6 +8,19 @@ import { LOCALES, TranslationKey, useI18n } from "@/lib/i18n";
 import { ColorMode, useTheme } from "@/lib/theme";
 import { TenantChoices, useTenants } from "@/components/TenantChoices";
 
+/**
+ * Two letters, not one.
+ *
+ * A single initial is the same letter for most of a Mongolian directory — one
+ * mark that says nothing about whose account is open. Two words give a letter
+ * each; one word gives its first two.
+ */
+function initialsOf(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (words.length >= 2) return (words[0].slice(0, 1) + words[1].slice(0, 1)).toUpperCase();
+  return (words[0] || "?").slice(0, 2).toUpperCase();
+}
+
 const MODES: { value: ColorMode; icon: typeof Sun; labelKey: TranslationKey }[] = [
   { value: "light", icon: Sun, labelKey: "appearance.mode.light" },
   { value: "dark", icon: Moon, labelKey: "appearance.mode.dark" },
@@ -68,7 +81,7 @@ export default function UserMenu({
     };
   }, [open]);
 
-  const initial = (user?.name || user?.email || "G").slice(0, 1).toUpperCase();
+  const initials = initialsOf(user?.name || user?.email || "G");
   const rows = links ?? [
     { href: "/profile", label: t("profile.title"), icon: <UserRound className="w-4 h-4" /> },
     { href: "/settings/appearance", label: t("web.menu.settings"), icon: <Settings className="w-4 h-4" /> },
@@ -88,9 +101,11 @@ export default function UserMenu({
         }`}
       >
         <span className="w-8 h-8 rounded-full bg-[var(--gerege-blue-soft)] text-[var(--gerege-blue)] grid place-items-center text-xs font-bold">
-          {initial}
+          {initials}
         </span>
-        <span className="hidden md:block text-sm font-medium text-slate-800 truncate max-w-36">{user?.name}</span>
+        {/* The whole name, not the first word of it: "Цэнддорж Эрдэнэбат" is
+            one name in two parts and cutting it at 9rem said the wrong one. */}
+        <span className="hidden md:block text-sm font-medium text-slate-800 truncate max-w-60">{user?.name}</span>
         <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 

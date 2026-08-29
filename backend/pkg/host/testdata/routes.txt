@@ -4,6 +4,7 @@ CONNECT /cp/api
 CONNECT /cp/api/*
 CONNECT /metrics
 DELETE /api/platform/v1/announcements/{id}
+DELETE /api/platform/v1/assistant/knowledge/{id}
 DELETE /api/platform/v1/credentials/{name}
 DELETE /api/platform/v1/flags/{key}
 DELETE /api/platform/v1/session
@@ -19,11 +20,14 @@ GET /.well-known/jwks.json
 GET /.well-known/openid-configuration
 GET /api/platform/v1/announcements
 GET /api/platform/v1/approvals
+GET /api/platform/v1/assistant/knowledge
+GET /api/platform/v1/assistant/prompts
 GET /api/platform/v1/audit
 GET /api/platform/v1/catalog/overview
 GET /api/platform/v1/catalog/status
 GET /api/platform/v1/credentials
 GET /api/platform/v1/deletions
+GET /api/platform/v1/email-verifications
 GET /api/platform/v1/flags
 GET /api/platform/v1/health
 GET /api/platform/v1/me
@@ -38,10 +42,7 @@ GET /api/platform/v1/tenants/{id}/usage
 GET /api/platform/v1/tenants/{id}/usage.csv
 GET /api/v1/admin/access/join-requests
 GET /api/v1/admin/access/overview
-GET /api/v1/admin/ai/knowledge
-GET /api/v1/admin/ai/prompts
 GET /api/v1/admin/devices
-GET /api/v1/admin/email-verification/overview
 GET /api/v1/admin/store/overview
 GET /api/v1/admin/store/status
 GET /api/v1/ai/stock-forecast
@@ -99,6 +100,7 @@ PATCH /metrics
 POST /api/platform/v1/announcements
 POST /api/platform/v1/approvals/{id}/approve
 POST /api/platform/v1/approvals/{id}/reject
+POST /api/platform/v1/assistant/knowledge
 POST /api/platform/v1/backups/restore-test
 POST /api/platform/v1/catalog/sync
 POST /api/platform/v1/deploy
@@ -117,7 +119,6 @@ POST /api/platform/v1/tenants/{id}/resume
 POST /api/platform/v1/tenants/{id}/suspend
 POST /api/v1/admin/access/join-requests/{id}
 POST /api/v1/admin/access/roles
-POST /api/v1/admin/ai/knowledge
 POST /api/v1/admin/devices/enrollment-codes
 POST /api/v1/admin/store/sync
 POST /api/v1/ai/chat
@@ -172,6 +173,7 @@ POST /oauth2/logout
 POST /oauth2/revoke
 POST /oauth2/token
 POST /oauth2/userinfo
+PUT /api/platform/v1/assistant/prompts/{key}
 PUT /api/platform/v1/credentials/{name}
 PUT /api/platform/v1/flags/{key}/override
 PUT /api/platform/v1/settings/{key}
@@ -179,7 +181,6 @@ PUT /api/platform/v1/tenants/{id}/quota
 PUT /api/v1/admin/access/memberships/{id}/roles
 PUT /api/v1/admin/access/roles/{id}
 PUT /api/v1/admin/access/roles/{id}/permissions
-PUT /api/v1/admin/ai/prompts/{key}
 PUT /api/v1/admin/devices/staff-pin
 PUT /api/v1/admin/devices/status
 PUT /api/v1/core/me/preferences

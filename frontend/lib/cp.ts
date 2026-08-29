@@ -229,6 +229,29 @@ export const cp = {
 
   tenant: (id: string) => request<TenantDetail>(`/tenants/${encodeURIComponent(id)}`),
 
+  // The assistant, as it stands for every organisation: the prompts it carries
+  // into a conversation and the corpus it answers from.
+  prompts: () => request<{ prompts: Prompt[] }>("/assistant/prompts"),
+  savePrompt: (key: string, content: string, active: boolean, reason: string) =>
+    request<{ status: string }>(`/assistant/prompts/${encodeURIComponent(key)}`, {
+      method: "PUT",
+      body: JSON.stringify({ content, active, reason }),
+    }),
+  knowledge: () => request<{ knowledge: Knowledge[] }>("/assistant/knowledge"),
+  addKnowledge: (entry: { title: string; content: string; source_url: string }, reason: string) =>
+    request<{ status: string }>("/assistant/knowledge", {
+      method: "POST",
+      body: JSON.stringify({ ...entry, reason }),
+    }),
+  removeKnowledge: (id: string, reason: string) =>
+    request<{ status: string }>(`/assistant/knowledge/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      body: JSON.stringify({ reason }),
+    }),
+
+  // Who the platform has been asked to write to, across every organisation.
+  verifications: (limit = 25) => request<VerificationLedger>(`/email-verifications?limit=${limit}`),
+
   audit: (params: { action?: string; target_type?: string; target_id?: string } = {}) => {
     const query = new URLSearchParams(
       Object.entries(params).filter(([, value]) => value) as [string, string][],
@@ -448,4 +471,57 @@ export interface Usage {
   series: UsageSeries[];
   /** Null when nothing has ever been counted, which the screen says. */
   collected: string | null;
+}
+
+/** One instruction the assistant carries into every conversation. */
+export interface Prompt {
+  key: string;
+  content: string;
+  active: boolean;
+  /** Null for a key the deployment has never written; the screen still offers it. */
+  updated_at: string | null;
+}
+
+/** One entry in the corpus every organisation's assistant answers from. */
+export interface Knowledge {
+  id: string;
+  title: string;
+  content: string;
+  source_url: string;
+  updated_at: string;
+}
+
+export interface Verification {
+  id: string;
+  tenant_id: string;
+  /** Empty when the organisation has since been deleted; the row stays. */
+  tenant_name: string;
+  source: string;
+  purpose: string;
+  email: string;
+  status: "PENDING" | "VERIFIED" | "EXPIRED";
+  created_at: string;
+  verified_at: string | null;
+}
+
+export interface VerificationLedger {
+  stats: {
+    total: number;
+    verified: number;
+    pending: number;
+    expired: number;
+    last_24h: number;
+    verified_pct: number;
+    tenants: number;
+  };
+  recent: Verification[];
+  service: {
+    /** Whether a key is present at all. The key itself never comes back. */
+    configured: boolean;
+    reachable: boolean;
+    /** What the provider said when it was not reachable. */
+    health?: string;
+    provider_url: string;
+    admin_url: string;
+  };
 }

@@ -33,10 +33,9 @@ export const aiApi = {
       method: "POST", body: JSON.stringify(data),
     }),
 
-  getAIPrompts: () => request<Array<{key:string;content:string;active:boolean;global:boolean}>>("/admin/ai/prompts"),
-  updateAIPrompt: (key:string, content:string, active=true) => request(`/admin/ai/prompts/${key}`, {method:"PUT",body:JSON.stringify({content,active})}),
-  getAIKnowledge: () => request<Array<{id:string;title:string;content:string;source_url:string;updated_at:string}>>("/admin/ai/knowledge"),
-  createAIKnowledge: (data:{title:string;content:string;source_url:string}) => request<{id:string}>("/admin/ai/knowledge",{method:"POST",body:JSON.stringify(data)}),
+  // The shared prompts and the knowledge base are administered in the console
+  // now — /api/platform/v1/assistant — because they belong to the deployment
+  // rather than to any one organisation.
 
   getAIForecast: () =>
     request<

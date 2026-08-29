@@ -281,7 +281,7 @@ Consulte [`.env.example`](../.env.example) para la lista completa.
 | `POST` | `/api/v1/store/apps/{slug}/install` | Instalar una aplicación (admin) |
 | `POST` | `/api/v1/verify/send` | Solicitar un enlace de verificación al servicio alojado |
 | `GET` | `/api/v1/verify/landed` | Recibir a quien ha confirmado — sirve una sola vez |
-| `GET` | `/api/v1/admin/email-verification/overview` | Historial de verificaciones y estado del servicio (admin) |
+| `GET` | `/api/platform/v1/email-verifications` | Registro de verificaciones y estado del servicio (consola) |
 | `POST` | `/oauth2/token` | Token OAuth2 de client credentials |
 
 Los tokens de sesión viajan en la cookie HttpOnly o como

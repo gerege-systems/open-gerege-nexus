@@ -310,53 +310,26 @@ func TestAnUnsafeDestinationIsRefusedBeforeAnythingIsSent(t *testing.T) {
 
 // The Overview screen is one request: the counts, the recent rows, and whether
 // the service that does the sending is reachable at all.
-func TestOverviewCountsAndReportsTheProvider(t *testing.T) {
+func TestHealthSaysWhenTheProviderIsDown(t *testing.T) {
 	f := newFixture(t)
 	ctx := context.Background()
 
-	if _, err := f.svc.Send(ctx, f.tenantID, Request{Email: "one@example.com", Source: "portal"}); err != nil {
-		t.Fatalf("send: %v", err)
-	}
-	if _, err := f.svc.Confirm(ctx, refFromReturnURL(t, f.stub)); err != nil {
-		t.Fatalf("confirm: %v", err)
-	}
-	if _, err := f.svc.Send(ctx, f.tenantID, Request{Email: "two@example.com", Source: "portal"}); err != nil {
-		t.Fatalf("second send: %v", err)
-	}
-
-	overview, err := f.svc.Overview(ctx, f.tenantID, 25)
-	if err != nil {
-		t.Fatalf("overview: %v", err)
-	}
-	if overview.Stats.Total != 2 || overview.Stats.Verified != 1 || overview.Stats.Pending != 1 {
-		t.Fatalf("stats are %+v, want 2 total / 1 verified / 1 pending", overview.Stats)
-	}
-	if overview.Stats.VerifiedPct != 50 {
-		t.Fatalf("verified rate is %v, want 50", overview.Stats.VerifiedPct)
-	}
-	if len(overview.Recent) != 2 {
-		t.Fatalf("%d recent rows, want 2", len(overview.Recent))
-	}
-	if !overview.Configured || !overview.Reachable {
-		t.Fatalf("overview reports configured=%v reachable=%v, want both true", overview.Configured, overview.Reachable)
-	}
-	if overview.ReturnURL != "https://nexus.test/api/v1/verify/landed" {
-		t.Fatalf("the screen was given %q as the return address", overview.ReturnURL)
-	}
-
-	// An administrator seeing nothing arrive should be able to tell "nobody
+	// The counting half of this test moved with the screen: the ledger is the
+	// console's now, and internal/operator/verifications counts it across every
+	// organisation. What stays here is the half that belongs to the client —
+	// an administrator seeing nothing arrive has to be able to tell "nobody
 	// asked" from "the service is down".
+	if err := f.svc.Health(ctx); err != nil {
+		t.Fatalf("health with the provider up: %v", err)
+	}
+
 	f.stub.server.Close()
-	down, err := f.svc.Overview(ctx, f.tenantID, 25)
-	if err != nil {
-		t.Fatalf("overview with the provider down: %v", err)
+	err := f.svc.Health(ctx)
+	if err == nil {
+		t.Fatal("health passed with the provider down")
 	}
-	if down.Reachable || down.Health == "" {
-		t.Fatalf("with the provider down the screen reports reachable=%v health=%q",
-			down.Reachable, down.Health)
-	}
-	if !strings.Contains(strings.ToLower(down.Health), "could not send") &&
-		!strings.Contains(strings.ToLower(down.Health), "health check") {
-		t.Fatalf("the health message reads %q, which does not say what is wrong", down.Health)
+	if !strings.Contains(strings.ToLower(err.Error()), "could not send") &&
+		!strings.Contains(strings.ToLower(err.Error()), "health check") {
+		t.Fatalf("the health message reads %q, which does not say what is wrong", err)
 	}
 }
