@@ -19,6 +19,7 @@ DELETE /metrics
 GET /.well-known/jwks.json
 GET /.well-known/openid-configuration
 GET /api/platform/v1/announcements
+GET /api/platform/v1/app-installations
 GET /api/platform/v1/approvals
 GET /api/platform/v1/assistant/knowledge
 GET /api/platform/v1/assistant/prompts
@@ -37,6 +38,7 @@ GET /api/platform/v1/people
 GET /api/platform/v1/report-schedules
 GET /api/platform/v1/settings
 GET /api/platform/v1/settings/history
+GET /api/platform/v1/tenant-quotas
 GET /api/platform/v1/tenants
 GET /api/platform/v1/tenants/{id}
 GET /api/platform/v1/tenants/{id}/export

@@ -218,6 +218,11 @@ func (s *Service) handleTenantMaintenance(w http.ResponseWriter, r *http.Request
 func (s *Service) Routes(r chi.Router) {
 
 	r.With(s.op.RequireCapability(operator.CapTenantRead)).Get("/tenants", s.handleListTenants)
+	// Across every organisation at once. Separate paths rather than
+	// /tenants/quotas, which a router is free to read as an organisation whose
+	// id is the word "quotas".
+	r.With(s.op.RequireCapability(operator.CapTenantRead)).Get("/tenant-quotas", s.handleListQuotas)
+	r.With(s.op.RequireCapability(operator.CapTenantRead)).Get("/app-installations", s.handleListInstallations)
 	r.With(s.op.RequireCapability(operator.CapTenantRead)).Get("/tenants/{id}", s.handleGetTenant)
 
 	// The organisation's life. Suspension is reversible and needs one

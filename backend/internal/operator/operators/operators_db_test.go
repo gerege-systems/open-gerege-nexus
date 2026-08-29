@@ -95,52 +95,72 @@ func TestAnAddressIsTakenOnlyOnce(t *testing.T) {
 	}
 }
 
-// A console that can lock itself out is a console somebody eventually locks
-// themselves out of. Both halves are refused: the last superadmin who can sign
-// in cannot be disabled, and cannot be demoted.
-func TestTheLastSuperadminIsKept(t *testing.T) {
+// Nobody can take themselves out of the console.
+//
+// Both halves are refused for the same reason: the session doing it keeps
+// working until it expires, so the operator appears to have succeeded and
+// finds out at the worst moment.
+func TestAnOperatorCannotTakeThemselvesOut(t *testing.T) {
 	pool := optest.Pool(t)
 	service, sess := screen(t, pool)
 	ctx := context.Background()
 
-	// A second superadmin who has not enrolled cannot sign in, so it does not
-	// count: the platform would still be locked out.
-	half, err := service.Create(ctx, sess, NewOperator{
-		Email: fmt.Sprintf("half+%d@controlplane.test", time.Now().UnixNano()),
-		Name:  "Half Enrolled",
-		Role:  string(operator.RoleSuperadmin),
-	}, "an enrolment nobody finished")
-	if err != nil {
-		t.Fatalf("create the operator: %v", err)
-	}
-	forget(t, pool, half.ID)
-
-	other, _ := optest.Account(t, pool, operator.RoleSuperadmin)
-	// Disabling every other signed-in superadmin leaves the session's own
-	// account as the last one.
-	if err := service.SetEnabled(ctx, sess, other.ID, false, "clear the field"); err != nil {
-		t.Fatalf("disable the other superadmin: %v", err)
-	}
-
 	if err := service.SetEnabled(ctx, sess, sess.ID, false, "lock myself out"); err == nil {
-		t.Fatal("an operator disabled their own account")
+		t.Error("an operator disabled their own account")
 	}
 	if err := service.SetRole(ctx, sess, sess.ID, operator.RoleAuditor, "demote myself"); err == nil {
-		t.Fatal("an operator demoted their own account")
+		t.Error("an operator demoted their own account")
+	}
+}
+
+// The platform must not be left without a superadmin who can sign in.
+//
+// Exercised in a transaction that is rolled back, rather than by disabling
+// every other superadmin for real: this database is shared with every other
+// package's tests, and a test that empties the roster to prove a point takes
+// their accounts with it. It did — the operators package failed on a branch
+// that had not touched it.
+func TestTheLastSuperadminIsKept(t *testing.T) {
+	pool := optest.Pool(t)
+	_, sess := screen(t, pool)
+	ctx := context.Background()
+
+	tx, err := pool.Begin(ctx)
+	if err != nil {
+		t.Fatalf("begin: %v", err)
+	}
+	defer func() { _ = tx.Rollback(context.Background()) }()
+
+	// A second superadmin who never finished enrolling cannot sign in, so the
+	// guard must not count them: a deployment whose only other superadmin is a
+	// half-finished enrolment is locked out just as thoroughly.
+	if _, err := tx.Exec(ctx,
+		`INSERT INTO operator.operator_accounts (email, name, role, password_hash, totp_secret)
+		 VALUES ($1, 'Half Enrolled', 'superadmin', 'x', 'x')`,
+		fmt.Sprintf("half+%d@controlplane.test", time.Now().UnixNano())); err != nil {
+		t.Fatalf("write a half-enrolled superadmin: %v", err)
+	}
+	// Everybody else, out of the way — inside this transaction only.
+	if _, err := tx.Exec(ctx,
+		`UPDATE operator.operator_accounts SET disabled_at = NOW()
+		  WHERE role = 'superadmin' AND id <> $1::uuid`, sess.ID); err != nil {
+		t.Fatalf("clear the field: %v", err)
 	}
 
-	// And through another superadmin's session, the guard is the count rather
-	// than the identity.
-	third, _ := optest.Account(t, pool, operator.RoleSuperadmin)
-	thirdSession := optest.Session(third)
-	if err := service.SetEnabled(ctx, thirdSession, sess.ID, false, "take the last one out"); err != nil {
-		t.Fatalf("disabling one of two superadmins was refused: %v", err)
+	if err := lastSuperadminGuard(ctx, tx, sess.ID); err == nil {
+		t.Fatal("the last superadmin who can sign in was allowed to go")
 	}
-	if err := service.SetEnabled(ctx, sess, third.ID, false, "and the other"); err == nil {
-		t.Fatal("the last superadmin who can sign in was disabled")
+
+	// And with one more who can sign in, the same change is allowed.
+	var other string
+	if err := tx.QueryRow(ctx,
+		`INSERT INTO operator.operator_accounts (email, name, role, password_hash, totp_secret, totp_confirmed_at)
+		 VALUES ($1, 'Second Superadmin', 'superadmin', 'x', 'x', NOW()) RETURNING id::text`,
+		fmt.Sprintf("second+%d@controlplane.test", time.Now().UnixNano())).Scan(&other); err != nil {
+		t.Fatalf("write a second superadmin: %v", err)
 	}
-	if err := service.SetRole(ctx, sess, third.ID, operator.RoleSupport, "demote the last one"); err == nil {
-		t.Fatal("the last superadmin who can sign in was demoted")
+	if err := lastSuperadminGuard(ctx, tx, sess.ID); err != nil {
+		t.Fatalf("with two superadmins the guard still refused: %v", err)
 	}
 }
 
