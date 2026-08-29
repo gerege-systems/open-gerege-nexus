@@ -34,9 +34,11 @@ import {
   Gauge,
   LayoutGrid,
   LifeBuoy,
+  PackageCheck,
   MailCheck,
   Megaphone,
   Menu as HamburgerIcon,
+  Scale,
   ScrollText,
   Search,
   ServerCog,
@@ -69,11 +71,6 @@ const APPS: ConsoleApp[] = [
       { id: "cp.group.watch", items: [
         { href: "/cp", exact: true, label: "cp.section.health", icon: <Activity className="w-5 h-5" /> },
       ] },
-      { id: "cp.group.organisations", items: [
-        { href: "/cp/tenants", label: "cp.section.tenants", icon: <Building2 className="w-5 h-5" /> },
-        { href: "/cp/support", label: "cp.section.support", icon: <LifeBuoy className="w-5 h-5" /> },
-        { href: "/cp/approvals", label: "cp.section.approvals", icon: <CheckCheck className="w-5 h-5" /> },
-      ] },
       { id: "cp.group.platform", items: [
         { href: "/cp/config", label: "cp.section.config", icon: <SlidersHorizontal className="w-5 h-5" /> },
         { href: "/cp/announcements", label: "cp.section.announcements", icon: <Megaphone className="w-5 h-5" /> },
@@ -83,6 +80,26 @@ const APPS: ConsoleApp[] = [
       { id: "cp.group.investigation", items: [
         { href: "/cp/audit", label: "cp.section.audit", icon: <ScrollText className="w-5 h-5" /> },
         { href: "/cp/operators", label: "cp.section.operators", icon: <ShieldCheck className="w-5 h-5" /> },
+      ] },
+    ],
+  },
+  {
+    // The organisations on this deployment: who they are, what they may use,
+    // and what is installed for them. Its own tile rather than a group in the
+    // console's, because it is where an operator spends a working day and the
+    // console's other groups are things they visit.
+    id: "tenants",
+    label: "cp.app.tenants",
+    icon: <Building2 className="w-5 h-5" />,
+    sections: [
+      { id: "cp.group.organisations", items: [
+        { href: "/cp/tenants", label: "cp.section.tenants", icon: <Building2 className="w-5 h-5" /> },
+        { href: "/cp/support", label: "cp.section.support", icon: <LifeBuoy className="w-5 h-5" /> },
+        { href: "/cp/approvals", label: "cp.section.approvals", icon: <CheckCheck className="w-5 h-5" /> },
+      ] },
+      { id: "cp.group.entitlements", items: [
+        { href: "/cp/quotas", label: "cp.section.quotas", icon: <Scale className="w-5 h-5" /> },
+        { href: "/cp/installations", label: "cp.section.installations", icon: <PackageCheck className="w-5 h-5" /> },
       ] },
     ],
   },

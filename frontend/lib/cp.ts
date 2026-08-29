@@ -57,6 +57,8 @@ export interface Quota {
   users: number;
   /** Which limits this build actually applies; the rest are recorded only. */
   enforced: string[];
+  /** When the limits were last written; the organisation's creation if never. */
+  updated_at: string;
 }
 
 export interface Impersonation {
@@ -228,6 +230,11 @@ export const cp = {
     request<{ tenants: TenantSummary[] }>(`/tenants?q=${encodeURIComponent(search)}`),
 
   tenant: (id: string) => request<TenantDetail>(`/tenants/${encodeURIComponent(id)}`),
+
+  // Across every organisation at once: which limits are set where, and which
+  // app is installed where.
+  quotas: () => request<{ quotas: QuotaLine[] }>("/tenant-quotas"),
+  installations: () => request<{ installations: Installation[] }>("/app-installations"),
 
   // The assistant, as it stands for every organisation: the prompts it carries
   // into a conversation and the corpus it answers from.
@@ -621,4 +628,25 @@ export interface CreatedOperator {
   uri: string;
   /** Generated here rather than chosen: the first thing it should be used for is changing it. */
   password: string;
+}
+
+/** One organisation's limits, with the organisation named. */
+export interface QuotaLine extends Quota {
+  tenant_name: string;
+  slug: string;
+  suspended: boolean;
+}
+
+/** One app in one organisation. */
+export interface Installation {
+  tenant_id: string;
+  tenant_name: string;
+  slug: string;
+  app_id: string;
+  app_name: string;
+  installed_version: string;
+  status: string;
+  enabled: boolean;
+  installed_at: string;
+  updated_at: string;
 }

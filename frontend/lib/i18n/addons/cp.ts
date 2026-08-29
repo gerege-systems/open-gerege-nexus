@@ -433,6 +433,33 @@ export const cp = {
   "cp.message.enrolled": { mn: "Баталгаажлаа. Тэр хүн одоо нэвтэрч чадна.", en: "Enrolled. They can sign in now." },
   "cp.message.passwords_differ": { mn: "Хоёр нууц үг таарахгүй байна.", en: "The two passwords are not the same." },
 
+  // Tenant удирдлага — консолын гурав дахь апп: энэ суулгац дээрх
+  // байгууллагууд, тэдний эрх, тэдэнд суусан аппууд.
+  "cp.app.tenants": { mn: "Tenant удирдлага", en: "Tenant management" },
+  "cp.group.entitlements": { mn: "Эрх ба суулгац", en: "Entitlements" },
+  "cp.section.quotas": { mn: "Квот", en: "Limits" },
+  "cp.section.installations": { mn: "Аппын суулгац", en: "Installations" },
+  "cp.hint.quotas": {
+    mn: "Аль байгууллагад ямар хязгаар тавигдсаныг нэг дор. Хязгаарыг байгууллагынх нь хуудаснаас, шалтгаантайгаар л тавина.",
+    en: "Which limits are set where, in one place. Setting one stays on the organisation's own page, with a reason.",
+  },
+  "cp.hint.installations": {
+    mn: "Аль апп аль байгууллагад суусан, ямар хувилбартай. Каталог нь зөвхөн тоог хэлдэг — энэ нь хэн болохыг хэлнэ.",
+    en: "Which app is installed where, and on which version. The catalogue gives the count; this says who.",
+  },
+  "cp.field.app": { mn: "Апп", en: "App" },
+  "cp.state.no_limit": { mn: "хязгааргүй", en: "no limit" },
+  "cp.state.every_app": { mn: "Бүх апп", en: "Every app" },
+  "cp.message.unlimited_count": {
+    mn: "{count} байгууллагад хэрэглэгчийн хязгаар тавиагүй байна.",
+    en: "{count} organisations have no limit on people.",
+  },
+  "cp.message.versions_in_the_field": {
+    mn: "Талбар дээр хэд хэдэн хувилбар байна: {versions}",
+    en: "More than one version is in the field: {versions}",
+  },
+  "cp.message.no_installations": { mn: "Суусан апп алга.", en: "Nothing is installed." },
+
   "cp.group.watch": { mn: "Ажиглалт", en: "Watch" },
   "cp.group.organisations": { mn: "Байгууллага", en: "Organisations" },
   "cp.group.platform": { mn: "Платформ", en: "Platform" },
