@@ -7,10 +7,13 @@
  * the operator is signed in and one place that draws the form. A page that made
  * that decision for itself would eventually make it differently.
  *
- * It looks nothing like the tenant application on purpose. An operator who has
- * both open should never have to read the URL to know which window can suspend
- * an organisation — the dark chrome is the answer to that, and it is why the
- * console does not reuse the product's shell.
+ * It wears the product's design, class for class. The console had a dark
+ * chrome of its own for a phase, and the argument for it — an operator with
+ * both windows open should know which is which — is answered by the shield and
+ * the word "Консол" in the corner rather than by a second design system: two
+ * visual languages in one repository is two things to maintain and one of them
+ * always falls behind. This file was that one, which is how a sign-in screen
+ * built from raw Tailwind outlived the `signin-card` every other door uses.
  */
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
@@ -28,9 +31,11 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { cp, Unauthorized, type Operator } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 import { useBrand } from "@/lib/brandContext";
+import { useTheme } from "@/lib/theme";
 
 interface ConsoleState {
   operator: Operator;
@@ -49,6 +54,7 @@ export function useConsole(): ConsoleState {
 export default function Console({ children }: { children: React.ReactNode }) {
   const { t } = useI18n();
   const brand = useBrand();
+  const theme = useTheme();
   const [operator, setOperator] = useState<Operator | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -104,12 +110,21 @@ export default function Console({ children }: { children: React.ReactNode }) {
       <div className="gerege-shell min-h-screen flex flex-col">
         <header className="gerege-topbar h-16 flex items-center border-b sticky top-0 z-50 px-4 gap-3">
           <Link href="/cp" className="flex items-center gap-2.5 font-semibold text-slate-900">
-            <span className="w-9 h-9 rounded-lg grid place-items-center bg-slate-900">
-              <ShieldCheck className="w-5 h-5 text-amber-400" />
-            </span>
+            {/* The mark the product uses, and for the same reason: on the
+                original design the chrome is blue, and a slate-900 square with
+                an amber shield in it was a second brand nobody chose. The
+                shield stays inside it — that is the console's own sign, and it
+                is enough. */}
+            {theme.design === "gerege" ? (
+              <img src={brand.logoUrl} width={36} height={36} alt="" className="w-9 h-9 rounded-lg shadow-sm" />
+            ) : (
+              <span className="original-brand-mark w-9 h-9 rounded-lg grid place-items-center">
+                <ShieldCheck className="w-5 h-5" />
+              </span>
+            )}
             <span className="min-w-0">
               <small className="block text-[11px] leading-4 text-slate-500">{brand.name}</small>
-              <strong className="block text-[15px] leading-5 truncate">{t("cp.view.title")}</strong>
+              <strong className="block text-[15px] leading-5 text-slate-900 truncate">{t("cp.view.title")}</strong>
             </span>
           </Link>
 
@@ -118,10 +133,13 @@ export default function Console({ children }: { children: React.ReactNode }) {
           <span className="hidden sm:block text-sm text-slate-600 truncate max-w-[16rem]">
             {operator.name} · {t(`cp.role.${operator.role}`)}
           </span>
+          {/* slate-200 and slate-50 rather than 300 and 100: those are the two
+              the topbar's own rules recolour on the blue chrome, and the pair
+              that was here read as a light-mode button on a blue bar. */}
           <button
             type="button"
             onClick={() => void signOut()}
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 transition"
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 transition"
           >
             <LogOut className="w-4 h-4" />
             <span className="hidden sm:inline">{t("cp.action.sign_out")}</span>
@@ -209,6 +227,7 @@ function ConsoleLink({
 
 function SignIn({ onSignedIn }: { onSignedIn: (operator: Operator) => void }) {
   const { t } = useI18n();
+  const brand = useBrand();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
@@ -232,73 +251,78 @@ function SignIn({ onSignedIn }: { onSignedIn: (operator: Operator) => void }) {
     }
   }
 
+  /*
+    The same door /login and /setup are: `signin-shell` outside, `signin-card`
+    inside, `setup-form` for the fields. It was a hand-rolled Tailwind card
+    until now, which is how the console ended up with its own input border, its
+    own focus ring and its own idea of a primary button — three decisions that
+    were already made once, in CSS, for every other screen where somebody is
+    standing outside a deployment they cannot get into.
+  */
   return (
-    <div className="min-h-screen grid place-items-center px-4">
-      <form
-        onSubmit={submit}
-        className="w-full max-w-sm bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4"
-      >
-        <div className="flex items-center gap-2 text-slate-900">
-          <ShieldCheck className="w-5 h-5 text-amber-500" />
-          <h1 className="text-lg font-semibold">{t("cp.login.title")}</h1>
+    <main className="signin-shell">
+      <header className="signin-shell__nav">
+        <span className="gp-brand">
+          <img src={brand.logoUrl} alt="" />
+          <span>{brand.name}</span>
+        </span>
+        <LanguageSwitcher />
+      </header>
+      <section className="signin-shell__body">
+        <div className="signin-card">
+          <div>
+            <h1 className="signin-card__title">{t("cp.login.title")}</h1>
+            <p className="signin-card__lede">{t("cp.login.hint")}</p>
+          </div>
+
+          {failed && <p className="signin-alert">{t("cp.login.failed")}</p>}
+
+          <form className="setup-form" onSubmit={submit}>
+            <label>
+              <span>{t("cp.field.email")}</span>
+              <input
+                type="email"
+                autoComplete="username"
+                required
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+              />
+            </label>
+
+            <label>
+              <span>{t("cp.field.password")}</span>
+              <input
+                type="password"
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+              />
+            </label>
+
+            <label>
+              <span>{t("cp.field.code")}</span>
+              <input
+                // A numeric keypad on a telephone, and no autofill: a one-time
+                // code is not something a password manager should be filling
+                // from a saved value.
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="[0-9]*"
+                maxLength={6}
+                required
+                value={code}
+                onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))}
+                className="font-mono tracking-[0.4em]"
+              />
+            </label>
+
+            <button className="signin-btn signin-btn--primary" type="submit" disabled={busy}>
+              {t("cp.action.sign_in")}
+            </button>
+          </form>
         </div>
-        <p className="text-sm text-slate-500">{t("cp.login.hint")}</p>
-
-        {failed && (
-          <p className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">
-            {t("cp.login.failed")}
-          </p>
-        )}
-
-        <label className="block text-sm">
-          <span className="text-slate-600">{t("cp.field.email")}</span>
-          <input
-            type="email"
-            autoComplete="username"
-            required
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-900/10"
-          />
-        </label>
-
-        <label className="block text-sm">
-          <span className="text-slate-600">{t("cp.field.password")}</span>
-          <input
-            type="password"
-            autoComplete="current-password"
-            required
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-900/10"
-          />
-        </label>
-
-        <label className="block text-sm">
-          <span className="text-slate-600">{t("cp.field.code")}</span>
-          <input
-            // A numeric keypad on a telephone, and no autofill: a one-time code
-            // is not something a password manager should be filling from a
-            // saved value.
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            pattern="[0-9]*"
-            maxLength={6}
-            required
-            value={code}
-            onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 tracking-[0.4em] font-mono focus:outline-none focus:ring-2 focus:ring-slate-900/10"
-          />
-        </label>
-
-        <button
-          type="submit"
-          disabled={busy}
-          className="w-full rounded-lg bg-slate-900 text-white py-2.5 font-medium hover:bg-slate-800 disabled:opacity-60 transition"
-        >
-          {t("cp.action.sign_in")}
-        </button>
-      </form>
-    </div>
+      </section>
+    </main>
   );
 }
