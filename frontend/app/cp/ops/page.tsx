@@ -98,11 +98,9 @@ export default function Metrics() {
           head={[t("cp.field.gauge"), t("cp.field.value"), t("cp.field.warning_at"), t("cp.field.status")]}
           rows={(health?.infra ?? []).map((gauge) => [
             <span key="n" className="font-mono text-xs uppercase text-slate-600">{gauge.name}</span>,
-            `${gauge.value.toFixed(1)}${gauge.unit}`,
+            gauge.measured ? `${gauge.value.toFixed(1)}${gauge.unit}` : <Unmeasured key="v" />,
             `${gauge.warning}${gauge.unit}`,
-            <Badge key="s" tone={gauge.state === "ok" ? "emerald" : gauge.state === "warn" ? "amber" : "red"}>
-              {gauge.state}
-            </Badge>,
+            <StateBadge key="s" state={gauge.state} />,
           ])}
           empty={t("cp.message.no_monitoring")}
         />
@@ -113,17 +111,34 @@ export default function Metrics() {
           head={[t("cp.field.system"), t("cp.metric.error_rate"), t("cp.metric.p95"), t("cp.field.status")]}
           rows={(health?.external ?? []).map((system) => [
             <span key="n" className="font-medium text-slate-800">{system.system}</span>,
-            `${(system.error_rate * 100).toFixed(1)}%`,
-            `${Math.round(system.p95_seconds * 1000)} ms`,
-            <Badge key="s" tone={system.state === "ok" ? "emerald" : system.state === "warn" ? "amber" : "red"}>
-              {system.state}
-            </Badge>,
+            system.measured ? `${(system.error_rate * 100).toFixed(1)}%` : <Unmeasured key="e" />,
+            system.measured ? `${Math.round(system.p95_seconds * 1000)} ms` : <Unmeasured key="p" />,
+            <StateBadge key="s" state={system.state} />,
           ])}
           empty={t("cp.message.no_monitoring")}
         />
       </Card>
     </div>
   );
+}
+
+/**
+ * The colour the backend decided, in the words this screen uses.
+ *
+ * The states are green, amber, red and unknown — "unknown" being a system
+ * Prometheus holds no sample for. It is deliberately not green: an unmeasured
+ * system reading as healthy is the failure this badge exists to stop.
+ */
+function StateBadge({ state }: { state: string }) {
+  const { t } = useI18n();
+  const tone = state === "green" ? "emerald" : state === "amber" ? "amber" : state === "red" ? "red" : "slate";
+  return <Badge tone={tone}>{t(`cp.state.${state}` as "cp.state.green")}</Badge>;
+}
+
+/** A number nobody measured is a dash and a word, never a zero. */
+function Unmeasured() {
+  const { t } = useI18n();
+  return <span className="text-xs text-slate-400">{t("cp.state.unmeasured")}</span>;
 }
 
 function Stat({ label, value, tone }: { label: string; value: string; tone?: "red" }) {
