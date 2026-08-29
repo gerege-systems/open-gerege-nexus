@@ -24,12 +24,12 @@ var foreignKeysWithoutAnIndex = map[string]string{
 	"reporting_probe(tenant_id)": "a probe of five rows",
 }
 
-// Text columns that are deliberately unbounded, and why.
+// Columns that are deliberately `text`, and why.
 //
 // Empty today, and that is the point: it is the place a reviewer writes the
 // reason when a column genuinely has no length worth naming, so that "no
 // length" is a decision rather than an omission.
-var textColumnsWithoutALength = map[string]string{}
+var columnsThatAreDeliberatelyText = map[string]string{}
 
 func hygienePool(t *testing.T) *pgxpool.Pool {
 	t.Helper()
@@ -88,10 +88,17 @@ or name it in foreignKeysWithoutAnIndex with the reason it does not need one.`, 
 	}
 }
 
-// An unbounded text column is the database saying "as many characters as you
-// like". The Go side validates at the boundary and stays the primary control;
-// this is the last wall, and it is the one that holds when a handler forgets.
-func TestEveryTextColumnSaysHowLongItMayBe(t *testing.T) {
+// A string column says how long it may be, in its own type.
+//
+// `varchar(n)` rather than `text` with a CHECK, because the length is then part
+// of the column's definition: \d shows it, information_schema carries it, and
+// every client that reads the schema — a driver, a documentation generator, a
+// migration reviewer — sees the same number without reading a constraint body.
+// A CHECK protects too; it just only says so to whoever opens it.
+//
+// The Go side validates at the boundary and stays the primary control. This is
+// the last wall, and it is the one that holds when a handler forgets.
+func TestEveryStringColumnCarriesItsLength(t *testing.T) {
 	pool := hygienePool(t)
 	rows, err := pool.Query(context.Background(), `
 		SELECT c.table_name || '.' || c.column_name
@@ -101,37 +108,28 @@ func TestEveryTextColumnSaysHowLongItMayBe(t *testing.T) {
 		 WHERE c.table_schema IN ('registry', 'workspace')
 		   AND c.data_type = 'text'
 		   AND t.table_type = 'BASE TABLE'
-		   AND NOT EXISTS (
-		        SELECT 1 FROM pg_constraint con
-		          JOIN pg_class cl ON cl.oid = con.conrelid
-		          JOIN pg_namespace n ON n.oid = cl.relnamespace AND n.nspname = c.table_schema
-		         WHERE cl.relname = c.table_name AND con.contype = 'c'
-		           AND pg_get_constraintdef(con.oid) ILIKE '%length(' || c.column_name || ')%')
 		 ORDER BY 1`)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer rows.Close()
-	checked := 0
 	for rows.Next() {
 		var column string
 		if err := rows.Scan(&column); err != nil {
 			t.Fatal(err)
 		}
-		checked++
-		if _, listed := textColumnsWithoutALength[column]; listed {
+		if _, listed := columnsThatAreDeliberatelyText[column]; listed {
 			continue
 		}
-		t.Errorf(`%s is text with no length.
+		t.Errorf(`%s is text, so the schema does not say how long it may be.
 
-Add a bound to the table:
+Give the column its length:
 
-    CONSTRAINT <table>_<column>_is_bounded CHECK (length(<column>) <= N)
+    ALTER TABLE <schema>.<table> ALTER COLUMN <column> TYPE varchar(N);
 
-or name it in textColumnsWithoutALength with the reason it has none.`, column)
+or name it in columnsThatAreDeliberatelyText with the reason it has none.`, column)
 	}
 	if err := rows.Err(); err != nil {
 		t.Fatal(err)
 	}
-	_ = checked
 }
