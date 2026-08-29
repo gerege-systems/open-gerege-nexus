@@ -141,25 +141,6 @@ export default function Detail() {
               onClick={() => setQuotaOpen(true)}
             />
           )}
-          {may("user.impersonate") && !suspended && tenant.members.length > 0 && (
-            <ActionButton
-              icon={<Eye className="w-4 h-4" />}
-              label={t("cp.action.impersonate")}
-              onClick={() =>
-                action.run({
-                  title: t("cp.action.impersonate"),
-                  detail: tenant.members[0].email,
-                  perform: async (reason) => {
-                    const { url } = await cp.impersonate(tenant.id, tenant.members[0].user_id, reason);
-                    // A new tab, so the console stays where it is: the
-                    // operator is about to be two people at once and should
-                    // not lose the window that can end it.
-                    window.open(url, "_blank", "noopener");
-                  },
-                })
-              }
-            />
-          )}
           {may("settings.write") && (
             <ActionButton
               icon={<Wrench className="w-4 h-4" />}
@@ -267,11 +248,41 @@ export default function Detail() {
         }
       >
         <Table
-          head={[t("cp.field.email"), t("cp.field.organisation"), t("cp.field.roles")]}
+          head={[t("cp.field.email"), t("cp.field.person"), t("cp.field.roles"), ""]}
           rows={tenant.members.map((member) => [
             member.email,
             member.name,
             member.roles.length ? member.roles.join(", ") : "—",
+            // Looking at the platform as somebody is a decision about *which*
+            // somebody. It used to be a button on the action bar above that
+            // took tenant.members[0] — whoever the list happened to start
+            // with — so the operator got an arbitrary person and the reason
+            // they typed named a different one.
+            may("user.impersonate") && !suspended ? (
+              <button
+                key="i"
+                type="button"
+                onClick={() =>
+                  action.run({
+                    title: t("cp.action.impersonate"),
+                    detail: member.email,
+                    perform: async (reason) => {
+                      const { url } = await cp.impersonate(tenant.id, member.user_id, reason);
+                      // A new tab, so the console stays where it is: the
+                      // operator is about to be two people at once and should
+                      // not lose the window that can end it.
+                      window.open(url, "_blank", "noopener");
+                    },
+                  })
+                }
+                className="inline-flex items-center gap-1.5 text-xs rounded-lg border border-slate-300 px-2 py-1 hover:bg-slate-50"
+              >
+                <Eye className="w-3.5 h-3.5" />
+                {t("cp.action.impersonate")}
+              </button>
+            ) : (
+              <span key="i" />
+            ),
           ])}
           empty={t("cp.message.no_activity")}
         />
