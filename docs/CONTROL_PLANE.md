@@ -278,10 +278,18 @@ npx tsc --noEmit
 npm run lint
 npm run build
 npm run host:smoke
+npm run test:e2e
 
 cd ../deploy/scripts
 python3 -m unittest test_render_cp_allowlist.py
 ```
+
+`npm run test` нь vitest — консолын дэлгэц бүр jsdom дээр рендерлэгдэж,
+`tests/cp/`-д эрх, алдаа, хоосон төлөв, step-up-ийн урсгал шалгагдана.
+`npm run test:e2e` нь Playwright: `next build` хийгээд `next start`-ыг
+`admin.localhost` дээр өргөж, API-г хөтөч дотор stub хийнэ (backend, DB
+шаардахгүй). Хостын хил ба `/cp` layout навигаци дамжин амьд үлдэж байгаа
+эсэх — jsdom-оор шалгах боломжгүй хоёр дүрэм — эндээс шалгагдана.
 
 `TEST_DATABASE_URL` бүхий migrated PostgreSQL дээр schema/grant/RLS
 integration test-ийг давхар ажиллуул:

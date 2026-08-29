@@ -14,7 +14,7 @@ import AICopilot from "@/components/AICopilot";
 import { invokeShell, useShell, SHELL_EVENTS, SHELL_METHODS, type ShellNavigatePayload, type ShellSearchPayload } from "@/lib/shell";
 import { currentDeviceLine, type DeviceLine } from "@/lib/deviceLine";
 import { MenuIcon } from "@/lib/icons";
-import { SECTION_PATHS } from "@/lib/landing";
+import { isPublicPath } from "@/lib/publicRoutes";
 import { homeScreensVisible, organisationScreensVisible } from "@/lib/workspaceKind.mjs";
 import { LayoutGrid, Settings, Menu as HamburgerIcon, Palette, Building2, Search, Ellipsis, ShieldCheck, RefreshCw, MailCheck, ChevronDown, ChevronsDownUp, ChevronsUpDown, ExternalLink, Sparkles, Inbox} from "lucide-react";
 
@@ -27,29 +27,6 @@ interface MenuItem { id:string; app_id?:string; app_name?:string; parent_id?:str
 // first menu entry has and the rail renders a Link or an anchor accordingly.
 interface AppNav { id:string; name:string; icon:string; path:string; externalUrl?:string; order:number; chrome:boolean; menus:MenuItem[] }
 
-// Routes that render without the ERP chrome. /oauth/consent is signed-in but
-// belongs here too: it is an identity handoff to another product, and framing
-// it in this one's navigation invites the user to wander off mid-flow.
-// /setup is public in the only sense that matters here: it runs on a
-// deployment with no organisation, so there is nobody to hold a session and
-// asking /me for one would push the wizard to a sign-in screen that cannot
-// work. What authorises it is the setup token, not a session.
-const PUBLIC_ROUTES=["/","/login","/setup","/auth/eid/callback","/oauth/consent","/kiosk"];
-// Шугамын нүүр дэлгэц нэвтрэлт шаардахгүй. Тэр нь ажлын мужид web-ийн нэвтрэх
-// дэлгэц гарч ирэхийг ОРЛОХЫН тулд байгаа тул session байхгүй үед ч зогсох
-// ёстой — эс бөгөөс дахин /login руу түлхэж, шийдэх гэсэн асуудлаа өөрөө
-// үүсгэнэ.
-// `/cp` is chromeless for a different reason from the rest: it is not public at
-// all, it is the operator console, and it authenticates with its own session
-// against its own API. Left out of this list it would have been given the
-// tenant shell — which asks /api/v1/me on mount, gets a 401 because an operator
-// holds no tenant session, and redirects the console to the platform's login
-// screen before it can draw its own.
-// The landing page's menu items are pages of their own now (app/[section]),
-// and they are as public as the page they were carved out of. Left out, the
-// shell asked /api/v1/me for a visitor who has no session, took the 401 and
-// redirected the front door's own menu to a sign-in screen.
-const isPublicPath=(path:string)=>PUBLIC_ROUTES.includes(path)||SECTION_PATHS.includes(path)||path.startsWith("/line/")||path==="/cp"||path.startsWith("/cp/");
 // The platform groups are the only ones not backed by a server menu row, so
 // they need ids of their own. Not the translated title: the collapsed set is
 // remembered across sessions and a Mongolian operator who switches to English

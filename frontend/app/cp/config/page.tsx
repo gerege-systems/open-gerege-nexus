@@ -100,6 +100,8 @@ export default function Configuration() {
               <button
                 type="button"
                 onClick={() => void openHistory(setting.key)}
+                aria-label={`${t("cp.section.history")}: ${setting.key}`}
+                title={t("cp.section.history")}
                 className="text-xs rounded-lg border border-slate-300 px-2 py-1 hover:bg-slate-50 inline-flex items-center gap-1"
               >
                 <History className="w-3 h-3" />
@@ -159,6 +161,8 @@ export default function Configuration() {
                       onDone: load,
                     })
                   }
+                  aria-label={`${t("cp.action.clear_credential")}: ${credential.name}`}
+                  title={t("cp.action.clear_credential")}
                   className="text-xs rounded-lg border border-slate-300 px-2 py-1 hover:bg-slate-50"
                 >
                   ✕
@@ -212,6 +216,8 @@ export default function Configuration() {
                     onDone: load,
                   })
                 }
+                aria-label={`${flag.enabled ? t("cp.action.turn_off") : t("cp.action.turn_on")}: ${flag.key}`}
+                title={flag.enabled ? t("cp.action.turn_off") : t("cp.action.turn_on")}
                 className="text-xs rounded-lg border border-slate-300 px-2 py-1 hover:bg-slate-50 inline-flex items-center gap-1"
               >
                 {flag.enabled ? <ToggleRight className="w-4 h-4 text-emerald-600" /> : <ToggleLeft className="w-4 h-4" />}
@@ -227,6 +233,8 @@ export default function Configuration() {
                     onDone: load,
                   })
                 }
+                aria-label={`${t("cp.action.delete_flag")}: ${flag.key}`}
+                title={t("cp.action.delete_flag")}
                 className="text-xs rounded-lg border border-slate-300 px-2 py-1 hover:bg-slate-50"
               >
                 ✕
