@@ -806,12 +806,19 @@ func (s *SSOProvider) grantedRoles(ctx context.Context, tenantID, userID string)
 		return roles, false
 	}
 
+	// `kind = 'organisation'` is load-bearing, not tidiness. Since migration
+	// 00085 every person gets a personal workspace, and those are rows in this
+	// same table — on a deployment where one was created before the wizard ran,
+	// the oldest row is somebody's home rather than the founding organisation,
+	// and nobody would ever be the platform administrator.
+	//
 	// Ordered by created_at with the id as the tie-break, because two
 	// organisations created inside the same clock tick would otherwise make
 	// this answer change between one sign-in and the next.
 	var root string
 	if err := s.store.db.QueryRow(ctx,
-		`SELECT id::text FROM registry.tenants ORDER BY created_at, id LIMIT 1`).Scan(&root); err != nil {
+		`SELECT id::text FROM registry.tenants
+		  WHERE kind = 'organisation' ORDER BY created_at, id LIMIT 1`).Scan(&root); err != nil {
 		slog.Warn("could not identify the first organisation", "error", err)
 		return roles, false
 	}

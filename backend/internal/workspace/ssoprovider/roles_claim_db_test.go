@@ -49,6 +49,31 @@ func TestRolesClaimNamesTheDeploymentsFirstAdministrator(t *testing.T) {
 			t.Fatalf("backdate the organisation: %v", err)
 		}
 
+		// And an older *personal* workspace, which is a row in the same table
+		// and must not count. Without the kind filter this makes the assertion
+		// below fail — which is the point of creating it.
+		var homeUser string
+		if err := f.pool.QueryRow(ctx,
+			`INSERT INTO registry.users (email, password_hash, name)
+			 VALUES ('home-' || substr(gen_random_uuid()::text, 1, 8) || '@example.com', 'x', 'Home')
+			 RETURNING id::text`).Scan(&homeUser); err != nil {
+			t.Fatalf("home owner: %v", err)
+		}
+		var homeTenant string
+		if err := f.pool.QueryRow(ctx,
+			`INSERT INTO registry.tenants (slug, name, kind, owner_user_id, created_at)
+			 VALUES ('home-' || substr(gen_random_uuid()::text, 1, 8), 'Home', 'personal',
+			         $1::uuid, '1960-01-01T00:00:00Z')
+			 RETURNING id::text`, homeUser).Scan(&homeTenant); err != nil {
+			t.Fatalf("home workspace: %v", err)
+		}
+		t.Cleanup(func() {
+			_, _ = f.pool.Exec(context.Background(),
+				`DELETE FROM registry.tenants WHERE id = $1::uuid`, homeTenant)
+			_, _ = f.pool.Exec(context.Background(),
+				`DELETE FROM registry.users WHERE id = $1::uuid`, homeUser)
+		})
+
 		claims := verifyIDToken(t, f, idTokenWithRoles(t, f))
 		if claims["platform_admin"] != true {
 			t.Errorf("platform_admin is %v for the deployment's first organisation",
