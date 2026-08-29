@@ -38,6 +38,11 @@ import (
 // how somebody discovers, after the deletion, that it was not.
 const exportRowCap = 50_000
 
+// exportSchema is where an organisation's own tables live. Both halves of the
+// export read it — the listing and the rows — so that a schema rename moves
+// them together or not at all.
+const exportSchema = "workspace"
+
 // ExportBundle is an organisation's data, table by table.
 type ExportBundle struct {
 	Tenant     operator.TenantState `json:"tenant"`
@@ -116,10 +121,10 @@ func (s *Service) exportableTables(ctx context.Context) ([]string, error) {
 		   FROM information_schema.columns c
 		   JOIN information_schema.tables t
 		     ON t.table_schema = c.table_schema AND t.table_name = c.table_name
-		  WHERE c.table_schema = 'workspace'
+		  WHERE c.table_schema = $1
 		    AND c.column_name = 'tenant_id'
 		    AND t.table_type = 'BASE TABLE'
-		  ORDER BY c.table_name`)
+		  ORDER BY c.table_name`, exportSchema)
 	if err != nil {
 		return nil, fmt.Errorf("control plane: list the exportable tables: %w", err)
 	}
@@ -142,8 +147,14 @@ func (s *Service) exportableTables(ctx context.Context) ([]string, error) {
 // information_schema a moment ago and can therefore only be a table that
 // exists — never from a request. Quoted with %q so a table whose name needs
 // quoting still parses. The tenant id stays a parameter.
+//
+// The schema is named once, in exportSchema, because it is the same answer as
+// the one exportableTables asks information_schema for. Naming it twice is how
+// this read `tenant.` after migration 00084 renamed the schema to `workspace`:
+// the listing half followed the rename, this half did not, and every export
+// since has failed on its first table with "relation does not exist".
 func (s *Service) exportTable(ctx context.Context, table, tenantID string) ([]map[string]any, bool, error) {
-	query := fmt.Sprintf(`SELECT * FROM tenant.%q WHERE tenant_id = $1::uuid LIMIT $2`, table)
+	query := fmt.Sprintf(`SELECT * FROM %s.%q WHERE tenant_id = $1::uuid LIMIT $2`, exportSchema, table)
 	rows, err := s.db.Query(ctx, query, tenantID, exportRowCap+1)
 	if err != nil {
 		return nil, false, fmt.Errorf("control plane: export %s: %w", table, err)
