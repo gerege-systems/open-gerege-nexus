@@ -223,9 +223,11 @@ func TestAnAppsRoutesAreBehindItsInstallationAndAnothersAreNot(t *testing.T) {
 	}
 
 	// Platform routes are unaffected by whether optional apps are installed.
-	res := f.do(t, http.MethodGet, "/api/v1/admin/ai/prompts", "")
+	// Any core read does; this one used to be the assistant's prompts, which
+	// moved to the console with the screen that edited them.
+	res := f.do(t, http.MethodGet, "/api/v1/installed-apps", "")
 	if res.Code != http.StatusOK {
-		t.Fatalf("platform core AI answered %d: %s", res.Code, res.Body.String())
+		t.Fatalf("a platform core route answered %d: %s", res.Code, res.Body.String())
 	}
 
 	// And with the app installed the gate opens.

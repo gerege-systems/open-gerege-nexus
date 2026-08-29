@@ -326,7 +326,7 @@ npm run dev
 | `POST` | `/api/v1/store/apps/{slug}/install` | تثبيت تطبيق (مسؤول) |
 | `POST` | `/api/v1/verify/send` | طلب رابط تأكيد البريد من الخدمة المستضافة |
 | `GET` | `/api/v1/verify/landed` | استقبال من أكّد عنوانه — يعمل مرة واحدة فقط |
-| `GET` | `/api/v1/admin/email-verification/overview` | سجل التأكيدات وحالة الخدمة (مسؤول) |
+| `GET` | `/api/platform/v1/email-verifications` | سجل التأكيدات وحالة الخدمة (وحدة التحكم) |
 | `POST` | `/oauth2/token` | رمز OAuth2 من نوع client credentials |
 
 <div dir="rtl">

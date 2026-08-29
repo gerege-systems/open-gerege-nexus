@@ -241,6 +241,10 @@ manifest compatibility-г шалгана.
 - `/cp/approvals` — хоёр хүний шийдвэр;
 - `/cp/config` — settings, flags, maintenance;
 - `/cp/announcements` — tenant banner;
+- `/cp/assistant` — бүх байгууллагад нийтлэг AI заавар ба мэдлэгийн сан
+  (2026-08-29-нд ажлын мужийн `/settings/ai`-аас нүүсэн);
+- `/cp/email-verification` — и-мэйл баталгаажуулалтын бүртгэл, үйлчилгээний
+  төлөв, бүх байгууллагаар (мөн тэр өдөр `/settings/email-verification`-оос);
 - `/cp/audit` — append-only operator audit хайлт ба өөрчлөлтийн snapshot.
 
 API-д байгаа боловч тусдаа UI дэлгэцгүй contract:

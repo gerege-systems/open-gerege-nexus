@@ -17,6 +17,8 @@ export const emailverify = {
   "emailverify.stat.verified": { mn: "Баталгаажсан", en: "Verified" },
   "emailverify.stat.pending": { mn: "Хүлээгдэж буй", en: "Pending" },
   "emailverify.stat.expired": { mn: "Хугацаа дууссан", en: "Expired" },
+  "emailverify.stat.last_24h": { mn: "Сүүлийн 24 цаг", en: "Last 24 hours" },
+  "emailverify.field.email": { mn: "Хаяг", en: "Address" },
   "emailverify.stat.verified_pct": { mn: "Баталгаажсан хувь", en: "Verified rate" },
 
   "emailverify.field.source": { mn: "Хүссэн", en: "Requested by" },

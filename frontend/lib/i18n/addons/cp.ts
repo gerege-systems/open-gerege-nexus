@@ -301,6 +301,24 @@ export const cp = {
     en: "Nothing has been counted yet — the collection runs nightly.",
   },
 
+  // The two screens the console took over from the workspace: the assistant
+  // every organisation meets, and the ledger of addresses the platform was
+  // asked to write to.
+  "cp.section.assistant": { mn: "AI туслах", en: "Assistant" },
+  "cp.hint.assistant": {
+    mn: "Бүх байгууллагад нийтлэг үйлчлэх заавар ба мэдлэгийн сан. Байгууллага өөрийн зааврыг бичээгүй үед туслах эдгээрийг хэрэглэнэ.",
+    en: "The instructions and the corpus every organisation shares. An organisation that has written none of its own is answered with these.",
+  },
+  "cp.section.verifications": { mn: "И-мэйл баталгаажуулалт", en: "Email verification" },
+  "cp.hint.verifications": {
+    mn: "Платформ хэнд бичсэн, үйлчилгээ нь ажиллаж байна уу — бүх байгууллагыг нэг дор.",
+    en: "Who the platform has written to, and whether the service is answering — every organisation at once.",
+  },
+  "cp.hint.tenants_touched": { mn: "{count} байгууллага", en: "{count} organisations" },
+  "cp.field.active": { mn: "Идэвхтэй", en: "Active" },
+  "cp.state.never": { mn: "хэзээ ч", en: "never" },
+  "cp.state.deleted": { mn: "устсан байгууллага", en: "deleted organisation" },
+
   "cp.group.watch": { mn: "Ажиглалт", en: "Watch" },
   "cp.group.organisations": { mn: "Байгууллага", en: "Organisations" },
   "cp.group.platform": { mn: "Платформ", en: "Platform" },
