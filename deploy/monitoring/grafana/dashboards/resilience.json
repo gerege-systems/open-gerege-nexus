@@ -871,6 +871,84 @@
           "sort": "desc"
         }
       }
+    },
+    {
+      "type": "row",
+      "title": "Лог",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 30
+      },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "logs",
+      "title": "Ачаалал ба дахин оролдлогын мөрүүд",
+      "description": "Татгалзсан хүсэлт, дахин оролдлого. Тоолуур хэдийг хэлнэ, мөр нь юуг хэлнэ — аль зам, аль байгууллага.",
+      "datasource": {
+        "type": "loki",
+        "uid": "nexus-loki"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nexus-loki"
+          },
+          "editorMode": "code",
+          "expr": "{container=\"gerege_nexus_backend\"} |~ \"(?i)load shed|overload|retry|shed|503\"",
+          "legendFormat": "",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": true,
+        "enableLogDetails": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      }
+    }
+  ],
+  "links": [
+    {
+      "type": "dashboards",
+      "title": "Самбарууд",
+      "tags": [
+        "nexus"
+      ],
+      "asDropdown": true,
+      "includeVars": false,
+      "keepTime": true,
+      "targetBlank": false,
+      "icon": "external link",
+      "url": "",
+      "tooltip": ""
+    },
+    {
+      "type": "link",
+      "title": "Бүх лог",
+      "tags": [],
+      "url": "/grafana/d/nexus-logs/",
+      "asDropdown": false,
+      "includeVars": false,
+      "keepTime": true,
+      "targetBlank": false,
+      "icon": "doc",
+      "tooltip": "Түвшин, контейнер, чөлөөт текстээр хайх"
     }
   ]
 }

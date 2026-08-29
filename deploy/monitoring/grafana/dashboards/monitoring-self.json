@@ -932,6 +932,84 @@
           "sort": "desc"
         }
       }
+    },
+    {
+      "type": "row",
+      "title": "Лог",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 47
+      },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "logs",
+      "title": "Мониторингийн стекийн гомдол",
+      "description": "Prometheus, Loki, Alertmanager, alloy, Tempo, Grafana өөрсдөө юу гэж байна. Эдгээр нь logfmt-ээр бичдэг тул `level=` гэсэн текстээр шүүнэ.",
+      "datasource": {
+        "type": "loki",
+        "uid": "nexus-loki"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 48
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "nexus-loki"
+          },
+          "editorMode": "code",
+          "expr": "{container=~\"gerege_nexus_(prometheus|loki|alertmanager|alloy|grafana|tempo|cadvisor)\"} |~ \"(?i)level=(error|warn)\"",
+          "legendFormat": "",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": true,
+        "enableLogDetails": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      }
+    }
+  ],
+  "links": [
+    {
+      "type": "dashboards",
+      "title": "Самбарууд",
+      "tags": [
+        "nexus"
+      ],
+      "asDropdown": true,
+      "includeVars": false,
+      "keepTime": true,
+      "targetBlank": false,
+      "icon": "external link",
+      "url": "",
+      "tooltip": ""
+    },
+    {
+      "type": "link",
+      "title": "Бүх лог",
+      "tags": [],
+      "url": "/grafana/d/nexus-logs/",
+      "asDropdown": false,
+      "includeVars": false,
+      "keepTime": true,
+      "targetBlank": false,
+      "icon": "doc",
+      "tooltip": "Түвшин, контейнер, чөлөөт текстээр хайх"
     }
   ]
 }

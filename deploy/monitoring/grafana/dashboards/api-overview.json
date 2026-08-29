@@ -779,5 +779,33 @@
         "prettifyLogMessage": false
       }
     }
+  ],
+  "links": [
+    {
+      "type": "dashboards",
+      "title": "Самбарууд",
+      "tags": [
+        "nexus"
+      ],
+      "asDropdown": true,
+      "includeVars": false,
+      "keepTime": true,
+      "targetBlank": false,
+      "icon": "external link",
+      "url": "",
+      "tooltip": ""
+    },
+    {
+      "type": "link",
+      "title": "Бүх лог",
+      "tags": [],
+      "url": "/grafana/d/nexus-logs/",
+      "asDropdown": false,
+      "includeVars": false,
+      "keepTime": true,
+      "targetBlank": false,
+      "icon": "doc",
+      "tooltip": "Түвшин, контейнер, чөлөөт текстээр хайх"
+    }
   ]
 }
