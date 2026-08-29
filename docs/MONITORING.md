@@ -39,8 +39,7 @@ nginx-ээр гарсан Grafana (§4) эсвэл SSH tunnel.
 
 | Хэмжүүр | Тайлбар |
 | --- | --- |
-| `http_requests_total{method,path,status}` | `path` нь chi-ийн routed pattern — түүхий URL биш |
-| `http_request_duration_seconds{method,path}` | |
+| `http_server_request_duration_seconds{http_request_method,http_route,http_response_status_code}` | OpenTelemetry-ийн HTTP semantic convention. `http_route` нь chi-ийн routed pattern — түүхий URL биш. **Хүсэлтийн тоо нь энэ гистограммын `_count` цуврал** — тусад нь counter байхгүй |
 | `pgxpool_*` | Холболтын pool: эзлэгдсэн, сул, нийт, хүлээлт |
 | `external_request_duration_seconds{system,operation,status}` | ХУР, eID, ДАН, eSign, Gemini, и-мэйл баталгаажуулалт |
 | `logins_total{method,result}` | password, eid, dan, google, sso |
@@ -50,6 +49,18 @@ nginx-ээр гарсан Grafana (§4) эсвэл SSH tunnel.
 | `resilience_load_shed_total`, `resilience_in_flight_requests` | |
 | `resilience_retry_total{name}` | |
 | `go_*`, `process_*` | client_golang-ийн бэлэн collector-ууд |
+| `target_info` | Энэ суулгацын `service_name`, `service_version`, `deployment_environment_name` — OTel resource |
+
+Бүх хэмжүүр **OpenTelemetry metrics SDK**-аар дамжиж, Prometheus exporter-ээр
+`/metrics` дээр гарна (`internal/kernel/telemetry/otelmetrics.go`). Instrument-
+ийн нэр цэгтэй (`http.server.request.duration`), Prometheus дээр гарахдаа
+доогуур зураастай, нэгжийн болон `_total` дагаваржинэ. Exporter нь
+client_golang-ийн үндсэн registry дээр суудаг тул `go_*`, `process_*` хамт нэг
+endpoint дээр үлдэнэ.
+
+**Trace-тай холбоос — exemplar.** Гистограммын сэмпл бүр trace_id авч явна
+(`--enable-feature=exemplar-storage` Prometheus дээр асаалттай). Grafana-ийн
+latency график дээрх удаан цэг дээр дарвал яг тэр удаашруулсан trace нээгдэнэ.
 
 **Аль ч label-д тенант байхгүй.** Тенант ID эсвэл slug нь label болвол
 time series-ийн тоо байгууллагын тоогоор үржинэ, гарсан байгууллагын series нь
@@ -149,16 +160,61 @@ ssh -L 3009:127.0.0.1:3009 <server>
 # дараа нь http://localhost:3009
 ```
 
-**nginx-ээр.** Гаднаас байнга хэрэгтэй бол vhost-д snippet-ийг оруулна:
+**Өөрийн домэйнээр — `https://monitor.nexus.gerege.mn/`.** Осол 03:00 цагт
+болдог бөгөөд тэр үед хүн гартаа утас барьж байдаг. SSH tunnel тэр мөчид
+хэрэггүй.
 
-```nginx
-include snippets/nexus-monitoring.conf;
+```bash
+sudo cp deploy/nginx/monitor.nexus.gerege.mn.conf /etc/nginx/sites-available/monitor.nexus.gerege.mn
+sudo ln -s /etc/nginx/sites-available/monitor.nexus.gerege.mn /etc/nginx/sites-enabled/
+sudo htpasswd -c /etc/nginx/.htpasswd-nexus-monitoring <хэрэглэгч>   # Alertmanager-т
+sudo nginx -t && sudo systemctl reload nginx
+sudo certbot --nginx -d monitor.nexus.gerege.mn
 ```
 
-Дараа нь `https://nexus.gerege.mn/grafana/`. Snippet нь Grafana-г л гаргана —
-Prometheus, Loki, cAdvisor, exporter-ууд гарахгүй. Prometheus-д ямар ч
-нэвтрэлт байхгүй бөгөөд түүний query API нь асуусан хүн бүрт энэ суулгацын
-бүх бүтцийг задлан хэлнэ.
+`*.nexus.gerege.mn` DNS нь wildcard — шинэ бичлэг хэрэггүй. Гэрчилгээ нь
+wildcard **биш**, тул certbot-ыг заавал ажиллуулна.
+
+Гарах хаягууд: `/grafana/` — Grafana, `/alertmanager/` — Alertmanager
+(basic auth-ын цаана), бусад бүхэн 404. Домэйныг дангаар нь бичихэд Grafana
+руу шилжинэ. Prometheus, Loki, Tempo, cAdvisor, exporter-ууд **гарахгүй** —
+Prometheus-д ямар ч нэвтрэлт байхгүй бөгөөд түүний query API нь асуусан хүн
+бүрт энэ суулгацын бүх бүтцийг задлан хэлнэ.
+
+Хуучин арга — `nexus.gerege.mn/grafana/` — `snippets/nexus-monitoring.conf`-оор
+хэвээр ажиллана. Тусдаа домэйн байхгүй суулгацуудад зориулсан.
+
+### Платформын бүртгэлээр нэвтрэх
+
+Суулгац өөрөө identity provider. Grafana-д тусдаа нууц үг хадгалахын оронд
+`GRAFANA_OAUTH_*`-ыг бөглөвөл операторууд байгаа бүртгэлээрээ орно, **суулгацыг
+анх тохируулсан админ нь Grafana-ийн server administrator болно**.
+
+1. Платформ дээр клиент бүртгэнэ — Хөгжүүлэгч → Аппликейшн:
+   - redirect_uris — `https://monitor.nexus.gerege.mn/grafana/login/generic_oauth`
+   - grant_types — `authorization_code`, `refresh_token`
+   - scopes — `openid`, `profile`, `email`, `roles`
+2. Тэр host платформын `OAUTH_REDIRECT_HOSTS`-д байх ёстой. Тэр жагсаалт
+   дэд домэйныг өвлүүлдэггүй — `monitor.nexus.gerege.mn` бүтнээрээ бичигдэнэ.
+   Утга нь GitHub-ийн repository **variable** (Settings → Variables), учир нь
+   `.env`-ийг deploy бүр GitHub-ээс шинээр бичдэг: серверт гараар нэмсэн мөр
+   дараагийн deploy хүртэл л амьдарна.
+
+   ```
+   gh variable set OAUTH_REDIRECT_HOSTS -b "nexus.gerege.mn,monitor.nexus.gerege.mn"
+   ```
+3. `.env.monitoring` дотор `GRAFANA_OAUTH_ENABLED=true`, `GRAFANA_OAUTH_CLIENT_ID`,
+   `GRAFANA_OAUTH_CLIENT_SECRET`-ийг тавиад Grafana-г дахин эхлүүлнэ.
+
+Эрх нь `roles` scope дээрх `platform_admin` claim-ээр шийдэгдэнэ. Тэр нь
+**эхний байгууллагын** admin — өөрөөр хэлбэл тохиргооны шидтэн (setup wizard)
+үүсгэсэн байгууллагын админ — гагцхүү тэр хүнд үнэн. Өчигдөр бүртгүүлсэн
+байгууллагын админ ч гэсэн Viewer болж орно. Яагаад тэр ялгааг платформ талд
+тавьсныг `internal/workspace/ssoprovider/endpoints.go` дотор бичсэн.
+
+`GRAFANA_ADMIN_PASSWORD` хэвээр ажиллана — энэ бол буцах зам. Identity provider
+унасан үед мониторингийн стек нээгдэхгүй байх нь яг түүнийг хамгийн их
+хэрэгтэй мөч.
 
 Dashboard-ууд **"Gerege Nexus"** гэсэн хавтсанд өөрөө үүснэ:
 
@@ -168,6 +224,9 @@ Dashboard-ууд **"Gerege Nexus"** гэсэн хавтсанд өөрөө үү�
 | **Гадаад системүүд** | Асуудал бидний тал уу, тэдний тал уу |
 | **Инфраструктур** | Удаашрал — хост, контейнер, Postgres, Redis |
 | **Тэсвэрлэлт ба эзлэхүүн** | Ачаалал, pool, бизнесийн тоо |
+| **Логууд** | Хүсэлтийн мөрүүд, алдаа, audit — түвшин ба чөлөөт текстээр |
+| **Аюулгүй байдал ба хандалт** | Консолын нэвтрэлт, break-glass, эрхийн татгалзал |
+| **Мониторингийн эрүүл мэнд** | Ажиглагчийг хэн ажиглах вэ |
 
 ---
 
@@ -224,8 +283,17 @@ Loki-д **label-ууд нь индекс**: `container`, `service`, `level`, `de
 1. **Cardinality-г эхэлж бод.** Label бүрийн боломжит утгын тоог үржүүл.
    Тенант, хэрэглэгч, ID, чөлөөт текст, түүхий зам — эдгээрийн аль нь ч
    label болохгүй. Утгын багц нь кодод бичигдсэн тогтмол байх ёстой.
-2. Хэмжүүрийг `observability` пакетад зарлаж, `init()`-д бүртгэ
-   (`business.go`, `external.go`, `resilience.go` жишээ).
+2. Хэмжүүрийг `internal/kernel/telemetry` дотор `mustCounter`,
+   `mustUpDownCounter` эсвэл `mustHistogram`-аар пакетын түвшний хувьсагч
+   болгож зарла (`business.go`, `external.go`, `resilience.go` жишээ).
+   `init()`-д бүртгэх шаардлагагүй — эдгээр нь OpenTelemetry-ийн global meter
+   дээр үүсдэг ба `SetupMetrics` дуудагдахад автоматаар жинхэнэ provider руу
+   холбогдоно.
+
+   **Нэрийг цэгээр бич** — `resilience.load_shed` шиг. Prometheus дээр гарахдаа
+   доогуур зураас болж, counter бол `_total`, нэгж заасан бол нэгжийн дагавар
+   нэмэгдэнэ: `resilience_load_shed_total`. Semantic convention байгаа зүйлд
+   (HTTP, DB, RPC) өөрийн нэр бүү зохио — OpenTelemetry-ийн нэрийг ашигла.
 3. Нэмэгдүүлэх дуудлагыг **бүх зам нийлдэг ганц цэгт** тавь — handler бүрт
    биш. Жишээ: Google-ийн бүх татгалзал `failGoogle`-аар, гарын үсгийн хоёр
    rail `store.markSigned`-аар өнгөрдөг.

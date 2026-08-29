@@ -192,9 +192,9 @@ func (o Overview) withLists() Overview {
 // are the four numbers a person wants in the first five seconds, and they have
 // to mean the same thing on this screen as they do in Grafana.
 const (
-	rpsQuery       = `sum(rate(http_requests_total[5m]))`
-	errorRateQuery = `sum(rate(http_requests_total{status=~"5.."}[5m])) / clamp_min(sum(rate(http_requests_total[5m])), 0.001)`
-	p95Query       = `histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m])))`
+	rpsQuery       = `sum(rate(http_server_request_duration_seconds_count[5m]))`
+	errorRateQuery = `sum(rate(http_server_request_duration_seconds_count{http_response_status_code=~"5.."}[5m])) / clamp_min(sum(rate(http_server_request_duration_seconds_count[5m])), 0.001)`
+	p95Query       = `histogram_quantile(0.95, sum by (le) (rate(http_server_request_duration_seconds_bucket[5m])))`
 )
 
 func (s *Service) apiHealth(ctx context.Context) APIHealth {

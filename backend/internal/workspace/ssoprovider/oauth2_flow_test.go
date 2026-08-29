@@ -165,11 +165,16 @@ func (f *fixture) consent(t *testing.T) {
 	}
 }
 
-// codeFromRedirect drives authorize through consent and extracts the code.
-func (f *fixture) codeFromRedirect(t *testing.T) string {
+// codeFromRedirect drives authorize through consent and extracts the code. An
+// optional scope string overrides the default set.
+func (f *fixture) codeFromRedirect(t *testing.T, scope ...string) string {
 	t.Helper()
 	f.consent(t)
-	status, redirect := f.authorize(t, nil)
+	var extra url.Values
+	if len(scope) > 0 {
+		extra = url.Values{"scope": {scope[0]}}
+	}
+	status, redirect := f.authorize(t, extra)
 	if status != http.StatusFound {
 		t.Fatalf("expected a redirect, got %d", status)
 	}

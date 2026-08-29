@@ -46,6 +46,18 @@ services:
       # here. Without this flag Prometheus refuses the writes and Tempo's search
       # has nothing to start from.
       - --web.enable-remote-write-receiver
+      # Exemplars: the trace id attached to an individual histogram sample, so
+      # the slow point on a latency graph is a link to the trace that made it
+      # slow. The platform has always produced them and this side has always
+      # dropped them — without this flag Prometheus does not ask for the
+      # OpenMetrics format, which is the only one exemplars travel in, and the
+      # exemplarTraceIdDestinations in the Grafana datasource pointed at
+      # nothing.
+      # Storage is a fixed-size in-memory ring — 100,000 exemplars by default,
+      # set in the config file rather than here if it ever needs changing.
+      # There is no CLI flag for it, and Prometheus refuses to start on an
+      # unknown one.
+      - --enable-feature=exemplar-storage
       # ${DEPLOYMENT_NAME} in external_labels is expanded by this flag and by
       # nothing else — Prometheus does not otherwise read the environment.
       - --enable-feature=expand-external-labels
@@ -210,6 +222,61 @@ services:
       # of rules is two answers to "is anything wrong".
       GF_UNIFIED_ALERTING_ENABLED: "false"
       GF_ALERTING_ENABLED: "false"
+
+      # ------------------------------------------------------------------
+      # Sign in with the platform's own account.
+      #
+      # The deployment already has an identity provider — itself. Without this
+      # block, running the monitoring stack means a second set of credentials
+      # for every operator, kept in Grafana's SQLite volume, expiring on nobody's
+      # schedule and revoked by nobody when a person leaves. With it, the person
+      # who set this deployment up is already the administrator here.
+      #
+      # `platform_admin` is a claim on the `roles` scope, and it is true for
+      # exactly one person: the administrator of the deployment's *first*
+      # organisation, the one the setup wizard created. Every other account —
+      # including the admin of an organisation that signed up yesterday —
+      # arrives as a Viewer. See internal/workspace/ssoprovider for why the
+      # distinction is drawn there rather than here.
+      #
+      # GF_SECURITY_ADMIN_PASSWORD above is untouched and stays the way back in.
+      # An identity provider that is down must not be a monitoring stack that
+      # cannot be opened — that is precisely the hour it is needed.
+      #
+      # Off unless GRAFANA_OAUTH_ENABLED is set: a deployment that has not
+      # registered the client would otherwise show a sign-in button that leads
+      # to an error page.
+      GF_AUTH_GENERIC_OAUTH_ENABLED: ${GRAFANA_OAUTH_ENABLED:-false}
+      GF_AUTH_GENERIC_OAUTH_NAME: ${GRAFANA_OAUTH_NAME:-Gerege Nexus}
+      GF_AUTH_GENERIC_OAUTH_CLIENT_ID: ${GRAFANA_OAUTH_CLIENT_ID:-}
+      GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET: ${GRAFANA_OAUTH_CLIENT_SECRET:-}
+      GF_AUTH_GENERIC_OAUTH_SCOPES: "openid profile email roles"
+      GF_AUTH_GENERIC_OAUTH_AUTH_URL: ${PLATFORM_PUBLIC_URL:-https://nexus.gerege.mn}/oauth2/auth
+      GF_AUTH_GENERIC_OAUTH_TOKEN_URL: ${PLATFORM_PUBLIC_URL:-https://nexus.gerege.mn}/oauth2/token
+      GF_AUTH_GENERIC_OAUTH_API_URL: ${PLATFORM_PUBLIC_URL:-https://nexus.gerege.mn}/oauth2/userinfo
+      GF_AUTH_GENERIC_OAUTH_EMAIL_ATTRIBUTE_PATH: email
+      GF_AUTH_GENERIC_OAUTH_LOGIN_ATTRIBUTE_PATH: email
+      GF_AUTH_GENERIC_OAUTH_NAME_ATTRIBUTE_PATH: name
+      # JMESPath over the claims. Anyone who is not the platform's own
+      # administrator can read the dashboards and change nothing.
+      GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH: "platform_admin && 'GrafanaAdmin' || 'Viewer'"
+      # Required before the path above is allowed to hand out the server
+      # administrator role at all; without it GrafanaAdmin silently becomes Admin.
+      GF_AUTH_GENERIC_OAUTH_ALLOW_ASSIGN_GRAFANA_ADMIN: "true"
+      # A path that resolves to nothing must not lock a person out — they become
+      # a Viewer, which is what an account with no roles is.
+      GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_STRICT: "false"
+      # The provider supports PKCE and this is a browser-initiated flow; there is
+      # no reason to run one without it.
+      GF_AUTH_GENERIC_OAUTH_USE_PKCE: "true"
+      # An account the provider vouches for gets a Grafana account. The
+      # alternative is inviting every operator by hand into a system that was
+      # just told who they are.
+      GF_AUTH_GENERIC_OAUTH_ALLOW_SIGN_UP: "true"
+      # Signing out of Grafana signs the browser out of the platform too.
+      # Without this, "log out" leaves the provider's session standing and the
+      # next click signs straight back in — which reads as a broken button.
+      GF_AUTH_SIGNOUT_REDIRECT_URL: ${PLATFORM_PUBLIC_URL:-https://nexus.gerege.mn}/oauth2/logout?post_logout_redirect_uri=${MONITORING_PUBLIC_URL:-http://localhost:3000}/grafana/login
     volumes:
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro

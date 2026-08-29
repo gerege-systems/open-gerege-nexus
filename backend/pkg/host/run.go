@@ -145,6 +145,20 @@ func Run(opts Options) error {
 		}()
 	}
 
+	// Metrics. Installed before anything that records one — every instrument in
+	// internal/kernel/telemetry is created at package initialisation through the
+	// global provider, which delegates, but the observable callbacks registered
+	// later (the database pool) are simpler to reason about when the real
+	// provider is already in place.
+	shutdownMetrics, err := telemetry.SetupMetrics("gerege-nexus", os.Getenv("ENVIRONMENT"))
+	if err != nil {
+		slog.Error("failed to setup metrics", "error", err)
+	} else {
+		defer func() {
+			_ = shutdownMetrics(ctx)
+		}()
+	}
+
 	// Panics and unhandled errors, grouped by what broke rather than scattered
 	// through the log. Off without SENTRY_DSN.
 	shutdownErrors, err := telemetry.SetupErrorTracking("gerege-nexus", os.Getenv("ENVIRONMENT"))

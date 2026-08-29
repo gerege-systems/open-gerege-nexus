@@ -65,6 +65,15 @@ var SupportedScopes = []Scope{
 	{Name: "email", Description: "Read your email address", DescriptionMN: "Таны и-мэйл хаягийг харна"},
 	{Name: "phone", Description: "Read your phone number", DescriptionMN: "Таны утасны дугаарыг харна"},
 	{Name: "offline_access", Description: "Stay signed in when you are away", DescriptionMN: "Та байхгүй үед ч холболтоо хадгална"},
+	// What the person may do here, so a relying party can decide what to show
+	// them without keeping its own copy of this platform's org chart. Grafana
+	// is the first consumer: it maps `platform_admin` onto its own server
+	// administrator, which is how the person who set this deployment up ends up
+	// owning the dashboards without a second account being created anywhere.
+	//
+	// Sensitive, because an application that knows a person is an
+	// administrator knows which account is worth attacking.
+	{Name: "roles", Description: "Read your roles in this organisation", DescriptionMN: "Танай байгууллага дахь таны эрхийг харна", Sensitive: true},
 	{Name: "erp.read", Description: "Read your organisation's ERP data", DescriptionMN: "Танай байгууллагын ERP өгөгдлийг унших", Sensitive: true},
 	{Name: "erp.write", Description: "Create and change your organisation's ERP data", DescriptionMN: "Танай байгууллагын ERP өгөгдлийг үүсгэх, өөрчлөх", Sensitive: true},
 }

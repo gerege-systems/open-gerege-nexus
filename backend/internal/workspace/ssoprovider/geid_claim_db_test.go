@@ -69,11 +69,11 @@ func TestAnAccountWithoutAGeregeNumberCarriesNoClaim(t *testing.T) {
 // exchangeForTokens runs the flow up to a pair of tokens. The end-to-end test
 // beside this one does the same thing inline; this is the two lines of it that
 // a claim test needs.
-func exchangeForTokens(t *testing.T, f *fixture) (accessToken, idToken string) {
+func exchangeForTokens(t *testing.T, f *fixture, scope ...string) (accessToken, idToken string) {
 	t.Helper()
 	status, body := f.token(t, url.Values{
 		"grant_type":    {"authorization_code"},
-		"code":          {f.codeFromRedirect(t)},
+		"code":          {f.codeFromRedirect(t, scope...)},
 		"redirect_uri":  {f.client.RedirectURIs[0]},
 		"code_verifier": {f.verifier},
 	})
