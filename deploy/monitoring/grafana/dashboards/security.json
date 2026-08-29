@@ -27,7 +27,7 @@
     {
       "type": "stat",
       "title": "Консолын нэвтрэлт — амжилтгүй (1ц)",
-      "description": "Операторын консолд долоо хоногт хэдхэн хүн ордог. Нэг цагт арав алдах нь буруу бичсэн биш, оролдож байгаа хэрэг — NexusControlPlaneLoginFailures.",
+      "description": "Операторын консолд долоо хоногт хэдхэн хүн ордог. Нэг цагт арав алдах нь буруу бичсэн биш, оролдож байгаа хэрэг — NexusControlPlaneLoginFailures. Тэг нь тэг — \"No data\" биш: хэмжигдээгүй байдал эрүүл байдалтай адилхан харагдах ёсгүй.",
       "datasource": {
         "type": "prometheus",
         "uid": "nexus-prometheus"
@@ -45,7 +45,7 @@
             "uid": "nexus-prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(increase(cp_login_attempts_total{result!=\"success\"}[1h]))",
+          "expr": "(sum(increase(cp_login_attempts_total{result!=\"success\"}[1h]))) or vector(0)",
           "legendFormat": "",
           "range": true,
           "instant": false,
@@ -99,7 +99,7 @@
     {
       "type": "stat",
       "title": "Түгжигдсэн бүртгэл (30м)",
-      "description": "NexusControlPlaneLockout гурваас дээш байхад асна.",
+      "description": "NexusControlPlaneLockout гурваас дээш байхад асна. Тэг нь тэг — \"No data\" биш: хэмжигдээгүй байдал эрүүл байдалтай адилхан харагдах ёсгүй.",
       "datasource": {
         "type": "prometheus",
         "uid": "nexus-prometheus"
@@ -117,7 +117,7 @@
             "uid": "nexus-prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(increase(cp_login_attempts_total{result=\"locked\"}[30m]))",
+          "expr": "(sum(increase(cp_login_attempts_total{result=\"locked\"}[30m]))) or vector(0)",
           "legendFormat": "",
           "range": true,
           "instant": false,
@@ -167,7 +167,7 @@
     {
       "type": "stat",
       "title": "Break-glass (24ц)",
-      "description": "Хэвийн үед энэ мөнхөд тэг. Тэгээс дээш гарсан бөгөөд төлөвлөгөөт биш бол платформын хамгийн эрхтэй интерфэйс рүү зөвшөөрөлгүй хандсан гэж үзэж ажиллана.",
+      "description": "Хэвийн үед энэ мөнхөд тэг. Тэгээс дээш гарсан бөгөөд төлөвлөгөөт биш бол платформын хамгийн эрхтэй интерфэйс рүү зөвшөөрөлгүй хандсан гэж үзэж ажиллана. Тэг нь тэг — \"No data\" биш: хэмжигдээгүй байдал эрүүл байдалтай адилхан харагдах ёсгүй.",
       "datasource": {
         "type": "prometheus",
         "uid": "nexus-prometheus"
@@ -185,7 +185,7 @@
             "uid": "nexus-prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(increase(cp_login_attempts_total{result=\"break_glass\"}[24h]))",
+          "expr": "(sum(increase(cp_login_attempts_total{result=\"break_glass\"}[24h]))) or vector(0)",
           "legendFormat": "",
           "range": true,
           "instant": false,
@@ -235,7 +235,7 @@
     {
       "type": "stat",
       "title": "Платформын нэвтрэлт — амжилтгүй хувь (1ц)",
-      "description": "Энд алдаа өдөр болгон гардаг — хүмүүс нууц үгээ буруу бичдэг. Хардах ёстой зүйл нь тоо биш, огцом өөрчлөлт.",
+      "description": "Энд алдаа өдөр болгон гардаг — хүмүүс нууц үгээ буруу бичдэг. Хардах ёстой зүйл нь тоо биш, огцом өөрчлөлт. Тэг нь тэг — \"No data\" биш: хэмжигдээгүй байдал эрүүл байдалтай адилхан харагдах ёсгүй.",
       "datasource": {
         "type": "prometheus",
         "uid": "nexus-prometheus"
@@ -253,7 +253,7 @@
             "uid": "nexus-prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(increase(logins_total{result=\"failure\"}[1h])) / clamp_min(sum(increase(logins_total[1h])), 1)",
+          "expr": "(sum(increase(logins_total{result=\"failure\"}[1h])) / clamp_min(sum(increase(logins_total[1h])), 1)) or vector(0)",
           "legendFormat": "",
           "range": true,
           "instant": false,
@@ -362,7 +362,8 @@
           "color": {
             "mode": "palette-classic"
           },
-          "min": 0
+          "min": 0,
+          "noValue": "Хараахан болоогүй"
         },
         "overrides": []
       },
@@ -428,7 +429,8 @@
           "color": {
             "mode": "palette-classic"
           },
-          "min": 0
+          "min": 0,
+          "noValue": "Алдаа гараагүй"
         },
         "overrides": []
       },
@@ -506,7 +508,8 @@
           "color": {
             "mode": "palette-classic"
           },
-          "min": 0
+          "min": 0,
+          "noValue": "Хараахан болоогүй"
         },
         "overrides": []
       },
@@ -572,7 +575,8 @@
           "color": {
             "mode": "palette-classic"
           },
-          "min": 0
+          "min": 0,
+          "noValue": "Хараахан болоогүй"
         },
         "overrides": []
       },

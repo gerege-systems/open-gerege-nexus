@@ -95,7 +95,7 @@
     {
       "type": "stat",
       "title": "Унтарсан target",
-      "description": "Тэгээс дээш байвал ямар нэг зүйлийг хэн ч хэмжихээ больсон гэсэн үг — хэмжигдээгүй байдал эрүүл байдалтай яг адилхан харагддаг.",
+      "description": "Тэгээс дээш байвал ямар нэг зүйлийг хэн ч хэмжихээ больсон гэсэн үг — хэмжигдээгүй байдал эрүүл байдалтай яг адилхан харагддаг. Тэг нь тэг — \"No data\" биш: хэмжигдээгүй байдал эрүүл байдалтай адилхан харагдах ёсгүй.",
       "datasource": {
         "type": "prometheus",
         "uid": "nexus-prometheus"
@@ -113,7 +113,7 @@
             "uid": "nexus-prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(up == 0)",
+          "expr": "(sum(up == 0)) or vector(0)",
           "legendFormat": "",
           "range": true,
           "instant": false,
@@ -701,7 +701,8 @@
           "color": {
             "mode": "palette-classic"
           },
-          "min": 0
+          "min": 0,
+          "noValue": "Юу ч дуугарахгүй байна"
         },
         "overrides": []
       },
@@ -767,7 +768,8 @@
           "color": {
             "mode": "palette-classic"
           },
-          "min": 0
+          "min": 0,
+          "noValue": "Татгалзсан бичилт алга"
         },
         "overrides": []
       },

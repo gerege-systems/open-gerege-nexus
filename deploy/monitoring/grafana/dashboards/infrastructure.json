@@ -682,7 +682,7 @@
     {
       "type": "timeseries",
       "title": "Контейнер бүрийн CPU",
-      "description": "",
+      "description": " Контейнерийг ID-гаар нэрлэсэн, нэрээр нь биш. Docker 29 нь containerd snapshotter ашигладаг тул cAdvisor контейнерийн нэрийг Docker-оос уншиж чадахгүй — containerd-аас уншихад ID л ирдэг. Аль контейнер болохыг `docker ps --filter id=<эхний 12 тэмдэгт>`-ээр олно.",
       "datasource": {
         "type": "prometheus",
         "uid": "nexus-prometheus"
@@ -700,8 +700,8 @@
             "uid": "nexus-prometheus"
           },
           "editorMode": "code",
-          "expr": "sum by (name) (rate(container_cpu_usage_seconds_total{name=~\"gerege_nexus_.*\"}[$__rate_interval]))",
-          "legendFormat": "{{name}}",
+          "expr": "sum by (id) (rate(container_cpu_usage_seconds_total{id=~\"/system.slice/docker-.*\"}[$__rate_interval]))",
+          "legendFormat": "{{id}}",
           "range": true,
           "instant": false,
           "refId": "A",
@@ -743,12 +743,21 @@
           "mode": "multi",
           "sort": "desc"
         }
-      }
+      },
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*docker-(.{12}).*",
+            "renamePattern": "$1"
+          }
+        }
+      ]
     },
     {
       "type": "timeseries",
       "title": "Контейнер бүрийн санах ой",
-      "description": "working set нь RSS биш: кэш хассан, OOM killer-ийн харагддаг тоо.",
+      "description": "working set нь RSS биш: кэш хассан, OOM killer-ийн харагддаг тоо. Контейнерийг ID-гаар нэрлэсэн, нэрээр нь биш. Docker 29 нь containerd snapshotter ашигладаг тул cAdvisor контейнерийн нэрийг Docker-оос уншиж чадахгүй — containerd-аас уншихад ID л ирдэг. Аль контейнер болохыг `docker ps --filter id=<эхний 12 тэмдэгт>`-ээр олно.",
       "datasource": {
         "type": "prometheus",
         "uid": "nexus-prometheus"
@@ -766,8 +775,8 @@
             "uid": "nexus-prometheus"
           },
           "editorMode": "code",
-          "expr": "sum by (name) (container_memory_working_set_bytes{name=~\"gerege_nexus_.*\"})",
-          "legendFormat": "{{name}}",
+          "expr": "sum by (id) (container_memory_working_set_bytes{id=~\"/system.slice/docker-.*\"})",
+          "legendFormat": "{{id}}",
           "range": true,
           "instant": false,
           "refId": "A",
@@ -809,7 +818,16 @@
           "mode": "multi",
           "sort": "desc"
         }
-      }
+      },
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*docker-(.{12}).*",
+            "renamePattern": "$1"
+          }
+        }
+      ]
     },
     {
       "type": "row",

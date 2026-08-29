@@ -93,7 +93,7 @@
     {
       "type": "timeseries",
       "title": "Алдааны хувь — системээр",
-      "description": "Урсгал бага үед энэ тоо огцом үсэрдэг — нэг дуудлага, нэг алдаа нь 100%. Alert-ууд урсгалын нөхцөлтэй.",
+      "description": "Урсгал бага үед энэ тоо огцом үсэрдэг — нэг дуудлага, нэг алдаа нь 100%. Alert-ууд урсгалын нөхцөлтэй. Алдаагүй систем нь тэг шугам татна — өмнө нь бүхэлдээ хоосон харагддаг байсан, яг бүх зүйл эрүүл байх мөчид.",
       "datasource": {
         "type": "prometheus",
         "uid": "nexus-prometheus"
@@ -111,7 +111,7 @@
             "uid": "nexus-prometheus"
           },
           "editorMode": "code",
-          "expr": "sum by (system) (rate(external_request_duration_seconds_count{status=\"error\"}[$__rate_interval])) / clamp_min(sum by (system) (rate(external_request_duration_seconds_count[$__rate_interval])), 0.001)",
+          "expr": "(sum by (system) (rate(external_request_duration_seconds_count{status=\"error\"}[$__rate_interval])) or sum by (system) (rate(external_request_duration_seconds_count[$__rate_interval])) * 0) / clamp_min(sum by (system) (rate(external_request_duration_seconds_count[$__rate_interval])), 0.001)",
           "legendFormat": "{{system}}",
           "range": true,
           "instant": false,
@@ -417,7 +417,8 @@
           "color": {
             "mode": "palette-classic"
           },
-          "min": 0
+          "min": 0,
+          "noValue": "Хараахан болоогүй"
         },
         "overrides": []
       },

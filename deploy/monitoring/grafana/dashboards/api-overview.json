@@ -748,7 +748,7 @@
     {
       "type": "logs",
       "title": "Backend-ийн алдаанууд",
-      "description": "request_id-гаар шүүх: | json | request_id = \"...\"",
+      "description": "level нь Loki-ийн индекслэсэн label — alloy түүнийг жижиг үсгээр бичдэг. `| json | level = \"ERROR\"` нь юу ч олдоггүй байсан: `| json` нь аль хэдийн байгаа label-ыг дарж бичиж чадахгүй тул JSON доторх талбар level_extracted болдог.",
       "datasource": {
         "type": "loki",
         "uid": "nexus-loki"
@@ -765,7 +765,7 @@
             "type": "loki",
             "uid": "nexus-loki"
           },
-          "expr": "{container=\"gerege_nexus_backend\"} | json | level = \"ERROR\"",
+          "expr": "{container=\"gerege_nexus_backend\", level=\"error\"}",
           "queryType": "range",
           "refId": "A"
         }
