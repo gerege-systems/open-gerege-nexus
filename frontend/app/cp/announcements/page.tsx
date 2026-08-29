@@ -57,7 +57,7 @@ function Announcements() {
         <button
           type="button"
           onClick={() => setWriting(true)}
-          className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
+          className="inline-flex items-center gap-2 rounded-lg bg-[var(--gerege-blue)] px-3 py-2 text-sm font-medium text-white hover:brightness-105"
         >
           <Megaphone className="w-4 h-4" />
           {t("cp.action.announce")}
@@ -229,7 +229,7 @@ function WriteDialog({ onClose, onPublished }: { onClose: () => void; onPublishe
           <button
             type="submit"
             disabled={busy}
-            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+            className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60"
           >
             {t("cp.action.announce")}
           </button>

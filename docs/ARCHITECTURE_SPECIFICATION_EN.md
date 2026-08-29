@@ -23,7 +23,7 @@ planes:
 | | Tenant plane | Operator plane |
 | --- | --- | --- |
 | Responsibility | A user's work inside one organisation | Operating the entire deployment |
-| Origin | `nexus.gerege.mn` | `cp.nexus.gerege.mn` |
+| Origin | `nexus.gerege.mn` | `admin.nexus.gerege.mn` |
 | API | `/api/v1/*` | `/api/platform/v1/*` |
 | Session cookie | `session_token` | `cp_session` |
 | Account | `registry.users` + `tenant.memberships` | `operator.operator_accounts` |

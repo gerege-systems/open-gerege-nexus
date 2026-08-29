@@ -90,6 +90,29 @@ export default function SetupPage() {
     void api.setupStatus().then(setStatus).catch(() => setStatus({ required: true, armed: true, core: false }));
   }, []);
 
+  // What a failed call means.
+  //
+  // The gate answers 404 — never 401 — to a token it does not hold, so that a
+  // stranger is not told there is a token to guess. The cost is borne by the
+  // operator: a link made before the last restart leaves "not found" sitting
+  // under a form whose every button will fail the same way, and nothing on the
+  // screen says the token is the reason. The token lives in memory and is
+  // minted afresh at each boot, so a stale one is the ordinary case, not a rare
+  // one.
+  //
+  // So a 404 drops the token and returns to the screen that asks for one, with
+  // the reason on it. Every other failure is the server's own words: "the
+  // directory refused", a password rule, a slug already taken.
+  function failed(err: Error & { status?: number }) {
+    if (err.status === 404) {
+      setToken("");
+      setTypedToken("");
+      setError(t("setup.message.token_stale"));
+      return;
+    }
+    setError(err.message);
+  }
+
   async function lookupOrganisation() {
     setError("");
     setBusy(true);
@@ -102,7 +125,7 @@ export default function SetupPage() {
       // (цор ганц, тогтвортой) тул нэр солигдоход дарагдахгүй.
       setSlugTouched(true);
     } catch (err: any) {
-      setError(err.message);
+      failed(err);
     } finally {
       setBusy(false);
     }
@@ -116,7 +139,7 @@ export default function SetupPage() {
       setAdminName(found.name);
       setAdminEmail(found.email);
     } catch (err: any) {
-      setError(err.message);
+      failed(err);
     } finally {
       setBusy(false);
     }
@@ -138,11 +161,12 @@ export default function SetupPage() {
       );
       setStep(5);
     } catch (err: any) {
-      setError(err.message);
+      failed(err);
       // Татгалзсан хариултууд эхний хоёр алхам дээр байдаг (нэр, богино нэр,
       // и-мэйл). Хүнийг алдааныхаа хамт эхэнд буцаахгүй бол сүүлийн дэлгэц
-      // дээр гарах ч, засах ч аргагүй үлдэнэ.
-      setStep(1);
+      // дээр гарах ч, засах ч аргагүй үлдэнэ. Хуучирсан токен нь өөр асуудал:
+      // тэнд `failed` токеныг цэвэрлэдэг тул хүн эхний хаалган дээрээ буцна.
+      if (err.status !== 404) setStep(1);
     } finally {
       setBusy(false);
     }
@@ -166,7 +190,7 @@ export default function SetupPage() {
         password: operatorPassword,
       }));
     } catch (err: any) {
-      setError(err.message);
+      failed(err);
     } finally {
       setBusy(false);
     }
@@ -184,7 +208,7 @@ export default function SetupPage() {
       setOperatorDone(true);
       await finish();
     } catch (err: any) {
-      setError(err.message);
+      failed(err);
     } finally {
       setBusy(false);
     }
@@ -239,6 +263,7 @@ export default function SetupPage() {
       <Shell brand={brand}>
         <h1 className="signin-card__title">{t("setup.view.title")}</h1>
         <p className="signin-card__lede">{t("setup.message.token_missing")}</p>
+        {error && <p className="signin-alert">{error}</p>}
         <form className="setup-form" onSubmit={(e) => { e.preventDefault(); setToken(typedToken.trim()); }}>
           <label>
             <span>{t("setup.field.token")}</span>
@@ -259,19 +284,44 @@ export default function SetupPage() {
         <p className="signin-card__lede">{t("setup.view.subtitle")}</p>
       </div>
 
+      {/* Шидтэн бол урагшлах зам тул алхмууд нэг мөрөнд зогсоно. Дөрвөн шошго
+          нэг мөрөнд багтдаггүй — «Байгууллага», «Administrator» гэх мэт орчуулга
+          картын өргөнөөс хальдаг — тиймээс шошгыг явж буй алхам дээр нь үзүүлж,
+          бусад нь дүрсээрээ зогсоно. Шошго DOM-д үлдэж байгаа (`sr-only`) тул
+          дэлгэц уншигч алхам бүрийн нэрийг хэвээр уншина. */}
       <ol className="setup-steps">
-        <li className={step === 1 ? "is-current" : step > 1 ? "is-done" : ""}>
-          <Building2 size={16} /> {t("setup.view.step_organisation")}
+        <li
+          className={step === 1 ? "is-current" : step > 1 ? "is-done" : ""}
+          aria-current={step === 1 ? "step" : undefined}
+          title={t("setup.view.step_organisation")}
+        >
+          <Building2 size={16} />
+          <span className={step === 1 ? undefined : "sr-only"}>{t("setup.view.step_organisation")}</span>
         </li>
-        <li className={step === 2 ? "is-current" : step > 2 ? "is-done" : ""}>
-          <UserRound size={16} /> {t("setup.view.step_admin")}
+        <li
+          className={step === 2 ? "is-current" : step > 2 ? "is-done" : ""}
+          aria-current={step === 2 ? "step" : undefined}
+          title={t("setup.view.step_admin")}
+        >
+          <UserRound size={16} />
+          <span className={step === 2 ? undefined : "sr-only"}>{t("setup.view.step_admin")}</span>
         </li>
-        <li className={step === 3 ? "is-current" : step > 3 ? "is-done" : ""}>
-          <Lock size={16} /> {t("setup.view.step_password")}
+        <li
+          className={step === 3 ? "is-current" : step > 3 ? "is-done" : ""}
+          aria-current={step === 3 ? "step" : undefined}
+          title={t("setup.view.step_password")}
+        >
+          <Lock size={16} />
+          <span className={step === 3 ? undefined : "sr-only"}>{t("setup.view.step_password")}</span>
         </li>
         {consoleOffered && (
-          <li className={step === 4 ? "is-current" : ""}>
-            <ShieldCheck size={16} /> {t("setup.view.step_console")}
+          <li
+            className={step === 4 ? "is-current" : ""}
+            aria-current={step === 4 ? "step" : undefined}
+            title={t("setup.view.step_console")}
+          >
+            <ShieldCheck size={16} />
+            <span className={step === 4 ? undefined : "sr-only"}>{t("setup.view.step_console")}</span>
           </li>
         )}
       </ol>
