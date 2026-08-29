@@ -170,7 +170,7 @@ export default function SetupPage() {
         password: operatorPassword,
       }));
     } catch (err: any) {
-      setError(err.message);
+      failed(err);
     } finally {
       setBusy(false);
     }
@@ -184,7 +184,7 @@ export default function SetupPage() {
       await api.setupConfirmOperator(token, operatorEmail, code);
       await finish();
     } catch (err: any) {
-      setError(err.message);
+      failed(err);
     } finally {
       setBusy(false);
     }
