@@ -15,6 +15,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed — операторын консол `admin.nexus.gerege.mn` дээр нүүв
+
+`cp.` гэдэг товчлолыг хүн уншиж ойлгодоггүй: консолын хаяг өөрөө юу болохоо
+хэлэх ёстой. Хост `admin.nexus.gerege.mn` болов — vhost, гэрчилгээ,
+`CONTROL_PLANE_HOST` репо хувьсагч, prod `.env` гурвуулаа шинэ нэр дээр.
+
+`cp.nexus.gerege.mn` нь гэрчилгээгээ хадгалж, зөвхөн 301-ээр шинэ нэр рүү
+заана — хуучин bookmark ажиллах боловч консол тэр хостоос үйлчлэхээ болив.
+API-ийн `HostGate` нь хуучин нэрээр ирсэн хүсэлтэд 404 өгнө, өөрчлөлт
+шаардлагагүй: тэр хаяг ердөө CONTROL_PLANE_HOST-той таарахаа больсон.
+
 ### Fixed — модулийн байнгын ажил миграцынхаа өмнө эхэлдэг байв
 
 `StartBackgroundJobs` нь v1.15.0-д бүртгэгдсэн модуль бүрийн
