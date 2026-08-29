@@ -298,9 +298,10 @@ export default function Console({ children }: { children: React.ReactNode }) {
               </div>
             </aside>
           </div>
-          <main className="gerege-main flex-1 min-w-0 p-4 sm:p-6 lg:p-8 overflow-y-auto">
-            <div className="mx-auto max-w-6xl">{children}</div>
-          </main>
+          {/* No centring wrapper: the workspace's main fills its column, and
+              a max-w-6xl here left a wide screen with a band of empty chrome
+              down each side of a page whose tables want the width. */}
+          <main className="gerege-main flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto min-w-0">{children}</main>
         </div>
       </div>
     </ConsoleContext.Provider>
