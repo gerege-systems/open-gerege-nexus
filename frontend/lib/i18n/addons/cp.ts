@@ -462,6 +462,11 @@ export const cp = {
 
   // Байгууллага нээх: дэлгэрэнгүйг нь бүртгэлээс, эхний админыг нь eID-ээр
   // баталгаажсан хүмүүсээс.
+  "cp.action.add_person": { mn: "Хүн нэмэх", en: "Add person" },
+  "cp.hint.member_is_chosen": {
+    mn: "eID-ээр баталгаажсан хүмүүсээс сонгоно. Тэр хүн платформын хамгийн бага эрхтэйгээр («Хэрэглэгч») орно — түүнээс дээшхийг байгууллагын өөрийнх нь админ өгнө.",
+    en: "Chosen from the people verified with eID. They arrive with the smallest role the platform has — anything above it is granted by the organisation's own administrator.",
+  },
   "cp.action.look_up": { mn: "Бүртгэлээс хайх", en: "Look up" },
   "cp.field.admin": { mn: "Эхний админ", en: "First administrator" },
   "cp.field.search_people": { mn: "Нэр, и-мэйл, эсвэл регистрээр хайх", en: "Search by name, address or register number" },

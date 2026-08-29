@@ -122,3 +122,80 @@ func verifiedUser(t *testing.T, pool *pgxpool.Pool, tenantID string) string {
 	}
 	return userID
 }
+
+// Somebody added to an organisation gets the least the platform offers, and
+// gets it from the schema rather than from this screen: 00008's trigger grants
+// `user` to every new membership.
+func TestAnAddedPersonGetsTheSmallestRole(t *testing.T) {
+	pool := optest.Pool(t)
+	op := operator.New(pool)
+	service := New(op, Deps{DB: pool})
+	account, _ := optest.Account(t, pool, operator.RoleSuperadmin)
+	sess := optest.Session(account)
+	home, _ := optest.Tenant(t, pool)
+	target, _ := optest.Tenant(t, pool)
+	person := verifiedUser(t, pool, home)
+	ctx := context.Background()
+
+	if err := service.AddMember(ctx, sess, target, person, "prove the smallest role"); err != nil {
+		t.Fatalf("add the person: %v", err)
+	}
+
+	var roles []string
+	rows, err := pool.Query(ctx, `
+		SELECT r.code FROM workspace.memberships m
+		  JOIN workspace.membership_roles mr ON mr.membership_id = m.id
+		  JOIN workspace.roles r ON r.id = mr.role_id
+		 WHERE m.tenant_id = $1::uuid AND m.user_id = $2::uuid`, target, person)
+	if err != nil {
+		t.Fatalf("read the roles: %v", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var code string
+		if err := rows.Scan(&code); err != nil {
+			t.Fatalf("read a role: %v", err)
+		}
+		roles = append(roles, code)
+	}
+	if len(roles) != 1 || roles[0] != "user" {
+		t.Fatalf("the person was given %v, want exactly the user role", roles)
+	}
+
+	// Twice is refused rather than silently doing nothing: an operator who
+	// clicks again is asking a question, and "already there" is the answer.
+	if err := service.AddMember(ctx, sess, target, person, "again"); err == nil {
+		t.Error("the same person was added twice")
+	}
+}
+
+// The console shows a limit on one screen and must not be the way past it on
+// another — when the limit is one the platform actually enforces.
+func TestAHardLimitRefusesAnotherPerson(t *testing.T) {
+	pool := optest.Pool(t)
+	op := operator.New(pool)
+	service := New(op, Deps{DB: pool})
+	account, _ := optest.Account(t, pool, operator.RoleSuperadmin)
+	sess := optest.Session(account)
+	home, _ := optest.Tenant(t, pool)
+	target, _ := optest.Tenant(t, pool)
+	ctx := context.Background()
+
+	none := 0
+	if err := service.SetQuota(ctx, sess, target, Quota{MaxUsers: &none, Enforcement: EnforcementHard},
+		"prove the limit"); err != nil {
+		t.Fatalf("set the limit: %v", err)
+	}
+	if err := service.AddMember(ctx, sess, target, verifiedUser(t, pool, home), "past the limit"); err == nil {
+		t.Fatal("a hard limit of zero let somebody in")
+	}
+
+	// Soft enforcement warns; it does not refuse.
+	if err := service.SetQuota(ctx, sess, target, Quota{MaxUsers: &none, Enforcement: EnforcementSoft},
+		"soften it"); err != nil {
+		t.Fatalf("soften the limit: %v", err)
+	}
+	if err := service.AddMember(ctx, sess, target, verifiedUser(t, pool, home), "soft limit"); err != nil {
+		t.Fatalf("a soft limit refused: %v", err)
+	}
+}
