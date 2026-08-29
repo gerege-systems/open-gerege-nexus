@@ -28,7 +28,6 @@ import {
   ChevronsUpDown,
   LayoutGrid,
   LifeBuoy,
-  LogOut,
   Megaphone,
   Menu as HamburgerIcon,
   ScrollText,
@@ -38,6 +37,7 @@ import {
 } from "lucide-react";
 
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import UserMenu from "@/components/UserMenu";
 import { cp, Unauthorized, type Operator } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 import { useBrand } from "@/lib/brandContext";
@@ -249,31 +249,21 @@ export default function Console({ children }: { children: React.ReactNode }) {
               )}
             </div>
           </div>
-          {/* The chip the product wears, initial and all (components/UserMenu):
-              same circle, same border, same truncation. It does not open a
-              menu — the console has one thing to offer here and it is the
-              button beside it — so it is a span rather than a button, and the
-              role stays visible because on this side of the platform "who is
-              signed in" is half of "what they may do". */}
+          {/* The product's own account menu, with the two parts a console has
+              no session for turned off: no organisations to switch between,
+              and no /profile or /settings pages to reach. What it brings is
+              what the operator was missing — language, colour mode and
+              sign-out where the rest of the platform keeps them, instead of a
+              lone button on the bar. The role rides under the address, because
+              on this side "who is signed in" is half of "what they may do". */}
           <div className="gerege-header-user flex items-center gap-2 pr-2 sm:pr-4 lg:pr-6">
-            <span className="hidden sm:flex items-center gap-2.5 rounded-full border border-slate-200 py-1 pl-1 pr-2.5">
-              <span className="w-8 h-8 rounded-full bg-[var(--gerege-blue-soft)] text-[var(--gerege-blue)] grid place-items-center text-xs font-bold">
-                {(operator.name || operator.email || "?").slice(0, 1).toUpperCase()}
-              </span>
-              <span className="text-sm font-medium text-slate-800 truncate max-w-40">{operator.name}</span>
-              <span className="hidden lg:block text-xs text-slate-500">{t(`cp.role.${operator.role}`)}</span>
-            </span>
-            {/* slate-200 and slate-50 rather than 300 and 100: those are the two
-                the topbar's own rules recolour on the blue chrome, and the pair
-                that was here read as a light-mode button on a blue bar. */}
-            <button
-              type="button"
-              onClick={() => void signOut()}
-              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 transition"
-            >
-              <LogOut className="w-4 h-4" />
-              <span className="hidden sm:inline">{t("cp.action.sign_out")}</span>
-            </button>
+            <UserMenu
+              user={{ name: operator.name, email: operator.email }}
+              onLogout={() => void signOut()}
+              showTenants={false}
+              links={[]}
+              subtitle={t(`cp.role.${operator.role}`)}
+            />
           </div>
         </header>
 
@@ -308,9 +298,10 @@ export default function Console({ children }: { children: React.ReactNode }) {
               </div>
             </aside>
           </div>
-          <main className="gerege-main flex-1 min-w-0 p-4 sm:p-6 lg:p-8 overflow-y-auto">
-            <div className="mx-auto max-w-6xl">{children}</div>
-          </main>
+          {/* No centring wrapper: the workspace's main fills its column, and
+              a max-w-6xl here left a wide screen with a band of empty chrome
+              down each side of a page whose tables want the width. */}
+          <main className="gerege-main flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto min-w-0">{children}</main>
         </div>
       </div>
     </ConsoleContext.Provider>
