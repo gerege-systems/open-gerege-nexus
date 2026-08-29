@@ -27,6 +27,8 @@
 -- ORM-гүй ч гэсэн клиентийн драйвер, баримт үүсгэгч бүр түүнийг хардаг.
 -- CHECK нь мөн хамгаална, харин уншиж байж л мэдэгдэнэ.
 --
+-- Гурван схем бүгд: `registry`, `workspace` ба консолын өөрийн `operator`.
+--
 -- Уртууд өгөөмөр бөгөөд агуулгаараа сонгогдсон: hash 128, PEM 8192, URL 2048,
 -- и-мэйл 320 (RFC 5321), нэр/гарчиг 200, тайлбар/шалтгаан 4000, төлөв/төрөл
 -- 16-32, AI-гийн мэдлэгийн эх 100000. Одоо байгаа мөр бүр хязгаартаа багтаж
@@ -230,7 +232,73 @@ ALTER TABLE registry.person_items ALTER COLUMN answer TYPE varchar(2000);
 ALTER TABLE registry.service_directory ALTER COLUMN code TYPE varchar(128);
 ALTER TABLE workspace.join_requests ALTER COLUMN message TYPE varchar(500);
 
+-- Консолын өөрийн схем. `operator` нь тенантын хэмжээсгүй тул дээрх хоёр
+-- дүрмийн эхнийх (RLS) түүнд хамаарахгүй ч урт нь адилхан хамаарна: аудитын
+-- шалтгаан, зөвшөөрлийн тайлбар, нөөцлөлтийн дэлгэрэнгүй бүр хүн бичдэг талбар.
+
+ALTER TABLE operator.operator_accounts ALTER COLUMN email TYPE varchar(320);
+ALTER TABLE operator.operator_accounts ALTER COLUMN name TYPE varchar(200);
+ALTER TABLE operator.operator_accounts ALTER COLUMN password_hash TYPE varchar(255);
+ALTER TABLE operator.operator_accounts ALTER COLUMN role TYPE varchar(32);
+ALTER TABLE operator.operator_accounts ALTER COLUMN totp_secret TYPE varchar(128);
+
+ALTER TABLE operator.operator_audit ALTER COLUMN action TYPE varchar(100);
+ALTER TABLE operator.operator_audit ALTER COLUMN operator_email TYPE varchar(320);
+ALTER TABLE operator.operator_audit ALTER COLUMN reason TYPE varchar(4000);
+ALTER TABLE operator.operator_audit ALTER COLUMN target_id TYPE varchar(200);
+ALTER TABLE operator.operator_audit ALTER COLUMN target_type TYPE varchar(64);
+
+ALTER TABLE operator.operator_sessions ALTER COLUMN user_agent TYPE varchar(512);
+
+ALTER TABLE operator.pending_approvals ALTER COLUMN action TYPE varchar(100);
+ALTER TABLE operator.pending_approvals ALTER COLUMN rejected_reason TYPE varchar(4000);
+ALTER TABLE operator.pending_approvals ALTER COLUMN requested_reason TYPE varchar(4000);
+ALTER TABLE operator.pending_approvals ALTER COLUMN target_id TYPE varchar(200);
+ALTER TABLE operator.pending_approvals ALTER COLUMN target_type TYPE varchar(64);
+
+ALTER TABLE operator.platform_backups ALTER COLUMN detail TYPE varchar(4000);
+ALTER TABLE operator.platform_backups ALTER COLUMN kind TYPE varchar(32);
+
+ALTER TABLE operator.platform_credentials ALTER COLUMN hint TYPE varchar(200);
+ALTER TABLE operator.platform_credentials ALTER COLUMN name TYPE varchar(128);
+
+ALTER TABLE operator.platform_settings_history ALTER COLUMN key TYPE varchar(200);
+ALTER TABLE operator.platform_settings_history ALTER COLUMN new_value TYPE varchar(8192);
+ALTER TABLE operator.platform_settings_history ALTER COLUMN previous_value TYPE varchar(8192);
+ALTER TABLE operator.platform_settings_history ALTER COLUMN reason TYPE varchar(4000);
 -- +goose Down
+
+
+ALTER TABLE operator.operator_accounts ALTER COLUMN email TYPE text;
+ALTER TABLE operator.operator_accounts ALTER COLUMN name TYPE text;
+ALTER TABLE operator.operator_accounts ALTER COLUMN password_hash TYPE text;
+ALTER TABLE operator.operator_accounts ALTER COLUMN role TYPE text;
+ALTER TABLE operator.operator_accounts ALTER COLUMN totp_secret TYPE text;
+
+ALTER TABLE operator.operator_audit ALTER COLUMN action TYPE text;
+ALTER TABLE operator.operator_audit ALTER COLUMN operator_email TYPE text;
+ALTER TABLE operator.operator_audit ALTER COLUMN reason TYPE text;
+ALTER TABLE operator.operator_audit ALTER COLUMN target_id TYPE text;
+ALTER TABLE operator.operator_audit ALTER COLUMN target_type TYPE text;
+
+ALTER TABLE operator.operator_sessions ALTER COLUMN user_agent TYPE text;
+
+ALTER TABLE operator.pending_approvals ALTER COLUMN action TYPE text;
+ALTER TABLE operator.pending_approvals ALTER COLUMN rejected_reason TYPE text;
+ALTER TABLE operator.pending_approvals ALTER COLUMN requested_reason TYPE text;
+ALTER TABLE operator.pending_approvals ALTER COLUMN target_id TYPE text;
+ALTER TABLE operator.pending_approvals ALTER COLUMN target_type TYPE text;
+
+ALTER TABLE operator.platform_backups ALTER COLUMN detail TYPE text;
+ALTER TABLE operator.platform_backups ALTER COLUMN kind TYPE text;
+
+ALTER TABLE operator.platform_credentials ALTER COLUMN hint TYPE text;
+ALTER TABLE operator.platform_credentials ALTER COLUMN name TYPE text;
+
+ALTER TABLE operator.platform_settings_history ALTER COLUMN key TYPE text;
+ALTER TABLE operator.platform_settings_history ALTER COLUMN new_value TYPE text;
+ALTER TABLE operator.platform_settings_history ALTER COLUMN previous_value TYPE text;
+ALTER TABLE operator.platform_settings_history ALTER COLUMN reason TYPE text;
 
 ALTER TABLE registry.person_items ALTER COLUMN answer TYPE text;
 ALTER TABLE registry.service_directory ALTER COLUMN code TYPE text;
