@@ -131,15 +131,24 @@ func (h *Handlers) Maintenance(ctx context.Context, tenantID string) maintenance
 
 // RefuseIfReadOnly answers 503 to a write while Maintenance is on.
 //
-// Safe methods pass, and so does signing out: somebody who wants to leave
-// should always be able to, and a Maintenance mode that traps people in a
-// session is one nobody will turn on again.
+// Safe methods pass, and so do the two ways out: signing out, and moving to
+// another organisation. Somebody who wants to leave should always be able to,
+// and a Maintenance mode that traps people in a session is one nobody will
+// turn on again.
+//
+// Switching was missing from that list until 2026-08-29, and the omission was
+// invisible until an operator turned Maintenance on: every member of that
+// organisation — including the administrator who had just turned it on — could
+// read, could sign out, and could not reach any of their other organisations.
+// The switch is a POST, so the gate refused it; what it writes is a session
+// row, not a single thing inside the organisation being maintained.
 func (h *Handlers) RefuseIfReadOnly(w http.ResponseWriter, r *http.Request, tenantID string) bool {
 	switch r.Method {
 	case http.MethodGet, http.MethodHead, http.MethodOptions:
 		return false
 	}
-	if r.URL.Path == "/api/v1/auth/logout" {
+	switch r.URL.Path {
+	case "/api/v1/auth/logout", "/api/v1/auth/switch-tenant":
 		return false
 	}
 
