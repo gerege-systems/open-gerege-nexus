@@ -37,6 +37,7 @@ import (
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/kernel/telemetry"
 	core "github.com/gerege-systems/open-gerege-nexus/backend/internal/operator"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/operator/setup"
+	"github.com/gerege-systems/open-gerege-nexus/backend/internal/operator/verifications"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/person"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace"
 	"github.com/gerege-systems/open-gerege-nexus/backend/pkg/nexus"
@@ -105,6 +106,13 @@ func newServer(db *pgxpool.Pool, catalogPath string, bus *cache.Bus, extra ...wo
 		TenantChanged: tenantPlane.ForgetSuspension,
 		Settings:      settingsStore, Flags: flagsStore, Credentials: credentialStore,
 		Warnings: tenantPlane.ConfigurationWarnings, CatalogStatus: tenantPlane.CatalogStatus,
+		VerificationHealth: func(ctx context.Context) verifications.Health {
+			configured, reachable, detail, provider, admin := tenantPlane.MailVerificationHealth(ctx)
+			return verifications.Health{
+				Configured: configured, Reachable: reachable, Detail: detail,
+				ProviderURL: provider, AdminURL: admin,
+			}
+		},
 		SyncCatalog:     tenantPlane.SyncCatalog,
 		PlatformVersion: config.PlatformVersion,
 	})

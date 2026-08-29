@@ -87,26 +87,6 @@ export interface EmailVerification {
   created_at: string;
 }
 
-export interface EmailVerifyOverview {
-  stats: {
-    total: number;
-    verified: number;
-    pending: number;
-    expired: number;
-    last_24h: number;
-    verified_pct: number;
-  };
-  recent: EmailVerification[];
-  /** Whether a service key is present at all. The key itself never comes back. */
-  configured: boolean;
-  /** The service's own health check, and what it said when it failed. */
-  reachable: boolean;
-  health?: string;
-  provider_url: string;
-  admin_url: string;
-  return_url: string;
-}
-
 export type OAuth2Scope = {
   name: string;
   description: string;
@@ -133,6 +113,24 @@ export interface SetupStatus {
   armed: boolean;
   /** True when GEREGE_CORE_TOKEN is set, so the register can be searched. */
   core: boolean;
+  /**
+   * The operator console, if this deployment can have one.
+   *
+   * `host` is empty when CONTROL_PLANE_HOST is unset — there is nowhere to
+   * serve a console, so the wizard does not offer to open one. `empty` is false
+   * once an operator exists: the first account is the wizard's to make, every
+   * account after it is the console's.
+   *
+   * Optional because a deployment running an older API answers without it.
+   */
+  console?: { host: string; empty: boolean };
+}
+
+/** What the person puts into their authenticator. Returned once, never again. */
+export interface SetupEnrolment {
+  secret: string;
+  uri: string;
+  host: string;
 }
 
 export interface SetupOrganisation {
@@ -178,6 +176,20 @@ export const coreApi = {
       method: "POST",
       headers: setupHeaders(token),
       body: JSON.stringify({ registration_number: registrationNumber }),
+    }),
+
+  setupCreateOperator: (token: string, operator: { email: string; name: string; password: string }) =>
+    request<SetupEnrolment>("/setup/operator", {
+      method: "POST",
+      headers: setupHeaders(token),
+      body: JSON.stringify(operator),
+    }),
+
+  setupConfirmOperator: (token: string, email: string, code: string) =>
+    request<void>("/setup/operator/confirm", {
+      method: "POST",
+      headers: setupHeaders(token),
+      body: JSON.stringify({ email, code }),
     }),
 
   setupComplete: (
@@ -454,8 +466,6 @@ export const coreApi = {
     request("/profile/preferences", { method: "PUT", body: JSON.stringify(patch) }),
 
   // Contacts App
-  getEmailVerifyOverview: (limit = 25) =>
-    request<EmailVerifyOverview>(`/admin/email-verification/overview?limit=${limit}`),
 
   // Ask the service for a link. App modules call the Go service directly; this
   // is for the product's own screens.

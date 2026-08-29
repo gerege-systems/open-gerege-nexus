@@ -87,9 +87,15 @@ type SystemDot struct {
 	System     string  `json:"system"`
 	ErrorRate  float64 `json:"error_rate"`
 	P95Seconds float64 `json:"p95_seconds"`
-	// State is green, amber or red — decided here rather than in the browser,
-	// so the console and any future alert agree about what "degraded" means.
+	// State is green, amber, red — or unknown, when nothing has measured this
+	// system at all. Decided here rather than in the browser, so the console
+	// and any future alert agree about what "degraded" means.
 	State string `json:"state"`
+	// Measured is whether Prometheus holds any sample for this system. An
+	// unmeasured system read as a green zero for as long as this screen has
+	// existed: no series means no error rate, and "no error rate" is not the
+	// same claim as "no errors".
+	Measured bool `json:"measured"`
 }
 
 // Gauge is one infrastructure number with the level it is judged against.
@@ -98,7 +104,12 @@ type Gauge struct {
 	Value   float64 `json:"value"`
 	Unit    string  `json:"unit"`
 	Warning float64 `json:"warning"`
-	State   string  `json:"state"`
+	// State is green, amber, red — or unknown, when no exporter is answering
+	// for this number.
+	State string `json:"state"`
+	// Measured is whether there was a sample at all. Without it a stopped
+	// exporter reads as 0% and green.
+	Measured bool `json:"measured"`
 }
 
 // Alert is one firing alert, from Alertmanager.
@@ -213,19 +224,27 @@ func (s *Service) externalSystems(ctx context.Context) []SystemDot {
 	systems := []string{"xyp", "eid", "dan", "esign", "gemini", "emailverify"}
 	dots := make([]SystemDot, 0, len(systems))
 	for _, system := range systems {
-		errorRate, errErr := instantQuery(ctx, fmt.Sprintf(
+		errorRate, sawErrors, errErr := instantSample(ctx, fmt.Sprintf(
 			`sum(rate(external_request_duration_seconds_count{system=%q,status="error"}[15m])) / `+
 				`clamp_min(sum(rate(external_request_duration_seconds_count{system=%q}[15m])), 0.001)`,
 			system, system))
-		p95, p95Err := instantQuery(ctx, fmt.Sprintf(
+		p95, sawLatency, p95Err := instantSample(ctx, fmt.Sprintf(
 			`histogram_quantile(0.95, sum by (le) (rate(external_request_duration_seconds_bucket{system=%q}[15m])))`,
 			system))
 		if errErr != nil && p95Err != nil {
 			continue
 		}
+		// Nothing has called this system since Prometheus last kept a sample,
+		// so there is no error rate to judge. Listed rather than dropped: an
+		// operator wants to know that eID is unmeasured, which is different
+		// from eID being absent and very different from eID being well.
+		if !sawErrors && !sawLatency {
+			dots = append(dots, SystemDot{System: system, State: "unknown"})
+			continue
+		}
 		dots = append(dots, SystemDot{
 			System: system, ErrorRate: errorRate, P95Seconds: p95,
-			State: tone(errorRate, 0.05, 0.2),
+			State: tone(errorRate, 0.05, 0.2), Measured: true,
 		})
 	}
 	return dots
@@ -245,13 +264,22 @@ func (s *Service) infrastructure(ctx context.Context) []Gauge {
 
 	gauges := make([]Gauge, 0, len(specs))
 	for _, item := range specs {
-		value, err := instantQuery(ctx, item.query)
+		value, measured, err := instantSample(ctx, item.query)
 		if err != nil {
 			continue
 		}
+		// A gauge with no sample is an exporter that is not running, and it
+		// used to read as 0% and green — the most reassuring possible way to
+		// display "nobody is watching this disk".
+		if !measured {
+			gauges = append(gauges, Gauge{
+				Name: item.name, Unit: item.unit, Warning: item.warning, State: "unknown",
+			})
+			continue
+		}
 		gauges = append(gauges, Gauge{
-			Name: item.name, Value: value, Unit: item.unit,
-			Warning: item.warning, State: tone(value, item.warning, item.critical),
+			Name: item.name, Value: value, Unit: item.unit, Warning: item.warning,
+			State: tone(value, item.warning, item.critical), Measured: true,
 		})
 	}
 	return gauges
@@ -314,10 +342,24 @@ func (s *Service) firingAlerts(ctx context.Context) []Alert {
 // A vector with no samples is not an error: it is what a metric that has never
 // been recorded looks like — a deployment where nobody has signed in yet has
 // no logins_total — and it answers zero.
+// instantQuery answers with zero when Prometheus holds nothing, which is the
+// right reading for a counter nobody has incremented — no sign-ins on a
+// deployment where nobody has signed in is a real zero.
 func instantQuery(ctx context.Context, query string) (float64, error) {
+	value, _, err := instantSample(ctx, query)
+	return value, err
+}
+
+// instantSample is the same read, and says whether there was a sample at all.
+//
+// The difference matters wherever a missing series means "nobody has measured
+// this" rather than "this is zero": an external system with no traffic since
+// the last restart, a gauge whose exporter is not running. Both used to reach
+// the screen as a confident green zero.
+func instantSample(ctx context.Context, query string) (float64, bool, error) {
 	base := prometheusURL()
 	if base == "" {
-		return 0, fmt.Errorf("no Prometheus is configured")
+		return 0, false, fmt.Errorf("no Prometheus is configured")
 	}
 
 	var payload struct {
@@ -330,35 +372,36 @@ func instantQuery(ctx context.Context, query string) (float64, error) {
 	}
 	address := base + "/api/v1/query?query=" + url.QueryEscape(query)
 	if err := getJSON(ctx, address, &payload); err != nil {
-		return 0, err
+		return 0, false, err
 	}
 	if payload.Status != "success" {
-		return 0, fmt.Errorf("prometheus answered %q", payload.Status)
+		return 0, false, fmt.Errorf("prometheus answered %q", payload.Status)
 	}
 	if len(payload.Data.Result) == 0 || len(payload.Data.Result[0].Value) < 2 {
-		return 0, nil
+		return 0, false, nil
 	}
 
 	// [ <unix time>, "<value>" ] — the value is a string, and it may be NaN
 	// when the expression divided by nothing.
 	text, ok := payload.Data.Result[0].Value[1].(string)
 	if !ok {
-		return 0, nil
+		return 0, false, nil
 	}
 	value, err := strconv.ParseFloat(text, 64)
 	if err != nil {
 		// A value Prometheus sent that Go cannot read is a version skew, not a
 		// number: reported rather than shown, so the panel says "could not
 		// read" instead of "zero".
-		return 0, fmt.Errorf("prometheus sent %q, which is not a number: %w", text, err)
+		return 0, false, fmt.Errorf("prometheus sent %q, which is not a number: %w", text, err)
 	}
 	// NaN is what dividing by nothing produces, and it is an honest zero here:
 	// an error rate over no requests is not an error rate, and it must not
 	// reach a screen as "NaN%" or a JSON body a browser refuses to parse.
 	if math.IsNaN(value) || math.IsInf(value, 0) {
-		return 0, nil
+		// The sample existed; it is simply not a number worth showing.
+		return 0, true, nil
 	}
-	return value, nil
+	return value, true, nil
 }
 
 // getJSON is one GET with a short deadline.

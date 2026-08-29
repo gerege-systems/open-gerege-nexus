@@ -27,21 +27,13 @@ import {
   Server,
 } from "lucide-react";
 
-import Console, { useConsole } from "@/components/cp/Console";
+import { useConsole } from "@/components/cp/Console";
 import { useAction } from "@/components/cp/Action";
 import { Badge, Card, formatMoment, Table, type Tone } from "@/components/cp/ui";
 import { cp, type Overview } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 
-export default function ControlPlaneHomePage() {
-  return (
-    <Console>
-      <Health />
-    </Console>
-  );
-}
-
-function Health() {
+export default function Health() {
   const { t, locale } = useI18n();
   const { operator } = useConsole();
   const action = useAction();
@@ -99,7 +91,7 @@ function Health() {
                 },
               })
             }
-            className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
+            className="inline-flex items-center gap-2 rounded-lg bg-[var(--gerege-blue)] px-3 py-2 text-sm font-medium text-white hover:brightness-105"
           >
             <Rocket className="w-4 h-4" />
             {t("cp.action.deploy")}
@@ -173,7 +165,9 @@ function Health() {
                   <strong className="text-sm text-slate-900">{system.system}</strong>
                 </div>
                 <p className="mt-1 text-xs text-slate-500 tabular-nums">
-                  {(system.error_rate * 100).toFixed(1)}% · {(system.p95_seconds * 1000).toFixed(0)} ms
+                  {system.measured
+                    ? `${(system.error_rate * 100).toFixed(1)}% · ${(system.p95_seconds * 1000).toFixed(0)} ms`
+                    : t("cp.state.unmeasured")}
                 </p>
               </div>
             ))}
@@ -191,8 +185,7 @@ function Health() {
               <div key={gauge.name} className="rounded-xl border border-slate-200 px-3 py-2">
                 <p className="text-xs uppercase tracking-wide text-slate-400">{gauge.name}</p>
                 <p className={`mt-1 text-lg tabular-nums ${textFor(gauge.state)}`}>
-                  {gauge.value.toFixed(1)}
-                  {gauge.unit}
+                  {gauge.measured ? `${gauge.value.toFixed(1)}${gauge.unit}` : t("cp.state.unmeasured")}
                 </p>
               </div>
             ))}
@@ -384,9 +377,11 @@ function jobName(name: string, t: Translate): string {
 }
 
 function dot(state: string): string {
+  if (state === "unknown") return "bg-slate-300";
   return state === "red" ? "bg-red-500" : state === "amber" ? "bg-amber-500" : "bg-emerald-500";
 }
 
 function textFor(state: string): string {
+  if (state === "unknown") return "text-slate-400";
   return state === "red" ? "text-red-600" : state === "amber" ? "text-amber-700" : "text-slate-900";
 }

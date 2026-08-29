@@ -103,3 +103,35 @@ export function landingSectionsFromEnv(
   }
   return chosen.length > 0 ? chosen : [...LANDING_SECTIONS];
 }
+
+/**
+ * The section a menu item's address names, or nothing.
+ *
+ * The anchor doubles as the slug: `SECTION_LINKS` already holds the one word
+ * the menu, the URL and the section's own `id` all use, so a section page is
+ * reachable at exactly the address the menu was scrolling to before it became
+ * a page — every link ever shared keeps working.
+ *
+ * Read against the deployment's own list rather than every section there is:
+ * a deployment that dropped a section should answer 404 for it, not render a
+ * page it decided not to have.
+ */
+export function sectionByAnchor(
+  sections: LandingSection[],
+  anchor: string,
+): LandingSection | undefined {
+  return sections.find((section) => SECTION_LINKS[section]?.anchor === anchor);
+}
+
+/**
+ * The addresses the menu points at, as paths.
+ *
+ * Every linked section there is, not the deployment's own list: a deployment
+ * that dropped one answers 404 for it, and a 404 must not be mistaken for a
+ * screen that wants a session (components/Layout.tsx reads this to know the
+ * page is public) or handed to the signed-in shell.
+ */
+export const SECTION_PATHS: string[] = LANDING_SECTIONS.flatMap((section) => {
+  const link = SECTION_LINKS[section];
+  return link ? [`/${link.anchor}`] : [];
+});

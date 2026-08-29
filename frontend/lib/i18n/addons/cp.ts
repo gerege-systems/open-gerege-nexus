@@ -41,6 +41,8 @@ export const cp = {
   "cp.field.installed": { mn: "Суусан", en: "Installed" },
   "cp.field.roles": { mn: "Үүрэг", en: "Roles" },
   "cp.field.action": { mn: "Үйлдэл", en: "Action" },
+  "cp.field.role": { mn: "Эрх", en: "Role" },
+  "cp.field.last_login": { mn: "Сүүлд нэвтэрсэн", en: "Last sign-in" },
   "cp.field.operator": { mn: "Оператор", en: "Operator" },
   "cp.field.reason": { mn: "Шалтгаан", en: "Reason" },
   "cp.field.when": { mn: "Хэзээ", en: "When" },
@@ -299,6 +301,235 @@ export const cp = {
   "cp.message.never_counted": {
     mn: "Хэрэглээ хараахан тоологдоогүй байна — тоолол шөнө бүр ажиллана.",
     en: "Nothing has been counted yet — the collection runs nightly.",
+  },
+
+  // The two screens the console took over from the workspace: the assistant
+  // every organisation meets, and the ledger of addresses the platform was
+  // asked to write to.
+  "cp.section.assistant": { mn: "AI туслах", en: "Assistant" },
+  "cp.hint.assistant": {
+    mn: "Бүх байгууллагад нийтлэг үйлчлэх заавар ба мэдлэгийн сан. Байгууллага өөрийн зааврыг бичээгүй үед туслах эдгээрийг хэрэглэнэ.",
+    en: "The instructions and the corpus every organisation shares. An organisation that has written none of its own is answered with these.",
+  },
+  "cp.section.verifications": { mn: "И-мэйл баталгаажуулалт", en: "Email verification" },
+  "cp.hint.verifications": {
+    mn: "Платформ хэнд бичсэн, үйлчилгээ нь ажиллаж байна уу — бүх байгууллагыг нэг дор.",
+    en: "Who the platform has written to, and whether the service is answering — every organisation at once.",
+  },
+  "cp.hint.tenants_touched": { mn: "{count} байгууллага", en: "{count} organisations" },
+  "cp.field.active": { mn: "Идэвхтэй", en: "Active" },
+  "cp.state.never": { mn: "хэзээ ч", en: "never" },
+  "cp.state.deleted": { mn: "устсан байгууллага", en: "deleted organisation" },
+
+  // System Operations — консолын хоёр дахь апп: байрлуулалтаа ажиллуулах
+  // (хяналт), юу үйлдвэрлэгдэж байгаа (тайлан), юу хадгалагдаж байгаа (нөөц).
+  "cp.app.ops": { mn: "Системийн үйл ажиллагаа", en: "System Operations" },
+  "cp.group.monitor": { mn: "Хяналт", en: "Monitor" },
+  "cp.group.report": { mn: "Тайлан", en: "Report" },
+  "cp.group.backup": { mn: "Нөөцлөлт", en: "Backup" },
+
+  "cp.section.metrics": { mn: "Үзүүлэлт", en: "Metrics" },
+  "cp.section.jobs": { mn: "Арын ажлууд", en: "Background jobs" },
+  "cp.section.schedules": { mn: "Товлосон тайлан", en: "Scheduled reports" },
+  "cp.section.infrastructure": { mn: "Дэд бүтэц", en: "Infrastructure" },
+  "cp.section.firing": { mn: "Идэвхтэй сэрэмжлүүлэг", en: "Firing" },
+  "cp.section.warnings": { mn: "Тохиргооны анхааруулга", en: "Configuration warnings" },
+  "cp.section.by_organisation": { mn: "Байгууллагаар", en: "By organisation" },
+  "cp.section.history": { mn: "Түүх", en: "History" },
+
+  "cp.hint.metrics": {
+    mn: "API-ийн гурван тоо, хамаарах гадаад системүүд, чимээгүй дүүрдэг дөрвөн хэмжүүр.",
+    en: "The API's own three numbers, the systems it depends on, and the four gauges that fill up quietly.",
+  },
+  "cp.hint.alerts": {
+    mn: "Одоо асаж буй сэрэмжлүүлэг ба платформын өөрийн тохиргооны гомдол — хоёр өөр зүйл, нэг мөчид уншигддаг.",
+    en: "What is firing now, and what the platform says about its own configuration — two different things, read at the same moment.",
+  },
+  "cp.hint.jobs": {
+    mn: "Өөрөө ажиллах ёстой бүхэн. Эдгээр нь чимээгүй уналттай: ажиллахаа больсныг долоо хоногийн дараа хүн анзаарна.",
+    en: "Everything that should run on its own. These fail silently: somebody notices a week later.",
+  },
+  "cp.hint.usage": {
+    mn: "Бүх байгууллагын энэ сарын хэрэглээ. Тоолуур бүр өөрийн утгаараа нэгтгэгдэнэ:",
+    en: "Every organisation this month. Each metric is rolled up the way it means:",
+  },
+  "cp.hint.schedules": {
+    mn: "Нүүр хуудсан дээрх тоо аль хуваарийнх болохыг энд харна. Асуудалтай нь эхэндээ.",
+    en: "Which schedule the front page is counting. The ones in trouble come first.",
+  },
+  "cp.hint.backups": {
+    mn: "Юу хадгалагдсан, хэн нь сэргээж үзсэн. Туршиж үзээгүй нөөц бол нөөц биш.",
+    en: "What has been kept, and whether anybody has checked that it restores. An untested backup is not a backup.",
+  },
+
+  "cp.metric.rps": { mn: "Хүсэлт/сек", en: "Requests/sec" },
+  "cp.metric.error_rate": { mn: "Алдааны хувь", en: "Error rate" },
+  "cp.metric.p95": { mn: "P95 хугацаа", en: "P95 latency" },
+
+  "cp.field.gauge": { mn: "Хэмжүүр", en: "Gauge" },
+  "cp.field.warning_at": { mn: "Анхааруулах босго", en: "Warns at" },
+  "cp.field.system": { mn: "Систем", en: "System" },
+  "cp.field.since": { mn: "Хэзээнээс", en: "Since" },
+  "cp.field.pending": { mn: "Хүлээгдэж буй", en: "Pending" },
+  "cp.field.sample": { mn: "Жишээ", en: "Sample" },
+  "cp.field.collected": { mn: "Тоологдсон", en: "Counted" },
+  "cp.field.report": { mn: "Тайлан", en: "Report" },
+  "cp.field.cron": { mn: "Хуваарь", en: "Schedule" },
+  "cp.field.recipients": { mn: "Хүлээн авагч", en: "Recipients" },
+  "cp.field.size": { mn: "Хэмжээ", en: "Size" },
+  "cp.field.detail": { mn: "Тайлбар", en: "Detail" },
+  "cp.kind.backup": { mn: "Нөөц", en: "Backup" },
+  "cp.kind.restore_test": { mn: "Сэргээлтийн турших", en: "Restore test" },
+  "cp.action.runbook": { mn: "Заавар", en: "Runbook" },
+
+  // The four states the monitoring panels speak in. "unknown" is a system
+  // Prometheus holds no sample for, and it is not a colour of health.
+  "cp.state.green": { mn: "Хэвийн", en: "Green" },
+  "cp.state.amber": { mn: "Анхаар", en: "Amber" },
+  "cp.state.red": { mn: "Ноцтой", en: "Red" },
+  "cp.state.unknown": { mn: "Хэмжигдээгүй", en: "Not measured" },
+  "cp.state.unmeasured": { mn: "хэмжигдээгүй", en: "not measured" },
+  "cp.state.normal": { mn: "Хэвийн", en: "Normal" },
+  "cp.state.never_counted": { mn: "тоологдоогүй", en: "never counted" },
+
+  "cp.message.nothing_firing": { mn: "Одоогоор асаж буй сэрэмжлүүлэг алга.", en: "Nothing is firing." },
+  "cp.message.no_warnings": { mn: "Тохиргооны анхааруулга алга.", en: "No configuration warnings." },
+  "cp.message.no_trouble": { mn: "Давтагдсан алдаатай байгууллага алга.", en: "No organisation is failing repeatedly." },
+  "cp.message.no_schedules": { mn: "Товлосон тайлан алга.", en: "Nothing is scheduled." },
+  "cp.message.schedules_trouble": {
+    mn: "{failing} хуваарь алдаатай, {never} нь хэзээ ч ажиллаж үзээгүй.",
+    en: "{failing} schedules are failing and {never} have never run.",
+  },
+  "cp.message.no_backups_configured": {
+    mn: "Нөөцлөлт хэзээ ч бүртгэгдээгүй байна. deploy/scripts/backup.sh-г cron-д тавина уу.",
+    en: "No backup has ever been recorded. Install deploy/scripts/backup.sh in cron.",
+  },
+
+  // Who may reach this console — the screen that replaced a shell on the
+  // production host for everybody after the first operator.
+  "cp.section.operators": { mn: "Операторууд", en: "Operators" },
+  "cp.hint.operators": {
+    mn: "Энэ консолд хэн хүрч болох вэ. Оператор нэмэх нь бүх бусад үйлдлийг хийж чадах хүмүүсийг өргөжүүлдэг тул зөвхөн ерөнхий админ, хоёр дахь хүчин зүйлтэй, бүртгэл үлдээж хийнэ.",
+    en: "Who can reach this console. Adding one widens the set of people who can do everything else, so it is superadmin only, with a second factor, and it leaves a record.",
+  },
+  "cp.action.add_operator": { mn: "Оператор нэмэх", en: "Add operator" },
+  "cp.action.change_password": { mn: "Нууц үг солих", en: "Change password" },
+  "cp.action.change_role": { mn: "Эрх солих", en: "Change role" },
+  "cp.action.disable": { mn: "Идэвхгүй болгох", en: "Disable" },
+  "cp.action.enable": { mn: "Идэвхжүүлэх", en: "Enable" },
+  "cp.field.secret": { mn: "Нууц түлхүүр", en: "Secret" },
+  "cp.field.current_password": { mn: "Одоогийн нууц үг", en: "Current password" },
+  "cp.field.new_password": { mn: "Шинэ нууц үг", en: "New password" },
+  "cp.field.repeat_password": { mn: "Дахин", en: "Repeat" },
+  "cp.state.disabled": { mn: "Идэвхгүй", en: "Disabled" },
+  "cp.state.enrolment_pending": { mn: "Баталгаажаагүй", en: "Not enrolled" },
+  "cp.state.you": { mn: "та", en: "you" },
+  "cp.view.handover": { mn: "Шинэ операторт дамжуулах", en: "Hand this over" },
+  "cp.message.handover_once": {
+    mn: "Эдгээр утга зөвхөн ОДОО харагдана. Нууц үг ба түлхүүрийг сервер дахин харуулж чадахгүй — хаавал дахин үүсгэхээс өөр арга байхгүй.",
+    en: "These values exist only now. Nothing on the server can show the password or the secret again — close this and the account has to be created afresh.",
+  },
+  "cp.hint.confirm_enrolment": {
+    mn: "Шинэ оператор QR-аа уншуулаад аппаасаа код оруулна. Үүнийг хийх хүртэл тэр хүн нэвтэрч чадахгүй.",
+    en: "The new operator scans the QR and types the code their app shows. Until that is done they cannot sign in.",
+  },
+  "cp.hint.step_up": {
+    mn: "Оператор нэмэхийн өмнө өөрийн баталгаажуулагчийн кодыг оруулна.",
+    en: "Confirm your own authenticator before adding an operator.",
+  },
+  "cp.message.enrolled": { mn: "Баталгаажлаа. Тэр хүн одоо нэвтэрч чадна.", en: "Enrolled. They can sign in now." },
+  "cp.message.passwords_differ": { mn: "Хоёр нууц үг таарахгүй байна.", en: "The two passwords are not the same." },
+
+  // Tenant удирдлага — консолын гурав дахь апп: энэ суулгац дээрх
+  // байгууллагууд, тэдний эрх, тэдэнд суусан аппууд.
+  "cp.app.tenants": { mn: "Tenant удирдлага", en: "Tenant management" },
+  "cp.group.entitlements": { mn: "Эрх ба суулгац", en: "Entitlements" },
+  "cp.section.quotas": { mn: "Квот", en: "Limits" },
+  "cp.section.installations": { mn: "Аппын суулгац", en: "Installations" },
+  "cp.hint.quotas": {
+    mn: "Аль байгууллагад ямар хязгаар тавигдсаныг нэг дор. Хязгаарыг байгууллагынх нь хуудаснаас, шалтгаантайгаар л тавина.",
+    en: "Which limits are set where, in one place. Setting one stays on the organisation's own page, with a reason.",
+  },
+  "cp.hint.installations": {
+    mn: "Аль апп аль байгууллагад суусан, ямар хувилбартай. Каталог нь зөвхөн тоог хэлдэг — энэ нь хэн болохыг хэлнэ.",
+    en: "Which app is installed where, and on which version. The catalogue gives the count; this says who.",
+  },
+  "cp.field.app": { mn: "Апп", en: "App" },
+  "cp.state.no_limit": { mn: "хязгааргүй", en: "no limit" },
+  "cp.state.every_app": { mn: "Бүх апп", en: "Every app" },
+  "cp.message.unlimited_count": {
+    mn: "{count} байгууллагад хэрэглэгчийн хязгаар тавиагүй байна.",
+    en: "{count} organisations have no limit on people.",
+  },
+  "cp.message.versions_in_the_field": {
+    mn: "Талбар дээр хэд хэдэн хувилбар байна: {versions}",
+    en: "More than one version is in the field: {versions}",
+  },
+  "cp.message.no_installations": { mn: "Суусан апп алга.", en: "Nothing is installed." },
+
+  // Байгууллага нээх: дэлгэрэнгүйг нь бүртгэлээс, эхний админыг нь eID-ээр
+  // баталгаажсан хүмүүсээс.
+  "cp.action.add_person": { mn: "Хүн нэмэх", en: "Add person" },
+  "cp.hint.member_is_chosen": {
+    mn: "eID-ээр баталгаажсан хүмүүсээс сонгоно. Тэр хүн платформын хамгийн бага эрхтэйгээр («Хэрэглэгч») орно — түүнээс дээшхийг байгууллагын өөрийнх нь админ өгнө.",
+    en: "Chosen from the people verified with eID. They arrive with the smallest role the platform has — anything above it is granted by the organisation's own administrator.",
+  },
+  "cp.action.look_up": { mn: "Бүртгэлээс хайх", en: "Look up" },
+  "cp.field.admin": { mn: "Эхний админ", en: "First administrator" },
+  "cp.field.search_people": { mn: "Нэр, и-мэйл, эсвэл регистрээр хайх", en: "Search by name, address or register number" },
+  "cp.hint.admin_is_chosen": {
+    mn: "eID-ээр нэвтэрч баталгаажсан хүмүүсээс сонгоно. Бичсэн хаяг биш, платформ өөрөө хараад баталсан хүн.",
+    en: "Chosen from the people who have signed in with eID — somebody this platform watched prove who they are, rather than an address typed into a dialog.",
+  },
+  "cp.message.from_the_register": { mn: "Бүртгэлээс: {name}", en: "From the register: {name}" },
+  "cp.message.already_in": { mn: "{count} байгууллагад", en: "in {count} organisations" },
+  "cp.message.no_verified_people": {
+    mn: "eID-ээр баталгаажсан хэрэглэгч алга. Тэр хүн эхлээд энэ платформ дээр eID-ээр нэг удаа нэвтрэх хэрэгтэй.",
+    en: "Nobody has signed in with eID yet. The person has to sign in here once before they can be chosen.",
+  },
+
+  // Хэрэглэгч — платформ дээрх бүх бүртгэл, ба нэгийнх нь бүх зүйл.
+  "cp.group.people": { mn: "Хэрэглэгч", en: "People" },
+  "cp.section.people": { mn: "Бүх хэрэглэгч", en: "Everybody" },
+  "cp.hint.people": {
+    mn: "Энэ суулгац дээр бүртгэлтэй бүх хүн. Дэмжлэгийн дэлгэц нэг хүнийг хайдаг; энэ нь хүн амын тухай асуултад хариулна.",
+    en: "Everybody with an account here. The help desk finds one person; this answers the questions about the population.",
+  },
+  "cp.metric.people": { mn: "Нийт бүртгэл", en: "Accounts" },
+  "cp.metric.verified": { mn: "eID-ээр баталгаажсан", en: "Verified with eID" },
+  "cp.metric.signed_in": { mn: "Нээлттэй session-той", en: "With an open session" },
+  "cp.metric.homeless": { mn: "Байгууллагагүй", en: "In no organisation" },
+  "cp.hint.homeless": {
+    mn: "Бүртгэлтэй ч хэрэглэх газаргүй",
+    en: "An account with nowhere to use it",
+  },
+  "cp.filter.everybody": { mn: "Бүгд", en: "Everybody" },
+  "cp.filter.verified": { mn: "eID-тэй", en: "Verified" },
+  "cp.filter.locked": { mn: "Түгжигдсэн", en: "Locked" },
+  "cp.filter.homeless": { mn: "Байгууллагагүй", en: "No organisation" },
+  "cp.field.identities": { mn: "Нэвтрэх аргууд", en: "Ways in" },
+  "cp.field.organisations": { mn: "Байгууллагууд", en: "Organisations" },
+  "cp.field.sessions": { mn: "Нээлттэй session", en: "Open sessions" },
+  "cp.field.subject": { mn: "Танигч", en: "Subject" },
+  "cp.field.linked": { mn: "Холбогдсон", en: "Linked" },
+  "cp.field.joined": { mn: "Элссэн", en: "Joined" },
+  "cp.field.last_seen": { mn: "Сүүлд харагдсан", en: "Last seen" },
+  "cp.state.password_only": { mn: "зөвхөн нууц үг", en: "password only" },
+  "cp.action.previous": { mn: "Өмнөх", en: "Previous" },
+  "cp.action.next": { mn: "Дараах", en: "Next" },
+  "cp.message.showing": { mn: "{total}-аас {shown} харуулж байна", en: "Showing {shown} of {total}" },
+  "cp.message.password_only": {
+    mn: "Гадаад таних тэмдэг холбогдоогүй — зөвхөн нууц үгээр нэвтэрнэ.",
+    en: "No external identity is linked — this account signs in with a password only.",
+  },
+  "cp.message.no_organisations": {
+    mn: "Ямар ч байгууллагад харьяалагдахгүй байна.",
+    en: "This person is in no organisation.",
+  },
+  "cp.message.no_sessions": { mn: "Нээлттэй session алга.", en: "No session is open." },
+  "cp.message.never_impersonated": {
+    mn: "Энэ хүний нэрээр хэн ч ороогүй байна.",
+    en: "Nobody has looked at the platform as this person.",
   },
 
   "cp.group.watch": { mn: "Ажиглалт", en: "Watch" },

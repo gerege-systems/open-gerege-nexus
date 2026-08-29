@@ -135,6 +135,13 @@ export const auth = {
     mn: "Энэ и-мэйлийн домэйнд нэвтрэх эрх нээгээгүй байна.",
     en: "Sign-in is not open to that email domain.",
   },
+  // Анх удаа нэвтэрч буй хүн: бүртгэл нь байхгүй нь **зөв**, тэр яг одоо
+  // үүсэх гэж байсан. Тиймээс "админдаа хандана уу" гэж хэлэх нь худал —
+  // баталгаажуулалтын дэлгэц рүү хүрч чадаагүй нь л асуудал.
+  "auth.sso.error_binding": {
+    mn: "Баталгаажуулалтыг эхлүүлж чадсангүй. Түр хүлээгээд дахин оролдоно уу.",
+    en: "The verification step could not be started. Please try again in a moment.",
+  },
   // Хувийн профайл.
   "profile.loading": { mn: "Ачаалж байна…", en: "Loading…" },
   "profile.link_eid": { mn: "eID-ээ холбох", en: "Link your eID" },

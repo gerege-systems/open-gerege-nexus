@@ -24,25 +24,18 @@ import {
   Play,
   Trash2,
   Undo2,
+  UserPlus,
   Wrench,
 } from "lucide-react";
 
-import Console, { useConsole } from "@/components/cp/Console";
+import { useConsole } from "@/components/cp/Console";
 import { useAction } from "@/components/cp/Action";
 import { Badge, Card, formatMoment, Table } from "@/components/cp/ui";
-import { cp, type Quota, type TenantDetail } from "@/lib/cp";
+import { cp, type Quota, type TenantDetail, type VerifiedPerson } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 import { Modal } from "@/components/ui";
 
-export default function ControlPlaneTenantPage() {
-  return (
-    <Console>
-      <Detail />
-    </Console>
-  );
-}
-
-function Detail() {
+export default function Detail() {
   const { t, locale } = useI18n();
   const { operator } = useConsole();
   const params = useParams<{ id: string }>();
@@ -52,6 +45,7 @@ function Detail() {
   const [tenant, setTenant] = useState<TenantDetail | null>(null);
   const [failure, setFailure] = useState("");
   const [quotaOpen, setQuotaOpen] = useState(false);
+  const [addingPerson, setAddingPerson] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -147,25 +141,6 @@ function Detail() {
               onClick={() => setQuotaOpen(true)}
             />
           )}
-          {may("user.impersonate") && !suspended && tenant.members.length > 0 && (
-            <ActionButton
-              icon={<Eye className="w-4 h-4" />}
-              label={t("cp.action.impersonate")}
-              onClick={() =>
-                action.run({
-                  title: t("cp.action.impersonate"),
-                  detail: tenant.members[0].email,
-                  perform: async (reason) => {
-                    const { url } = await cp.impersonate(tenant.id, tenant.members[0].user_id, reason);
-                    // A new tab, so the console stays where it is: the
-                    // operator is about to be two people at once and should
-                    // not lose the window that can end it.
-                    window.open(url, "_blank", "noopener");
-                  },
-                })
-              }
-            />
-          )}
           {may("settings.write") && (
             <ActionButton
               icon={<Wrench className="w-4 h-4" />}
@@ -257,13 +232,57 @@ function Detail() {
         />
       </Card>
 
-      <Card title={t("cp.section.members")}>
+      <Card
+        title={t("cp.section.members")}
+        action={
+          !suspended && (
+            <button
+              type="button"
+              onClick={() => setAddingPerson(true)}
+              className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-50"
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              {t("cp.action.add_person")}
+            </button>
+          )
+        }
+      >
         <Table
-          head={[t("cp.field.email"), t("cp.field.organisation"), t("cp.field.roles")]}
+          head={[t("cp.field.email"), t("cp.field.person"), t("cp.field.roles"), ""]}
           rows={tenant.members.map((member) => [
             member.email,
             member.name,
             member.roles.length ? member.roles.join(", ") : "—",
+            // Looking at the platform as somebody is a decision about *which*
+            // somebody. It used to be a button on the action bar above that
+            // took tenant.members[0] — whoever the list happened to start
+            // with — so the operator got an arbitrary person and the reason
+            // they typed named a different one.
+            may("user.impersonate") && !suspended ? (
+              <button
+                key="i"
+                type="button"
+                onClick={() =>
+                  action.run({
+                    title: t("cp.action.impersonate"),
+                    detail: member.email,
+                    perform: async (reason) => {
+                      const { url } = await cp.impersonate(tenant.id, member.user_id, reason);
+                      // A new tab, so the console stays where it is: the
+                      // operator is about to be two people at once and should
+                      // not lose the window that can end it.
+                      window.open(url, "_blank", "noopener");
+                    },
+                  })
+                }
+                className="inline-flex items-center gap-1.5 text-xs rounded-lg border border-slate-300 px-2 py-1 hover:bg-slate-50"
+              >
+                <Eye className="w-3.5 h-3.5" />
+                {t("cp.action.impersonate")}
+              </button>
+            ) : (
+              <span key="i" />
+            ),
           ])}
           empty={t("cp.message.no_activity")}
         />
@@ -307,6 +326,16 @@ function Detail() {
         />
       </Card>
 
+      {addingPerson && (
+        <AddPersonDialog
+          tenantID={tenant.id}
+          onClose={() => setAddingPerson(false)}
+          onAdded={() => {
+            setAddingPerson(false);
+            void load();
+          }}
+        />
+      )}
       {quotaOpen && (
         <QuotaDialog
           tenantID={tenant.id}
@@ -467,7 +496,7 @@ function QuotaDialog({
           <button
             type="submit"
             disabled={busy}
-            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+            className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60"
           >
             {t("cp.action.confirm")}
           </button>
@@ -517,5 +546,174 @@ function Fact({ label, value }: { label: string; value: string }) {
       <dt className="text-xs uppercase tracking-wide text-slate-400">{label}</dt>
       <dd className="mt-1 text-sm text-slate-900">{value}</dd>
     </div>
+  );
+}
+
+/**
+ * Adding somebody to an organisation.
+ *
+ * The same list the first administrator is chosen from — people this
+ * deployment has watched sign in with eID — and the same reason: an address
+ * typed into a dialog is an address, and a choice is a person.
+ *
+ * They arrive with the smallest role the platform has. Anything above it is
+ * granted by the organisation's own administrator, in their own access screen,
+ * where the people who live with the decision can see it.
+ */
+function AddPersonDialog({
+  tenantID,
+  onClose,
+  onAdded,
+}: {
+  tenantID: string;
+  onClose: () => void;
+  onAdded: () => void;
+}) {
+  const { t, locale } = useI18n();
+  const [people, setPeople] = useState<VerifiedPerson[]>([]);
+  const [search, setSearch] = useState("");
+  const [chosen, setChosen] = useState<VerifiedPerson | null>(null);
+  const [reason, setReason] = useState("");
+  const [code, setCode] = useState("");
+  const [failure, setFailure] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const loadPeople = useCallback(async (query: string) => {
+    try {
+      setPeople((await cp.verifiedPeople(query)).people);
+    } catch (error) {
+      setFailure(error instanceof Error ? error.message : String(error));
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadPeople("");
+  }, [loadPeople]);
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    if (!chosen) return;
+    setBusy(true);
+    setFailure("");
+    try {
+      await cp.addMember(tenantID, chosen.user_id, reason);
+      onAdded();
+    } catch (error) {
+      setFailure(error instanceof Error ? error.message : String(error));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Modal label={t("cp.action.add_person")}>
+      <form onSubmit={submit} className="p-5 space-y-4">
+        <h2 className="text-lg font-semibold text-slate-900">{t("cp.action.add_person")}</h2>
+        <p className="text-xs text-slate-500">{t("cp.hint.member_is_chosen")}</p>
+
+        {failure && (
+          <p className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+        )}
+
+        {chosen ? (
+          <div className="flex items-center gap-3 rounded-lg border border-[var(--gerege-blue)] bg-[var(--gerege-blue-soft)] px-3 py-2">
+            <span className="min-w-0 flex-1">
+              <strong className="block text-sm text-slate-900 truncate">{chosen.name}</strong>
+              <span className="block text-xs text-slate-600 truncate">{chosen.email}</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => setChosen(null)}
+              className="text-xs rounded-lg border border-slate-300 bg-white px-2 py-1 hover:bg-slate-50"
+            >
+              {t("cp.action.change")}
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <input
+              value={search}
+              onChange={(event) => {
+                setSearch(event.target.value);
+                void loadPeople(event.target.value);
+              }}
+              placeholder={t("cp.field.search_people")}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            />
+            <div className="max-h-48 overflow-y-auto divide-y divide-slate-100 rounded-lg border border-slate-200">
+              {people.map((person) => (
+                <button
+                  key={person.user_id}
+                  type="button"
+                  onClick={() => setChosen(person)}
+                  className="w-full text-left px-3 py-2 hover:bg-slate-50"
+                >
+                  <strong className="block text-sm text-slate-900 truncate">{person.name}</strong>
+                  <span className="block text-xs text-slate-500 truncate">
+                    {person.email}
+                    {person.reg_number ? ` · ${person.reg_number}` : ""}
+                    {" · "}
+                    {formatMoment(person.last_seen_at, locale)}
+                  </span>
+                </button>
+              ))}
+              {people.length === 0 && (
+                <p className="px-3 py-3 text-sm text-slate-500">{t("cp.message.no_verified_people")}</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        <label className="block text-sm">
+          <span className="text-slate-600">{t("cp.field.reason")}</span>
+          <input
+            required
+            value={reason}
+            onChange={(event) => setReason(event.target.value)}
+            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+          />
+        </label>
+
+        {/* The API asks for the second factor before it hands anybody the keys
+            to an organisation's data; confirming it here keeps what has been
+            typed. */}
+        <label className="block text-sm">
+          <span className="text-slate-600">{t("cp.field.code")}</span>
+          <input
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={6}
+            value={code}
+            onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))}
+            onBlur={async () => {
+              if (code.length === 6) {
+                try {
+                  await cp.stepUp(code);
+                  setCode("");
+                  setFailure("");
+                } catch (error) {
+                  setFailure(error instanceof Error ? error.message : String(error));
+                }
+              }
+            }}
+            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono tracking-[0.4em]"
+          />
+          <small className="text-xs text-slate-500">{t("cp.hint.step_up")}</small>
+        </label>
+
+        <div className="flex justify-end gap-2">
+          <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-100">
+            {t("cp.action.cancel")}
+          </button>
+          <button
+            type="submit"
+            disabled={busy || !chosen}
+            className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60"
+          >
+            {t("cp.action.add_person")}
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 }

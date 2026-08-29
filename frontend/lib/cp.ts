@@ -14,8 +14,8 @@
  */
 
 // Production stays same-origin. Development deliberately uses two hostnames
-// and two ports, so the optional value lets cp.localhost:3000 call the API at
-// cp.localhost:8080 without weakening either host gate.
+// and two ports, so the optional value lets admin.localhost:3000 call the API at
+// admin.localhost:8080 without weakening either host gate.
 const BASE = process.env.NEXT_PUBLIC_CONTROL_PLANE_API_URL || "/api/platform/v1";
 
 export type OperatorRole = "superadmin" | "operator" | "support" | "auditor";
@@ -57,6 +57,8 @@ export interface Quota {
   users: number;
   /** Which limits this build actually applies; the rest are recorded only. */
   enforced: string[];
+  /** When the limits were last written; the organisation's creation if never. */
+  updated_at: string;
 }
 
 export interface Impersonation {
@@ -108,6 +110,8 @@ export interface CreatedTenant {
   failed: string[];
   invited: boolean;
   invite_error?: string;
+  /** True when the administrator was chosen rather than invited. */
+  admin_existed?: boolean;
 }
 
 export interface TenantApp {
@@ -229,6 +233,34 @@ export const cp = {
 
   tenant: (id: string) => request<TenantDetail>(`/tenants/${encodeURIComponent(id)}`),
 
+  // Across every organisation at once: which limits are set where, and which
+  // app is installed where.
+  quotas: () => request<{ quotas: QuotaLine[] }>("/tenant-quotas"),
+  installations: () => request<{ installations: Installation[] }>("/app-installations"),
+
+  // The assistant, as it stands for every organisation: the prompts it carries
+  // into a conversation and the corpus it answers from.
+  prompts: () => request<{ prompts: Prompt[] }>("/assistant/prompts"),
+  savePrompt: (key: string, content: string, active: boolean, reason: string) =>
+    request<{ status: string }>(`/assistant/prompts/${encodeURIComponent(key)}`, {
+      method: "PUT",
+      body: JSON.stringify({ content, active, reason }),
+    }),
+  knowledge: () => request<{ knowledge: Knowledge[] }>("/assistant/knowledge"),
+  addKnowledge: (entry: { title: string; content: string; source_url: string }, reason: string) =>
+    request<{ status: string }>("/assistant/knowledge", {
+      method: "POST",
+      body: JSON.stringify({ ...entry, reason }),
+    }),
+  removeKnowledge: (id: string, reason: string) =>
+    request<{ status: string }>(`/assistant/knowledge/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      body: JSON.stringify({ reason }),
+    }),
+
+  // Who the platform has been asked to write to, across every organisation.
+  verifications: (limit = 25) => request<VerificationLedger>(`/email-verifications?limit=${limit}`),
+
   audit: (params: { action?: string; target_type?: string; target_id?: string } = {}) => {
     const query = new URLSearchParams(
       Object.entries(params).filter(([, value]) => value) as [string, string][],
@@ -236,12 +268,56 @@ export const cp = {
     return request<{ entries: AuditEntry[] }>(`/audit?${query.toString()}`);
   },
 
-  operators: () => request<{ operators: (Operator & { disabled_at: string | null; last_login_at: string | null; created_at: string })[] }>("/operators"),
+  operators: () => request<{ operators: OperatorSummary[] }>("/operators"),
+
+  // Everybody with an account on this deployment, and one of them in full.
+  roster: (search = "", filter = "", offset = 0) =>
+    request<Roster>(`/people/roster?q=${encodeURIComponent(search)}&filter=${encodeURIComponent(filter)}&offset=${offset}`),
+  person: (id: string) => request<PersonDetail>(`/people/${encodeURIComponent(id)}`),
+
+  // Adding an operator. The answer carries the password and the enrolment once
+  // and is never repeatable: nothing on the server can show them again.
+  addOperator: (body: { email: string; name: string; role: string; reason: string }) =>
+    request<CreatedOperator>("/operators", { method: "POST", body: JSON.stringify(body) }),
+  confirmEnrolment: (id: string, code: string, reason: string) =>
+    request<{ status: string }>(`/operators/${encodeURIComponent(id)}/enrolment`, {
+      method: "POST",
+      body: JSON.stringify({ code, reason }),
+    }),
+  setOperatorEnabled: (id: string, enabled: boolean, reason: string) =>
+    request<{ status: string }>(`/operators/${encodeURIComponent(id)}/${enabled ? "enable" : "disable"}`, {
+      method: "POST",
+      body: JSON.stringify({ reason }),
+    }),
+  setOperatorRole: (id: string, role: string, reason: string) =>
+    request<{ status: string }>(`/operators/${encodeURIComponent(id)}/role`, {
+      method: "POST",
+      body: JSON.stringify({ role, reason }),
+    }),
+  changePassword: (current: string, next: string) =>
+    request<{ status: string }>("/me/password", {
+      method: "POST",
+      body: JSON.stringify({ current, next }),
+    }),
 
   createTenant: (body: {
     name: string; slug: string; legal_name?: string; registration_number?: string;
-    apps?: string[]; admin_email: string; admin_name?: string; reason: string;
+    apps?: string[]; admin_user_id?: string; admin_email?: string; admin_name?: string; reason: string;
   }) => request<CreatedTenant>("/tenants", { method: "POST", body: JSON.stringify(body) }),
+
+  // What the register says about a registration number, and who on this
+  // deployment has proved who they are with eID.
+  findOrganisation: (regNo: string) =>
+    request<DirectoryOrganisation>(`/directory/organisation?reg_no=${encodeURIComponent(regNo)}`),
+  addMember: (tenantID: string, userID: string, reason: string) =>
+    request<{ status: string }>(`/tenants/${encodeURIComponent(tenantID)}/people`, {
+      method: "POST",
+      body: JSON.stringify({ user_id: userID, reason }),
+    }),
+  findPerson: (regNo: string) =>
+    request<DirectoryPerson>(`/directory/person?reg_no=${encodeURIComponent(regNo)}`),
+  verifiedPeople: (search = "") =>
+    request<{ people: VerifiedPerson[]; directory: boolean }>(`/directory/people?q=${encodeURIComponent(search)}`),
 
   suspend: (id: string, reason: string) =>
     request<{ status: string }>(`/tenants/${id}/suspend`, { method: "POST", body: JSON.stringify({ reason }) }),
@@ -283,6 +359,12 @@ export const cp = {
   usageCSVURL: (tenantID: string) => `${BASE}/tenants/${tenantID}/usage.csv`,
 
   health: () => request<Overview>("/health"),
+
+  // System Operations: the three reads its screens stand on. Each one is a
+  // list the front page only counts.
+  platformUsage: () => request<PlatformUsage>("/usage"),
+  reportSchedules: () => request<{ schedules: ReportSchedule[] }>("/report-schedules"),
+  backups: (limit = 50) => request<{ backups: BackupEntry[]; status: Overview["backups"] }>(`/backups?limit=${limit}`),
   catalogStatus: () => request<Overview["catalog"]>("/catalog/status"),
   catalogOverview: () => request<{ catalog: Overview["catalog"]; platform: Overview["version"] }>("/catalog/overview"),
   syncCatalog: (reason: string) =>
@@ -406,8 +488,9 @@ export interface Overview {
   monitoring: boolean;
   grafana_url: string;
   api: { requests_per_second: number; error_rate: number; p95_seconds: number; read: boolean };
-  external: Array<{ system: string; error_rate: number; p95_seconds: number; state: string }>;
-  infra: Array<{ name: string; value: number; unit: string; warning: number; state: string }>;
+  /** state is green, amber, red — or unknown, when nothing has measured it. */
+  external: Array<{ system: string; error_rate: number; p95_seconds: number; state: string; measured: boolean }>;
+  infra: Array<{ name: string; value: number; unit: string; warning: number; state: string; measured: boolean }>;
   alerts: Array<{
     name: string; severity: string; summary: string;
     starts_at: string; runbook: string; silenced: boolean;
@@ -448,4 +531,233 @@ export interface Usage {
   series: UsageSeries[];
   /** Null when nothing has ever been counted, which the screen says. */
   collected: string | null;
+}
+
+/** One instruction the assistant carries into every conversation. */
+export interface Prompt {
+  key: string;
+  content: string;
+  active: boolean;
+  /** Null for a key the deployment has never written; the screen still offers it. */
+  updated_at: string | null;
+}
+
+/** One entry in the corpus every organisation's assistant answers from. */
+export interface Knowledge {
+  id: string;
+  title: string;
+  content: string;
+  source_url: string;
+  updated_at: string;
+}
+
+export interface Verification {
+  id: string;
+  tenant_id: string;
+  /** Empty when the organisation has since been deleted; the row stays. */
+  tenant_name: string;
+  source: string;
+  purpose: string;
+  email: string;
+  status: "PENDING" | "VERIFIED" | "EXPIRED";
+  created_at: string;
+  verified_at: string | null;
+}
+
+export interface VerificationLedger {
+  stats: {
+    total: number;
+    verified: number;
+    pending: number;
+    expired: number;
+    last_24h: number;
+    verified_pct: number;
+    tenants: number;
+  };
+  recent: Verification[];
+  service: {
+    /** Whether a key is present at all. The key itself never comes back. */
+    configured: boolean;
+    reachable: boolean;
+    /** What the provider said when it was not reachable. */
+    health?: string;
+    provider_url: string;
+    admin_url: string;
+  };
+}
+
+/** One organisation's line in the platform usage report. */
+export interface TenantUsageLine {
+  tenant_id: string;
+  tenant_name: string;
+  slug: string;
+  suspended: boolean;
+  /** Only the metrics counted for this organisation this month. */
+  metrics: Record<string, number>;
+  /** Null is "never counted", which reads differently from a row of zeroes. */
+  collected: string | null;
+}
+
+export interface PlatformUsage {
+  month: string;
+  metrics: string[];
+  tenants: TenantUsageLine[];
+  totals: Record<string, number>;
+}
+
+export interface ReportSchedule {
+  id: string;
+  tenant_id: string;
+  tenant_name: string;
+  name: string;
+  report_key: string;
+  cron: string;
+  format: string;
+  recipients: string[];
+  active: boolean;
+  last_run_at: string | null;
+  last_status: string;
+}
+
+export interface BackupEntry {
+  id: string;
+  kind: "backup" | "restore_test";
+  started_at: string;
+  finished_at: string | null;
+  size_mb: number;
+  ok: boolean;
+  detail: string;
+  /** Empty for the script's own rows; an operator id for a hand-written one. */
+  recorded_by: string;
+}
+
+export interface OperatorSummary extends Operator {
+  disabled_at: string | null;
+  last_login_at: string | null;
+  created_at: string;
+  /** False until somebody proves the authenticator works; such an account cannot sign in. */
+  enrolled: boolean;
+}
+
+/** Shown once, when an operator is added, and never again. */
+export interface CreatedOperator {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  /** The authenticator's secret, and the URI a QR code is drawn from. */
+  secret: string;
+  uri: string;
+  /** Generated here rather than chosen: the first thing it should be used for is changing it. */
+  password: string;
+}
+
+/** One organisation's limits, with the organisation named. */
+export interface QuotaLine extends Quota {
+  tenant_name: string;
+  slug: string;
+  suspended: boolean;
+}
+
+/** One app in one organisation. */
+export interface Installation {
+  tenant_id: string;
+  tenant_name: string;
+  slug: string;
+  app_id: string;
+  app_name: string;
+  installed_version: string;
+  status: string;
+  enabled: boolean;
+  installed_at: string;
+  updated_at: string;
+}
+
+/** What the Gerege Core register says about a registration number. */
+export interface DirectoryOrganisation {
+  core_id: number;
+  name: string;
+  legal_name: string;
+  registration_number: string;
+  suggested_slug: string;
+  email: string;
+  phone: string;
+  address: string;
+}
+
+/** Somebody who has signed in with eID on this deployment. */
+export interface VerifiedPerson {
+  user_id: string;
+  name: string;
+  email: string;
+  reg_number: string;
+  linked_at: string;
+  last_seen_at: string;
+  /** How many organisations they already belong to. */
+  organisations: number;
+}
+
+/** One row of the people roster. */
+export interface RosterPerson {
+  id: string;
+  email: string;
+  name: string;
+  /** Whether eID has ever vouched for this account. */
+  verified: boolean;
+  /** How many federated providers it is linked to. */
+  providers: number;
+  organisations: number;
+  sessions: number;
+  /** The newest session, which is as close to "last here" as the schema holds. */
+  last_seen_at: string | null;
+  locked_until: string | null;
+  active: boolean;
+  created_at: string;
+}
+
+export interface Roster {
+  people: RosterPerson[];
+  total: number;
+  counts: { verified: number; locked: number; homeless: number; signed_in: number };
+}
+
+/** One way into an account: eID, or a federated provider by its issuer. */
+export interface PersonIdentity {
+  kind: string;
+  subject: string;
+  detail: string;
+  linked_at: string;
+  last_seen_at: string | null;
+}
+
+export interface PersonMembership {
+  tenant_id: string;
+  tenant_name: string;
+  slug: string;
+  roles: string[];
+  joined_at: string;
+}
+
+export interface PersonSession {
+  id: string;
+  tenant_id: string | null;
+  created_at: string;
+  last_seen_at: string | null;
+  expires_at: string;
+}
+
+export interface PersonDetail extends RosterPerson {
+  identities: PersonIdentity[];
+  memberships: PersonMembership[];
+  open_sessions: PersonSession[];
+  impersonations: Array<{ operator_email: string; reason: string; created_at: string }>;
+}
+
+/** What the register says about a person's registration number. */
+export interface DirectoryPerson {
+  core_id: number;
+  name: string;
+  email: string;
+  phone: string;
+  registration_number: string;
 }

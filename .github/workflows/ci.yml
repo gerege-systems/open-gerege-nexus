@@ -21,18 +21,34 @@ jobs:
           # Pinning "1.24" here while go.mod requires 1.25.7 breaks every job.
           go-version-file: backend/go.mod
           cache-dependency-path: backend/go.sum
+      # golangci-lint нь эх кодоос компайл хийгддэг (доорх `install-mode`-ыг үз)
+      # бөгөөд тэр нь гүйлт бүрт 42 секунд авдаг байв. Компайлын үр дүн нь
+      # хувилбар, Go-гийн хувилбар хоёроос л хамаардаг тул кэшлэгдэнэ. Энэ нь
+      # доорх `skip-cache`-тай зөрчилдөхгүй: тэр нь ШИНЖИЛГЭЭНИЙ кэш, энэ нь
+      # хөрвүүлэгдсэн хоёртын файл.
+      - name: Cache the golangci-lint binary
+        id: lint-binary
+        uses: actions/cache@v4
+        with:
+          path: ~/go/bin/golangci-lint
+          key: golangci-v2.1.6-${{ runner.os }}-${{ hashFiles('backend/go.mod') }}
+      - name: Build golangci-lint
+        if: steps.lint-binary.outputs.cache-hit != 'true'
+        run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:
           version: v2.1.6
           working-directory: backend
+          # Дээр суулгасан хоёртын файлыг ашиглана.
           # The published binaries are built with Go 1.24 and refuse to analyse
           # a module targeting a newer language version:
           #   "the Go language version (go1.24) used to build golangci-lint is
           #    lower than the targeted Go version (1.25.x)".
           # Compiling from source with the toolchain from setup-go keeps the two
-          # in step automatically.
-          install-mode: goinstall
+          # in step automatically. The compile itself is cached above; the
+          # reason for compiling at all is unchanged.
+          install-mode: none
           # The analysis cache is not trustworthy here, so it is not kept.
           #
           # On 2026-08-12 a restored cache produced six SA5011 findings —
@@ -86,8 +102,26 @@ jobs:
         run: python3 -m unittest discover -s deploy/scripts -p 'test_*.py'
 
   test:
-    name: Test
+    name: Test (${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
+    # Дөрвөн хэсэг, тус бүр өөрийн өгөгдлийн сантай. Хоёр зүйлийн төлөө:
+    #
+    # ХУРД. `go test -race ./...` 143 секунд авдаг байсан бөгөөд энэ ажил бүх
+    # гүйлтийн шүүрэлт байв. Дөрөв хуваахад хэсэг бүр өөрийн Postgres дээр
+    # зэрэг ажиллана.
+    #
+    # ТОГТВОР. Багцууд нэг сан дээр зэрэг ажиллаж, бие биенийхээ мөрийг
+    # устгаж, түгжиж байв: 2026-08-29-нд `role_permissions`-ийн гадаад
+    # түлхүүрийн зөрчил, `idx_user_eid_identities_etsi`-гийн давхардал, түүнээс
+    # өмнө `deadlock detected` (#280). Хэсэг доторх багцууд `-p 1`-ээр цуваа
+    # явдаг тул нэг сан дээр нэг л багц ажиллана — энэ нь хурдны буулт биш:
+    # цуваа явсан ч дөрвөн хэсэг зэрэг явна.
+    strategy:
+      # Нэг хэсэг унасан ч бусад нь дуустал ажиллана: аль тестүүд унасныг нэг
+      # гүйлтээс бүтнээр нь харах нь дахин ажиллуулахаас хямд.
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     defaults:
       run:
         working-directory: backend
@@ -147,18 +181,28 @@ jobs:
         with:
           go-version-file: backend/go.mod
           cache-dependency-path: backend/go.sum
-      - name: go vet
-        run: go vet ./...
+      # `go vet` энд байхаа больсон: Lint ажлын golangci-lint нь govet-ыг
+      # анхдагчаар агуулдаг тул ижил шинжилгээ хоёр удаа хийгдэж байв. Хэсэг
+      # бүрд 33 секунд — учир нь vet бүх багцыг хөрвүүлдэг.
       - name: Migrate the test database
         run: go run ./cmd/migrate up
       - name: Run tests
-        run: go test -race ./...
+        # Багцуудыг дөрөвт хуваана: `go list`-ийн дараалал тогтвортой тул хэсэг
+        # бүр гүйлт болгонд ижил багцуудыг авна, шинэ багц гарч ирвэл
+        # жагсаалтад өөрөө орно — гараар бичсэн жагсаалт хуучирдаг.
+        run: |
+          packages=$(go list ./... | awk 'NR % 4 == ${{ matrix.shard }} % 4')
+          echo "$packages"
+          go test -race -p 1 $packages
       # A guard step of this shape belongs to the package it names, and has to
       # leave with it. The gov_services one outlived its package: the app moved
       # to gerege-gov, `./internal/apps/gov_services/...` matched nothing, and
       # `go test` over no packages is a pass — so the step written to stop a
       # silent skip became one. Removing a package means removing its step.
       - name: Fail if the email verification integration tests were skipped
+        # Зөвхөн нэг хэсэгт: эдгээр нь тухайн тест алгасагдсан эсэхийг
+        # асуудаг тул дөрвүүлэнд давтагдах шаардлагагүй.
+        if: matrix.shard == 1
         # Same reasoning again: a confirmation is claimed by one conditional
         # UPDATE, and a skipped test is how that stops being true without
         # anybody noticing.
@@ -170,6 +214,9 @@ jobs:
             exit 1
           fi
       - name: Fail if the OAuth2 flow tests were skipped
+        # Зөвхөн нэг хэсэгт: эдгээр нь тухайн тест алгасагдсан эсэхийг
+        # асуудаг тул дөрвүүлэнд давтагдах шаардлагагүй.
+        if: matrix.shard == 1
         # An authorization code is spent by an UPDATE predicate and a refresh
         # token family is revoked by another, so the properties that make the
         # provider safe to expose — single use, rotation, replay detection —
@@ -184,6 +231,12 @@ jobs:
           fi
 
       - name: Fail if the seeded-role tests were skipped
+
+        # Зөвхөн нэг хэсэгт: эдгээр нь тухайн тест алгасагдсан эсэхийг
+
+        # асуудаг тул дөрвүүлэнд давтагдах шаардлагагүй.
+
+        if: matrix.shard == 1
         # What a brand-new organisation's manager and user can do is decided by
         # a trigger, not by Go, so nothing else observes it. It named five
         # permissions belonging to an app that left this repository; skipped,
@@ -195,7 +248,22 @@ jobs:
             echo "::error::seeded-role tests skipped — TEST_DATABASE_URL is not reaching the test"
             exit 1
           fi
+      - name: Fail if the signing store tests were skipped
+        # The e-signature app's isolation is in its WHERE clauses, its batch's
+        # refusal is a subquery's row count, and its archive is a column rather
+        # than a DELETE. Skipped, the package reports green having asserted
+        # nothing about the one app whose output is evidence.
+        run: |
+          go test -run 'TestADocumentIsInvisibleToAnotherOrganisation' -v \
+            ./internal/workspace/signing/ | tee /tmp/signing.log
+          if grep -q -- '--- SKIP' /tmp/signing.log; then
+            echo "::error::signing store tests skipped — no test database is reaching the test"
+            exit 1
+          fi
       - name: Fail if the route policy test was skipped
+        # Зөвхөн нэг хэсэгт: эдгээр нь тухайн тест алгасагдсан эсэхийг
+        # асуудаг тул дөрвүүлэнд давтагдах шаардлагагүй.
+        if: matrix.shard == 1
         # This is the one that decides whether a route is reachable by a
         # stranger. Modules are handed the root router, so mounting a path
         # outside the gate is one line; skipped, that line ships unnoticed.
@@ -207,6 +275,9 @@ jobs:
             exit 1
           fi
       - name: Fail if the route table golden test was skipped
+        # Зөвхөн нэг хэсэгт: эдгээр нь тухайн тест алгасагдсан эсэхийг
+        # асуудаг тул дөрвүүлэнд давтагдах шаардлагагүй.
+        if: matrix.shard == 1
         # The golden file is the only thing that makes adding a route to the
         # core a visible act. It is built from the real router, so it needs the
         # real schema; skipped, the platform's surface can grow a line at a
@@ -219,6 +290,9 @@ jobs:
             exit 1
           fi
       - name: Fail if the capability wiring tests were skipped
+        # Зөвхөн нэг хэсэгт: эдгээр нь тухайн тест алгасагдсан эсэхийг
+        # асуудаг тул дөрвүүлэнд давтагдах шаардлагагүй.
+        if: matrix.shard == 1
         # The eight things Bootstrap needs used to be parameters, so a missing
         # one was a compile error. They are capabilities now and a missing one
         # is a log line and a zero value. These tests are that compile error put
@@ -231,6 +305,9 @@ jobs:
             exit 1
           fi
       - name: Fail if the login lockout tests were skipped
+        # Зөвхөн нэг хэсэгт: эдгээр нь тухайн тест алгасагдсан эсэхийг
+        # асуудаг тул дөрвүүлэнд давтагдах шаардлагагүй.
+        if: matrix.shard == 1
         # The lockout is one UPDATE. Whether a lapsed lock restarts the count or
         # adds to it is the difference between locking an account after five bad
         # passwords and locking it for good after five, and neither is visible
@@ -243,6 +320,9 @@ jobs:
             exit 1
           fi
       - name: Fail if the tenant isolation tests were skipped
+        # Зөвхөн нэг хэсэгт: эдгээр нь тухайн тест алгасагдсан эсэхийг
+        # асуудаг тул дөрвүүлэнд давтагдах шаардлагагүй.
+        if: matrix.shard == 1
         # This is the one that matters most. It is the test that proves a query
         # carrying no WHERE tenant_id returns only the caller's rows — the whole
         # point of the row-level policies. Skipped, the policies could stop
@@ -255,6 +335,9 @@ jobs:
             exit 1
           fi
       - name: Fail if the module migration tests were skipped
+        # Зөвхөн нэг хэсэгт: эдгээр нь тухайн тест алгасагдсан эсэхийг
+        # асуудаг тул дөрвүүлэнд давтагдах шаардлагагүй.
+        if: matrix.shard == 1
         # A module bringing its own schema is the whole of Үе 3, and nothing
         # else exercises it: no app has moved out of db/migrations yet. Skipped,
         # the mechanism ships with no evidence it works.
@@ -266,6 +349,9 @@ jobs:
             exit 1
           fi
       - name: Fail if the tenant policy shape test was skipped
+        # Зөвхөн нэг хэсэгт: эдгээр нь тухайн тест алгасагдсан эсэхийг
+        # асуудаг тул дөрвүүлэнд давтагдах шаардлагагүй.
+        if: matrix.shard == 1
         # Which tables a multi-organisation session can read across, and which
         # ones it cannot. Both shapes are correct somewhere and only one is
         # correct per table; skipped, a new table takes whichever its neighbour
@@ -278,6 +364,9 @@ jobs:
             exit 1
           fi
       - name: Fail if the reporting isolation tests were skipped
+        # Зөвхөн нэг хэсэгт: эдгээр нь тухайн тест алгасагдсан эсэхийг
+        # асуудаг тул дөрвүүлэнд давтагдах шаардлагагүй.
+        if: matrix.shard == 1
         # A report is a query somebody else wrote against tables the platform
         # keeps a tenant apart in. The test that matters proves a report which
         # forgot its WHERE tenant_id returns nothing rather than everyone's
@@ -290,6 +379,9 @@ jobs:
             exit 1
           fi
       - name: Fail if the report sharing tests were skipped
+        # Зөвхөн нэг хэсэгт: эдгээр нь тухайн тест алгасагдсан эсэхийг
+        # асуудаг тул дөрвүүлэнд давтагдах шаардлагагүй.
+        if: matrix.shard == 1
         # The one place this platform deliberately lets one organisation see
         # another's figures. Default deny, immediate revocation, counterparty
         # scope and the two-sided audit are all enforced in SQL; skipped, the
@@ -302,6 +394,9 @@ jobs:
             exit 1
           fi
       - name: Fail if the cross-replica tests were skipped
+        # Зөвхөн нэг хэсэгт: эдгээр нь тухайн тест алгасагдсан эсэхийг
+        # асуудаг тул дөрвүүлэнд давтагдах шаардлагагүй.
+        if: matrix.shard == 1
         # Invalidation reaching another replica, and two replicas sharing one
         # rate-limit budget, are both invisible to a single-process test.
         run: |
@@ -320,6 +415,11 @@ jobs:
     defaults:
       run:
         working-directory: frontend
+    env:
+      # `npm ci` would otherwise fetch three browsers through Playwright's
+      # postinstall. The end-to-end step below installs the one this suite
+      # drives, with the system libraries it needs.
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -372,6 +472,28 @@ jobs:
         run: npm run build
       - name: Smoke-test the built host boundary
         run: npm run host:smoke
+      # The suite that needs a browser. Two of the console's rules are not
+      # facts about any one component and so cannot be asked of jsdom: it is
+      # served on its own hostname, and its frame is a layout that has to
+      # survive navigation between the routes under it — when that frame lived
+      # inside each page instead, every click rebuilt the whole shell and
+      # re-read the session, and nothing in the suite noticed for a fortnight.
+      #
+      # The API is stubbed in the page, so this needs no database and no
+      # backend: it tests the frontend, and says so. `npx playwright test`
+      # rather than `npm run test:e2e`, which would build a second time — the
+      # step above already built what `next start` serves.
+      - name: Install the browser the end-to-end suite drives
+        run: npx playwright install --with-deps chromium
+      - name: End-to-end
+        run: npx playwright test
+      - name: Keep the traces of a failed run
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 7
 
   build:
     name: Build
@@ -389,5 +511,16 @@ jobs:
           go build -o bin/api ./cmd/api
           go build -o bin/migrate ./cmd/migrate
 
+      # deploy.yml нь image-ээ `type=gha,scope=backend` кэштэй барьдаг. Энэ ажил
+      # ижил Dockerfile-ыг кэшгүй барьж 70 секунд зарцуулж байв — тэр кэшийг
+      # уншаад, бичихгүй: PR-ын гүйлт main-ий кэшийг бохирдуулах ёсгүй.
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
       - name: Build backend Docker image
-        run: docker build -f deploy/Dockerfile -t open-gerege-nexus-backend:ci .
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: deploy/Dockerfile
+          push: false
+          tags: open-gerege-nexus-backend:ci
+          cache-from: type=gha,scope=backend

@@ -8,16 +8,16 @@
 import assert from "node:assert/strict";
 import { controlPlaneHostDecision } from "../lib/controlPlaneHost.mjs";
 
-const decide = (host, path, configured = "cp.localhost") =>
+const decide = (host, path, configured = "admin.localhost") =>
   controlPlaneHostDecision(host, configured, path);
 
-assert.equal(decide("cp.localhost:3000", "/"), "redirect");
-assert.equal(decide("CP.LOCALHOST.", "/cp"), "allow");
-assert.equal(decide("cp.localhost", "/cp/audit"), "allow");
-assert.equal(decide("cp.localhost", "/api/platform/v1/session"), "allow");
+assert.equal(decide("admin.localhost:3000", "/"), "redirect");
+assert.equal(decide("ADMIN.LOCALHOST.", "/cp"), "allow");
+assert.equal(decide("admin.localhost", "/cp/audit"), "allow");
+assert.equal(decide("admin.localhost", "/api/platform/v1/session"), "allow");
 
 for (const path of ["/login", "/settings", "/api/v1/auth/login", "/cpx", "/robots.txt"]) {
-  assert.equal(decide("cp.localhost", path), "not-found", `${path} leaked onto the console host`);
+  assert.equal(decide("admin.localhost", path), "not-found", `${path} leaked onto the console host`);
 }
 
 for (const host of ["nexus.localhost:3000", "localhost:3000", "nexus.gerege.mn"]) {

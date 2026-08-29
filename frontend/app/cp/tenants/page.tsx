@@ -13,21 +13,13 @@ import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Building2, Plus, Search } from "lucide-react";
 
-import Console, { useConsole } from "@/components/cp/Console";
+import { useConsole } from "@/components/cp/Console";
 import { formatMoment } from "@/components/cp/ui";
-import { cp, type TenantSummary } from "@/lib/cp";
+import { cp, type DirectoryOrganisation, type TenantSummary, type VerifiedPerson } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 import { Modal } from "@/components/ui";
 
-export default function ControlPlaneTenantsPage() {
-  return (
-    <Console>
-      <Tenants />
-    </Console>
-  );
-}
-
-function Tenants() {
+export default function Tenants() {
   const { t, locale } = useI18n();
   const { operator } = useConsole();
   const [creating, setCreating] = useState(false);
@@ -67,7 +59,7 @@ function Tenants() {
           <button
             type="button"
             onClick={() => setCreating(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
+            className="inline-flex items-center gap-2 rounded-lg bg-[var(--gerege-blue)] px-3 py-2 text-sm font-medium text-white hover:brightness-105"
           >
             <Plus className="w-4 h-4" />
             {t("cp.action.new_tenant")}
@@ -177,17 +169,71 @@ function Tenants() {
  * The first administrator gets an invitation, never a password: see
  * lifecycle.go for why an operator must not be able to choose one.
  */
+/**
+ * Opening an organisation.
+ *
+ * Two things here are read rather than typed. The organisation's details come
+ * from the Gerege Core register — a name typed from a form is a name that is
+ * nearly right, and "nearly" is what makes two records of the same company.
+ * The first administrator is chosen from the people this deployment has
+ * already watched sign in with eID, so the account that ends up running an
+ * organisation is one somebody proved they hold, rather than an address
+ * somebody typed.
+ */
 function NewTenantDialog({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [registration, setRegistration] = useState("");
+  const [legalName, setLegalName] = useState("");
   const [apps, setApps] = useState("");
-  const [adminEmail, setAdminEmail] = useState("");
   const [reason, setReason] = useState("");
   const [failure, setFailure] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
+
+  // The register.
+  const [looking, setLooking] = useState(false);
+  const [found, setFound] = useState<DirectoryOrganisation | null>(null);
+
+  // The administrator.
+  const [people, setPeople] = useState<VerifiedPerson[]>([]);
+  const [directory, setDirectory] = useState(true);
+  const [search, setSearch] = useState("");
+  const [admin, setAdmin] = useState<VerifiedPerson | null>(null);
+
+  const loadPeople = useCallback(async (query: string) => {
+    try {
+      const answer = await cp.verifiedPeople(query);
+      setPeople(answer.people);
+      setDirectory(answer.directory);
+    } catch (error) {
+      setFailure(error instanceof Error ? error.message : String(error));
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadPeople("");
+  }, [loadPeople]);
+
+  async function lookUp() {
+    if (!registration.trim()) return;
+    setLooking(true);
+    setFailure("");
+    try {
+      const org = await cp.findOrganisation(registration.trim());
+      setFound(org);
+      setName(org.name);
+      setLegalName(org.legal_name);
+      setSlug(org.suggested_slug.toLowerCase());
+      setRegistration(org.registration_number);
+    } catch (error) {
+      setFound(null);
+      setFailure(error instanceof Error ? error.message : String(error));
+    } finally {
+      setLooking(false);
+    }
+  }
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -197,16 +243,19 @@ function NewTenantDialog({ onClose, onCreated }: { onClose: () => void; onCreate
       const created = await cp.createTenant({
         name,
         slug,
+        legal_name: legalName,
         registration_number: registration,
         apps: apps.split(",").map((app) => app.trim()).filter(Boolean),
-        admin_email: adminEmail,
+        admin_user_id: admin?.user_id,
         reason,
       });
       // An organisation created with an app that would not install, or an
       // invitation that could not be sent, is still an organisation — and the
       // operator has to be told which parts did not land rather than finding
       // out when the customer calls.
-      if (created.failed.length || !created.invited) {
+      // A chosen administrator is not invited — they already have a way in —
+      // so a missing invitation is only worth reporting when one was meant.
+      if (created.failed.length || (!created.invited && !created.admin_existed)) {
         setNotice(
           [
             created.failed.length ? `${t("cp.field.apps")}: ${created.failed.join(", ")}` : "",
@@ -241,7 +290,7 @@ function NewTenantDialog({ onClose, onCreated }: { onClose: () => void; onCreate
             <button
               type="button"
               onClick={onCreated}
-              className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+              className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-medium text-white hover:brightness-105"
             >
               {t("cp.action.back")}
             </button>
@@ -250,11 +299,93 @@ function NewTenantDialog({ onClose, onCreated }: { onClose: () => void; onCreate
 
         {!notice && (
           <>
+            {/* The register first: everything below it is filled from the
+                answer, and typed over only when the register is wrong. */}
+            <div className="flex items-end gap-2">
+              <div className="flex-1">
+                <TextField label={t("cp.field.registration")} value={registration} onChange={setRegistration} required />
+              </div>
+              <button
+                type="button"
+                onClick={() => void lookUp()}
+                disabled={looking || !registration.trim()}
+                className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              >
+                <Search className={`w-4 h-4 ${looking ? "animate-pulse" : ""}`} />
+                {t("cp.action.look_up")}
+              </button>
+            </div>
+            {found && (
+              <p className="text-xs rounded-lg bg-[var(--gerege-blue-soft)] text-[var(--gerege-blue)] px-3 py-2">
+                {t("cp.message.from_the_register", { name: found.legal_name || found.name })}
+                {found.address ? ` · ${found.address}` : ""}
+              </p>
+            )}
+
             <TextField label={t("cp.field.name")} value={name} onChange={setName} required />
+            <TextField label={t("cp.field.legal_name")} value={legalName} onChange={setLegalName} />
             <TextField label={t("cp.field.slug")} value={slug} onChange={(value) => setSlug(value.toLowerCase())} required />
-            <TextField label={t("cp.field.registration")} value={registration} onChange={setRegistration} />
             <TextField label={t("cp.field.install_apps")} value={apps} onChange={setApps} />
-            <TextField label={t("cp.field.admin_email")} value={adminEmail} onChange={setAdminEmail} required type="email" />
+
+            {/* The first administrator, chosen rather than typed. */}
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-slate-700">{t("cp.field.admin")}</p>
+              <p className="text-xs text-slate-500">{t("cp.hint.admin_is_chosen")}</p>
+              {admin ? (
+                <div className="flex items-center gap-3 rounded-lg border border-[var(--gerege-blue)] bg-[var(--gerege-blue-soft)] px-3 py-2">
+                  <span className="min-w-0 flex-1">
+                    <strong className="block text-sm text-slate-900 truncate">{admin.name}</strong>
+                    <span className="block text-xs text-slate-600 truncate">
+                      {admin.email}
+                      {admin.reg_number ? ` · ${admin.reg_number}` : ""}
+                    </span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setAdmin(null)}
+                    className="text-xs rounded-lg border border-slate-300 bg-white px-2 py-1 hover:bg-slate-50"
+                  >
+                    {t("cp.action.change")}
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <input
+                    value={search}
+                    onChange={(event) => {
+                      setSearch(event.target.value);
+                      void loadPeople(event.target.value);
+                    }}
+                    placeholder={t("cp.field.search_people")}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  />
+                  <div className="max-h-48 overflow-y-auto divide-y divide-slate-100 rounded-lg border border-slate-200">
+                    {people.map((person) => (
+                      <button
+                        key={person.user_id}
+                        type="button"
+                        onClick={() => setAdmin(person)}
+                        className="w-full text-left px-3 py-2 hover:bg-slate-50"
+                      >
+                        <strong className="block text-sm text-slate-900 truncate">{person.name}</strong>
+                        <span className="block text-xs text-slate-500 truncate">
+                          {person.email}
+                          {person.reg_number ? ` · ${person.reg_number}` : ""}
+                          {" · "}
+                          {t("cp.message.already_in", { count: String(person.organisations) })}
+                          {" · "}
+                          {formatMoment(person.last_seen_at, locale)}
+                        </span>
+                      </button>
+                    ))}
+                    {people.length === 0 && (
+                      <p className="px-3 py-3 text-sm text-slate-500">{t("cp.message.no_verified_people")}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
             <TextField label={t("cp.field.reason")} value={reason} onChange={setReason} required />
 
             <div className="flex justify-end gap-2">
@@ -263,8 +394,9 @@ function NewTenantDialog({ onClose, onCreated }: { onClose: () => void; onCreate
               </button>
               <button
                 type="submit"
-                disabled={busy}
-                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+                disabled={busy || !admin}
+                title={admin ? undefined : t("cp.hint.admin_is_chosen")}
+                className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60"
               >
                 {t("cp.action.create")}
               </button>

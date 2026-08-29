@@ -14,8 +14,9 @@ import AICopilot from "@/components/AICopilot";
 import { invokeShell, useShell, SHELL_EVENTS, SHELL_METHODS, type ShellNavigatePayload, type ShellSearchPayload } from "@/lib/shell";
 import { currentDeviceLine, type DeviceLine } from "@/lib/deviceLine";
 import { MenuIcon } from "@/lib/icons";
+import { isPublicPath } from "@/lib/publicRoutes";
 import { homeScreensVisible, organisationScreensVisible } from "@/lib/workspaceKind.mjs";
-import { LayoutGrid, Settings, Menu as HamburgerIcon, Palette, Building2, Search, Ellipsis, ShieldCheck, RefreshCw, MailCheck, ChevronDown, ChevronsDownUp, ChevronsUpDown, ExternalLink, Sparkles, Inbox} from "lucide-react";
+import { LayoutGrid, Settings, Menu as HamburgerIcon, Palette, Building2, Megaphone, Search, Ellipsis, ShieldCheck, RefreshCw, MailCheck, ChevronDown, ChevronsDownUp, ChevronsUpDown, ExternalLink, Sparkles, Inbox} from "lucide-react";
 
 // app_order and app_chrome describe the app rather than the entry: where its
 // tile sits in the rail, and whether it has a tile at all. Both come from the
@@ -26,25 +27,6 @@ interface MenuItem { id:string; app_id?:string; app_name?:string; parent_id?:str
 // first menu entry has and the rail renders a Link or an anchor accordingly.
 interface AppNav { id:string; name:string; icon:string; path:string; externalUrl?:string; order:number; chrome:boolean; menus:MenuItem[] }
 
-// Routes that render without the ERP chrome. /oauth/consent is signed-in but
-// belongs here too: it is an identity handoff to another product, and framing
-// it in this one's navigation invites the user to wander off mid-flow.
-// /setup is public in the only sense that matters here: it runs on a
-// deployment with no organisation, so there is nobody to hold a session and
-// asking /me for one would push the wizard to a sign-in screen that cannot
-// work. What authorises it is the setup token, not a session.
-const PUBLIC_ROUTES=["/","/login","/setup","/auth/eid/callback","/oauth/consent","/kiosk"];
-// Шугамын нүүр дэлгэц нэвтрэлт шаардахгүй. Тэр нь ажлын мужид web-ийн нэвтрэх
-// дэлгэц гарч ирэхийг ОРЛОХЫН тулд байгаа тул session байхгүй үед ч зогсох
-// ёстой — эс бөгөөс дахин /login руу түлхэж, шийдэх гэсэн асуудлаа өөрөө
-// үүсгэнэ.
-// `/cp` is chromeless for a different reason from the rest: it is not public at
-// all, it is the operator console, and it authenticates with its own session
-// against its own API. Left out of this list it would have been given the
-// tenant shell — which asks /api/v1/me on mount, gets a 401 because an operator
-// holds no tenant session, and redirects the console to the platform's login
-// screen before it can draw its own.
-const isPublicPath=(path:string)=>PUBLIC_ROUTES.includes(path)||path.startsWith("/line/")||path==="/cp"||path.startsWith("/cp/");
 // The platform groups are the only ones not backed by a server menu row, so
 // they need ids of their own. Not the translated title: the collapsed set is
 // remembered across sessions and a Mongolian operator who switches to English
@@ -205,7 +187,6 @@ export default function Layout({children}:{children:React.ReactNode}){
     {label:t("web.menu.app_store"),app:t("web.label.platform"),path:"/apps",icon:"grid"},
     {label:t("web.menu.appearance"),app:t("web.label.platform"),path:"/settings/appearance",icon:"palette"},
     {label:t("web.menu.installed_apps"),app:t("web.label.platform"),path:"/settings/apps",icon:"settings"},
-    {label:t("web.menu.email_verification"),app:t("web.label.platform"),path:"/settings/email-verification",icon:"mail-check"},
     ...apps.flatMap(app=>app.menus.filter(m=>m.path).map(m=>({label:m.label,app:app.name,path:m.path!,icon:m.icon})))
   ],[apps,t]);
   const results=query.trim()?searchIndex.filter(x=>(x.label+" "+x.app).toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())).slice(0,8):[];
@@ -277,6 +258,13 @@ export default function Layout({children}:{children:React.ReactNode}){
         and edit — the organisation itself — not a switch that changes how the
         platform behaves. */}
     {company&&<NavLink href="/organisation" active={pathname==="/organisation"} icon={<Building2 className="w-5 h-5"/>} label={t("web.menu.organisation")}/>}
+    {/* What the organisation offers the public, beside what it is. It was a
+        card at the bottom of the organisation's own screen, which is where a
+        thing goes when nobody has decided it is a thing: publishing a service
+        is an outward promise — a stranger finds it in the directory and asks —
+        and it deserves the same standing in the menu as the identity above
+        it. */}
+    {company&&<NavLink href="/organisation/services" active={pathname==="/organisation/services"} icon={<Megaphone className="w-5 h-5"/>} label={t("core.view.services_title")}/>}
     {/* Its screens, next in the list rather than nested under it. They were
         indented for a while, which made them look like a second level this
         sidebar does not otherwise have — one entry with children, in a menu
@@ -294,13 +282,11 @@ export default function Layout({children}:{children:React.ReactNode}){
         somebody to hold two answers for where the same page is. */}
     {company&&<NavLink href="/settings/apps" active={pathname==="/settings/apps"} icon={<Settings className="w-5 h-5"/>} label={t("web.menu.installed_apps")}/>}
     <NavLink href="/settings/appearance" active={pathname==="/settings/appearance"} icon={<Palette className="w-5 h-5"/>} label={t("web.menu.appearance")}/>
-    {user?.is_admin&&<NavLink href="/settings/ai" active={pathname==="/settings/ai"} icon={<Sparkles className="w-5 h-5"/>} label={t("ai.view.settings_title")}/>}
     {chromeEntries("settings").map(item=>
       <NavLink key={item.id} href={item.path!} active={item.path===pathname}
         icon={<MenuIcon name={item.icon} className="w-5 h-5"/>} label={item.label}/>)}
     {/* Issuing a key that sends mail in the tenant's name is administrative, and
         the API behind this screen is admin-only, so the link follows it. */}
-    {user?.is_admin&&<NavLink href="/settings/email-verification" active={pathname==="/settings/email-verification"} icon={<MailCheck className="w-5 h-5"/>} label={t("web.menu.email_verification")}/>}
     {user?.is_admin&&<NavLink href="/settings/access" active={pathname==="/settings/access"} icon={<ShieldCheck className="w-5 h-5"/>} label={t("access.view.title")}/>}
   </MenuGroup></>;
 

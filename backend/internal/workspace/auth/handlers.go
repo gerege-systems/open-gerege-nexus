@@ -100,6 +100,7 @@ func (h *Handlers) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	_, _ = h.db.Exec(r.Context(), `UPDATE registry.users SET failed_login_attempts=0, locked_until=NULL WHERE id=$1`, userID)
+	h.rehashIfStale(r.Context(), userID, passwordHash, req.Password)
 
 	// Where this session opens: the oldest organisation they belong to, or a
 	// workspace of their own. Asked after the password rather than with it, so
@@ -459,6 +460,30 @@ func ReportSessionFailure(w http.ResponseWriter, err error) {
 	}
 	slog.Error("could not establish a session", "error", err)
 	httpx.Error(w, http.StatusInternalServerError, "failed to establish session")
+}
+
+// rehashIfStale replaces a hash that has just verified with one this build
+// would write today.
+//
+// The plaintext is in hand exactly once — in the request that just proved it —
+// so this is the only moment an account's stored hash can be upgraded without
+// asking anybody to choose a new password. Best effort on purpose: a failed
+// write leaves the old hash, which still verifies, and must not turn a
+// successful sign-in into an error.
+func (h *Handlers) rehashIfStale(ctx context.Context, userID, storedHash, password string) {
+	if userID == "" || !security.NeedsRehash(storedHash) {
+		return
+	}
+	fresh, err := HashPassword(password)
+	if err != nil {
+		slog.Error("could not rehash a password", "user_id", userID, "error", err)
+		return
+	}
+	if _, err := h.db.Exec(ctx,
+		`UPDATE registry.users SET password_hash = $2 WHERE id = $1 AND password_hash = $3`,
+		userID, fresh, storedHash); err != nil {
+		slog.Error("could not store a rehashed password", "user_id", userID, "error", err)
+	}
 }
 
 // SignInError carries a reason that is meant for the person signing in. Account

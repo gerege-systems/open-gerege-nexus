@@ -10,6 +10,12 @@ out/
 frontend/out/
 *.tsbuildinfo
 
+# Playwright's own output: a run's traces and its HTML report. Both are
+# artefacts of a failure, useful on the machine that produced them.
+frontend/test-results/
+frontend/playwright-report/
+frontend/.playwright/
+
 # Documentation site build output (published from CI, never committed)
 docs/site/dist/
 

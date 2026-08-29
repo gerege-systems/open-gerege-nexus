@@ -12,7 +12,6 @@ import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Filter, RefreshCw, ScrollText } from "lucide-react";
 
-import Console from "@/components/cp/Console";
 import { Badge, formatMoment } from "@/components/cp/ui";
 import { cp, type AuditEntry } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
@@ -25,15 +24,7 @@ interface AuditFilters {
 
 const EMPTY_FILTERS: AuditFilters = { action: "", target_type: "", target_id: "" };
 
-export default function ControlPlaneAuditPage() {
-  return (
-    <Console>
-      <AuditTrail />
-    </Console>
-  );
-}
-
-function AuditTrail() {
+export default function AuditTrail() {
   const { t, locale } = useI18n();
   const [entries, setEntries] = useState<AuditEntry[] | null>(null);
   const [draft, setDraft] = useState<AuditFilters>(EMPTY_FILTERS);
@@ -122,7 +113,7 @@ function AuditTrail() {
         <div className="mt-4 flex gap-2">
           <button
             type="submit"
-            className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+            className="rounded-lg bg-[var(--gerege-blue)] px-3 py-2 text-sm font-medium text-white transition hover:brightness-105"
           >
             {t("cp.action.search")}
           </button>

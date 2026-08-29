@@ -1,6 +1,6 @@
 # Control plane — операторын консол
 
-`cp.nexus.gerege.mn` дээрх операторын урсгалыг босгох, хамгаалах, ажиллуулах
+`admin.nexus.gerege.mn` дээрх операторын урсгалыг босгох, хамгаалах, ажиллуулах
 одоогийн заавар. Шинэчлэгдсэн: 2026-08-24.
 
 [Баримт бичгийн төв](README.md) · [Архитектур](ARCHITECTURE_SPECIFICATION.md) ·
@@ -13,7 +13,7 @@
 
 | Талбар | Утга |
 | --- | --- |
-| Origin | `https://cp.nexus.gerege.mn` |
+| Origin | `https://admin.nexus.gerege.mn` |
 | Frontend | `/` нь 308-аар `/cp` руу; UI нь `/cp/*` |
 | Canonical API | `/api/platform/v1/*` — одоогоор 44 route |
 | Legacy API | `/cp/api/*` нь HostGate-ийн ард 308; vNEXT-д устгана |
@@ -66,26 +66,31 @@ HostGate/session/role үлдэнэ; nginx allowlist идэвхтэй бол ап
 
 ### 3.1 DNS, TLS, nginx
 
-`cp.nexus.gerege.mn` DNS нь deployment server-ийг заана. Репогийн
-`deploy/nginx/cp.nexus.gerege.mn.conf` болон
+Нэршил нь **`admin.<домэйн>`** (жишээ нь `admin.petronet.mn`); хөгжүүлэлтийн
+анхдагч нь `admin.localhost`. Энэ репогийн үндсэн суулгац 2026-08-29-нд
+`cp.nexus.gerege.mn`-ээс `admin.nexus.gerege.mn` рүү нүүсэн; хуучин хост
+гэрчилгээгээ хадгалж, зөвхөн 301-ээр шинэ нэр рүү заана.
+
+`admin.nexus.gerege.mn` DNS нь deployment server-ийг заана. Репогийн
+`deploy/nginx/admin.nexus.gerege.mn.conf` болон
 `deploy/nginx/snippets/cp-allowlist.conf`-ыг идэвхжүүлээд TLS сертификат
 олгоно:
 
 ```bash
-sudo cp deploy/nginx/cp.nexus.gerege.mn.conf /etc/nginx/sites-available/
+sudo cp deploy/nginx/admin.nexus.gerege.mn.conf /etc/nginx/sites-available/
 sudo cp deploy/nginx/snippets/cp-allowlist.conf /etc/nginx/snippets/
-sudo ln -s /etc/nginx/sites-available/cp.nexus.gerege.mn.conf \
-  /etc/nginx/sites-enabled/cp.nexus.gerege.mn.conf
+sudo ln -s /etc/nginx/sites-available/admin.nexus.gerege.mn.conf \
+  /etc/nginx/sites-enabled/admin.nexus.gerege.mn.conf
 sudo nginx -t
 sudo systemctl reload nginx
-sudo certbot --nginx -d cp.nexus.gerege.mn
+sudo certbot --nginx -d admin.nexus.gerege.mn
 ```
 
 GitHub Actions production deploy дараах тохиргоог хэрэглэнэ:
 
 | GitHub тохиргоо | Жишээ | Үүрэг |
 | --- | --- | --- |
-| Repository variable `CONTROL_PLANE_HOST` | `cp.nexus.gerege.mn` | Backend/frontend-ийн origin gate |
+| Repository variable `CONTROL_PLANE_HOST` | `admin.nexus.gerege.mn` | Backend/frontend-ийн origin gate |
 | Secret `CONTROL_PLANE_ALLOWED_CIDRS` | `203.0.113.10/32, 2001:db8:1::/64` | nginx allowlist үүсгэх |
 
 Тогтмол office/VPN хаягийг аль болох CIDR-аар оруул. Түр зуурын нэг IPv4
@@ -104,7 +109,7 @@ invalid CIDR, host bit зөрсөн network, бүх интернетийг нэ�
 Production env-д дор хаяж:
 
 ```dotenv
-CONTROL_PLANE_HOST=cp.nexus.gerege.mn
+CONTROL_PLANE_HOST=admin.nexus.gerege.mn
 ```
 
 Энэ утга backend болон frontend хоёрт ижил очих ёстой. Compose startup goose
@@ -117,7 +122,26 @@ console query login role-оор үргэлжлэхгүй, хаалттай ун�
 
 ### 3.3 Анхны оператор
 
-Вэб бүртгэл байхгүй. DB эрхтэй хүн контейнер дотор bootstrap command ажиллуулна:
+**Шинэ суулгац дээр: анхны тохиргооны шидтэн.** `/setup` дээр байгууллагаа
+үүсгэж буй хүн сүүлийн алхамд консолын эхний бүртгэлийг нээнэ — нэр, и-мэйл,
+нууц үг, дараа нь authenticator-ийн QR ба нэг код. Тэр алхам зөвхөн хоёр
+нөхцөлд гарна: `CONTROL_PLANE_HOST` тохируулагдсан, ба энэ суулгацад оператор
+**огт байхгүй**. Хоёр дахь бүртгэл нь консолынхоо ажил — миграц 00049
+`operator_accounts`-д INSERT хийх эрхийг консолын role-оос зориуд хассаныг
+бодоход, шидтэн хоёр дахийг үүсгэж чаддаг байвал яг тэр цоорхой болно.
+
+Шидтэний эрх нь bootstrap command-ынхтай ижил ангийн: ачаалах үед санах ойд
+үүсч, лог руу нэг удаа бичигдэж, байгууллага үүсмэгц устдаг токен. Ялгаа нь
+зөвхөн тэр эрхийг эдлэх хүнд машин дээр shell хэрэггүй болсонд л байна.
+
+**Хоёр дахь ба түүнээс хойшхи оператор** нь консолын `/cp/operators` дэлгэцээс
+нэмэгдэнэ: ерөнхий админ, хоёр дахь хүчин зүйлтэй, шалтгаантай, audit-д мөр
+үлдээж. Консол нууц үгийг өөрөө үүсгэж нэг удаа харуулна; шинэ оператор QR-аа
+уншуулж, кодоо оруулж баталгаажуулах хүртэл нэвтэрч чадахгүй. Хүснэгтийн INSERT
+эрх нь миграц 00097-оор консолын role-д өгөгдсөн — нэг мөрөөр буцаан авч болно.
+
+**Bootstrap command** нь эхний account-д (шидтэн ажиллаагүй суулгац) эсвэл
+консол руу орох арга байхгүй болсон үед хэвээр:
 
 ```bash
 docker exec -it gerege_nexus_backend /app/operator-bootstrap \
@@ -132,12 +156,12 @@ Command нууц үгийг TTY-ээс хоёр удаа асууж, TOTP secret
 ## 4. Хөгжүүлэлтийн хоёр origin
 
 `.env.example` болон `docker-compose.yml` development-д
-`CONTROL_PLANE_HOST=cp.localhost` ашиглана:
+`CONTROL_PLANE_HOST=admin.localhost` ашиглана:
 
 ```text
 Тенант:   http://nexus.localhost:3000
-Консол:   http://cp.localhost:3000     → 308 → /cp
-CP API:   http://cp.localhost:8080/api/platform/v1
+Консол:   http://admin.localhost:3000     → 308 → /cp
+CP API:   http://admin.localhost:8080/api/platform/v1
 ```
 
 Орчин үеийн browser `*.localhost`-ыг loopback руу шийддэг. Ингэснээр HostGate,
@@ -223,6 +247,10 @@ manifest compatibility-г шалгана.
 - `/cp/approvals` — хоёр хүний шийдвэр;
 - `/cp/config` — settings, flags, maintenance;
 - `/cp/announcements` — tenant banner;
+- `/cp/assistant` — бүх байгууллагад нийтлэг AI заавар ба мэдлэгийн сан
+  (2026-08-29-нд ажлын мужийн `/settings/ai`-аас нүүсэн);
+- `/cp/email-verification` — и-мэйл баталгаажуулалтын бүртгэл, үйлчилгээний
+  төлөв, бүх байгууллагаар (мөн тэр өдөр `/settings/email-verification`-оос);
 - `/cp/audit` — append-only operator audit хайлт ба өөрчлөлтийн snapshot.
 
 API-д байгаа боловч тусдаа UI дэлгэцгүй contract:
@@ -250,10 +278,18 @@ npx tsc --noEmit
 npm run lint
 npm run build
 npm run host:smoke
+npm run test:e2e
 
 cd ../deploy/scripts
 python3 -m unittest test_render_cp_allowlist.py
 ```
+
+`npm run test` нь vitest — консолын дэлгэц бүр jsdom дээр рендерлэгдэж,
+`tests/cp/`-д эрх, алдаа, хоосон төлөв, step-up-ийн урсгал шалгагдана.
+`npm run test:e2e` нь Playwright: `next build` хийгээд `next start`-ыг
+`admin.localhost` дээр өргөж, API-г хөтөч дотор stub хийнэ (backend, DB
+шаардахгүй). Хостын хил ба `/cp` layout навигаци дамжин амьд үлдэж байгаа
+эсэх — jsdom-оор шалгах боломжгүй хоёр дүрэм — эндээс шалгагдана.
 
 `TEST_DATABASE_URL` бүхий migrated PostgreSQL дээр schema/grant/RLS
 integration test-ийг давхар ажиллуул:

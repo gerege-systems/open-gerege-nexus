@@ -15,22 +15,13 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { History, KeyRound, RotateCcw, ToggleLeft, ToggleRight } from "lucide-react";
 
-import Console from "@/components/cp/Console";
 import { useAction } from "@/components/cp/Action";
 import { Badge, Card, formatMoment, Table } from "@/components/cp/ui";
 import { cp, type Credential, type Flag, type Setting, type SettingChange } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 import { Modal } from "@/components/ui";
 
-export default function ControlPlaneConfigPage() {
-  return (
-    <Console>
-      <Configuration />
-    </Console>
-  );
-}
-
-function Configuration() {
+export default function Configuration() {
   const { t, locale } = useI18n();
   const action = useAction();
 
@@ -109,6 +100,8 @@ function Configuration() {
               <button
                 type="button"
                 onClick={() => void openHistory(setting.key)}
+                aria-label={`${t("cp.section.history")}: ${setting.key}`}
+                title={t("cp.section.history")}
                 className="text-xs rounded-lg border border-slate-300 px-2 py-1 hover:bg-slate-50 inline-flex items-center gap-1"
               >
                 <History className="w-3 h-3" />
@@ -168,6 +161,8 @@ function Configuration() {
                       onDone: load,
                     })
                   }
+                  aria-label={`${t("cp.action.clear_credential")}: ${credential.name}`}
+                  title={t("cp.action.clear_credential")}
                   className="text-xs rounded-lg border border-slate-300 px-2 py-1 hover:bg-slate-50"
                 >
                   ✕
@@ -184,7 +179,7 @@ function Configuration() {
           <button
             type="button"
             onClick={() => setNewFlag(true)}
-            className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
+            className="rounded-lg bg-[var(--gerege-blue)] px-3 py-2 text-sm font-medium text-white hover:brightness-105"
           >
             {t("cp.action.new_flag")}
           </button>
@@ -221,6 +216,8 @@ function Configuration() {
                     onDone: load,
                   })
                 }
+                aria-label={`${flag.enabled ? t("cp.action.turn_off") : t("cp.action.turn_on")}: ${flag.key}`}
+                title={flag.enabled ? t("cp.action.turn_off") : t("cp.action.turn_on")}
                 className="text-xs rounded-lg border border-slate-300 px-2 py-1 hover:bg-slate-50 inline-flex items-center gap-1"
               >
                 {flag.enabled ? <ToggleRight className="w-4 h-4 text-emerald-600" /> : <ToggleLeft className="w-4 h-4" />}
@@ -236,6 +233,8 @@ function Configuration() {
                     onDone: load,
                   })
                 }
+                aria-label={`${t("cp.action.delete_flag")}: ${flag.key}`}
+                title={t("cp.action.delete_flag")}
                 className="text-xs rounded-lg border border-slate-300 px-2 py-1 hover:bg-slate-50"
               >
                 ✕
@@ -441,7 +440,7 @@ function CredentialDialog({
           <button
             type="submit"
             disabled={busy}
-            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+            className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-medium text-white hover:brightness-105 disabled:opacity-50"
           >
             {t("cp.action.set_credential")}
           </button>
@@ -569,7 +568,7 @@ function SettingDialog({
           <button
             type="submit"
             disabled={busy}
-            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+            className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60"
           >
             {t("cp.action.confirm")}
           </button>
@@ -665,7 +664,7 @@ function FlagDialog({ onClose, onSaved }: { onClose: () => void; onSaved: () => 
           <button
             type="submit"
             disabled={busy}
-            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+            className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60"
           >
             {t("cp.action.create")}
           </button>

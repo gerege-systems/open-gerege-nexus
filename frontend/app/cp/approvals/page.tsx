@@ -13,21 +13,12 @@ import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Check, X } from "lucide-react";
 
-import Console from "@/components/cp/Console";
 import { useAction } from "@/components/cp/Action";
 import { Card, formatMoment } from "@/components/cp/ui";
 import { cp, type Approval } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 
-export default function ControlPlaneApprovalsPage() {
-  return (
-    <Console>
-      <Approvals />
-    </Console>
-  );
-}
-
-function Approvals() {
+export default function Approvals() {
   const { t, locale } = useI18n();
   const action = useAction();
   const [approvals, setApprovals] = useState<Approval[]>([]);
