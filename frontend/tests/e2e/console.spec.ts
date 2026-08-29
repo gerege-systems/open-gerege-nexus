@@ -194,13 +194,15 @@ test("an operator is added, and the handover is shown exactly once", async ({ pa
   // cp.action.add_operator. The two buttons named by their words are the two
   // this journey is about; everything else is reached by address or by role.
   await page.getByRole("button", { name: "Оператор нэмэх" }).click();
-  // The dialog's four fields, in the order it asks for them: address, name,
-  // reason, and the authenticator code. Filled by position rather than by
-  // label so that the journey does not break when the wording improves.
+  // The three fields this journey types into, by their labels. Filled by
+  // position at first, which broke the day the dialog grew a registration
+  // search above them: a position is a claim about every field before the one
+  // meant, and this dialog gains fields. The label is the thing being typed
+  // into.
   const form = page.getByRole("dialog");
-  await form.locator("input").nth(0).fill(CREATED.email);
-  await form.locator("input").nth(1).fill(CREATED.name);
-  await form.locator("input").nth(2).fill("шинэ ажилтан");
+  await form.getByLabel("И-мэйл").fill(CREATED.email);
+  await form.getByLabel("Нэр").fill(CREATED.name);
+  await form.getByLabel("Шалтгаан").fill("шинэ ажилтан");
   await form.getByRole("button", { name: "Оператор нэмэх" }).click();
 
   // The one moment these values exist: nothing on the server can show them
