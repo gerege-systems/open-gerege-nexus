@@ -16,21 +16,12 @@ import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { KeyRound, LockOpen, LogOut, Search } from "lucide-react";
 
-import Console from "@/components/cp/Console";
 import { useAction } from "@/components/cp/Action";
 import { Badge, Card, formatMoment, Table } from "@/components/cp/ui";
 import { cp, type Person } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 
-export default function ControlPlaneSupportPage() {
-  return (
-    <Console>
-      <Support />
-    </Console>
-  );
-}
-
-function Support() {
+export default function Support() {
   const { t, locale } = useI18n();
   const action = useAction();
   const [query, setQuery] = useState("");

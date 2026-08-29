@@ -11,11 +11,11 @@ import {useBrand} from "@/lib/brandContext";
 /**
  * The public header.
  *
- * The section items scroll to a part of this page and are listed in the order
- * those sections are rendered, so the first item is never the furthest away —
- * which is why the list comes from the page rather than being written out
+ * Each section item is a page of its own (`app/[section]`), at the address the
+ * item used to scroll to. They are listed in the order the page renders those
+ * sections, and the list comes from the page rather than being written out
  * here: a deployment that drops a section must not be left with a menu item
- * that scrolls nowhere.
+ * pointing at a 404.
  *
  * The last item leaves for the published documentation, so it opens in a new
  * tab and carries `rel="noopener"` rather than silently replacing the page
@@ -73,9 +73,9 @@ export default function SiteHeader({sections}: {sections: LandingSection[]}) {
         const link = SECTION_LINKS[section];
         if (!link) return null;
         return (
-          <a key={section} href={`#${link.anchor}`} onClick={() => setOpen(false)}>
+          <Link key={section} href={`/${link.anchor}`} onClick={() => setOpen(false)}>
             {t(link.label)}
-          </a>
+          </Link>
         );
       })}
       <a
@@ -91,10 +91,10 @@ export default function SiteHeader({sections}: {sections: LandingSection[]}) {
 
   return (
     <header className="gp-nav" ref={header}>
-      <a href="#top" className="gp-brand">
+      <Link href="/" className="gp-brand">
         <img src={brand.logoUrl} alt="" />
         <span>{brand.name}</span>
-      </a>
+      </Link>
       <nav>{items}</nav>
       <div className="gp-actions">
         <LanguageSwitcher variant="dark" />

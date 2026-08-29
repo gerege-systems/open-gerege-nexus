@@ -13,21 +13,13 @@ import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Building2, Plus, Search } from "lucide-react";
 
-import Console, { useConsole } from "@/components/cp/Console";
+import { useConsole } from "@/components/cp/Console";
 import { formatMoment } from "@/components/cp/ui";
 import { cp, type TenantSummary } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 import { Modal } from "@/components/ui";
 
-export default function ControlPlaneTenantsPage() {
-  return (
-    <Console>
-      <Tenants />
-    </Console>
-  );
-}
-
-function Tenants() {
+export default function Tenants() {
   const { t, locale } = useI18n();
   const { operator } = useConsole();
   const [creating, setCreating] = useState(false);
