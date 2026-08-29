@@ -314,6 +314,8 @@ export const cp = {
       method: "POST",
       body: JSON.stringify({ user_id: userID, reason }),
     }),
+  findPerson: (regNo: string) =>
+    request<DirectoryPerson>(`/directory/person?reg_no=${encodeURIComponent(regNo)}`),
   verifiedPeople: (search = "") =>
     request<{ people: VerifiedPerson[]; directory: boolean }>(`/directory/people?q=${encodeURIComponent(search)}`),
 
@@ -748,4 +750,13 @@ export interface PersonDetail extends RosterPerson {
   memberships: PersonMembership[];
   open_sessions: PersonSession[];
   impersonations: Array<{ operator_email: string; reason: string; created_at: string }>;
+}
+
+/** What the register says about a person's registration number. */
+export interface DirectoryPerson {
+  core_id: number;
+  name: string;
+  email: string;
+  phone: string;
+  registration_number: string;
 }

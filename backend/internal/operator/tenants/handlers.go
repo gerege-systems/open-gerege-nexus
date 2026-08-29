@@ -232,6 +232,12 @@ func (s *Service) Routes(r chi.Router) {
 		Get("/directory/organisation", s.handleFindOrganisation)
 	r.With(s.op.RequireCapability(operator.CapTenantCreate)).
 		Get("/directory/people", s.handleVerifiedPeople)
+	// One person by registration number, straight from the register. It sits
+	// with its two siblings rather than with the operator screen that uses it:
+	// this plane has one directory client, and the screens that need a name
+	// spelled the way the register spells it ask the same route for it.
+	r.With(s.op.RequireCapability(operator.CapTenantCreate)).
+		Get("/directory/person", s.handleFindPerson)
 	// Staffing an organisation after it is open. The second factor for the
 	// same reason as opening one: it hands somebody the keys to an
 	// organisation's data, and a borrowed console session should not be
