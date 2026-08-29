@@ -334,22 +334,20 @@ func TestARequestUsesCachedControlDecisionsWhenTheirTablesAreUnavailable(t *test
 		t.Fatalf("warm permission cache: permissions=%v error=%v", permissions, err)
 	}
 
-	blocker, err := f.pool.Begin(ctx)
-	if err != nil {
-		t.Fatalf("begin blocker: %v", err)
-	}
-	t.Cleanup(func() { _ = blocker.Rollback(context.Background()) })
-	if _, err := blocker.Exec(ctx, `LOCK TABLE
-		registry.platform_settings,
-		registry.feature_flags,
-		registry.feature_flag_overrides,
-		registry.tenants,
-		workspace.app_installations,
-		workspace.role_permissions,
-		registry.permissions
-		IN ACCESS EXCLUSIVE MODE`); err != nil {
-		t.Fatalf("lock control tables: %v", err)
-	}
+	// Taking ACCESS EXCLUSIVE on seven shared tables is the point of the test,
+	// and it is also the one thing here that cannot be done politely: `go test
+	// ./...` runs packages in parallel against one database, so another
+	// package holding a row in registry.tenants while it waits on something
+	// this transaction already holds is a deadlock — and Postgres resolves a
+	// deadlock by killing one of the two. It killed this one on 2026-08-29,
+	// twice, on branches that had changed no SQL at all.
+	//
+	// So: bound the wait, and start over rather than fail. lock_timeout turns
+	// "wait for ever behind another package" into a quick error, and the retry
+	// is what makes a lost race cost a second rather than a red build. Five
+	// attempts because the contention is other tests finishing, not a queue
+	// that grows.
+	lockControlTables(ctx, t, f)
 
 	// Prove the tables really are unavailable from the pool used by handlers.
 	probeCtx, cancelProbe := context.WithTimeout(ctx, 100*time.Millisecond)
@@ -379,4 +377,42 @@ func TestARequestUsesCachedControlDecisionsWhenTheirTablesAreUnavailable(t *test
 	if rec.Code != http.StatusNoContent {
 		t.Fatalf("cached request answered %d, want 204: %s", rec.Code, rec.Body.String())
 	}
+}
+
+// lockControlTables holds every table the gate reads, retrying a lost deadlock.
+//
+// The transaction is rolled back at the end of the test through t.Cleanup,
+// which is what releases the tables.
+func lockControlTables(ctx context.Context, t *testing.T, f *gateFixture) {
+	t.Helper()
+	const lockSQL = `LOCK TABLE
+		registry.platform_settings,
+		registry.feature_flags,
+		registry.feature_flag_overrides,
+		registry.tenants,
+		workspace.app_installations,
+		workspace.role_permissions,
+		registry.permissions
+		IN ACCESS EXCLUSIVE MODE`
+
+	var lastErr error
+	for attempt := 1; attempt <= 5; attempt++ {
+		tx, err := f.pool.Begin(ctx)
+		if err != nil {
+			t.Fatalf("begin blocker: %v", err)
+		}
+		if _, err := tx.Exec(ctx, `SET LOCAL lock_timeout = '3s'`); err != nil {
+			_ = tx.Rollback(ctx)
+			t.Fatalf("bound the lock wait: %v", err)
+		}
+		if _, err := tx.Exec(ctx, lockSQL); err == nil {
+			t.Cleanup(func() { _ = tx.Rollback(context.Background()) })
+			return
+		} else {
+			lastErr = err
+		}
+		_ = tx.Rollback(ctx)
+		time.Sleep(time.Duration(attempt) * 200 * time.Millisecond)
+	}
+	t.Fatalf("lock control tables after five attempts: %v", lastErr)
 }
