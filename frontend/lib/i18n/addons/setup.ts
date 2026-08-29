@@ -48,6 +48,11 @@ export const setup = {
     en: "The token that opens this deployment was written once to the server's log at boot. Copy it from that line and paste it here.",
   },
 
+  "setup.message.token_stale": {
+    mn: "Энэ токен хүчингүй болжээ — сервер дахин асахад шинэ токен үүсдэг. Логийн хамгийн сүүлийн мөрөөс аваарай.",
+    en: "That token is no longer valid — a restart mints a new one. Take the most recent line from the log.",
+  },
+
   "setup.message.not_armed": {
     mn: "Тохиргооны токен байхгүй байна. Сервер асахад бичсэн лог мөрөөс хаягийг нь аваарай, эсвэл серверийг дахин асаагаад шинэ токен авна уу.",
     en: "There is no setup token. Take the address from the line the server wrote to its log at boot, or restart it for a new one.",

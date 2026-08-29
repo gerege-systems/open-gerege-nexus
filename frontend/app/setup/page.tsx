@@ -62,6 +62,29 @@ export default function SetupPage() {
     void api.setupStatus().then(setStatus).catch(() => setStatus({ required: true, armed: true, core: false }));
   }, []);
 
+  // What a failed call means.
+  //
+  // The gate answers 404 — never 401 — to a token it does not hold, so that a
+  // stranger is not told there is a token to guess. The cost is borne by the
+  // operator: a link made before the last restart leaves "not found" sitting
+  // under a form whose every button will fail the same way, and nothing on the
+  // screen says the token is the reason. The token lives in memory and is
+  // minted afresh at each boot, so a stale one is the ordinary case, not a rare
+  // one.
+  //
+  // So a 404 drops the token and returns to the screen that asks for one, with
+  // the reason on it. Every other failure is the server's own words: "the
+  // directory refused", a password rule, a slug already taken.
+  function failed(err: Error & { status?: number }) {
+    if (err.status === 404) {
+      setToken("");
+      setTypedToken("");
+      setError(t("setup.message.token_stale"));
+      return;
+    }
+    setError(err.message);
+  }
+
   async function lookupOrganisation() {
     setError("");
     setBusy(true);
@@ -71,7 +94,7 @@ export default function SetupPage() {
       setLegalName(found.legal_name);
       setSlug(found.suggested_slug);
     } catch (err: any) {
-      setError(err.message);
+      failed(err);
     } finally {
       setBusy(false);
     }
@@ -85,7 +108,7 @@ export default function SetupPage() {
       setAdminName(found.name);
       setAdminEmail(found.email);
     } catch (err: any) {
-      setError(err.message);
+      failed(err);
     } finally {
       setBusy(false);
     }
@@ -108,7 +131,7 @@ export default function SetupPage() {
       );
       setStep(4);
     } catch (err: any) {
-      setError(err.message);
+      failed(err);
     } finally {
       setBusy(false);
     }
@@ -163,6 +186,7 @@ export default function SetupPage() {
       <Shell brand={brand}>
         <h1 className="signin-card__title">{t("setup.view.title")}</h1>
         <p className="signin-card__lede">{t("setup.message.token_missing")}</p>
+        {error && <p className="signin-alert">{error}</p>}
         <form className="setup-form" onSubmit={(e) => { e.preventDefault(); setToken(typedToken.trim()); }}>
           <label>
             <span>{t("setup.field.token")}</span>
