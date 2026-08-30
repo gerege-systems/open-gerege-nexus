@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gerege-systems/open-gerege-nexus/backend/internal/kernel/config"
+
 	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/totp"
 )
@@ -23,8 +25,6 @@ import (
 // that today; adding WebAuthn later is another way to satisfy the same
 // requireSecondFactor, not a change to anything around it.
 const (
-	// totpIssuer is what shows up beside the code in the authenticator app.
-	totpIssuer = "Gerege Nexus Control Plane"
 	// TOTPPeriod is the length of one code, in seconds. Exported so a screen's
 	// test can produce the code its second factor would.
 	TOTPPeriod = 30
@@ -50,19 +50,38 @@ func NewTOTPSecret(email string) (secret, uri string, err error) {
 	return secret, otpauthURI(email, secret), nil
 }
 
+// totpIssuer is what shows up beside the code in the authenticator app.
+//
+// It follows the deployment's own name rather than being written into the
+// image, for the same reason config.BrandName exists at all: one image, a
+// different .env, a hundred deployments. With the name baked in, every console
+// on a host that runs several of these products enrolled under the same string
+// — a phone showing four identical "Gerege Nexus Control Plane" entries and no
+// way to tell which is which, which is how this was found.
+//
+// The suffix stays: the console is the only thing here that asks for a second
+// factor, and naming it says which door the code opens.
+func totpIssuer() string { return config.BrandName() + " Control Plane" }
+
 // otpauthURI renders the enrolment URI by hand rather than through
 // otp.Key.URL(), so that the issuer and account label are escaped once, here,
 // and an e-mail address containing a character the format cares about cannot
 // produce a URI an authenticator reads as a different account.
 func otpauthURI(email, secret string) string {
-	label := url.PathEscape(totpIssuer + ":" + email)
+	issuer := totpIssuer()
+	label := url.PathEscape(issuer + ":" + email)
 	query := url.Values{
 		"secret": {secret},
-		"issuer": {totpIssuer},
+		"issuer": {issuer},
 		"period": {fmt.Sprint(TOTPPeriod)},
 		"digits": {"6"},
 	}
-	return "otpauth://totp/" + label + "?" + query.Encode()
+	// url.Values.Encode writes a space as `+`, which is legal in a query string
+	// and which authenticator applications print literally: the phone showed
+	// "Gerege+Nexus+Control+Plane". Percent-encoding is what they render as a
+	// space. The replacement cannot corrupt anything, because Encode has
+	// already written any literal `+` in the issuer as %2B.
+	return "otpauth://totp/" + label + "?" + strings.ReplaceAll(query.Encode(), "+", "%20")
 }
 
 // verifyTOTP checks a code and returns the time step it was issued for.
