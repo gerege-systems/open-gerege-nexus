@@ -65,6 +65,32 @@ test("a session that cannot be read at all is also shown the door", async () => 
   expect(complained).toHaveBeenCalled();
 });
 
+test("the door is a landing page, and the form is on it", async () => {
+  // The console's front door used to be one card on a pale screen: somebody who
+  // arrived at this hostname without a session was told nothing about what was
+  // behind it. It is now the platform's own landing page with the form in the
+  // hero, so the two have to be true at once — the argument is there, and the
+  // form is still reachable without scrolling past it.
+  api.me.mockRejectedValue(new Unauthorized());
+
+  frame();
+
+  // The form, unchanged.
+  expect(await screen.findByLabelText("cp.field.email")).toBeTruthy();
+  expect(screen.getByLabelText("cp.field.code")).toBeTruthy();
+  expect(screen.getByRole("button", { name: "cp.action.sign_in" })).toBeTruthy();
+
+  // And the page around it: what the console is, and the three claims it makes.
+  expect(screen.getByText("cp.landing.lede")).toBeTruthy();
+  expect(screen.getByText("cp.landing.card1_title")).toBeTruthy();
+  expect(screen.getByText("cp.landing.card3_title")).toBeTruthy();
+  // The five conditions on impersonation are the page's strongest claim, so a
+  // silent drop of one of them should fail here rather than in a screenshot.
+  for (const claim of ["imp_1", "imp_2", "imp_3", "imp_4", "imp_5"]) {
+    expect(screen.getByText(`cp.landing.${claim}`)).toBeTruthy();
+  }
+});
+
 test("a refused sign-in says one thing and takes the code away", async () => {
   api.me.mockRejectedValue(new Unauthorized());
   api.signIn.mockRejectedValue(new Error("invalid credentials"));

@@ -534,6 +534,80 @@ export const cp = {
 
   "cp.group.watch": { mn: "Ажиглалт", en: "Watch" },
   "cp.group.organisations": { mn: "Байгууллага", en: "Organisations" },
+
+  // Консолын нүүр хуудас — нэвтрээгүй хүн юу хардаг.
+  "cp.landing.chip": { mn: "КОНСОЛ", en: "CONSOLE" },
+  "cp.landing.eyebrow": { mn: "ОПЕРАТОРЫН КОНСОЛ · ХЯЗГААРЛАГДСАН ХАНДАЛТ", en: "OPERATOR CONSOLE · RESTRICTED ACCESS" },
+  // Гурван хэсэг: hero-гийн гарчиг хоёр мөрөөс хэтрэхгүй байх ёстой — дөрөв
+  // болмогц нэвтрэх карт доошоо түлхэгдэж, нэвтрэх гэж ирсэн хүн гүйлгэх
+  // шаардлагатай болно. «Операторын» гэдэг үг eyebrow дээр аль хэдийн бий.
+  "cp.landing.title_lead": { mn: "Суулгацыг", en: "The console that" },
+  "cp.landing.title_highlight": { mn: "удирдах", en: "runs" },
+  "cp.landing.title_tail": { mn: "консол", en: "the deployment" },
+  "cp.landing.lede": {
+    mn: "Байгууллага үүсгэх, түдгэлзүүлэх, эрх олгох, квот тохируулах, audit унших — бүгд нэг дороос. Хэрэглэгчийн бүртгэлээс тусдаа identity, тусдаа cookie, тусдаа өгөгдлийн сангийн role.",
+    en: "Create and suspend organisations, grant capabilities, set quotas, read the audit trail — from one place. A separate identity, cookie and database role from any user account.",
+  },
+  "cp.landing.stat_roles": { mn: "4", en: "4" },
+  "cp.landing.stat_roles_label": { mn: "үүрэг", en: "roles" },
+  "cp.landing.stat_caps": { mn: "15", en: "15" },
+  "cp.landing.stat_caps_label": { mn: "чадвар, нэг хүснэгтэд", en: "capabilities, in one table" },
+  "cp.landing.stat_session": { mn: "8 цаг", en: "8 hours" },
+  "cp.landing.stat_session_label": { mn: "session-ий хугацаа", en: "session lifetime" },
+  "cp.landing.stat_stepup": { mn: "5 минут", en: "5 minutes" },
+  "cp.landing.stat_stepup_label": { mn: "step-up цонх", en: "step-up window" },
+
+  "cp.landing.model_eyebrow": { mn: "ЭРХИЙН ЗАГВАР", en: "THE ACCESS MODEL" },
+  "cp.landing.model_title": { mn: "Хэн юу хийж чадахыг нэг хүснэгт хэлнэ", en: "One table says who may do what" },
+  "cp.landing.model_lede": {
+    mn: "«Энэ үүрэг тэрийг хийж чадах уу» гэсэн асуулт бүр тэр хүснэгтийг уншиж хариулагдана.",
+    en: "Every question of the form “may this role do that” is answered by reading it.",
+  },
+
+  "cp.landing.card1_tag": { mn: "Дөрвөн үүрэг", en: "Four roles" },
+  "cp.landing.card1_title": { mn: "Шат биш, хуваарилалт", en: "Not a ladder, a division" },
+  "cp.landing.card1_body": {
+    mn: "operator байгууллага үүсгэж чадна, support чадахгүй. support байгууллагын дотор харж чадна, operator чадахгүй. Аль нь ч нөгөөгөөсөө «дээгүүр» биш.",
+    en: "An operator can create an organisation and support cannot; support can look inside one and an operator cannot. Neither is “more” than the other.",
+  },
+  "cp.landing.card2_tag": { mn: "Нэг газар", en: "One place" },
+  "cp.landing.card2_title": { mn: "Handler дотор нөхцөл байхгүй", en: "No condition inside a handler" },
+  "cp.landing.card2_body": {
+    mn: "Эрхийн шалгалт бүр нэг хүснэгтээс. Handler дотор бичигдсэн нөхцөл бол эрхийн алдаа амьдардаг газар — тэнд бүтэн зургийг хэн ч нэг дор харж чадахгүй.",
+    en: "Every check reads that table. A condition written inside a handler is where privilege bugs live, and where nobody can see the whole picture at once.",
+  },
+  "cp.landing.card3_tag": { mn: "Хамгийн хүнд үйлдэл", en: "The heaviest action" },
+  "cp.landing.card3_title": { mn: "Устгал бол хоёр хүний шийдвэр", en: "Deletion takes two people" },
+  "cp.landing.card3_body": {
+    mn: "Нэг superadmin хүсэлт гаргаж, ӨӨР нэг зөвшөөрнө. Хоёр үүрэг барьсан нэг хүн бол хоёр хүн биш — тиймээс шалгалт нь чадвар дээр биш, хувь хүн дээр.",
+    en: "One superadmin requests it and a different one approves. One person holding both roles is not two people, so the check is on the identity rather than the capability.",
+  },
+  "cp.landing.auditor": {
+    mn: "auditor бүхнийг уншиж, юу ч хийж чадахгүй. Тэр нь яг л зорилго: платформыг шалгадаг, өөрчилж чаддаггүй хүн.",
+    en: "An auditor reads everything and can do nothing. That is the point of it: somebody who checks the platform without being able to change it.",
+  },
+
+  "cp.landing.imp_eyebrow": { mn: "IMPERSONATION", en: "IMPERSONATION" },
+  "cp.landing.imp_title": { mn: "Байгууллагын нүдээр харах — чимээгүй хийх боломжгүй", en: "Looking as somebody else — impossible to do quietly" },
+  "cp.landing.imp_lede": {
+    mn: "Консолын хийдэг зүйлсээс цорын ганц нь хэрэглэгчийн өгөгдөлд хүрдэг. Тиймээс тэр нь чимээгүй хийх боломжгүй байхаар барьсан: таван нөхцөл, аль нь ч сонголттой биш.",
+    en: "This is the one thing the console does that reaches a customer's data, so it is the one thing built to be impossible to do quietly: five conditions, none of them optional.",
+  },
+  "cp.landing.imp_1": { mn: "Бичсэн шалтгаан — хадгалагдана, checkbox биш", en: "A typed reason — stored, not a checkbox" },
+  "cp.landing.imp_2": { mn: "Хоёр дахь хүчин зүйлийг дахин", en: "The second factor, again" },
+  "cp.landing.imp_3": { mn: "30 минут — сунгагдахгүй", en: "Thirty minutes — never extended" },
+  "cp.landing.imp_4": { mn: "Байгууллагын дэлгэц дээр banner", en: "A banner on the organisation's own screen" },
+  "cp.landing.imp_5": { mn: "Хоёр audit мөр — операторынх ба байгууллагынх", en: "Two audit trails — the operator's and the organisation's" },
+  "cp.landing.imp_note": {
+    mn: "Сүүлийнх нь хамгийн чухал. Зөвхөн операторууд харж чаддаг impersonation бол цаасан бичигтэй харуулдалт болно.",
+    en: "The last one matters most. An impersonation only operators could see would be surveillance with paperwork.",
+  },
+
+  "cp.landing.footer": {
+    mn: "Зөвхөн бүртгэлтэй оператор. Нэвтрэлтийн оролдлого бүр бүртгэгдэнэ.",
+    en: "Registered operators only. Every sign-in attempt is recorded.",
+  },
+
   "cp.group.platform": { mn: "Платформ", en: "Platform" },
   "cp.group.investigation": { mn: "Мөрдлөг", en: "Investigation" },
 };

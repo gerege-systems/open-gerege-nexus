@@ -329,6 +329,13 @@ html[data-theme="dark"] :where(input, textarea)::placeholder { color: var(--gere
    from the on-navy tokens, which are white at an alpha chosen to stay above
    4.5:1 for copy and 3:1 for incidental labels. */
 .gp-landing,.eid-page,.eid-callback{--gp-navy:#0050b0;--gp-on-navy:#f7f8fb;--gp-on-navy-70:rgb(247 248 251 / 78%);--gp-on-navy-45:rgb(247 248 251 / 62%);--gp-gold:#f2bd42;--gp-gold-h:#ffd267;--gp-ink:#15233b;--gp-muted:#66758c;background:#f7f9fc;color:var(--gp-ink);min-height:100vh}
+/* Консолын хаалганы nav наалддаггүй.
+   Нийтийн хуудас дээр наалддаг нь цэсийг хаанаас ч хүрэхийн тулд; консолын
+   nav дээр цэс байхгүй — зөвхөн тэмдэг ба хэлний сонголт. Наалдацтай үлдээх
+   нь ямар ч ашиггүй бөгөөд e2e тест яг үүнийг барьсан: нэвтрэх товч рүү
+   гүйлгэхэд 72px өндөр толгой түүний дээгүүр орж, дарагдахгүй болгож байв.
+   Хүн ч мөн адил тулгарна — нарийн дэлгэц дээр илүү олон удаа. */
+.gp-nav--plain{position:static}
 .gp-nav{height:72px;padding:0 max(24px,calc((100vw - 1180px)/2));display:flex;align-items:center;justify-content:space-between;background:var(--gp-navy);color:#fff;position:sticky;top:0;z-index:30;border-bottom:1px solid rgba(255,255,255,.11)}
 .gp-brand{display:flex;align-items:center;gap:10px;color:inherit;text-decoration:none;font-weight:800;letter-spacing:-.02em}.gp-brand img{width:36px;height:36px;border-radius:8px}.gp-nav>nav{display:flex;gap:30px}.gp-nav>nav a{font-size:14px;color:var(--gp-on-navy-70);text-decoration:none}.gp-nav>nav a:hover{color:var(--gp-gold)}.gp-actions{display:flex;align-items:center;gap:12px}.gp-nav__toggle{display:none;align-items:center;justify-content:center;width:40px;height:40px;border-radius:9px;border:1px solid rgba(255,255,255,.22);background:transparent;color:#fff;font-size:18px;line-height:1;cursor:pointer}.gp-nav__toggle:hover{background:rgba(255,255,255,.08)}.gp-nav__menu{display:none}.gp-gold{display:inline-flex;align-items:center;justify-content:center;gap:9px;background:var(--gp-gold);color:#17243a!important;padding:10px 17px;border-radius:9px;font-weight:800;text-decoration:none;box-shadow:0 8px 22px rgba(242,189,66,.18)}.gp-gold:hover{background:var(--gp-gold-h)}.gp-gold--large{padding:14px 22px}.gp-gold svg,.gp-outline svg{width:18px}
 .gp-hero{position:relative;background:var(--gp-navy);color:#fff;overflow:hidden}.gp-pattern,.eid-page__pattern{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.07) 1px,transparent 1px);background-size:44px 44px;mask-image:linear-gradient(110deg,#000,transparent 72%)}.gp-hero__inner{position:relative;max-width:1180px;margin:auto;padding:82px 24px 88px;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(360px,.75fr);gap:70px;align-items:center}.gp-copy{max-width:680px}.gp-eyebrow{display:inline-flex;align-items:center;gap:9px;color:var(--gp-on-navy-70);font-size:12px;font-weight:800;letter-spacing:.12em}.gp-eyebrow i{display:block;width:7px;height:7px;border-radius:50%;background:var(--gp-gold);box-shadow:0 0 0 5px rgba(242,189,66,.16)}.gp-eyebrow--blue{color:#45607f}.gp-eyebrow--blue i{background:#0064e1;box-shadow:0 0 0 5px rgba(0,100,225,.12)}.gp-copy h1,.eid-page__intro h1{font-size:clamp(44px,6vw,76px);line-height:1.02;letter-spacing:-.055em;color:#fff;margin:22px 0 24px;font-weight:850}.gp-copy h1 em,.eid-page__intro h1 em{font-style:normal;color:var(--gp-gold)}.gp-copy>p{font-size:18px;line-height:1.7;color:var(--gp-on-navy-70);max-width:650px}.gp-cta{display:flex;gap:13px;margin:34px 0}.gp-outline{display:inline-flex;align-items:center;padding:13px 20px;border:1px solid rgba(255,255,255,.26);border-radius:9px;color:#fff;text-decoration:none;font-weight:700}.gp-outline:hover{border-color:#fff;background:rgba(255,255,255,.06)}.gp-stats{display:flex;gap:30px;margin-top:42px}.gp-stats span{display:flex;flex-direction:column;color:var(--gp-on-navy-45);font-size:12px}.gp-stats b{font-size:17px;color:#fff;margin-bottom:3px}.gp-hero__inner--solo{grid-template-columns:minmax(0,1fr)}.gp-login-slot{position:relative}.gp-login-slot:before{content:"";position:absolute;inset:-24px;background:radial-gradient(circle,rgba(0,100,225,.27),transparent 68%);filter:blur(20px)}
@@ -337,6 +344,12 @@ html[data-theme="dark"] :where(input, textarea)::placeholder { color: var(--gere
    .gp-feature-ийн хэмжээ, радиус, hover-ийг дагана: тэдгээр нь энэ хуудасны
    картны хэл бөгөөд шинэ хэсэг өөр хэлээр ярих шаардлагагүй. Ялгаа нь зөвхөн
    дээд талын зураг ба доод талын хаяг. */
+/* Консолын нүүрийн хоёр жижиг зүйл: nav дахь ялгах тэмдэг ба картуудын доорх
+   нэг мөрийн тэмдэглэл. Аль аль нь өөрийн хэсэг зохион байгуулах хэмжээнд том
+   биш тул шинэ бүрэлдэхүүн болгосонгүй. */
+.gp-brand__chip{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;font-weight:800;letter-spacing:.12em;color:var(--gp-on-navy-45);border:1px solid rgba(255,255,255,.22);border-radius:6px;padding:3px 7px;margin-left:2px}
+.signin-shell__nav .gp-brand__chip{color:var(--sg-muted);border-color:var(--sg-border)}
+.cp-landing__note{max-width:740px;margin:22px auto 0;text-align:center;color:var(--gp-muted);font-size:15px;line-height:1.7}
 .gp-services{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px}
 .gp-service{display:flex;flex-direction:column;border:1px solid #dfe6ef;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 8px 24px rgba(15,35,63,.04);text-decoration:none;color:inherit;transition:.2s}
 .gp-service:hover{transform:translateY(-3px);border-color:#7a9fca}
@@ -407,14 +420,27 @@ html[data-theme="dark"] :where(input, textarea)::placeholder { color: var(--gere
    `h1..h4 { color: var(--gerege-fg) }` суурь дүрэм нь өвлөлтөөс хүчтэй тул
    харанхуй горимд --gerege-fg (бараг цагаан) нь энэ ЦАЙВАР картан дээр
    бичигдэж, «Нэвтрэх» гарчиг цагаан дээр цагаан болдог байв. */
-.signin-shell{
+/* Токенууд ба зохион байгуулалт нь хоёр өөр зүйл.
+   Консолын нүүр хуудас нь navy hero дээр яг ижил цагаан картыг суулгадаг тул
+   токенууд хэрэгтэй ч `min-height:100vh` бүхий цайвар дэлгэц хэрэггүй. Хоёрыг
+   нь салгаснаар карт хоёр газарт нэг тодорхойлолтоор ажиллана. */
+.signin-shell,.cp-signin{
   --sg-bg:#f9fafc;--sg-surface:#fff;--sg-surface-2:#f1f3f7;
   --sg-fg:#11161e;--sg-muted:#5e646c;--sg-faint:#9b9fa5;
   --sg-border:#e2e5e9;--sg-border-strong:#c0c4cb;
   --sg-blue:#0065da;--sg-blue-hover:#0056c6;--sg-blue-soft:#e4f0ff;--sg-blue-text:#005ccd;
-  --sg-danger:#cc272e;--sg-danger-soft:#ffecea;
-  background:var(--sg-bg);color:var(--sg-fg);min-height:100vh;display:flex;flex-direction:column
+  --sg-danger:#cc272e;--sg-danger-soft:#ffecea
 }
+.signin-shell{background:var(--sg-bg);color:var(--sg-fg);min-height:100vh;display:flex;flex-direction:column}
+/* Hero дотор карт нь өөрийн дэлгэц биш, багана — нарийхан, багавтар зайтай. */
+.cp-signin{color:var(--sg-fg)}
+/* `position:relative` нь чимэглэл биш, шаардлага. `.gp-login-slot` нь ард нь
+   гэрэлтэх давхаргыг `::before`-оор зурдаг ба тэр нь inset:-24px-тэй — өөрөөр
+   хэлбэл картаас том. Байрлуулаагүй карт түүний доогуур үлдэж, товч нь
+   харагдсаар атлаа дарагдахгүй болно. Нийтийн хуудасны eID карт яг үүний
+   тулд `position:relative` байдаг; e2e тест энэ ялгааг олсон. */
+.cp-signin .signin-card{position:relative;max-width:460px;padding:30px;box-shadow:0 24px 60px rgba(0,11,30,.24)}
+.cp-signin .signin-card__title{font-size:23px}
 .signin-shell__nav{border-bottom:1px solid var(--sg-border);display:flex;align-items:center;justify-content:space-between;padding:18px 32px}
 .signin-shell__nav .gp-brand{color:var(--sg-fg)}
 .signin-shell__nav .gp-brand img{width:26px;height:26px;border-radius:6px}

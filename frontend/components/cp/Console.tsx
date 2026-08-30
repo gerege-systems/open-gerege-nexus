@@ -27,6 +27,7 @@ import {
   Building2,
   CalendarClock,
   CheckCheck,
+  CheckCircle2,
   ChevronDown,
   ChevronsDownUp,
   ChevronsUpDown,
@@ -488,77 +489,165 @@ function SignIn({ onSignedIn }: { onSignedIn: (operator: Operator) => void }) {
   }
 
   /*
-    The same door /login and /setup are: `signin-shell` outside, `signin-card`
-    inside, `setup-form` for the fields. It was a hand-rolled Tailwind card
-    until now, which is how the console ended up with its own input border, its
-    own focus ring and its own idea of a primary button — three decisions that
-    were already made once, in CSS, for every other screen where somebody is
-    standing outside a deployment they cannot get into.
+    The console's front door is a landing page, not a lonely card.
+
+    It used to be `signin-shell` — a pale screen with one box in the middle of
+    it — and that is what somebody who arrives at this hostname without a
+    session saw: no statement of what is behind the door, and nothing that
+    looked like the rest of the platform. The card itself is unchanged
+    (`signin-card` outside, `setup-form` for the fields, so the console still
+    borrows the input border, the focus ring and the primary button that were
+    decided once in CSS); what is around it is the platform's own landing
+    language — navy hero, grid pattern, gold accent, 1180px column.
+
+    The card sits in the hero beside the copy, in the slot the public page
+    keeps for the eID card. Somebody who came here to sign in reaches the form
+    without scrolling; somebody who came to find out what this hostname is
+    reads down the page.
+
+    Everything the page claims below the fold is true of the code it is
+    describing — the four roles, the one capability table, the two-superadmin
+    deletion, the five conditions on impersonation. A front door that oversells
+    the room behind it is the one kind of copy an operator will notice.
   */
   return (
-    <main className="signin-shell">
-      <header className="signin-shell__nav">
+    <div className="gp-landing" id="top">
+      <header className="gp-nav gp-nav--plain">
         <span className="gp-brand">
           <img src={brand.logoUrl} alt="" />
           <span>{brand.name}</span>
+          <small className="gp-brand__chip">{t("cp.landing.chip")}</small>
         </span>
         <LanguageSwitcher />
       </header>
-      <section className="signin-shell__body">
-        <div className="signin-card">
-          <div>
-            <h1 className="signin-card__title">{t("cp.login.title")}</h1>
-            <p className="signin-card__lede">{t("cp.login.hint")}</p>
+
+      <section className="gp-hero">
+        <div className="gp-pattern" />
+        <div className="gp-hero__inner">
+          <div className="gp-copy">
+            <span className="gp-eyebrow">
+              <i /> {t("cp.landing.eyebrow")}
+            </span>
+            <h1>
+              {t("cp.landing.title_lead")} <em>{t("cp.landing.title_highlight")}</em>{" "}
+              {t("cp.landing.title_tail")}
+            </h1>
+            <p>{t("cp.landing.lede")}</p>
+            <div className="gp-stats">
+              <span><b>{t("cp.landing.stat_roles")}</b>{t("cp.landing.stat_roles_label")}</span>
+              <span><b>{t("cp.landing.stat_caps")}</b>{t("cp.landing.stat_caps_label")}</span>
+              <span><b>{t("cp.landing.stat_session")}</b>{t("cp.landing.stat_session_label")}</span>
+              <span><b>{t("cp.landing.stat_stepup")}</b>{t("cp.landing.stat_stepup_label")}</span>
+            </div>
           </div>
 
-          {failed && <p className="signin-alert">{t("cp.login.failed")}</p>}
+          <div className="gp-login-slot cp-signin">
+            <div className="signin-card">
+              <div>
+                <h1 className="signin-card__title">{t("cp.login.title")}</h1>
+                <p className="signin-card__lede">{t("cp.login.hint")}</p>
+              </div>
 
-          <form className="setup-form" onSubmit={submit}>
-            <label>
-              <span>{t("cp.field.email")}</span>
-              <input
-                type="email"
-                autoComplete="username"
-                required
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-              />
-            </label>
+              {failed && <p className="signin-alert">{t("cp.login.failed")}</p>}
 
-            <label>
-              <span>{t("cp.field.password")}</span>
-              <input
-                type="password"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-              />
-            </label>
+              <form className="setup-form" onSubmit={submit}>
+                <label>
+                  <span>{t("cp.field.email")}</span>
+                  <input
+                    type="email"
+                    autoComplete="username"
+                    required
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                  />
+                </label>
 
-            <label>
-              <span>{t("cp.field.code")}</span>
-              <input
-                // A numeric keypad on a telephone, and no autofill: a one-time
-                // code is not something a password manager should be filling
-                // from a saved value.
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                pattern="[0-9]*"
-                maxLength={6}
-                required
-                value={code}
-                onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))}
-                className="font-mono tracking-[0.4em]"
-              />
-            </label>
+                <label>
+                  <span>{t("cp.field.password")}</span>
+                  <input
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                  />
+                </label>
 
-            <button className="signin-btn signin-btn--primary" type="submit" disabled={busy}>
-              {t("cp.action.sign_in")}
-            </button>
-          </form>
+                <label>
+                  <span>{t("cp.field.code")}</span>
+                  <input
+                    // A numeric keypad on a telephone, and no autofill: a
+                    // one-time code is not something a password manager should
+                    // be filling from a saved value.
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    pattern="[0-9]*"
+                    maxLength={6}
+                    required
+                    value={code}
+                    onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))}
+                    className="font-mono tracking-[0.4em]"
+                  />
+                </label>
+
+                <button className="signin-btn signin-btn--primary" type="submit" disabled={busy}>
+                  {t("cp.action.sign_in")}
+                </button>
+              </form>
+            </div>
+          </div>
         </div>
       </section>
-    </main>
+
+      <section className="gp-section">
+        <div className="gp-heading">
+          <span>{t("cp.landing.model_eyebrow")}</span>
+          <h2>{t("cp.landing.model_title")}</h2>
+          <p>{t("cp.landing.model_lede")}</p>
+        </div>
+
+        <div className="gp-services">
+          <div className="gp-feature">
+            <span className="tag">{t("cp.landing.card1_tag")}</span>
+            <h3>{t("cp.landing.card1_title")}</h3>
+            <p>{t("cp.landing.card1_body")}</p>
+          </div>
+          <div className="gp-feature">
+            <span className="tag">{t("cp.landing.card2_tag")}</span>
+            <h3>{t("cp.landing.card2_title")}</h3>
+            <p>{t("cp.landing.card2_body")}</p>
+          </div>
+          <div className="gp-feature gp-feature--dark">
+            <span className="tag">{t("cp.landing.card3_tag")}</span>
+            <h3>{t("cp.landing.card3_title")}</h3>
+            <p>{t("cp.landing.card3_body")}</p>
+          </div>
+        </div>
+
+        <p className="cp-landing__note">{t("cp.landing.auditor")}</p>
+      </section>
+
+      <section className="gp-trust">
+        <div>
+          <span className="gp-eyebrow gp-eyebrow--blue">
+            <i /> {t("cp.landing.imp_eyebrow")}
+          </span>
+          <h2>{t("cp.landing.imp_title")}</h2>
+          <p>{t("cp.landing.imp_lede")}</p>
+        </div>
+        <ul>
+          <li><CheckCircle2 /> {t("cp.landing.imp_1")}</li>
+          <li><CheckCircle2 /> {t("cp.landing.imp_2")}</li>
+          <li><CheckCircle2 /> {t("cp.landing.imp_3")}</li>
+          <li><CheckCircle2 /> {t("cp.landing.imp_4")}</li>
+          <li><CheckCircle2 /> {t("cp.landing.imp_5")}</li>
+        </ul>
+      </section>
+
+      <footer className="gp-footer">
+        <span>{t("cp.landing.imp_note")}</span>
+        <span>{t("cp.landing.footer")}</span>
+      </footer>
+    </div>
   );
 }
