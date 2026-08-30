@@ -136,7 +136,7 @@ func (h *Handlers) HandleDeviceStaffPIN(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	identity, err := h.staffPIN.Verify(r.Context(), device.TenantID, req.PIN)
+	identity, err := h.staffPIN.VerifyOnDevice(r.Context(), device.TenantID, device.ID, req.PIN)
 	switch {
 	case errors.Is(err, nexus.ErrStaffCredentialRejected):
 		// One answer for a wrong secret, a locked credential and an
