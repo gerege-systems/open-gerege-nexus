@@ -320,9 +320,20 @@ docker system df
 **Засах.**
 
 ```bash
-# Хамгийн аюулгүй, ихэвчлэн хамгийн үр дүнтэй
-docker image prune -af --filter "until=168h"
+# 1 — build cache. Хамгийн аюулгүй, ихэвчлэн хамгийн том.
 docker builder prune -af
+
+# 2 — хуучин tag-ууд. `prune -a` нь ашиглагдаагүй БҮХ image-ийг авах тул
+#     rollback хийх зүйлгүй үлдэнэ; оронд нь repo тус бүрээс ажиллаж байгаа
+#     нь + сүүлийн гурвыг үлдээнэ.
+KEEP=3
+INUSE=$(docker ps -a --format '{{.Image}}' | sort -u)
+for repo in ghcr.io/gerege-systems/open-gerege-nexus/backend \
+            ghcr.io/gerege-systems/open-gerege-nexus/frontend; do
+  docker images --format '{{.CreatedAt}}|{{.Repository}}:{{.Tag}}' "$repo" \
+    | sort -r | cut -d'|' -f2 | tail -n +$((KEEP+1)) \
+    | grep -vxF "$INUSE" | xargs -r -n 40 docker rmi
+done
 
 # Prometheus-ийн эзлэх хэмжээ
 docker exec gerege_nexus_prometheus du -sh /prometheus
@@ -337,6 +348,15 @@ docker exec -i gerege_nexus_postgres psql -U postgres -d platform_db -c "
 
 **Устгаж болохгүй зүйлс:** `gerege_nexus_postgres_data` volume, шифрлэлтийн
 түлхүүр агуулсан `.env` файлууд, гарын үсэгтэй PDF-үүд.
+
+**Хамгийн сүүлд гарсан: 2026-08-30, nexus.gerege.mn — 81%.** Хэмжсэн зүйл:
+294 image / 42.7 GB, build cache 11.9 GB. Ихэнх нь өдөр бүрийн deploy-ийн
+хуучин tag байсан — backend 129, frontend 130. Build cache ба хуучин
+tag-уудыг цэвэрлэхэд **61 GB → 22 GB (81% → 29%)**. Зогссон контейнерууд
+хуучин tag дээр суугаагүйг эхлээд шалгасан.
+
+Энэ нь дахин давтагдана: deploy бүр хоёр image нэмдэг ба `ghcr-retention.yml`
+нь зөвхөн GHCR талыг цэвэрлэдэг, хостын дискийг биш.
 
 **Өргөжүүлэх.** 95% давбал шууд — цаг хэдхэн байна.
 
