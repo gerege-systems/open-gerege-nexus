@@ -140,6 +140,11 @@ func (s *Service) tenantTrouble(ctx context.Context) []TenantTrouble {
 		}
 		trouble = append(trouble, row)
 	}
+	// Хяналтын самбарын хувьд дутуу жагсаалт нь «асуудалгүй» гэсэн хариу:
+	// уншилт тасарсныг чимээгүй өнгөрөөвөл тэр нь эрүүл байдлын дүр эсгэнэ.
+	if err := rows.Err(); err != nil {
+		slog.Warn("control plane: could not read every failure row", "error", err)
+	}
 	return trouble
 }
 
@@ -208,6 +213,10 @@ func (s *Service) CatalogStatus(ctx context.Context) CatalogStatus {
 	status.Apps = status.Apps[:0]
 	for _, app := range byApp {
 		status.Apps = append(status.Apps, *app)
+	}
+	// Каталогийн дутуу жагсаалт нь «энэ апп хаана ч суугаагүй» гэж уншигдана.
+	if err := rows.Err(); err != nil {
+		slog.Warn("control plane: could not read every installed app", "error", err)
 	}
 	return status
 }

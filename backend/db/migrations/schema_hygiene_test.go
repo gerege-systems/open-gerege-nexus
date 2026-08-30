@@ -108,6 +108,12 @@ func TestEveryStringColumnCarriesItsLength(t *testing.T) {
 		 WHERE c.table_schema IN ('registry', 'workspace', 'operator')
 		   AND c.data_type = 'text'
 		   AND t.table_type = 'BASE TABLE'
+		   -- Миграц биш, тест үүсгэсэн хүснэгтүүд. Бодлого амьд эсэхийг
+		   -- шалгаад үлддэг хэдэн мөр бөгөөд энэ файлын дүрэм тэдэнд
+		   -- хамаарахгүй: миграцаар үүсээгүй зүйлийг миграцаар засах
+		   -- боломжгүй. Тэднийг оруулснаас болж энэ тест нь ямар багц
+		   -- өмнө нь ажилласнаас хамаарч уначихдаг байв.
+		   AND c.table_name NOT LIKE '%\_probe'
 		 ORDER BY 1`)
 	if err != nil {
 		t.Fatal(err)
