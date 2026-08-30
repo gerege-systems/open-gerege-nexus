@@ -11,11 +11,13 @@ package staffpin
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"net/http"
 	"regexp"
 	"time"
 
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/kernel/httpx"
+	"github.com/gerege-systems/open-gerege-nexus/backend/internal/kernel/security"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/audit"
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/workspace/auth"
 	"github.com/gerege-systems/open-gerege-nexus/backend/pkg/nexus"
@@ -56,7 +58,7 @@ func (s *Service) HandleSetPIN(w http.ResponseWriter, r *http.Request) {
 		httpx.Error(w, http.StatusBadRequest, "PIN must contain 4-12 digits")
 		return
 	}
-	hash, err := auth.HashPassword(req.PIN)
+	hash, err := security.HashPIN(req.PIN)
 	if err != nil {
 		httpx.Error(w, http.StatusInternalServerError, "failed to protect PIN")
 		return
@@ -77,6 +79,66 @@ func (s *Service) HandleSetPIN(w http.ResponseWriter, r *http.Request) {
 }
 
 // Verify authenticates a PIN typed at a device for a given tenant.
+// Түгжээний хэмжүүрүүд.
+//
+// Таван оролдлого нь бичих алдаанд өгөөмөр, таахад хатуу: дөрвөн оронтой PIN-ий
+// арван мянган хувилбарыг арван таван минутын завсарлагатайгаар туулахад
+// зуу гаруй хоног шаардана.
+const (
+	staffPINMaxFailures = 5
+	staffPINLockFor     = 15 * time.Minute
+)
+
+// VerifyOnDevice шалгаад буруу оролдлогыг ТӨХӨӨРӨМЖ дээр тоолно.
+//
+// PIN дангаараа ирдэг тул аль ажилтных болохыг мэдэхгүй — буруу оролдлогыг
+// credential-д онооход хэн нэгэн хажуугийн хүнийг санаатай түгжиж чадна.
+// Таагаад байгаа нь касс бөгөөд тэр нь мэдэгддэг.
+func (s *Service) VerifyOnDevice(ctx context.Context, tenantID, deviceID, secret string) (nexus.StaffIdentity, error) {
+	var lockedUntil *time.Time
+	if err := s.db.QueryRow(ctx,
+		`SELECT staff_pin_locked_until FROM workspace.devices WHERE id = $1::uuid AND tenant_id = $2::uuid`,
+		deviceID, tenantID).Scan(&lockedUntil); err != nil {
+		return nexus.StaffIdentity{}, err
+	}
+	if lockedUntil != nil && lockedUntil.After(time.Now()) {
+		// Түгжигдсэн касс буруу PIN-тэй ижил хариу авна: аль нь болохыг
+		// хэлэх нь кассны өмнө зогсож байгаа хүнд аль хэдийн хэлсэн нь болно.
+		return nexus.StaffIdentity{}, ErrStaffCredentialRejected
+	}
+
+	identity, err := s.Verify(ctx, tenantID, secret)
+	if errors.Is(err, ErrStaffCredentialRejected) {
+		// Тоолол ба түгжээ нэг statement-д: хоёр касс зэрэг таавал хоёулаа
+		// уншаад нэгийг нь бичих уралдаан үүсэхгүй.
+		if _, updateErr := s.db.Exec(ctx, `
+			UPDATE workspace.devices
+			   SET staff_pin_failures = staff_pin_failures + 1,
+			       staff_pin_locked_until = CASE
+			           WHEN staff_pin_failures + 1 >= $3 THEN NOW() + $4::interval
+			           ELSE staff_pin_locked_until END,
+			       updated_at = NOW()
+			 WHERE id = $1::uuid AND tenant_id = $2::uuid`,
+			deviceID, tenantID, staffPINMaxFailures, staffPINLockFor.String()); updateErr != nil {
+			slog.Warn("could not count a failed staff PIN", "device_id", deviceID, "error", updateErr)
+		}
+		return nexus.StaffIdentity{}, err
+	}
+	if err != nil {
+		return nexus.StaffIdentity{}, err
+	}
+
+	if _, err := s.db.Exec(ctx, `
+		UPDATE workspace.devices
+		   SET staff_pin_failures = 0, staff_pin_locked_until = NULL, updated_at = NOW()
+		 WHERE id = $1::uuid AND tenant_id = $2::uuid
+		   AND (staff_pin_failures <> 0 OR staff_pin_locked_until IS NOT NULL)`,
+		deviceID, tenantID); err != nil {
+		slog.Warn("could not clear the staff PIN failures", "device_id", deviceID, "error", err)
+	}
+	return identity, nil
+}
+
 func (s *Service) Verify(ctx context.Context, tenantID, secret string) (nexus.StaffIdentity, error) {
 	if !validPIN.MatchString(secret) {
 		return nexus.StaffIdentity{}, ErrStaffCredentialRejected

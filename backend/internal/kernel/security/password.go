@@ -73,6 +73,32 @@ func argonLanes() uint8 {
 	return 1
 }
 
+// HashPIN hashes a numeric PIN, at a cost the PIN's own strength justifies.
+//
+// A four-digit PIN has ten thousand values. No key derivation makes that space
+// large: an attacker holding the table walks it in minutes whatever the memory
+// parameter, so the protection has to be — and now is — the attempt counter on
+// the till (workspace.devices.staff_pin_failures, migration 00105).
+//
+// What the parameter does decide is what a *correct* PIN costs us. The till
+// sends the digits alone, with no name attached, so the platform tries them
+// against every active credential in the organisation: an organisation with
+// fifty staff pays fifty derivations for one tap on a screen. At the password
+// parameters that is a second and a half of one core, and the shop assistant
+// waits for it.
+//
+// So: one pass over 8 MiB — an eighth of the password cost, still far beyond a
+// plain hash, and the number that keeps a fifty-person till answering in a
+// quarter of a second.
+func HashPIN(pin string) (string, error) {
+	return hashWith([]byte(pin), pinMemory, pinTime)
+}
+
+const (
+	pinMemory = 8 * 1024
+	pinTime   = 1
+)
+
 // HashPassword returns an argon2id hash in the PHC string format:
 //
 //	$argon2id$v=19$m=19456,t=2,p=1$<salt>$<key>
@@ -80,14 +106,21 @@ func argonLanes() uint8 {
 // Ninety-odd characters, which registry.users.password_hash (255) holds with
 // room to spare.
 func HashPassword(password string) (string, error) {
+	return hashWith([]byte(password), argonMemory, argonTime)
+}
+
+// hashWith is the one place a hash is written. The parameters travel inside the
+// string, so CheckPasswordHash verifies both kinds without being told which it
+// is holding — and a cost raised later still verifies what was written before.
+func hashWith(secret []byte, memory, time uint32) (string, error) {
 	salt := make([]byte, argonSaltLen)
 	if _, err := rand.Read(salt); err != nil {
 		return "", fmt.Errorf("read a salt: %w", err)
 	}
 	lanes := argonLanes()
-	key := argon2.IDKey([]byte(password), salt, argonTime, argonMemory, lanes, argonKeyLen)
+	key := argon2.IDKey(secret, salt, time, memory, lanes, argonKeyLen)
 	return fmt.Sprintf("$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s",
-		argon2.Version, argonMemory, argonTime, lanes,
+		argon2.Version, memory, time, lanes,
 		base64.RawStdEncoding.EncodeToString(salt),
 		base64.RawStdEncoding.EncodeToString(key)), nil
 }
@@ -119,6 +152,11 @@ func NeedsRehash(hash string) bool {
 	memory, time, _, err := argonParams(hash)
 	if err != nil {
 		return true
+	}
+	// PIN-ийн параметр (HashPIN) нь зориудаар доогуур бөгөөд түүнийг
+	// нууц үгийн хэмжүүрээр хэмжвэл тап бүрт дахин бичих гэж оролдоно.
+	if memory == pinMemory && time == pinTime {
+		return false
 	}
 	return memory < argonMemory || time < argonTime
 }
