@@ -1,0 +1,111 @@
+# Gerege Nexus — баримт бичгийн сайт.
+#
+# docs.gerege.mn нь MkDocs + Material for MkDocs дээр байгуулагдсан. Энэ сайт нь
+# яг тэр хэрэгсэл, яг тэр брэндийг ашиглана: хоёулаа нэг экосистемийн баримт
+# байх ёстой болохоос, нэг компанийг хуваалцдаг хоёр өөр бүтээгдэхүүн шиг
+# уншигдах ёсгүй. Өнгө нь docs-gerege-mn-ийн stylesheets/brand.css-тэй нэг эх
+# сурвалжтай.
+#
+# nav-ыг stage.mjs бичнэ — ../site/pages.mjs дахь жагсаалтаас. Энэ файлыг гараар
+# засахдаа nav хэсгийг бүү нэм: тэр нь дараагийн build дээр дарагдана.
+
+site_name: Gerege Nexus
+site_description: >-
+  Gerege Nexus нээлттэй эхийн платформын техникийн баримт — архитектур,
+  модуль хөгжүүлэлт, ажиллагаа, native клиентүүд.
+site_url: https://docs.nexus.gerege.mn/
+repo_url: https://github.com/gerege-systems/open-gerege-nexus
+repo_name: gerege-systems/open-gerege-nexus
+copyright: © 2026 Gerege Systems ХХК · Apache 2.0
+docs_dir: docs
+site_dir: site
+use_directory_urls: true
+
+# `mkdocs build --strict` дээр эдгээр анхааруулга нь АЛДАА болно. Anchor
+# шалгалт нь default-аар унтраалттай ирдэг тул тусад нь асаана — эс тэгвэл
+# «#хэсэг» рүү заасан эвдэрсэн холбоос чимээгүйхэн production-д гарна.
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn
+
+theme:
+  name: material
+  language: en
+  logo: assets/logo.png
+  favicon: assets/logo.png
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: Харанхуй горим
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-sunny
+        name: Гэрэл горим
+  font:
+    text: Inter
+    code: JetBrains Mono
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.tracking
+    - navigation.indexes
+    - navigation.footer
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+
+extra_css:
+  - stylesheets/brand.css
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - footnotes
+  # Кирилл гарчгийн anchor ажиллахын тулд unicode-ийг хадгалдаг slugify хэрэгтэй.
+  # Python-Markdown-ийн стандарт slugify нь ASCII бус тэмдэгтийг хаядаг тул
+  # «## Танилт» → хоосон id болж, хуудас доторх холбоос унадаг.
+  - toc:
+      permalink: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify {kwds: {case: lower}}
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/gerege-systems/open-gerege-nexus
+    - icon: material/book-open-variant
+      link: https://docs.gerege.mn
+    - icon: material/web
+      link: https://nexus.gerege.mn
+
+# {{NAV}}

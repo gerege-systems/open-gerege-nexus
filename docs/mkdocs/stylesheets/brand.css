@@ -1,0 +1,149 @@
+/* Gerege Ecosystem Docs — брэнд.
+   Өнгө нь экосистемийн бусад сайттай нэг эх сурвалжтай: Gerege кобальт цэнхэр
+   (--grg-blue толгой, --grg-blue-2 брэнд) + алт нь ЗӨВХӨН онцлох/итгэлийн
+   тэмдэгт. Шинэ hex-ийг энэ блокоос гадуур бүү нэм. */
+:root {
+  --grg-blue:       #004eb6; /* толгой / гүн кобальт */
+  --grg-blue-2:     #0064e1; /* брэнд */
+  --grg-blue-deep:  #003a8a;
+  --grg-blue-light: #3990ff; /* харанхуй горимын линк */
+  --grg-gold:       #e4b24a;
+  --grg-gold-2:     #cf9c34;
+}
+
+/* Гэрэл горим */
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color:        var(--grg-blue);
+  --md-primary-fg-color--light: var(--grg-blue-2);
+  --md-primary-fg-color--dark:  var(--grg-blue-deep);
+  --md-primary-bg-color:        #ffffff;
+  --md-accent-fg-color:         var(--grg-blue-2);
+  --md-typeset-a-color:         var(--grg-blue-2);
+}
+
+/* Харанхуй горим */
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color:        var(--grg-blue-deep);
+  --md-primary-fg-color--light: var(--grg-blue-2);
+  --md-primary-fg-color--dark:  #002a66;
+  --md-accent-fg-color:         var(--grg-blue-light);
+  --md-typeset-a-color:         var(--grg-blue-light);
+  --md-default-bg-color:        #0b1220;
+}
+
+/* Толгой — кобальт градиент + алтан доод зураас */
+.md-header {
+  background: linear-gradient(90deg, var(--grg-blue-deep), var(--grg-blue));
+  box-shadow: 0 2px 0 var(--grg-gold), 0 4px 18px rgba(0, 30, 80, 0.35);
+}
+.md-tabs { background: transparent; }
+
+/* Лого — дугуй эмблемийг зөөлөн булантайгаар */
+.md-header__button.md-logo img,
+.md-nav__button.md-logo img {
+  height: 1.6rem;
+  width: 1.6rem;
+  border-radius: 22%;
+}
+
+/* Идэвхтэй nav */
+.md-nav__link--active,
+.md-nav__item .md-nav__link--active { color: var(--grg-blue-2); font-weight: 600; }
+[data-md-color-scheme="slate"] .md-nav__link--active { color: var(--grg-blue-light); }
+
+.md-typeset h1, .md-typeset h2 { letter-spacing: -0.01em; }
+.md-typeset h2 { border-bottom: 1px solid rgba(128, 128, 128, 0.18); padding-bottom: 0.3rem; }
+.md-typeset code { border-radius: 6px; }
+.md-typeset a:hover { text-decoration: underline; }
+
+/* Үндсэн товч */
+.md-typeset .md-button--primary {
+  background: var(--grg-blue-2);
+  border-color: var(--grg-blue-2);
+  color: #ffffff;
+}
+.md-typeset .md-button--primary:hover {
+  background: var(--grg-blue);
+  border-color: var(--grg-blue);
+}
+
+/* Grid карт — брэнд захтай */
+.md-typeset .grid.cards > ul > li {
+  border: 1px solid rgba(0, 78, 182, 0.18);
+  border-radius: 10px;
+  transition: border-color 120ms, box-shadow 120ms;
+}
+.md-typeset .grid.cards > ul > li:hover {
+  border-color: var(--grg-blue-2);
+  box-shadow: 0 4px 16px rgba(0, 78, 182, 0.14);
+}
+[data-md-color-scheme="slate"] .md-typeset .grid.cards > ul > li {
+  border-color: rgba(57, 144, 255, 0.22);
+}
+
+/* Хайлт */
+.md-search__input:focus { box-shadow: 0 0 0 2px var(--grg-blue-light); }
+
+/* Хүснэгтийн толгой — өнгө дүүргэхийн оронд зөөлөн өнгөлөг */
+.md-typeset table:not([class]) th {
+  background: rgba(0, 78, 182, 0.06);
+  color: inherit;
+}
+[data-md-color-scheme="slate"] .md-typeset table:not([class]) th {
+  background: rgba(57, 144, 255, 0.10);
+}
+
+/* Admonition — tip нь алт (итгэл), note нь брэнд цэнхэр */
+.md-typeset .admonition.tip, .md-typeset details.tip { border-color: var(--grg-gold); }
+.md-typeset .tip > .admonition-title, .md-typeset .tip > summary {
+  background-color: rgba(228, 178, 74, 0.12);
+}
+.md-typeset .admonition.note, .md-typeset details.note { border-color: var(--grg-blue-2); }
+.md-typeset .note > .admonition-title, .md-typeset .note > summary {
+  background-color: rgba(0, 100, 225, 0.10);
+}
+
+/* Хөл */
+.md-footer-meta { background: var(--grg-blue-deep); }
+
+/* ── Экосистемийн hub-д тусгайлан нэмсэн ────────────────────────────────── */
+
+/* Төлөвийн шошго — платформын хүснэгтэд «Production / Хагас / Төлөвлөгөө».
+   Хэрэглэх: [Production](#){ .grg-status .grg-status--live } маягаар биш,
+   энгийн span-аар: <span class="grg-badge grg-badge--live">Production</span> */
+.grg-badge {
+  display: inline-block;
+  padding: 0.08rem 0.42rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+.grg-badge--live {
+  background: rgba(0, 100, 225, 0.12);
+  border-color: rgba(0, 100, 225, 0.35);
+  color: var(--grg-blue-2);
+}
+[data-md-color-scheme="slate"] .grg-badge--live { color: var(--grg-blue-light); }
+
+.grg-badge--wip {
+  background: rgba(228, 178, 74, 0.16);
+  border-color: rgba(228, 178, 74, 0.45);
+  color: var(--grg-gold-2);
+}
+[data-md-color-scheme="slate"] .grg-badge--wip { color: var(--grg-gold); }
+
+.grg-badge--plan {
+  background: rgba(128, 128, 128, 0.14);
+  border-color: rgba(128, 128, 128, 0.35);
+  color: #6b7280;
+}
+[data-md-color-scheme="slate"] .grg-badge--plan { color: #9ca3af; }
+
+/* Давхаргын ASCII/pre диаграм — жижиг дэлгэцэд хэвтээ гүйлгэнэ */
+.md-typeset pre > code { -webkit-overflow-scrolling: touch; }
+
+/* Mermaid диаграмыг голлуулах */
+.md-typeset .mermaid { text-align: center; }
