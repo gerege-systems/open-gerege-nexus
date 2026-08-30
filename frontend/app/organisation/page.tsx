@@ -203,6 +203,35 @@ export default function OrganisationPage() {
         </label>
       </section>
 
+      {/* Хаалга. Энэ хэсэг «Харьяалал»-ын дараа байгаа нь дараалал зөв: дээрх нь
+          энэ байгууллага хэн бэ гэдгийг хэлдэг, энэ нь хэн орж болохыг.
+
+          Хоёр сонголт, гурав биш. «Урилгаар л авна» гэдэг нь гурав дахь төлөв
+          мэт харагддаг ч үнэндээ хүсэлт хүлээж авдаг байгууллагын өдөр тутмын
+          хариулт — татгалзах — тул түүнд тусдаа тохиргоо хэрэггүй. */}
+      <section className="bg-white border border-slate-200 rounded-xl p-5 space-y-2">
+        <h2 className="font-semibold text-slate-800">{t("core.group.joining")}</h2>
+        <p className="text-xs text-slate-500">{t("core.message.join_policy_hint")}</p>
+        <label className="block max-w-md">
+          <span className="block text-xs font-medium text-slate-500 mb-1">{t("core.field.join_policy")}</span>
+          <select
+            value={draft.join_policy ?? organisation.join_policy ?? "on_request"}
+            disabled={!canManage}
+            onChange={(e) => setDraft((d) => ({ ...d, join_policy: e.target.value }))}
+            className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white disabled:bg-slate-50"
+          >
+            <option value="on_request">{t("core.state.join_on_request")}</option>
+            <option value="open">{t("core.state.join_open")}</option>
+          </select>
+        </label>
+        {/* Нээлттэй болгосон хүнд юу болохыг нь хэлнэ: гишүүн нэмэгдэнэ,
+            эрх нэмэгдэхгүй. Тэр хоёрыг андуурах нь энэ дэлгэц дээрх хамгийн
+            үнэтэй алдаа байх байсан. */}
+        {(draft.join_policy ?? organisation.join_policy) === "open" && (
+          <p className="text-xs text-[var(--gerege-blue-text)]">{t("core.message.join_open_note")}</p>
+        )}
+      </section>
+
       {canManage && (
         <div className="flex items-center gap-3">
           <button

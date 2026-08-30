@@ -17,6 +17,7 @@ import (
 	"context"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -49,7 +50,7 @@ func TestAskingPutsTheRequestInTheOrganisationAndTheCopyOnThePerson(t *testing.T
 	_, userID := seedPerson(t, pool)
 	orgID, slug := openOrganisation(t, pool)
 
-	if err := store.Ask(ctx, userID, slug, "Би энд ажилладаг"); err != nil {
+	if _, err := store.Ask(ctx, userID, slug, "Би энд ажилладаг"); err != nil {
 		t.Fatalf("ask: %v", err)
 	}
 
@@ -86,7 +87,7 @@ func TestAskingTwiceIsOneRequest(t *testing.T) {
 	_, slug := openOrganisation(t, pool)
 
 	for range 2 {
-		if err := store.Ask(ctx, userID, slug, ""); err != nil {
+		if _, err := store.Ask(ctx, userID, slug, ""); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -100,6 +101,103 @@ func TestAskingTwiceIsOneRequest(t *testing.T) {
 	}
 }
 
+// An open organisation admits at the moment of asking.
+//
+// Three assertions, because "joined" is three facts and a screen that showed
+// only the first would be lying about the other two: the membership exists, the
+// row that explains it says a policy decided rather than a person, and the
+// asker's own copy says ACCEPTED — a projection left on PENDING would tell
+// somebody who is already inside to wait for an answer.
+func TestAnOpenOrganisationAdmitsAtTheMomentOfAsking(t *testing.T) {
+	pool := openPool(t)
+	store := person.New(pool)
+	ctx := context.Background()
+	_, userID := seedPerson(t, pool)
+	orgID, slug := openOrganisation(t, pool)
+	if _, err := pool.Exec(ctx,
+		`UPDATE registry.tenants SET join_policy = 'open' WHERE id = $1::uuid`, orgID); err != nil {
+		t.Fatal(err)
+	}
+
+	outcome, err := store.Ask(ctx, userID, slug, "намайг оруулна уу")
+	if err != nil {
+		t.Fatalf("ask: %v", err)
+	}
+	if !outcome.Joined {
+		t.Fatal("an open organisation answered with a request rather than a membership")
+	}
+
+	var members int
+	if err := pool.QueryRow(ctx,
+		`SELECT count(*) FROM workspace.memberships WHERE tenant_id = $1::uuid AND user_id = $2::uuid`,
+		orgID, userID).Scan(&members); err != nil {
+		t.Fatal(err)
+	}
+	if members != 1 {
+		t.Errorf("memberships = %d, want 1", members)
+	}
+
+	var status string
+	var decidedBy *string
+	var decidedAt *time.Time
+	if err := pool.QueryRow(ctx,
+		`SELECT status, decided_by::text, decided_at FROM workspace.join_requests
+		  WHERE tenant_id = $1::uuid AND user_id = $2::uuid`,
+		orgID, userID).Scan(&status, &decidedBy, &decidedAt); err != nil {
+		t.Fatalf("an open organisation left no record of who came in: %v", err)
+	}
+	if status != "ACCEPTED" || decidedAt == nil {
+		t.Errorf("the record says %q decided at %v", status, decidedAt)
+	}
+	// NULL is the point: nobody decided this, the policy did.
+	if decidedBy != nil {
+		t.Errorf("decided_by = %q, want NULL — no person made this decision", *decidedBy)
+	}
+
+	var copyStatus string
+	if err := pool.QueryRow(ctx,
+		`SELECT status FROM registry.person_items WHERE user_id = $1::uuid AND source_app = $2`,
+		userID, person.CoreApp).Scan(&copyStatus); err != nil {
+		t.Fatalf("the person has no copy of what happened: %v", err)
+	}
+	if copyStatus != "ACCEPTED" {
+		t.Errorf("the asker's copy says %q — they are in, and their own screen should say so", copyStatus)
+	}
+}
+
+// A membership is not a role.
+//
+// The open door lets somebody stand inside; it does not hand them anything.
+// This is the same thing an approved request does (access/joinrequests.go) and
+// the reason "open" is not dangerous by default: an administrator still decides
+// what the new member may do.
+func TestAnOpenOrganisationGrantsNoRole(t *testing.T) {
+	pool := openPool(t)
+	store := person.New(pool)
+	ctx := context.Background()
+	_, userID := seedPerson(t, pool)
+	orgID, slug := openOrganisation(t, pool)
+	if _, err := pool.Exec(ctx,
+		`UPDATE registry.tenants SET join_policy = 'open' WHERE id = $1::uuid`, orgID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := store.Ask(ctx, userID, slug, ""); err != nil {
+		t.Fatalf("ask: %v", err)
+	}
+
+	var roles int
+	if err := pool.QueryRow(ctx,
+		`SELECT count(*) FROM workspace.membership_roles mr
+		   JOIN workspace.memberships m ON m.id = mr.membership_id
+		  WHERE m.tenant_id = $1::uuid AND m.user_id = $2::uuid`,
+		orgID, userID).Scan(&roles); err != nil {
+		t.Fatal(err)
+	}
+	if roles != 0 {
+		t.Errorf("the new member arrived holding %d roles, want 0", roles)
+	}
+}
+
 // The three things the function refuses, and the reason each one matters.
 func TestTheDoorRefusesWhatItShould(t *testing.T) {
 	pool := openPool(t)
@@ -109,7 +207,7 @@ func TestTheDoorRefusesWhatItShould(t *testing.T) {
 	_, otherHomeSlug := homeSlugOf(t, pool)
 
 	t.Run("a name nobody answers to", func(t *testing.T) {
-		if err := store.Ask(ctx, userID, "no-such-organisation-here", ""); err == nil {
+		if _, err := store.Ask(ctx, userID, "no-such-organisation-here", ""); err == nil {
 			t.Error("asking a name nobody answers to succeeded")
 		}
 	})
@@ -117,7 +215,7 @@ func TestTheDoorRefusesWhatItShould(t *testing.T) {
 	// A home takes no members: it is one person's own space by construction,
 	// and a queue outside it would be a queue nobody can answer.
 	t.Run("somebody else's home", func(t *testing.T) {
-		err := store.Ask(ctx, userID, otherHomeSlug, "")
+		_, err := store.Ask(ctx, userID, otherHomeSlug, "")
 		if err == nil {
 			t.Fatal("asking to join somebody's home succeeded")
 		}
@@ -134,7 +232,7 @@ func TestTheDoorRefusesWhatItShould(t *testing.T) {
 			`UPDATE registry.tenants SET suspended_at = NOW() WHERE id = $1::uuid`, id); err != nil {
 			t.Fatal(err)
 		}
-		err := store.Ask(ctx, userID, slug, "")
+		_, err := store.Ask(ctx, userID, slug, "")
 		if err == nil {
 			t.Fatal("asking a suspended organisation succeeded")
 		}
@@ -151,7 +249,7 @@ func TestTheDoorRefusesWhatItShould(t *testing.T) {
 			id, userID); err != nil {
 			t.Fatal(err)
 		}
-		err := store.Ask(ctx, userID, slug, "")
+		_, err := store.Ask(ctx, userID, slug, "")
 		if err == nil {
 			t.Fatal("a member asked to join their own organisation")
 		}
