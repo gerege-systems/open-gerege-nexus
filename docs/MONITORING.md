@@ -199,6 +199,10 @@ Prometheus-д ямар ч нэвтрэлт байхгүй бөгөөд түүн�
 
 1. Платформ дээр клиент бүртгэнэ — Хөгжүүлэгч → Аппликейшн:
    - redirect_uris — `https://monitor.nexus.gerege.mn/grafana/login/generic_oauth`
+   - post_logout_redirect_uris — `https://monitor.nexus.gerege.mn/grafana/login`
+     (гарах урсгал үүнийг шаардана; логоутын хаяг нь `client_id`-гаа
+     заавал авч явна, эс бөгөөс провайдер аль клиентийн жагсаалттай
+     тулгахаа мэдэхгүй тул татгалзана)
    - grant_types — `authorization_code`, `refresh_token`
    - scopes — `openid`, `profile`, `email`, `roles`
 2. Тэр host платформын `OAUTH_REDIRECT_HOSTS`-д байх ёстой. Тэр жагсаалт

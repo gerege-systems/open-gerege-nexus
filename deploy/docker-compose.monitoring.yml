@@ -276,7 +276,15 @@ services:
       # Signing out of Grafana signs the browser out of the platform too.
       # Without this, "log out" leaves the provider's session standing and the
       # next click signs straight back in — which reads as a broken button.
-      GF_AUTH_SIGNOUT_REDIRECT_URL: ${PLATFORM_PUBLIC_URL:-https://nexus.gerege.mn}/oauth2/logout?post_logout_redirect_uri=${MONITORING_PUBLIC_URL:-http://localhost:3000}/grafana/login
+      #
+      # `client_id` is not optional. The logout endpoint resolves the client
+      # from it (or from an id_token_hint) and then checks the return address
+      # against that client's registered list — a logout URL is one anybody can
+      # put a redirect on, so an unattributed one is refused. Without the
+      # parameter there is no client to check against and the browser lands on
+      # `post_logout_redirect_uri is not registered for this client`, which
+      # reads like a misconfigured URI rather than a missing one.
+      GF_AUTH_SIGNOUT_REDIRECT_URL: ${PLATFORM_PUBLIC_URL:-https://nexus.gerege.mn}/oauth2/logout?client_id=${GRAFANA_OAUTH_CLIENT_ID:-}&post_logout_redirect_uri=${MONITORING_PUBLIC_URL:-http://localhost:3000}/grafana/login
     volumes:
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
