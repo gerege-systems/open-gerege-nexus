@@ -215,7 +215,7 @@ function AskToJoin({ onAsked }: { onAsked: () => void }) {
         />
         <button
           disabled={busy || slug.trim() === ""}
-          className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-semibold text-[var(--gerege-on-blue)] disabled:opacity-50"
         >
           <Send className="inline w-4 h-4 mr-1" />
           {t("me.action.ask")}

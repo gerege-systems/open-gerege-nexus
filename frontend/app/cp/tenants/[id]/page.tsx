@@ -496,7 +496,7 @@ function QuotaDialog({
           <button
             type="submit"
             disabled={busy}
-            className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60"
+            className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-medium text-[var(--gerege-on-blue)] hover:brightness-105 disabled:opacity-60"
           >
             {t("cp.action.confirm")}
           </button>
@@ -708,7 +708,7 @@ function AddPersonDialog({
           <button
             type="submit"
             disabled={busy || !chosen}
-            className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60"
+            className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-medium text-[var(--gerege-on-blue)] hover:brightness-105 disabled:opacity-60"
           >
             {t("cp.action.add_person")}
           </button>

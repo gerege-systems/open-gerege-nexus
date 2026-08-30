@@ -93,7 +93,7 @@ export default function PublishedServices() {
         <div className="flex flex-col gap-2 border-t p-4 sm:flex-row">
           <input value={code} onChange={(e) => setCode(e.target.value)} placeholder={t("core.field.service_code")} className={`${fieldClass} sm:w-56`} />
           <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("core.field.service_title")} className={`${fieldClass} flex-1`} />
-          <button disabled={busy || code.trim() === ""} onClick={() => void publish()} className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+          <button disabled={busy || code.trim() === ""} onClick={() => void publish()} className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-semibold text-[var(--gerege-on-blue)] disabled:opacity-50">
             <Plus className="inline w-4 h-4 mr-1" />{t("core.action.publish")}
           </button>
         </div>

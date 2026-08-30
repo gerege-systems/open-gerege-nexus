@@ -113,7 +113,7 @@ export default function AuditTrail() {
         <div className="mt-4 flex gap-2">
           <button
             type="submit"
-            className="rounded-lg bg-[var(--gerege-blue)] px-3 py-2 text-sm font-medium text-white transition hover:brightness-105"
+            className="rounded-lg bg-[var(--gerege-blue)] px-3 py-2 text-sm font-medium text-[var(--gerege-on-blue)] transition hover:brightness-105"
           >
             {t("cp.action.search")}
           </button>

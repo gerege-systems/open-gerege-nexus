@@ -114,7 +114,7 @@ export default function Assistant() {
                   },
                 })
               }
-              className="inline-flex items-center gap-2 rounded-lg bg-[var(--gerege-blue)] px-3 py-2 text-sm font-medium text-white hover:brightness-105 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-lg bg-[var(--gerege-blue)] px-3 py-2 text-sm font-medium text-[var(--gerege-on-blue)] hover:brightness-105 disabled:opacity-50"
             >
               <Plus className="w-4 h-4" />
               {t("ai.action.add_knowledge")}
@@ -193,7 +193,7 @@ function PromptEditor({ prompt, onSave }: { prompt: Prompt; onSave: (content: st
           type="button"
           disabled={!content.trim()}
           onClick={() => onSave(content, active)}
-          className="inline-flex items-center gap-2 rounded-lg bg-[var(--gerege-blue)] px-3 py-2 text-sm font-medium text-white hover:brightness-105 disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-lg bg-[var(--gerege-blue)] px-3 py-2 text-sm font-medium text-[var(--gerege-on-blue)] hover:brightness-105 disabled:opacity-50"
         >
           <Save className="w-4 h-4" />
           {t("base.action.save")}

@@ -91,7 +91,7 @@ export default function Health() {
                 },
               })
             }
-            className="inline-flex items-center gap-2 rounded-lg bg-[var(--gerege-blue)] px-3 py-2 text-sm font-medium text-white hover:brightness-105"
+            className="inline-flex items-center gap-2 rounded-lg bg-[var(--gerege-blue)] px-3 py-2 text-sm font-medium text-[var(--gerege-on-blue)] hover:brightness-105"
           >
             <Rocket className="w-4 h-4" />
             {t("cp.action.deploy")}
