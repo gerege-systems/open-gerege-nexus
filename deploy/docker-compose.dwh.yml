@@ -1,0 +1,54 @@
+# dwh.nexus.gerege.mn — дата агуулах (data warehouse), BI ба AI давхарга.
+#
+# Статик хуудас, өөрийн контейнерт. Хостын nginx-ээс шууд файл үйлчилж ч
+# болох байсан — docs.* яг тэгдэг — гэхдээ энэ хуудас нь тэрхүү төслийн
+# анхны бодит эд анги бөгөөд төсөл нь дараа нь Metabase, Cube, Postgres
+# нэмнэ. Тэдгээр нь бүгд контейнер болно, тиймээс нэгдүгээрх нь ч контейнер:
+# хожим хуудсыг stack-ийн хажууд зөөх нь compose файлд мөр нэмэх ажил болно,
+# нүүлгэн шилжүүлэлт биш.
+#
+# Хостод юу ч суулгахгүй. Зураг нь nginx:alpine, агуулга нь read-only mount —
+# контейнер өөрөө юу үйлчилж байгаагаа өөрчилж чадахгүй.
+#
+# Асаах:
+#   cd /opt/open-gerege-nexus
+#   docker compose -f deploy/docker-compose.dwh.yml up -d
+#
+# Хуудас шинэчлэх (image дахин барихгүй):
+#   git pull && docker compose -f deploy/docker-compose.dwh.yml restart
+
+name: nexus-dwh
+
+services:
+  dwh:
+    image: nginx:1.29-alpine
+    container_name: nexus_dwh_landing
+    restart: unless-stopped
+    # Зөвхөн loopback. Гадагшаа гарах цорын ганц зам нь хостын nginx, түүн
+    # дээр TLS ба толгойнууд байдаг — контейнер өөрөө интернэтэд гарахгүй.
+    ports:
+      - "127.0.0.1:${DWH_PORT:-3018}:80"
+    # Өөрийн nginx тохиргоо байхгүй: зургийн анхдагч нь энэ хавтсыг үйлчилдэг,
+    # TLS, толгой, кэш бүгд хостын nginx дээр байна. Энд нэмэх тохиргоо нь
+    # хоёр газар хадгалагдах нэг дүрэм болно.
+    volumes:
+      - ./dwh-landing:/usr/share/nginx/html:ro
+    # Гадаад хамаарал байхгүй, бичих зүйл байхгүй. Түр файлын хоёр зам л
+    # хэрэгтэй, тэднийг tmpfs-ээр өгөөд файлын системийг бүхэлд нь хаана.
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
