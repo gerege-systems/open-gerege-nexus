@@ -17,19 +17,19 @@ compile-time Go module хэлбэрээр distribution репо нэмдэг. Э
 > deployment дээр нээгдэхгүй.
 
 <p>
-  <b>Монгол</b>
+  <img src="docs/assets/icons/flag-mn.png" width="18" height="18" alt=""> <b>Монгол</b>
   &nbsp;·&nbsp;
-  <a href="docs/README_AR.md">العربية</a>
+  <a href="docs/README_AR.md"><img src="docs/assets/icons/flag-ar.png" width="18" height="18" alt=""> العربية</a>
   &nbsp;·&nbsp;
-  <a href="docs/README_ZH.md">中文</a>
+  <a href="docs/README_ZH.md"><img src="docs/assets/icons/flag-zh.png" width="18" height="18" alt=""> 中文</a>
   &nbsp;·&nbsp;
-  <a href="docs/README_EN.md">English</a>
+  <a href="docs/README_EN.md"><img src="docs/assets/icons/flag-en.png" width="18" height="18" alt=""> English</a>
   &nbsp;·&nbsp;
-  <a href="docs/README_FR.md">Français</a>
+  <a href="docs/README_FR.md"><img src="docs/assets/icons/flag-fr.png" width="18" height="18" alt=""> Français</a>
   &nbsp;·&nbsp;
-  <a href="docs/README_RU.md">Русский</a>
+  <a href="docs/README_RU.md"><img src="docs/assets/icons/flag-ru.png" width="18" height="18" alt=""> Русский</a>
   &nbsp;·&nbsp;
-  <a href="docs/README_ES.md">Español</a>
+  <a href="docs/README_ES.md"><img src="docs/assets/icons/flag-es.png" width="18" height="18" alt=""> Español</a>
 </p>
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
@@ -102,9 +102,10 @@ compile-time Go module хэлбэрээр distribution репо нэмдэг. Э
 backend/
   cmd/                  api, migrate, bootstrap, catalog хэрэгслүүд
   db/migrations/        үндсэн PostgreSQL migration-ууд
-  internal/kernel/      хоёр plane-д нийтлэг доод түвшний механизм
+  internal/kernel/      гурван plane-д нийтлэг доод түвшний механизм
   internal/operator/    deployment/operator plane
   internal/workspace/   байгууллагын нэрийн өмнөөс ажиллах plane
+  internal/person/      хүний өөрийн орон зай — /api/v1/me
   internal/apps/        distribution module-ийн угсрах цэг (одоо хоосон)
   pkg/nexus/            distribution module-ийн нийтийн SDK
   pkg/host/             distribution binary-г асаах нийтийн entry point

@@ -8,20 +8,20 @@
 
 ---
 
-## Нэг бинарь, хоёр урсгал
+## Нэг бинарь, гурван урсгал
 
-`cmd/api` нэг процесс ачаалж, дотор нь хоорондоо import хийдэггүй хоёр
+`cmd/api` нэг процесс ачаалж, дотор нь хоорондоо import хийдэггүй гурван
 хүсэлтийн урсгал ажиллана.
 
-| | Ажлын урсгал | Операторын урсгал |
-| --- | --- | --- |
-| Хэнд зориулагдсан | Байгууллага доторх хүн | Суулгацыг удирдах оператор |
-| Origin | `nexus.gerege.mn` | `admin.nexus.gerege.mn` |
-| API угтвар | `/api/v1/*` | `/api/platform/v1/*` |
-| Cookie | `session_token` | `cp_session` |
-| Бүртгэл | `registry.users` + `workspace.memberships` | `operator.operator_accounts` |
-| DB role | `gerege_nexus_tenant` | `gerege_nexus_operator` |
-| Go багц | `internal/workspace/*` | `internal/operator/*` |
+| | Ажлын урсгал | Операторын урсгал | Хүний урсгал |
+| --- | --- | --- | --- |
+| Хэнд | Байгууллага доторх хүн | Суулгацыг удирдах оператор | Хүн өөрөө, аль ч байгууллагаас гадуур |
+| Origin | `nexus.gerege.mn` | `admin.nexus.gerege.mn` | `nexus.gerege.mn` |
+| API угтвар | `/api/v1/*` | `/api/platform/v1/*` | `/api/v1/me/*` |
+| Cookie | `session_token` | `cp_session` | `session_token` |
+| Бүртгэл | `registry.users` + `workspace.memberships` | `operator.operator_accounts` | `registry.users` |
+| DB role | `gerege_nexus_tenant` | `gerege_nexus_operator` | `gerege_nexus_tenant` |
+| Go багц | `internal/workspace/*` | `internal/operator/*` | `internal/person` |
 
 158 HTTP замын 64 нь операторынх.
 
@@ -30,23 +30,36 @@
 байгууллагын нүдээр харах шаардлагатай бол шалтгаан бүхий, хугацаа хязгаартай
 impersonation урсгалыг ашиглана — тэр нь бүртгэгддэг.
 
-Хоёр урсгал хоорондоо import хийхгүйг `internal/planes_test.go` компиляцын
-граф дээр шалгана. Энэ бол баримтын амлалт биш, тестийн батламж.
+Хүний урсгал нь ажлын урсгалтай нэг cookie, нэг DB role хуваалцдаг. Ялгаа нь
+хамрах хүрээ: `/api/v1/me/*` нь **нэг хүний** зүйлсийг бүх байгууллагаар нь
+хариулна — түүнд ирсэн зүйлс, түүний гишүүн болох хүсэлтүүд, лавлах. Тиймээс
+энэ нь workspace-ийн дэд багц биш, тусдаа багц: workspace-ийн query бүр
+байгууллага дотор ажиллаж байгаа хүнд зориулж бичигдсэн бөгөөд тэдгээрийг
+энд import хийх нь тэр query-үүдийг ямар ч байгууллагад харьяалагдахгүй
+хүсэлтээс дуудагдах боломжтой болгоно. Session-ээс хэрэгтэй зүйл нь ганц
+асуулт — «энэ token хэн бэ» — асуулт нь import биш, port.
+
+Гурван урсгал хоорондоо import хийхгүйг `internal/planes_test.go` компиляцын
+граф дээр шалгана: workspace ↮ operator, person ↮ workspace, person ↮ operator.
+Энэ бол баримтын амлалт биш, тестийн батламж.
 
 ```text
 ажлын origin ─┐                            ┌─ internal/workspace/*  → workspace schema
-              ├─ pkg/host/server.go ───────┤
-операторын ───┘   дундын middleware        └─ internal/operator/*   → operator + registry
+              │                            │
+              ├─ pkg/host/server.go ───────┼─ internal/person       → registry + workspace
+              │     дундын middleware      │
+операторын ───┘                            └─ internal/operator/*   → operator + registry
                           │
                     internal/kernel/*
                           │
                       PostgreSQL
 ```
 
-`backend/pkg/host` нь composition root. `run.go` нь бүх зүйлийг дараалалтайгаар
-босгоно: лог, trace, метрик, алдааны бүртгэл, өгөгдлийн сангийн pool, tenant
-binding, audit sink, Redis, сервер, суурь өгөгдөл, ардын ажил. `server.go` нь
-хоёр route table-ыг нэг router дээр mount хийнэ.
+`backend/pkg/host` нь composition root — гурваас илүүг нэрлэх эрхтэй цорын
+ганц газар. `run.go` нь бүх зүйлийг дараалалтайгаар босгоно: лог, trace,
+метрик, алдааны бүртгэл, өгөгдлийн сангийн pool, tenant binding, audit sink,
+Redis, сервер, суурь өгөгдөл, ардын ажил. `server.go` нь гурван route
+table-ыг нэг router дээр mount хийнэ.
 
 Дундын middleware гинж, дарааллаараа:
 
@@ -131,7 +144,7 @@ Load shedder-ийн тааз нь нэг зэрэг 1000 хүсэлт. Түүн�
 
 Тест нь хамгаалалт болж ажилладаг нь чухал: маршрутын golden file
 (`pkg/host/testdata/routes.txt`), schema-ийн хилийн тоолол, RLS бодлогын
-хэлбэр, хоёр урсгалын import граф. Эдгээр нь онолын зөвийг биш, **буруу зүйл
+хэлбэр, гурван урсгалын import граф. Эдгээр нь онолын зөвийг биш, **буруу зүйл
 чимээгүй нэвтрэхийг** хардаг.
 
 ## Гадагш хандах зам

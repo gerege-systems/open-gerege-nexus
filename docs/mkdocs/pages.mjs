@@ -1,14 +1,11 @@
 /**
  * Public documentation manifest.
  *
- * This is intentionally data-only. The builder and verifier both consume the
- * same manifest, so adding a page cannot silently update navigation without
- * also updating the checks that protect the published site.
+ * Data only, and the one place the published site's shape is decided: stage.mjs
+ * builds both the MkDocs tree and its navigation from this list, so a page that
+ * is not here is not published, and a page that is here without a file fails
+ * the build rather than appearing empty.
  */
-export const GITHUB = "https://github.com/gerege-systems/open-gerege-nexus";
-export const BLOB = `${GITHUB}/blob/main`;
-export const TREE = `${GITHUB}/tree/main`;
-
 export const PAGES = [
   {src: "README.md", slug: "index", title: "Тойм", group: "Танилцуулга", lang: "mn"},
   {src: "docs/README_EN.md", slug: "overview-en", title: "Overview", group: "Танилцуулга", lang: "en"},
@@ -41,12 +38,3 @@ export const PAGES = [
   {src: "CHANGELOG.md", slug: "changelog", title: "Өөрчлөлтийн түүх", group: "Төслийн журам"},
 ];
 
-export const LANGUAGES = [
-  {lang: "mn", label: "Монгол", flag: "flag-mn.png"},
-  {lang: "ar", label: "العربية", flag: "flag-ar.png"},
-  {lang: "zh", label: "中文", flag: "flag-zh.png"},
-  {lang: "en", label: "English", flag: "flag-en.png"},
-  {lang: "fr", label: "Français", flag: "flag-fr.png"},
-  {lang: "ru", label: "Русский", flag: "flag-ru.png"},
-  {lang: "es", label: "Español", flag: "flag-es.png"},
-];
