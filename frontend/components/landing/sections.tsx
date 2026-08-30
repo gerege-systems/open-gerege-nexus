@@ -5,9 +5,11 @@ import Architecture from "@/components/landing/Architecture";
 import Capabilities from "@/components/landing/Capabilities";
 import Hero from "@/components/landing/Hero";
 import PlatformDepth from "@/components/landing/PlatformDepth";
+import Services from "@/components/landing/Services";
 import Technology from "@/components/landing/Technology";
 import Trust from "@/components/landing/Trust";
 import { firstLinkedSection, type LandingSection } from "@/lib/landing";
+import { servicesFromEnv } from "@/lib/services";
 
 /**
  * Every section, by name.
@@ -33,6 +35,9 @@ export function sectionNodes(
     hero: <Hero seeMoreAnchor={firstLinkedSection(sections)} localSignIn={localSignIn} />,
     architecture: <Architecture />,
     applications: <Applications />,
+    // Хаягуудыг энд уншина: энэ функц сервер дээр ажилладаг бөгөөд браузерын
+    // `process.env` нь зөвхөн build-д шигтгэсэн зүйлийг агуулдаг.
+    services: <Services services={servicesFromEnv()} />,
     platform: <PlatformDepth />,
     trust: <Trust />,
     technology: <Technology />,

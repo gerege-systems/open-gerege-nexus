@@ -385,6 +385,14 @@ services:
       # all of them, which is what every deployment did before this existed.
       # See frontend/lib/landing.ts for the names.
       LANDING_SECTIONS: ${LANDING_SECTIONS:-}
+      # Энэ суулгацын хажууд ажиллаж байгаа үйлчилгээнүүдийн хаяг. Тохируулсан
+      # нь л нүүр хуудсан дээр карт болж гарна — байхгүй нэг нь зурагдахгүй,
+      # тиймээс консолгүй, агуулахгүй суулгац юу ч тайлбарлах шаардлагагүй.
+      SERVICE_URL_ADMIN: ${SERVICE_URL_ADMIN:-}
+      SERVICE_URL_DWH: ${SERVICE_URL_DWH:-}
+      SERVICE_URL_BACKUPS: ${SERVICE_URL_BACKUPS:-}
+      SERVICE_URL_MONITOR: ${SERVICE_URL_MONITOR:-}
+      SERVICE_URL_DOCS: ${SERVICE_URL_DOCS:-}
     volumes:
       # Mounted always and usually empty. Copy is configuration a person edits,
       # so it must not need an image rebuild — and it is not something the app

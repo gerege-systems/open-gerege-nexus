@@ -203,6 +203,39 @@ export const website = {
   "website.action.my_contracts": { mn: "Надад ирсэн гэрээ", en: "My incoming contracts" },
   "website.action.open_platform": { mn: "Платформ руу", en: "Open the platform" },
   "website.view.hero_inbox_title": { mn: "Танд ирсэн гэрээ", en: "Contracts sent to you" },
+  "website.service.eyebrow": { mn: "ЭНЭ СУУЛГАЦ", en: "THIS DEPLOYMENT" },
+  "website.service.title": { mn: "Платформын хажууд юу ажиллаж байна вэ", en: "What runs beside the platform" },
+  "website.service.lede": {
+    mn: "Nexus бол нэг хаяг биш. Консол, дата агуулах, нөөцлөлт, хяналт, баримт бичиг тус бүр өөрийн хаягтай — доорх картуудаас шууд орно.",
+    en: "Nexus is not one hostname. The console, the warehouse, the backup store, the monitoring stack and the manual each answer on their own address — the cards below open them.",
+  },
+
+  "website.service.admin_title": { mn: "Операторын консол", en: "Operator console" },
+  "website.service.admin_body": {
+    mn: "Байгууллага үүсгэх, түдгэлзүүлэх, эрх олгох, audit унших. Хэрэглэгчийн бүртгэлээс тусдаа identity, тусдаа cookie.",
+    en: "Create and suspend organisations, grant capabilities, read the audit trail. A separate identity and cookie from a user account.",
+  },
+  "website.service.dwh_title": { mn: "Дата агуулах", en: "Data warehouse" },
+  "website.service.dwh_body": {
+    mn: "Үйл ажиллагааны системүүдээс өдөр бүр татаж, цэвэрлэж, бизнесийн хэлээр загварчилсан нэг агуулах. Дээр нь BI ба AI давхарга.",
+    en: "One warehouse fed daily from the operational systems, cleaned and modelled in business language. BI and an AI layer on top.",
+  },
+  "website.service.backups_title": { mn: "Нөөцлөлт", en: "Backups" },
+  "website.service.backups_body": {
+    mn: "Өдөр бүр 03:15-д. Хостыг орхихоосоо өмнө шифрлэгдэж, эх сервер нь түүхээ устгаж чадахгүй сан руу очно.",
+    en: "Daily at 03:15. Encrypted before it leaves the host, into a store whose history the source server cannot delete.",
+  },
+  "website.service.monitor_title": { mn: "Хяналт", en: "Monitoring" },
+  "website.service.monitor_body": {
+    mn: "Хэмжүүр, лог, trace, сэрэмжлүүлэг. Хэмжигдээгүй зүйл эвдэрсэн ч мэдэгддэггүй тул энэ нь нэмэлт биш, суурь.",
+    en: "Metrics, logs, traces and alerts. What is not measured fails silently, which is why this is a foundation rather than an extra.",
+  },
+  "website.service.docs_title": { mn: "Баримт бичиг", en: "Documentation" },
+  "website.service.docs_body": {
+    mn: "Кодоос уншиж бичсэн архитектур, модуль, танилт, ажиллагаа. Долоон хэлээр.",
+    en: "Architecture, modules, identity and operations — written from the code. In seven languages.",
+  },
+
   "website.view.hero_inbox_empty": {
     mn: "Одоогоор хариу хүлээж буй гэрээ алга.",
     en: "Nothing is waiting for your signature right now.",
