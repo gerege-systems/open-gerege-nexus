@@ -15,6 +15,80 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — ажиглалт нь OpenTelemetry дээр, өөрийн домэйнтэй
+
+Хэмжүүрүүд client_golang дээр гараар бичигдсэн, нэр нь өөрсдийн зохиосон
+байсан. Одоо OpenTelemetry-ийн metrics SDK-аар дамжиж, Prometheus exporter-ээр
+хуучин `/metrics` дээрээ гарна. HTTP-ийн хоёр хэмжүүр semantic convention руу
+шилжив — `http_requests_total` ба `http_request_duration_seconds` нь
+`http_server_request_duration_seconds` болж нэгдсэн, хүсэлтийн тоо нь тэр
+гистограммын `_count` цуврал. Repo доторх бүх alert дүрэм, dashboard панел,
+консолын query хамт шилжсэн.
+
+Гурван зүйл дайвар байдлаар зассан. `net/http` ямар ч token-ыг method болгож
+хүлээж авдаг тул хэн ч зохиомол verb илгээгээд хязгааргүй тооны цуврал үүсгэж
+чадах байсан — танихгүй method одоо `_OTHER`. `resilience_in_flight_requests`
+нь `Set()`-ээр бичигддэг байсныг UpDownCounter болгов: зэрэг дуусах хоёр
+хүсэлт агшны зургаа дурын дарааллаар бичиж, гарсан тоо хуучирдаг байв.
+Exemplar нь хоёр талаасаа тасарсан байсныг залгав — латенси графикийн удаан
+цэг дээр дарахад тэр хүсэлт ямар SQL хүлээснийг харуулна.
+
+**monitor.nexus.gerege.mn** — Grafana, Alertmanager. Grafana нь платформын
+өөрийн OIDC-ээр нэвтэрнэ: `roles` scope дээр `platform_admin` claim гарах ба
+тэр нь эхний байгууллагын админд — тохиргооны шидтэн үүсгэсэн байгууллагын
+админд — л үнэн. Claim нь хүний тухай, токен аль workspace-д зориулагдсанаас
+хамаарахгүй.
+
+Долоон dashboard: API тойм, Гадаад системүүд, Инфраструктур, Тэсвэрлэлт,
+Логууд, Аюулгүй байдал, Мониторингийн эрүүл мэнд. Самбар бүр лог руу орох
+цэстэй.
+
+Trace асав. Tempo хоёр долоо хоног ажиллаж юу ч хүлээж аваагүй байсан —
+кодод бүх зүйл бэлэн байсан, `.env` рүү хувьсагч хүргэх зам байгаагүй.
+
+### Added — нөөцлөлт, эцэст нь
+
+Энэ платформ дээр **нөөцлөлт огт байгаагүй**: cron суугаагүй, скрипт хостод
+байхгүй, `platform_backups` хүснэгт хоосон. Консолын Нөөцлөлт дэлгэц хоосон
+байсныг хэн ч анзаараагүй — хоосон дэлгэц нь «юу ч буруудаагүй»-тэй яг
+адилхан харагддаг.
+
+`backup.sh` одоо үр дүнгээ хоёр газар бичнэ: `platform_backups` (консол
+уншина) ба node_exporter-ийн textfile (Prometheus уншина). Дөрвөн дохио, тэр
+дундаа `NexusBackupNeverSeen` — «нөөцлөлт унасан» биш, «нөөцлөлт байгаа
+эсэхийг хэн ч хэмжихгүй байна».
+
+**backups.nexus.gerege.mn** — S3-той нийцэх сан. Dump нь хостыг орхихоосоо
+өмнө `age`-ээр шифрлэгдэнэ; эх хостод зөвхөн нийтийн түлхүүр байдаг тул
+эвдэрсэн платформ өөрийн илгээсэн зүйлээ уншиж чадахгүй. Bucket нь
+хувилбартай ба суулгацын түлхүүр устгах эрхгүй: гараас нь атгасан хост нэмж
+чадна, арилгаж чадахгүй. Сэргээлтийг хаях зориулалттай санд ажиллуулж
+баталгаажуулсан.
+
+### Added — баримт бичгийн сайт MkDocs дээр
+
+**docs.nexus.gerege.mn** — MkDocs + Material for MkDocs, docs.gerege.mn-тэй
+яг ижил хэрэгсэл, ижил брэнд. Хуудасны жагсаалт нь `docs/site/pages.mjs`-ээс
+уншигдана: хоёр жагсаалт байвал салж, салсан нь нь хэн ч харахгүй байгаа нь
+болно.
+
+### Changed — эхний бүртгэл нь хүн биш
+
+Тохиргооны шидтэн Gerege Core-оос хүнийг хайж, түүний нэрийг эхний бүртгэлд
+тавьдаг байсан. Эхний бүртгэл бол хүн биш — байгууллага үүсгэж, ажиллах
+хүмүүсээ урих хаалга. Нэр нь одоо тогтмол `Super Admin`, хүний хайлт
+шидтэнээс хасагдав. И-мэйл хэвээр: нууц үг сэргээх мессеж хэн нэгэнд хүрэх
+ёстой.
+
+### Fixed — Authenticator дээрх нэр брэндээ дагана
+
+Нэг хост дээр ажиллаж буй бүх бүтээгдэхүүний консол утсан дээр яг ижил
+бичлэг үүсгэдэг байв — issuer кодод бэхлэгдсэн байсан. Одоо
+`config.BrandName()`-ыг дагана. Мөн `url.Values.Encode` хоосон зайг `+` гэж
+бичдэг тул утсан дээр `Gerege+Nexus+Control+Plane` гэж гардаг байсныг
+`%20` болгов.
+
+
 ### Fixed — засварын горим хүнийг байгууллага дотор нь хоръё гэж байв
 
 Байгууллагыг засварын горимд оруулахад тэр байгууллагын гишүүн бүр — түүнийг
@@ -2645,7 +2719,7 @@ their job without being able to do quiet damage.
 Somebody has to be able to see which organisations exist, which apps they run
 and what has been done to them — and until now that somebody used `psql`. This
 is the first phase of the operator console described in
-[`docs/CONTROL_PLANE_PLAN.md`](docs/CONTROL_PLANE_PLAN.md): the foundation, on
+`docs/CONTROL_PLANE_PLAN.md`: the foundation, on
 which suspension, support and configuration are built next. Guide in
 [`docs/CONTROL_PLANE.md`](docs/CONTROL_PLANE.md).
 
@@ -2899,7 +2973,7 @@ the R and the D of RED and nothing else — no saturation, no business volume, n
 sign that a call to ХУР or eID had gone slow, and no way to tell a breach of the
 in-flight ceiling from any other 503. Everything a dashboard would need was
 missing before the dashboards were, which is why this lands before the stack
-that reads it (design: [`docs/MONITORING_AND_REPORTING_PROPOSAL.md`](docs/MONITORING_AND_REPORTING_PROPOSAL.md)).
+that reads it (design: `docs/MONITORING_AND_REPORTING_PROPOSAL.md`).
 
 - **Saturation.** The Go runtime and process collectors are asserted rather than
   assumed — client_golang registers both, and a test now fails if that ever

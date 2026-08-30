@@ -5,7 +5,7 @@
  *   npm run api:check
  *
  * lib/api.ts was 1831 lines and held every endpoint of every app in one object.
- * That is why it is the file at the top of docs/CORE_BOUNDARY_PLAN.md §2.1: of
+ * That is why it is the first file the core boundary work reached for: of
  * the last 133 commits that touched an app, 40 changed it. Not because anybody
  * wanted a shared file — because it was the only file there was, so an app's
  * endpoint had nowhere else to go.

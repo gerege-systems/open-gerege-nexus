@@ -5,7 +5,7 @@
 
 [Баримт бичгийн төв рүү буцах](README.md) ·
 [Тайлангийн хөдөлгүүр](REPORTS.md) ·
-[Дизайны санал §3.5](MONITORING_AND_REPORTING_PROPOSAL.md)
+[Тайлангийн хөдөлгүүр](REPORTS.md)
 
 ---
 

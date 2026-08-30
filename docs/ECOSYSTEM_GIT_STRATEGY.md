@@ -5,8 +5,7 @@
 developer console) экосистемийн түгээлтийн төв болно.
 
 [Баримт бичгийн төв рүү буцах](README.md) ·
-Холбоотой: [Control Plane](CONTROL_PLANE_PLAN.md) ·
-[Мониторинг ба тайлан](MONITORING_AND_REPORTING_PROPOSAL.md)
+Холбоотой: [Control Plane](CONTROL_PLANE.md) · [Мониторинг](MONITORING.md)
 
 ---
 

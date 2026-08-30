@@ -8,7 +8,7 @@
 package-ийг импортлохгүй; тайлангаа нийтийн `pkg/nexus` SDK-аар бүртгэнэ.
 
 [Баримт бичгийн төв рүү буцах](README.md) ·
-[Дизайны санал](MONITORING_AND_REPORTING_PROPOSAL.md) ·
+[Мониторинг](MONITORING.md) ·
 [Модуль бичих заавар](MODULE_AUTHORING_GUIDE.md)
 
 ---
