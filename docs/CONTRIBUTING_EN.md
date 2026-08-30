@@ -90,8 +90,7 @@ mind.
    that file on every boot, so no manual SQL is required.
 5. Add the frontend view under `frontend/app/<module_name>/page.tsx`.
 
-The [Module Authoring Guide](MODULE_AUTHORING_GUIDE.md) walks through this in
-detail.
+[Writing a module](MODULES.md) walks through this in detail.
 
 ---
 

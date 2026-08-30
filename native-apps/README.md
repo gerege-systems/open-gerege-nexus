@@ -169,7 +169,7 @@ export ANDROID_HOME="$HOME/Library/Android/sdk"   # эсвэл local.properties 
    - `window.GeregeShell` is injected at document start, main-frame only.
    - `auth.reLogin` returns to native login; unknown methods reject.
    - `shell.openPane` lets the work area move to a shell-owned screen without opening anything.
-   - [`../docs/NATIVE_LOGIN_SPEC.md`](../docs/NATIVE_LOGIN_SPEC.md) defines the shared state machine.
+   - [`../docs/SHELL_CONTRACT.md`](../docs/SHELL_CONTRACT.md) defines the shared state machine.
 
 ## Deployment ба update суваг
 

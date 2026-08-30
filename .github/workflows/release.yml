@@ -29,7 +29,7 @@ jobs:
           cache-dependency-path: backend/go.sum
 
       # Two version numbers, deliberately not the same one — see
-      # docs/RELEASING.md §3. The tag is the SDK's promise to distribution
+      # docs/MODULES.md. The tag is the SDK's promise to distribution
       # repositories; PlatformVersion is what an app manifest's
       # `"platform": ">=1.0.0"` is checked against. Printed together because
       # somebody cutting a release should see both, and never compared, because

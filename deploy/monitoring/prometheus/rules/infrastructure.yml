@@ -136,7 +136,7 @@ groups:
 
       # TLS. There is no blackbox exporter here — the certificate is on nginx,
       # on the host, and node_exporter's textfile collector is what can see it.
-      # docs/MONITORING.md carries the cron job that writes the file; without
+      # docs/OPERATIONS.md carries the cron job that writes the file; without
       # it this alert never fires, which is why NexusTLSExpiryUnknown exists
       # beside it.
       - alert: NexusTLSCertificateExpiringSoon

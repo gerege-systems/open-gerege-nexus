@@ -23,7 +23,7 @@ Fixes # (issue)
 Only if `backend/pkg/nexus/testdata/api.txt` is in this diff. Every distribution
 repository compiles against that package and pins it by tag, so a change to it
 is a change to code that is not in this repository and cannot be fixed from it —
-see [`docs/RELEASING.md`](../docs/RELEASING.md) §1.
+see [`docs/MODULES.md`](../docs/MODULES.md) §1.
 
 - [ ] The description above says, in words, **what a caller has to do about it**.
       Not what changed — the diff says that. What somebody with a working

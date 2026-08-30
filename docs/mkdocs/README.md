@@ -36,10 +36,3 @@ sh deploy.sh nexus-root      # угсраад /var/www/docs руу хуулна
 
 nginx-ийн тохиргоо нь `deploy/nginx/docs.nexus.gerege.mn.conf`.
 
-## Яагаад `docs/site` хэвээр байгаа вэ
-
-`docs/site` нь GitHub Pages
-([gerege-systems.github.io/open-gerege-nexus](https://gerege-systems.github.io/open-gerege-nexus/))
-дээрх сайтыг угсардаг өөр builder. Хоёулаа нэг `pages.mjs`-ээс уншдаг тул
-агуулга нь салахгүй, гэхдээ хоёр угсрагч байх нь урт хугацаанд хадгалах зүйл
-биш. Аль нэгийг нь тэтгэвэрт гаргах шийдвэрийг тусад нь гаргана.

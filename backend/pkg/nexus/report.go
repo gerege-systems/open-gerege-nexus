@@ -277,7 +277,7 @@ var (
 // Deprecated: use Provide[ReportSink] instead. This is a wrapper over it and
 // behaves identically, including the delivery of anything registered before it.
 // It stays for one major version so a distribution pinned to v1 keeps
-// compiling, and goes in v2 — see docs/RELEASING.md.
+// compiling, and goes in v2 — see docs/MODULES.md.
 func UseReportSink(sink func(Report)) { Provide[ReportSink](sink) }
 
 // deliverBufferedReports hands the sink everything registered before it arrived.

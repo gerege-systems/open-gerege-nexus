@@ -271,8 +271,8 @@ govulncheck 与 gosec。
 | 文档 | 说明 |
 | --- | --- |
 | [文档中心](README.md) | 全部文档与翻译索引 |
-| [架构规范](ARCHITECTURE_SPECIFICATION.md) | 平台分层与设计决策 |
-| [模块开发指南](MODULE_AUTHORING_GUIDE.md) | 如何开发新的应用模块 |
+| [架构](ARCHITECTURE.md) | 两个平面、三个模式、数据隔离 |
+| [编写模块](MODULES.md) | `pkg/nexus` 契约，以及应用如何抵达部署 |
 | [贡献指南](../CONTRIBUTING.md) | 贡献流程 |
 | [安全策略](../SECURITY.md) | 漏洞报告 |
 | [行为准则](../CODE_OF_CONDUCT.md) | 社区规范 |

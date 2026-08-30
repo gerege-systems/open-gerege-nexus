@@ -149,7 +149,7 @@ services:
       # Signing this deployment's own people in at another provider. Empty is
       # the normal case — this instance issues its own identities. Setting the
       # issuer closes the local sign-in paths and hands the login screen over;
-      # see docs/SSO_FEDERATION.md.
+      # see docs/IDENTITY.md.
       SSO_CLIENT_ISSUER: ${SSO_CLIENT_ISSUER:-}
       SSO_CLIENT_ID: ${SSO_CLIENT_ID:-}
       SSO_CLIENT_SECRET: ${SSO_CLIENT_SECRET:-}
@@ -223,7 +223,7 @@ services:
       SESSION_IDLE_TIMEOUT: ${SESSION_IDLE_TIMEOUT:-90m}
       EMAIL_VERIFY_BASE_URL: ${EMAIL_VERIFY_BASE_URL:-}
       # The hostname the operator console answers on. Empty means this
-      # deployment has no console at all — see docs/CONTROL_PLANE.md.
+      # deployment has no console at all — see docs/OPERATIONS.md.
       CONTROL_PLANE_HOST: ${CONTROL_PLANE_HOST:-}
       # The addresses the console answers to *while the platform is private*.
       # Empty, or the word "open", means no address restriction — which is what
@@ -284,7 +284,7 @@ services:
       # Observability. Both empty by default, and empty is genuinely off: no
       # exporter, no batch processor, no background goroutine. The monitoring
       # stack (deploy/docker-compose.monitoring.yml) runs the Tempo this points
-      # at, on this stack's own network — see docs/MONITORING.md.
+      # at, on this stack's own network — see docs/OPERATIONS.md.
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
       OTEL_TRACES_SAMPLER_ARG: ${OTEL_TRACES_SAMPLER_ARG:-0.1}
       # Panic reporting over the Sentry protocol, to GlitchTip or to a hosted

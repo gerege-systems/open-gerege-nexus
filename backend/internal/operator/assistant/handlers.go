@@ -13,7 +13,7 @@
 // deployment's, paid for by the deployment's key, and an organisation editing
 // the shared prompt was editing what every other organisation would be
 // answered with. Here it is one screen, audited, behind the console's own
-// capabilities — see docs/adr/0005-two-planes-one-origin-each.md.
+// capabilities — see docs/ARCHITECTURE.md.
 //
 // It stands on internal/operator/operator, which decides who is asking and
 // records what they did; nothing in this plane stands on this package.

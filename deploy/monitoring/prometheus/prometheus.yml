@@ -43,7 +43,7 @@ scrape_configs:
   # to say the endpoint is fine — and `up{job="nexus_api"}` already carries the
   # same fact, from an endpoint served by the same process and the same
   # listener. Checking /health from *outside* this server is a real gap and it
-  # is answered by Uptime Kuma on another host (docs/MONITORING.md).
+  # is answered by Uptime Kuma on another host (docs/OPERATIONS.md).
 
   - job_name: node
     static_configs:

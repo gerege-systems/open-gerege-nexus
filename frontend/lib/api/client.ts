@@ -10,9 +10,8 @@
 // Every distribution imports this file. An app's endpoint added here is an
 // endpoint every deployment carries whether or not it has the app — which is
 // how lib/api.ts reached 1831 lines and became the file app work changed most
-// often (40 of the last 133 commits that touched an app; see
-// docs/CORE_BOUNDARY_PLAN.md §2.1). check-api-boundaries.mjs is what says so
-// now.
+// often (40 of the last 133 commits that touched an app).
+// check-api-boundaries.mjs is what says so now.
 
 import { apiBase } from "@/lib/apiBase";
 

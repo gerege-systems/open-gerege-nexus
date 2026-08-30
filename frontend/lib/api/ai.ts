@@ -4,7 +4,7 @@
  * Distributed under the Apache 2.0 License.
  */
 
-// The assistant. Its data sources are being pulled out of the core — see docs/CORE_BOUNDARY_PLAN.md §3.4(A).
+// The assistant. Its data sources are being pulled out of the core.
 
 import { request } from "./client";
 

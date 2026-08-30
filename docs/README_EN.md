@@ -21,7 +21,7 @@ Mongolian is the source. This product overview exists in all seven languages;
 individual technical documents do not necessarily do so. The UI has Mongolian
 and English source dictionaries plus Arabic, Chinese, French, Russian, and
 Spanish overlays; missing overlay strings fall back to English. See the
-[translation guide](TRANSLATION_GUIDE.md).
+[translation guide](TRANSLATION.md).
 
 <p>
   <a href="../README.md"><img src="assets/icons/flag-mn.png" width="18" height="18" alt=""> Монгол</a>
@@ -328,9 +328,9 @@ Report vulnerabilities as described in [`SECURITY.md`](../SECURITY.md).
 | Document | Description |
 | --- | --- |
 | [Documentation hub](README.md) | Index of every document and translation |
-| [Architecture specification](ARCHITECTURE_SPECIFICATION.md) | Platform layers and design decisions |
-| [Module authoring guide](MODULE_AUTHORING_GUIDE.md) | How to build a new app module |
-| [Translation guide](TRANSLATION_GUIDE.md) | Language policy, and adding a language with Gemini |
+| [Architecture](ARCHITECTURE.md) | The two planes, the three schemas, how data is isolated |
+| [Writing a module](MODULES.md) | The `pkg/nexus` contract, and how an app reaches a deployment |
+| [Translation](TRANSLATION.md) | Language policy, and adding a language with Gemini |
 | [Contributing](../CONTRIBUTING.md) | Contribution workflow |
 | [Security policy](../SECURITY.md) | Reporting vulnerabilities |
 | [Code of conduct](../CODE_OF_CONDUCT.md) | Community standards |

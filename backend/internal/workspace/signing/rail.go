@@ -24,7 +24,7 @@ import (
 // point: a distribution implementing a module against nexus.Signer must not
 // have to depend on however this installation happens to sign.
 //
-// See docs/adr/0002-one-signing-rail.md.
+// See docs/SIGNING.md.
 type signingRail struct{ eid *eidmongolia.Service }
 
 // Signing publishes the installation's signing rail. A deployment with no eID

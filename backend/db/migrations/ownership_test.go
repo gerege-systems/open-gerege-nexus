@@ -37,7 +37,7 @@
  * answer the question the two planes ask, which is whose behalf a row is held
  * on: a deployment holds one platform_settings, and it holds one sessions per
  * organisation. So every entry carries a plane as well, decided by one
- * sentence (docs/TWO_PLANES_PROPOSAL.md §2.1):
+ * sentence:
  *
  *	A row that exists once per deployment is the operator plane. A row that
  *	exists separately for each tenant is the workspace plane.
