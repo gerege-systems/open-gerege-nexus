@@ -1,0 +1,1010 @@
+<!doctype html>
+<html lang="mn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Дата агуулах, BI ба AI — Gerege Nexus</title>
+<meta name="description" content="ERP эх сурвалжтай, дотоод серверт байрлах дата агуулах, BI ба AI давхаргыг үе шаттай босгох төлөвлөгөө. Бүх технологи нээлттэй эх.">
+<meta name="theme-color" content="#06336e">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Unbounded:wght@600;700&display=swap">
+
+<style>
+/*
+ * Хуудасны бүтэц нь сэдвээсээ гардаг: дата агуулах бол давхаргууд, тиймээс
+ * энэ хуудас барилгын огтлол шиг доороос дээшээ уншигдана. Гол дүр нь §01-ийн
+ * зургаан давхарга — хуудасны бусад хэсэг түүнийг тайлбарлана.
+ */
+:root {
+  color-scheme: light;
+
+  --paper:      #F6F7F9;
+  --card:       #FFFFFF;
+  --card-2:     #EEF1F5;
+  --line:       #DBE1E9;
+  --line-firm:  #B9C4D2;
+
+  --ink:        #0C1420;
+  --ink-2:      #33435A;
+  --muted:      #6B7A8F;
+
+  --blue:       #1869eb;
+  --blue-deep:  #06336e;
+  --blue-soft:  #E3EDFD;
+  --blue-line:  #A9C8F6;
+
+  --signal:     #A96A05;
+  --signal-soft:#FBF0DC;
+  --signal-line:#E5C88A;
+
+  --good:       #0F7A5A;
+
+  --sans: "Golos Text", system-ui, -apple-system, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --display: "Unbounded", "Golos Text", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", "Cascadia Mono",
+          "IBM Plex Mono", Menlo, Consolas, monospace;
+
+  --shadow: 0 1px 2px rgba(12,20,32,.05), 0 14px 34px -22px rgba(12,20,32,.35);
+  --pad: clamp(1.25rem, 4vw, 2rem);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper:      #0A0E14;
+    --card:       #121822;
+    --card-2:     #182030;
+    --line:       #232D3D;
+    --line-firm:  #35435A;
+    --ink:        #E6EBF2;
+    --ink-2:      #B3BFCF;
+    --muted:      #7E8DA2;
+    --blue:       #5C9CFF;
+    --blue-deep:  #A9C8F6;
+    --blue-soft:  #12233E;
+    --blue-line:  #2A4570;
+    --signal:     #E0A94A;
+    --signal-soft:#2A2114;
+    --signal-line:#5A4620;
+    --good:       #3FBF95;
+    --shadow: 0 1px 2px rgba(0,0,0,.45), 0 14px 34px -22px rgba(0,0,0,.9);
+  }
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap { max-width: 74rem; margin: 0 auto; padding: 0 var(--pad); }
+.narrow { max-width: 52rem; }
+
+a { color: var(--blue); }
+a:focus-visible, button:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+/* ─────────────────────────────────────────────────────────── topbar */
+.topbar {
+  position: sticky; top: 0; z-index: 20;
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter: saturate(1.4) blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+.topbar .wrap {
+  display: flex; align-items: center; gap: 1rem;
+  min-height: 3.5rem;
+}
+.mark {
+  font-family: var(--display);
+  font-weight: 700; font-size: .95rem; letter-spacing: -.02em;
+  color: var(--ink); text-decoration: none;
+  display: inline-flex; align-items: center; gap: .55rem;
+}
+.mark i {
+  width: .85rem; height: .85rem; display: block;
+  background: var(--blue);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+.topnav { margin-left: auto; display: flex; gap: 1.35rem; }
+.topnav a {
+  font-size: .8rem; color: var(--muted); text-decoration: none;
+  font-variant-numeric: tabular-nums;
+}
+.topnav a:hover { color: var(--ink); }
+@media (max-width: 46rem) { .topnav { display: none; } }
+
+/* ─────────────────────────────────────────────────────────── hero
+ * Гарчиг нь асуулт. Энэ төслийн бүх зүйл тэр асуултын хариултаас эхэлдэг тул
+ * хуудас ч мөн адил эхэлнэ — үзүүлэлтийн жагсаалтаас ч, tool-ын нэрсээс ч биш.
+ */
+.hero { padding: clamp(3.5rem, 9vw, 6.5rem) 0 clamp(2rem, 5vw, 3.5rem); }
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: .72rem; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 1.5rem;
+}
+
+.hero h1 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(2.4rem, 7.5vw, 4.6rem);
+  line-height: 1.02;
+  letter-spacing: -.03em;
+  margin: 0 0 1.5rem;
+  max-width: 16ch;
+}
+.hero h1 em {
+  font-style: normal;
+  color: var(--blue);
+}
+
+.lede {
+  font-size: clamp(1.05rem, 2vw, 1.3rem);
+  line-height: 1.55;
+  color: var(--ink-2);
+  max-width: 46ch;
+  margin: 0 0 2.5rem;
+}
+.lede b { color: var(--ink); font-weight: 600; }
+
+/* Баримтын зурвас — таамаг биш, тоо. */
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  /* Хагарлын шугамыг gap өөрөө зурна: тэгвэл гадна тал дээр давхар шугам
+     гарахгүй, мөр бүрийн эхэн, төгсгөлийг тусад нь нэрлэх ч шаардлагагүй. */
+  gap: 1px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--line);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.facts div {
+  padding: .95rem 1.1rem;
+  background: var(--card);
+}
+.facts dt {
+  font-family: var(--mono);
+  font-size: .68rem; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 .3rem;
+}
+.facts dd { margin: 0; font-weight: 600; font-size: .98rem; }
+
+/* ─────────────────────────────────────────────────────────── section */
+section { padding: clamp(3rem, 7vw, 5.5rem) 0; border-top: 1px solid var(--line); }
+
+.shead { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 2.5rem; }
+.shead .num {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  letter-spacing: -.02em;
+  color: var(--blue-line);
+  line-height: 1;
+}
+.shead h2 {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: clamp(1.35rem, 3.2vw, 2rem);
+  letter-spacing: -.025em;
+  line-height: 1.1;
+  margin: 0;
+}
+.shead p {
+  margin: .4rem 0 0;
+  color: var(--muted);
+  font-size: .95rem;
+  font-family: var(--sans);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.shead .t { display: flex; flex-direction: column; }
+
+/* ─────────────────────────────────────────────── §01 давхаргын огтлол
+ * Гол дүр. Доод давхарга нь эх сурвалж, дээд нь хэрэглэгч — уншигч дээшээ
+ * авирна. Зүүн талын тасралтгүй суваг нь "давхарга алгасахгүй" дүрмийг
+ * зурагаар хэлж байгаа хэрэг: үсрэх зай байхгүй.
+ */
+.stack { display: flex; flex-direction: column-reverse; gap: 0; }
+
+.layer {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr auto;
+  gap: 0 1.25rem;
+  align-items: start;
+  padding: 1.15rem 1.25rem 1.15rem 0;
+  border-top: 1px solid var(--line);
+  position: relative;
+  transition: background .18s ease;
+}
+.stack .layer:last-child { border-top: 0; }
+.layer:hover { background: var(--card); }
+
+/* Тасралтгүй суваг */
+.layer::before {
+  content: "";
+  position: absolute;
+  left: 2.05rem; top: 0; bottom: 0;
+  width: 2px;
+  background: var(--blue-line);
+}
+.stack .layer:first-child::before { bottom: 50%; }
+.stack .layer:last-child::before  { top: 50%; }
+
+.layer .code {
+  font-family: var(--mono);
+  font-size: .8rem; font-weight: 500;
+  color: var(--blue-deep);
+  background: var(--paper);
+  border: 1px solid var(--blue-line);
+  border-radius: 999px;
+  padding: .1rem 0;
+  width: 2.6rem; text-align: center;
+  position: relative; z-index: 1;
+  justify-self: start;
+  margin-left: .78rem;
+}
+.layer h3 {
+  margin: 0 0 .25rem;
+  font-size: 1.02rem; font-weight: 600; letter-spacing: -.01em;
+}
+.layer h3 span { color: var(--muted); font-weight: 400; }
+.layer p { margin: 0; color: var(--ink-2); font-size: .93rem; }
+.layer .tools {
+  display: flex; flex-wrap: wrap; gap: .35rem;
+  justify-content: flex-end;
+  max-width: 15rem;
+}
+.chip {
+  font-family: var(--mono);
+  font-size: .7rem;
+  padding: .18rem .5rem;
+  border: 1px solid var(--line-firm);
+  border-radius: 5px;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.chip.on { border-color: var(--blue-line); background: var(--blue-soft); color: var(--blue-deep); }
+
+@media (max-width: 46rem) {
+  .layer { grid-template-columns: 4.5rem 1fr; }
+  .layer .tools { grid-column: 2; justify-content: flex-start; max-width: none; margin-top: .55rem; }
+}
+
+.rule {
+  margin-top: 1.75rem;
+  border: 1px solid var(--blue-line);
+  background: var(--blue-soft);
+  border-radius: 10px;
+  padding: 1rem 1.15rem;
+  font-size: .95rem;
+  color: var(--blue-deep);
+}
+.rule b { font-weight: 600; }
+
+.spine {
+  display: flex; flex-wrap: wrap; gap: .5rem;
+  margin-top: 1rem;
+}
+.spine span {
+  font-family: var(--mono); font-size: .7rem;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--muted);
+  border: 1px dashed var(--line-firm);
+  border-radius: 6px;
+  padding: .3rem .6rem;
+}
+
+/* ─────────────────────────────────────────────────────── §02 хүснэгт */
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--card); box-shadow: var(--shadow); }
+table { width: 100%; border-collapse: collapse; min-width: 44rem; }
+th, td { text-align: left; padding: .8rem 1rem; border-bottom: 1px solid var(--line); vertical-align: top; font-size: .92rem; }
+thead th {
+  font-family: var(--mono);
+  font-size: .68rem; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--muted); font-weight: 500;
+  background: var(--card-2);
+}
+tbody tr:last-child td { border-bottom: 0; }
+td.pick { font-weight: 600; white-space: nowrap; }
+td.alt { color: var(--muted); white-space: nowrap; font-size: .87rem; }
+td code, p code, li code { font-family: var(--mono); font-size: .85em; background: var(--card-2); padding: .06rem .3rem; border-radius: 4px; }
+
+/* ────────────────────────────────────────────────────────── §03 AI тоо */
+.scores {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+}
+.score {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 1.25rem;
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+.score.best { border-color: var(--blue-line); }
+.score.warn { border-color: var(--signal-line); background: var(--signal-soft); }
+.score .n {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(1.9rem, 5vw, 2.7rem);
+  line-height: 1;
+  letter-spacing: -.03em;
+  display: block;
+  margin-bottom: .55rem;
+}
+.score.best .n { color: var(--blue); }
+.score.warn .n { color: var(--signal); }
+.score p { margin: 0; font-size: .9rem; color: var(--ink-2); }
+.bar { height: 4px; border-radius: 2px; background: var(--card-2); margin: .8rem 0 .75rem; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--line-firm); }
+.score.best .bar i { background: var(--blue); }
+.score.warn .bar i { background: var(--signal); }
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1rem;
+}
+.card {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 1.2rem;
+  background: var(--card);
+}
+.card .tag {
+  font-family: var(--mono);
+  font-size: .68rem; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--muted); display: block; margin-bottom: .5rem;
+}
+.card h4 { margin: 0 0 .5rem; font-size: 1rem; font-weight: 600; }
+.card p { margin: 0; font-size: .9rem; color: var(--ink-2); }
+
+.note {
+  border-left: 3px solid var(--signal);
+  background: var(--signal-soft);
+  padding: .9rem 1.1rem;
+  border-radius: 0 8px 8px 0;
+  margin: 1.75rem 0 0;
+  font-size: .93rem;
+  color: var(--ink-2);
+}
+.note b { color: var(--ink); font-weight: 600; }
+
+/* ──────────────────────────────────────────────────────── §04 үе шат */
+.phases { display: grid; gap: .75rem; }
+.phase {
+  display: grid;
+  grid-template-columns: 9rem 1fr;
+  gap: 0 1.5rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  padding: 1.15rem 1.25rem;
+}
+.phase .when { border-right: 1px solid var(--line); padding-right: 1.25rem; }
+.phase .p { font-family: var(--mono); font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--blue); display: block; }
+.phase .dur { font-size: .85rem; color: var(--muted); }
+.phase h3 { margin: 0 0 .6rem; font-size: 1.05rem; font-weight: 600; letter-spacing: -.01em; }
+.phase ul { margin: 0; padding-left: 1.1rem; }
+.phase li { font-size: .92rem; color: var(--ink-2); margin-bottom: .2rem; }
+.phase .out {
+  margin-top: .85rem; padding-top: .75rem;
+  border-top: 1px dashed var(--line-firm);
+  font-size: .9rem;
+}
+.phase .out b {
+  font-family: var(--mono);
+  font-size: .68rem; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--good); display: block; margin-bottom: .2rem;
+}
+@media (max-width: 42rem) {
+  .phase { grid-template-columns: 1fr; }
+  .phase .when { border-right: 0; border-bottom: 1px solid var(--line); padding: 0 0 .7rem; margin-bottom: .85rem; display: flex; gap: .75rem; align-items: baseline; }
+}
+
+/* ───────────────────────────────────────────────────────── §05 алдаа */
+/* Мөн адил: шугамыг gap зурна — .facts-ын тайлбарыг үз. */
+.traps { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 1px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--line); }
+.trap { padding: 1.1rem 1.2rem; background: var(--card); }
+.trap .n { font-family: var(--mono); font-size: .72rem; color: var(--signal); display: block; margin-bottom: .35rem; }
+.trap h4 { margin: 0 0 .3rem; font-size: .97rem; font-weight: 600; }
+.trap p { margin: 0; font-size: .89rem; color: var(--ink-2); }
+
+/* ──────────────────────────────────────────────────────── §06 30 хоног */
+.weeks { display: grid; gap: .6rem; }
+.week { display: grid; grid-template-columns: 7.5rem 1fr; gap: 1.25rem; padding: .9rem 0; border-top: 1px solid var(--line); }
+.week:first-child { border-top: 0; }
+.week .w { font-family: var(--mono); font-size: .75rem; color: var(--blue); letter-spacing: .06em; padding-top: .12rem; }
+.week h4 { margin: 0 0 .2rem; font-size: .98rem; font-weight: 600; }
+.week p { margin: 0; font-size: .91rem; color: var(--ink-2); }
+@media (max-width: 40rem) { .week { grid-template-columns: 1fr; gap: .25rem; } }
+
+/* ───────────────────────────────────────────────────────────── footer */
+footer { border-top: 1px solid var(--line); padding: 3rem 0 4rem; color: var(--muted); font-size: .87rem; }
+footer h4 { font-family: var(--mono); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 .7rem; font-weight: 500; }
+footer ul { margin: 0 0 1.75rem; padding-left: 1.1rem; }
+footer li { margin-bottom: .25rem; }
+.foot-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 2rem; }
+.sig { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; align-items: center; }
+.sig .mark { font-size: .85rem; }
+
+/* Илрэх хөдөлгөөн — нэг удаа, дээшээ. Хөдөлгөөн багасгах сонголтыг хүндэтгэнэ. */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal { opacity: 0; transform: translateY(8px); transition: opacity .34s ease, transform .34s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="mark" href="#top"><i></i> Gerege Nexus · Data</a>
+    <nav class="topnav">
+      <a href="#stack">01 Стек</a>
+      <a href="#tech">02 Технологи</a>
+      <a href="#ai">03 AI</a>
+      <a href="#plan">04 Үе шат</a>
+      <a href="#traps">05 Алдаа</a>
+      <a href="#start">06 Эхлэл</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+<div class="hero wrap">
+  <p class="eyebrow">Хэрэгжүүлэлтийн зураглал · On-premise · 2026</p>
+  <h1>«Борлуулалт» гэж <em>юу</em>&nbsp;вэ?</h1>
+  <p class="lede">
+    Дата агуулахын төслүүд технологиос болж унадаггүй. Энэ асуултад хоёр хэлтэс
+    <b>өөр өөр хариулт</b> өгснөөс унадаг. Тиймээс бид серверээс ч, tool-оос ч
+    биш — үзүүлэлтийн тодорхойлолтоос эхэлнэ.
+  </p>
+
+  <dl class="facts">
+    <div><dt>Эх сурвалж</dt><dd>ERP / нягтлан</dd></div>
+    <div><dt>Байршил</dt><dd>On-premise</dd></div>
+    <div><dt>Баг</dt><dd>1–2 SQL аналист</dd></div>
+    <div><dt>Эхний үр дүн</dt><dd>6–8 долоо хоног</dd></div>
+    <div><dt>Бүрэн хэрэгжилт</dt><dd>9–12 сар</dd></div>
+    <div><dt>Лицензийн зардал</dt><dd>$0 — нээлттэй эх</dd></div>
+  </dl>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 01 стек -->
+<section id="stack">
+  <div class="wrap">
+    <div class="shead">
+      <span class="num">01</span>
+      <span class="t">
+        <h2>Давхарга бүр нэг ажилтай</h2>
+        <p>Өгөгдөл доороос дээшээ урсана</p>
+      </span>
+    </div>
+
+    <div class="stack">
+      <div class="layer reveal">
+        <span class="code">L0</span>
+        <div>
+          <h3>Эх сурвалж</h3>
+          <p>ERP / нягтлангийн систем, Excel файл, гараар хөтөлдөг лавлах хүснэгт.</p>
+        </div>
+        <div class="tools"><span class="chip">MSSQL</span><span class="chip">Postgres</span><span class="chip">Oracle</span><span class="chip">Excel</span></div>
+      </div>
+
+      <div class="layer reveal">
+        <span class="code">L1</span>
+        <div>
+          <h3>Ingestion <span>— татаж авах</span></h3>
+          <p>ERP-ийн <b>read replica</b>-аас өдөр бүр зөвхөн шинэчлэгдсэн мөрийг татна. Production DB-д шууд хэзээ ч ханддаггүй.</p>
+        </div>
+        <div class="tools"><span class="chip on">dlt</span><span class="chip">Airbyte OSS</span></div>
+      </div>
+
+      <div class="layer reveal">
+        <span class="code">L2</span>
+        <div>
+          <h3>Raw <span>— хөндөөгүй хуулбар</span></h3>
+          <p>ERP-ээс ирсэн чигээрээ, зөвхөн нэмэгдэнэ. Ачаалсан огноог тэмдэглэнэ. Гараар хэзээ ч засахгүй.</p>
+        </div>
+        <div class="tools"><span class="chip">schema-per-source</span><span class="chip">append-only</span></div>
+      </div>
+
+      <div class="layer reveal">
+        <span class="code">L3</span>
+        <div>
+          <h3>Staging <span>— цэвэрлэгээ</span></h3>
+          <p>Төрөл тааруулах, нэр стандартчлах, давхардал арилгах, NULL зохицуулах. Бизнес логик энд <b>орохгүй</b>.</p>
+        </div>
+        <div class="tools"><span class="chip on">dbt models</span><span class="chip on">dbt tests</span></div>
+      </div>
+
+      <div class="layer reveal">
+        <span class="code">L4</span>
+        <div>
+          <h3>Mart <span>— бизнесийн загвар</span></h3>
+          <p>Star schema: <code>fact_sales</code>, <code>dim_customer</code>, <code>dim_product</code>, <code>dim_date</code>. Аналист шууд уншиж чадах нэршил.</p>
+        </div>
+        <div class="tools"><span class="chip on">dbt models</span><span class="chip">SQL</span></div>
+      </div>
+
+      <div class="layer reveal">
+        <span class="code">L5</span>
+        <div>
+          <h3>Semantic layer <span>— үзүүлэлтийн тодорхойлолт</span></h3>
+          <p>KPI бүрийн томьёо <b>ганц газар</b>. BI ба AI хоёул эндээс уншина. AI-ийн нарийвчлалын түлхүүр энэ давхарга.</p>
+        </div>
+        <div class="tools"><span class="chip on">Cube Core</span><span class="chip">Postgres-wire SQL API</span></div>
+      </div>
+
+      <div class="layer reveal">
+        <span class="code">L6</span>
+        <div>
+          <h3>Хэрэглэгчийн давхарга</h3>
+          <p>Дашбоард, тайлан, AI чат, сэрэмжлүүлэг, экспорт.</p>
+        </div>
+        <div class="tools"><span class="chip on">Metabase</span><span class="chip">AI chat</span><span class="chip">Email alert</span></div>
+      </div>
+    </div>
+
+    <p class="rule">
+      <b>Давхарга алгасахыг хориглоно.</b> BI хэрэгсэл Raw давхаргаас шууд уншиж
+      болохгүй. Энэ ганц дүрэм л системийг хоёр жилийн дараа ч ойлгомжтой байлгана.
+    </p>
+
+    <div class="spine">
+      <span>Оркестраци — Dagster / cron</span>
+      <span>Засаглал — тест · git · нөөцлөлт · хандалт</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ 02 технологи -->
+<section id="tech">
+  <div class="wrap">
+    <div class="shead">
+      <span class="num">02</span>
+      <span class="t">
+        <h2>Технологийн сонголт</h2>
+        <p>Бүгд нээлттэй эх, лицензийн төлбөргүй</p>
+      </span>
+    </div>
+
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>Давхарга</th><th>Сонголт</th><th>Хувилбар</th><th>Яагаад</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Агуулах DB</td><td class="pick">PostgreSQL 18</td><td class="alt">ClickHouse</td>
+            <td>Багийнхан аль хэдийн мэддэг. ERP хэмжээний дата (&lt;500 GB) дээр хангалттай хурдан. Дашбоардын query 10 сек давах, эсвэл 1 TB давахад ClickHouse руу шилжинэ.</td>
+          </tr>
+          <tr>
+            <td>Ingestion</td><td class="pick">dlt</td><td class="alt">Airbyte OSS</td>
+            <td>Python сан — тусдаа сервер шаардахгүй, код нь git-д орно. Airbyte нь UI-тай ч 4–8 GB RAM нэмж иднэ.</td>
+          </tr>
+          <tr>
+            <td>Хувиргалт</td><td class="pick">dbt-core</td><td class="alt">—</td>
+            <td>Энэ дээр буулт хийхгүй. Зөвхөн SQL бичнэ, гэхдээ тест, баримтжуулалт, lineage, хувилбарын хяналт дагалдана.</td>
+          </tr>
+          <tr>
+            <td>Оркестраци</td><td class="pick">cron → Dagster</td><td class="alt">Airflow</td>
+            <td>Эхний 2 сар <code>cron + dbt run</code> хангалттай. Pipeline 10-аас олон болоход Dagster руу шилжинэ.</td>
+          </tr>
+          <tr>
+            <td>BI</td><td class="pick">Metabase</td><td class="alt">Apache Superset</td>
+            <td>Контейнер асаснаас эхний дашбоард хүртэл ~10 минут; техникийн бус хүн өөрөө асуулт үүсгэнэ. Мөр түвшний эрх үнэгүй хэрэгтэй бол Superset.</td>
+          </tr>
+          <tr>
+            <td>Semantic layer</td><td class="pick">Cube Core</td><td class="alt">dbt MetricFlow</td>
+            <td>Cube Core (Apache 2.0) нь Postgres протоколоор SQL API гаргадаг тул Metabase түүнийг ердийн DB мэт хардаг. MetricFlow-ийн хөдөлгүүр үнэгүй ч <b>BI холбох API нь зөвхөн төлбөртэй dbt Cloud дээр</b>.</td>
+          </tr>
+          <tr>
+            <td>ML</td><td class="pick">statsforecast · LightGBM</td><td class="alt">Prophet</td>
+            <td>Таамгийг Python-оор бодоод үр дүнг <code>mart_forecast_*</code> хүснэгтэд буцааж бичнэ — BI дээр бодит гүйцэтгэлийн хажууд харагдана.</td>
+          </tr>
+          <tr>
+            <td>Код хадгалалт</td><td class="pick">Gitea</td><td class="alt">GitLab CE</td>
+            <td>dbt код, dlt скрипт, тохиргоо бүгд git-д. 1 GB RAM-д ажиллана. Энэгүйгээр 6 сарын дараа хэн юу өөрчилснийг мэдэхээ болино.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="cards" style="margin-top:1.75rem">
+      <div class="card">
+        <span class="tag">Phase 1–2 · эхлэл</span>
+        <h4>1 сервер</h4>
+        <p>8–16 vCPU · 64 GB RAM · 2 TB NVMe (RAID 1). Docker Compose дээр Postgres, dbt, Metabase, Gitea бүгд нэг машин дээр. Ubuntu Server LTS.</p>
+      </div>
+      <div class="card">
+        <span class="tag">Phase 3+ · өргөтгөл</span>
+        <h4>2 сервер + нөөцлөлт</h4>
+        <p>DWH сервер — зөвхөн Postgres. App сервер — Metabase, Dagster, Gitea. NAS эсвэл tape — өдөр тутмын нөөц, өөр байранд.</p>
+      </div>
+      <div class="card">
+        <span class="tag">Зөвхөн локал LLM-д</span>
+        <h4>GPU сервер</h4>
+        <p>48–96 GB VRAM. 48 GB-д 30B загвар зөвхөн quantized хэлбэрээр багтана. Заавал биш — §03-ын шийдвэрээс хамаарна.</p>
+      </div>
+    </div>
+
+    <p class="note">
+      <b>Зардал.</b> Програм хангамжийн лиценз $0; бодит зардал бол техник
+      хангамж ба цалин. 2026 оны DDR5 ECC санах ойн хомсдолоос болж серверийн
+      RAM жилийн өмнөхөөс ~2 дахин үнэтэй болсон — 2025 оны үнээр төсөвлөж
+      болохгүй. Нэг хүн цагийнхаа 60–70%-ийг өгвөл энэ төлөвлөгөө биелнэ;
+      хэн ч бүтэн эзэнгүй бол төсөл гурав дахь сард зогсоно.
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ 03 AI -->
+<section id="ai">
+  <div class="wrap">
+    <div class="shead">
+      <span class="num">03</span>
+      <span class="t">
+        <h2>AI давхарга</h2>
+        <p>Цэвэр mart-гүйгээр утгагүй</p>
+      </span>
+    </div>
+
+    <p class="lede narrow" style="margin-bottom:2rem">
+      Хамгийн түгээмэл алдаа: цэвэрлэгээгүй дата дээр AI чат тавьж,
+      <b>итгэлтэй өнгөөр буруу тоо</b> хэлүүлэх. Тиймээс L4 mart болон
+      L5 semantic layer бэлэн болтол AI-д гар хүрэхгүй.
+    </p>
+
+    <div class="scores">
+      <div class="score">
+        <span class="n">84–90%</span>
+        <div class="bar"><i style="width:87%"></i></div>
+        <p>Шууд text-to-SQL — загвар schema-г уншаад өөрөө SQL бичих.</p>
+      </div>
+      <div class="score best">
+        <span class="n">98–100%</span>
+        <div class="bar"><i style="width:99%"></i></div>
+        <p>Semantic layer дундуур — загвар зөвхөн тодорхойлсон үзүүлэлтийг дуудна.</p>
+      </div>
+      <div class="score warn">
+        <span class="n">~15%</span>
+        <div class="bar"><i style="width:15%"></i></div>
+        <p>Text-to-SQL үнэмшилтэй харагдах <b>буруу</b> хариу өгөх магадлал — алдаа нь чимээгүй.</p>
+      </div>
+    </div>
+
+    <p class="rule">
+      Гол ялгаа нь нарийвчлал биш, <b>алдах хэлбэр</b>. Semantic layer алдвал
+      «ийм үзүүлэлт алга» гэж ил хэлнэ. Text-to-SQL алдвал зөв харагдах тоо
+      буцаана — хүн үүнийг удирдлагын хуралд аваачина.
+    </p>
+
+    <h3 style="font-size:1.05rem;margin:2.5rem 0 1rem">LLM-ээ хаана байрлуулах вэ</h3>
+    <div class="cards">
+      <div class="card">
+        <span class="tag">Хувилбар А</span>
+        <h4>API + зөвхөн metadata</h4>
+        <p>Гадаад загвар руу зөвхөн хүснэгтийн бүтэц, багана, үзүүлэлтийн тодорхойлолт явна. Бодит мөр гадагшилахгүй, SQL нь дотоод серверт ажиллана. Хамгийн хямд, хамгийн нарийвчлалтай.</p>
+      </div>
+      <div class="card">
+        <span class="tag">Хувилбар Б</span>
+        <h4>Бүрэн локал загвар</h4>
+        <p>Qwen / Llama ангиллын 30B загвар GPU сервер дээр. Юу ч гадагш гарахгүй. Нарийвчлал доогуур, GPU-д $5–7k, тохируулга удаан. Банк, төрийн байгууллагад л зайлшгүй.</p>
+      </div>
+      <div class="card">
+        <span class="tag">Хувилбар В</span>
+        <h4>Холимог</h4>
+        <p>Мөр датад хүрэх алхмыг локал загвараар, зөвхөн schema хардаг алхмыг API-аар. Хамгийн уян хатан ч хамгийн олон эд анги — багийн чадавх бэхжсэн хойно.</p>
+      </div>
+    </div>
+
+    <p class="note">
+      <b>Дараалал.</b> Аномали илрүүлэлт (хамгийн хялбар) → semantic layer дээрх
+      асуулт-хариулт → таамаглал ба churn (хамгийн хүнд). ML-ээр бүү эхэл:
+      өдөр тутмын KPI цуваа дээр STL задаргаа + robust z-score хангалттай.
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ 04 үе шат -->
+<section id="plan">
+  <div class="wrap">
+    <div class="shead">
+      <span class="num">04</span>
+      <span class="t">
+        <h2>Хэрэгжүүлэх төлөвлөгөө</h2>
+        <p>Үе шат бүр ажиллаж байгаа зүйл гаргана</p>
+      </span>
+    </div>
+
+    <div class="phases">
+      <div class="phase">
+        <div class="when"><span class="p">Phase 0</span><span class="dur">2–4 долоо хоног</span></div>
+        <div>
+          <h3>Тодорхойлолт ба бэлтгэл</h3>
+          <ul>
+            <li>10–15 KPI-г томьёо, эх сурвалж, эзэмшигчтэй нь бичих</li>
+            <li>ERP-ийн хүснэгтийн бүртгэл, эзлэхүүн, өсөлтийн хурд хэмжих</li>
+            <li>ERP дээр read replica тохируулах эсвэл шөнийн цонх тохирох</li>
+            <li>Сервер захиалах, Ubuntu + Docker бэлдэх, Gitea босгох</li>
+          </ul>
+          <p class="out"><b>Дуусмагц</b> Гарын үсэгтэй KPI баримт бичиг, ажиллаж байгаа сервер, хоосон git repo.</p>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="when"><span class="p">Phase 1</span><span class="dur">4–8 долоо хоног</span></div>
+        <div>
+          <h3>Эхний урсгал, эхний дашбоард</h3>
+          <ul>
+            <li>dlt-ээр 5–8 гол хүснэгтийг өдөр бүр Raw давхаргад татах</li>
+            <li>dbt: staging загварууд + эхний 3 mart (борлуулалт, харилцагч, бараа)</li>
+            <li>Metabase суулгаж, Phase 0-д сонгосон гар тайланг орлуулах дашбоард</li>
+            <li>cron дээр өдөр тутмын ажиллагаа, амжилтгүй болвол имэйл</li>
+          </ul>
+          <p class="out"><b>Дуусмагц</b> Өмнө нь 1–2 хүн-өдөр иддэг байсан нэг тайлан өглөө бүр өөрөө шинэчлэгддэг болсон. Энэ мөч төслийн үлдсэн төсвийг шийднэ.</p>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="when"><span class="p">Phase 2</span><span class="dur">2–3 сар</span></div>
+        <div>
+          <h3>Найдвартай байдал ба өргөтгөл</h3>
+          <ul>
+            <li>dbt тест 30+ (uniqueness, not-null, relationship, тоон хязгаар)</li>
+            <li>Түүх хадгалах загвар (SCD2) — үнэ, ангилал өөрчлөгдөх лавлахуудад</li>
+            <li>Incremental ачаалалт — бүтэн дахин ачаалалтаас салах</li>
+            <li>Нөөцлөлт + сэргээх дасгал, хандалтын эрхийн бүтэц</li>
+          </ul>
+          <p class="out"><b>Дуусмагц</b> Өдөр бүр бүх тест ногоон, гар оролцоо тэг, аль ч тоо хаанаас гарсныг lineage-аар харуулж чадна.</p>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="when"><span class="p">Phase 3</span><span class="dur">1–2 сар</span></div>
+        <div>
+          <h3>Semantic layer ба сэрэмжлүүлэг</h3>
+          <ul>
+            <li>KPI-уудыг Cube Core дээр нэг удаа тодорхойлж, Metabase-ийг Cube-ийн SQL API руу холбох</li>
+            <li>5–10 үзүүлэлт дээр аномали илрүүлэлт, босго тохируулга</li>
+            <li>Имэйл / Slack сэрэмжлүүлэг, хүлээн авагч бүрт эзэмшигч</li>
+          </ul>
+          <p class="out"><b>Дуусмагц</b> Нэг үзүүлэлт нэг л газар тодорхойлогдсон; сэрэмжлүүлгийн худал дохио 20%-иас доош.</p>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="when"><span class="p">Phase 4</span><span class="dur">2–3 сар</span></div>
+        <div>
+          <h3>AI чат ба таамаглал</h3>
+          <ul>
+            <li>LLM байршлын шийдвэр — мэдээллийн аюулгүй байдлын журмын зөвшөөрөл</li>
+            <li>Semantic layer дээр суурилсан асуулт-хариулт, 20 сорилын багц</li>
+            <li>Борлуулалтын таамаг → <code>mart_forecast_sales</code> → дашбоард дээр гүйцэтгэлийн хажууд</li>
+            <li>Churn загвар (харилцагчийн 24+ сарын түүх байгаа бол)</li>
+          </ul>
+          <p class="out"><b>Дуусмагц</b> Сорилын 20 асуултад 100% зөв хариулна; таамаг нь улирлын baseline-ыг тодорхой давсан.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ 05 алдаа -->
+<section id="traps">
+  <div class="wrap">
+    <div class="shead">
+      <span class="num">05</span>
+      <span class="t">
+        <h2>Төсөл унагаадаг зүйлс</h2>
+        <p>Урьдчилан мэдэж байвал зайлсхийж болно</p>
+      </span>
+    </div>
+
+    <div class="traps">
+      <div class="trap">
+        <span class="n">01</span>
+        <h4>Tool-оос эхлэх</h4>
+        <p>Үзүүлэлтээ тодорхойлохоос өмнө технологи сонгох. Гурван сарын дараа «энэ тоо яагаад санхүүгийнхтэй таарахгүй байна вэ» гэсэн асуултаас гарч чадахгүй.</p>
+      </div>
+      <div class="trap">
+        <span class="n">02</span>
+        <h4>ERP production-д шууд хандах</h4>
+        <p>Аналистын хүнд query нягтлангийн системийг удаашруулна. Нэг удаа тохиолдвол IT хэлтэс хаалгыг бүрмөсөн хаана. Replica эсвэл шөнийн цонх заавал.</p>
+      </div>
+      <div class="trap">
+        <span class="n">03</span>
+        <h4>«Хэрэг болж магадгүй» гэж бүгдийг татах</h4>
+        <p>300 хүснэгт татсан ч 12 нь л хэрэглэгдэнэ. Үлдсэн нь зөвхөн диск, засвар үйлчилгээ иднэ. Асуултаас ухраад хэрэгцээт хүснэгтээ ол.</p>
+      </div>
+      <div class="trap">
+        <span class="n">04</span>
+        <h4>Тестгүй pipeline</h4>
+        <p>Итгэл нэг л удаа буруу тоо гарахад алдагдана, буцаад сэргэдэггүй. dbt тест бол нэмэлт биш, суурь.</p>
+      </div>
+      <div class="trap">
+        <span class="n">05</span>
+        <h4>Цэвэр mart-гүйгээр AI</h4>
+        <p>Эмх замбараагүй дата дээрх AI бол хамгийн үнэтэй буруу хариултын машин. Дараалал: mart → тест → semantic layer → AI.</p>
+      </div>
+      <div class="trap">
+        <span class="n">06</span>
+        <h4>Эзэнгүй дашбоард</h4>
+        <p>Дашбоард бүрд нэр бүхий эзэмшигч байх. Зургаан сар хэн ч нээгээгүй дашбоардыг устга — тэдгээр нь буруу тоогоор эргэлдэж хор хийнэ.</p>
+      </div>
+      <div class="trap">
+        <span class="n">07</span>
+        <h4>Git-гүй, нөөцгүй</h4>
+        <p>Серверийн дискэн дээр л байгаа SQL код бол цаг хугацааны бөмбөг. Сэргээж үзээгүй нөөц ч мөн адил — сэргээж үзээгүй нөөц бол нөөц биш.</p>
+      </div>
+      <div class="trap">
+        <span class="n">08</span>
+        <h4>Бүтэн дахин ачаалалт</h4>
+        <p>Эхэндээ 5 минут, жилийн дараа 6 цаг. Phase 2-т заавал incremental болго — дараа нь хийхэд илүү үнэтэй.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ 06 эхлэл -->
+<section id="start">
+  <div class="wrap narrow">
+    <div class="shead">
+      <span class="num">06</span>
+      <span class="t">
+        <h2>Эхний 30 хоног</h2>
+        <p>Маргаашаас эхлэх дараалал</p>
+      </span>
+    </div>
+
+    <div class="weeks">
+      <div class="week">
+        <span class="w">1 дэх 7 хоног</span>
+        <div>
+          <h4>KPI-ийн семинар</h4>
+          <p>Санхүү, борлуулалт, үйл ажиллагааны хүмүүсийг нэг өрөөнд оруулж, 10–15 үзүүлэлтийг томьёотой нь бич. Санал зөрсөн газрыг тэмдэглэ — тэр яг л агуулах шийдэх ёстой асуудал.</p>
+        </div>
+      </div>
+      <div class="week">
+        <span class="w">1 дэх 7 хоног</span>
+        <div>
+          <h4>Гар тайлангийн аудит</h4>
+          <p>Одоо хэн, ямар тайланг, хэдэн цагаар гаргадгийг бүртгэ. Хамгийн их цаг иддэгийг Phase 1-ийн бай болго.</p>
+        </div>
+      </div>
+      <div class="week">
+        <span class="w">2 дах 7 хоног</span>
+        <div>
+          <h4>ERP-ийн бүтцийг ухах</h4>
+          <p>Хэрэгтэй 5–8 хүснэгтийг ол, мөрийн тоо, өсөлт, <code>updated_at</code>-ийг шалга. IT-тэй read replica-ийн талаар ярь.</p>
+        </div>
+      </div>
+      <div class="week">
+        <span class="w">2 дах 7 хоног</span>
+        <div>
+          <h4>Сервер захиалах</h4>
+          <p>16 vCPU / 64 GB / 2 TB NVMe. Хүргэлт ихэвчлэн 2–4 долоо хоног — эрт эхэл.</p>
+        </div>
+      </div>
+      <div class="week">
+        <span class="w">3 дах 7 хоног</span>
+        <div>
+          <h4>Laptop дээр прототип</h4>
+          <p>Docker дээр Postgres + dbt + Metabase босгож, ERP-ийн нэг хүснэгтийн CSV экспортоор бүтэн замыг туршиж үз. Нэг өдрийн ажил, олон эргэлзээг арилгана.</p>
+        </div>
+      </div>
+      <div class="week">
+        <span class="w">4 дэх 7 хоног</span>
+        <div>
+          <h4>Сервер тохируулах</h4>
+          <p>Ubuntu, Docker Compose, Gitea, Postgres, өдөр тутмын <code>pg_dump</code>. Эхний dlt урсгалыг ганц хүснэгт дээр ажиллуулж, Raw давхаргад буулга.</p>
+        </div>
+      </div>
+      <div class="week">
+        <span class="w">4 дэх 7 хоног</span>
+        <div>
+          <h4>Багийн үүрэг тодорхойлох</h4>
+          <p>Аль аналист dbt эзэмших, хэн Metabase-ийн эзэн болох. Долоо хоног бүрийн 30 минутын демо тогтоо — үзүүлэх зүйлгүй долоо хоног бол дохио.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h4>Эх сурвалж</h4>
+        <ul>
+          <li>Semantic Layer vs. Text-to-SQL: 2026 Benchmark Update — dbt Developer Blog</li>
+          <li>Apache Superset vs Metabase vs Redash: self-hosting in 2026 — elest.io</li>
+          <li>dbt Semantic Layer FAQ — API-ууд зөвхөн төлбөртэй төлөвлөгөөнд</li>
+          <li>Cube Core — Apache 2.0, self-hosted semantic layer</li>
+          <li>PostgreSQL 18 released</li>
+        </ul>
+      </div>
+      <div>
+        <h4>Тэмдэглэл</h4>
+        <p style="margin:0 0 1rem">
+          Нарийвчлалын хэмжилтийг dbt Cloud-ийн semantic layer дээр хийсэн —
+          энэ нь «semantic layer хэрэглэ» гэдгийн нотолгоо, тодорхой
+          бүтээгдэхүүний биш.
+        </p>
+        <p style="margin:0">
+          Техник хангамжийн үнэ 2026 онд тогтворгүй байгаа тул сервер
+          захиалахын өмнө дахин үнэ авахыг зөвлөе.
+        </p>
+      </div>
+    </div>
+
+    <div class="sig">
+      <a class="mark" href="#top"><i></i> Gerege Nexus</a>
+      <span>·</span>
+      <a href="https://docs.nexus.gerege.mn/">Баримт бичиг</a>
+      <span>·</span>
+      <a href="https://nexus.gerege.mn/">Платформ</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+/*
+ * Ганц хөдөлгөөн, ганц газар: §01-ийн давхаргууд доороос дээшээ өрөгдөнө —
+ * өгөгдөл яг тэр чиглэлд урсдаг учраас. Үе шатууд дээр ч тавьж үзсэн боловч
+ * авсан: хурдан гүйлгэхэд бүхэл хэсэг хоосон харагдах нь хөдөлгөөний өгөх
+ * зүйлээс илүү үнэтэй. IntersectionObserver байхгүй бол бүх зүйл шууд гарна.
+ */
+(function () {
+  var items = document.querySelectorAll('.reveal');
+  if (!('IntersectionObserver' in window) ||
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    for (var i = 0; i < items.length; i++) items[i].classList.add('in');
+    return;
+  }
+  // Дэлгэцэд орж ирэхээс өмнө эхэлнэ. Хойшлуулалт нь бүлэг доторх байрлалаар
+  // тоологдоно, хуудсан дахь дугаараар биш: сүүлийн бүлэг ч эхнийхтэй ижил
+  // хурдтай гарч ирнэ. Хурдан гүйлгэхэд хоосон дэлгэц үлдээхгүй байх нь
+  // хөдөлгөөн нэмснээс чухал.
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+    });
+  }, { rootMargin: '0px 0px 18% 0px', threshold: 0 });
+  items.forEach(function (el) {
+    var group = el.parentNode;
+    var i = Array.prototype.indexOf.call(group.children, el);
+    el.style.transitionDelay = (Math.min(i, 4) * 40) + 'ms';
+    io.observe(el);
+  });
+})();
+</script>
+</body>
+</html>
