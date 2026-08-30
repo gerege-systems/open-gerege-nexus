@@ -189,7 +189,7 @@ function AskToJoin({ onAsked }: { onAsked: () => void }) {
           </p>
           <button
             type="button"
-            className="rounded-lg bg-[var(--gerege-blue)] px-3 py-1.5 text-xs font-semibold text-white"
+            className="rounded-lg bg-[var(--gerege-blue)] px-3 py-1.5 text-xs font-semibold text-[var(--gerege-on-blue)]"
             onClick={() => {
               void api.switchTenant(joined.id).then(() => window.location.assign("/"));
             }}

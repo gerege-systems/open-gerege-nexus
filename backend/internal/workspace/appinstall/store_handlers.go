@@ -306,6 +306,13 @@ func (h *Handlers) HandleListInstalledApps(w http.ResponseWriter, r *http.Reques
 		}
 		list = append(list, item)
 	}
+	// Дутуу жагсаалт нь «энэ апп суугаагүй» гэсэн хариу бөгөөд стор дараа нь
+	// дээрээс нь дахин суулгахыг санал болгоно — мөрийг алгасахыг хориглосон
+	// дээрх тайлбартай ижил шалтгаан.
+	if err := rows.Err(); err != nil {
+		httpx.Error(w, http.StatusInternalServerError, "failed to read installed apps")
+		return
+	}
 	if err := rows.Err(); err != nil {
 		httpx.Error(w, http.StatusInternalServerError, "failed to read installed apps")
 		return

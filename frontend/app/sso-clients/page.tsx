@@ -224,7 +224,7 @@ function EndpointCard({ endpoints, copied, onCopy, title }: {
     <section className="bg-slate-900 text-white rounded-xl border border-slate-800 p-5">
       <div className="flex items-center gap-3 mb-4">
         <Shield className="w-6 h-6 text-cyan-400" />
-        <h2 className="font-semibold text-sm">{title}</h2>
+        <h2 className="font-semibold text-sm text-white">{title}</h2>
         <span className="ml-auto text-[11px] bg-emerald-500/20 text-emerald-300 font-mono px-3 py-1 rounded-full border border-emerald-500/30">
           Active SSO Provider
         </span>

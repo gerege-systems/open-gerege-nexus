@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 	"sync"
@@ -202,6 +203,11 @@ func (s *CopilotService) systemPrompt(ctx context.Context, tenantID, lang string
 					}
 				}
 			}
+			// Дундуур тасарвал суулгацын өөрийн заавар биш, файлд бичсэн
+			// анхдагч нь хүчинтэй болно — тэр нь загварт өөр дүрэм өгнө.
+			if err := rows.Err(); err != nil {
+				slog.Warn("could not read the assistant prompts", "error", err)
+			}
 		}
 	}
 	// Applied to whatever won above — the shipped default, the global row, or a
@@ -347,18 +353,18 @@ func (s *CopilotService) Speak(ctx context.Context, text string) (*Audio, error)
 
 func validateAudio(a *Audio) error {
 	if a == nil {
-		return errors.New("audio required")
+		return BadRequest("audio required")
 	}
 	allowed := map[string]bool{"audio/webm": true, "audio/ogg": true, "audio/wav": true, "audio/mp4": true, "audio/mpeg": true}
 	mime := strings.ToLower(strings.Split(a.Mime, ";")[0])
 	if !allowed[mime] {
-		return errors.New("unsupported audio format")
+		return BadRequest("unsupported audio format")
 	}
 	if len(a.Data) > 950000 {
-		return errors.New("audio is too large")
+		return BadRequest("audio is too large")
 	}
 	if _, e := base64.StdEncoding.DecodeString(a.Data); e != nil {
-		return errors.New("invalid audio data")
+		return BadRequest("invalid audio data")
 	}
 	return nil
 }

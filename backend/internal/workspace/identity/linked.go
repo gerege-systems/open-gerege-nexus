@@ -70,6 +70,12 @@ func (h *Handlers) LinkedIdentities(ctx context.Context, userID string) []Linked
 			_ = json.Unmarshal(raw, &it.Claims)
 			identities = append(identities, it)
 		}
+		// Тасарсан уншилтын дараа жагсаалт нь дутуу боловч бүрэн мэт
+		// харагдана: хүн өөрийн нэвтрэх аргаа алга болсон гэж үзээд
+		// дахин холбохыг оролдоно.
+		if err := rows.Err(); err != nil {
+			slog.Warn("could not read every linked provider identity", "error", err)
+		}
 	} else {
 		slog.Warn("could not read linked provider identities", "error", err)
 	}

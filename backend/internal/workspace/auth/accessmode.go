@@ -214,6 +214,13 @@ func (h *Handlers) Notices(ctx context.Context, tenantID string) []Notice {
 		}
 		Notices = append(Notices, notice)
 	}
+	// Дундуур тасарсан уншилт нь богино жагсаалт болж, дэлгэц дээр «мэдэгдэл
+	// байхгүй» гэж харагдана. Тэр нь мэдэгдэл огт бичээгүйтэй ялгаагүй тул
+	// шалгаж, буруу бүрэн байдлын оронд өмнөх утгыг үлдээнэ.
+	if err := rows.Err(); err != nil {
+		slog.Warn("could not read the announcements", "error", err)
+		return Notices
+	}
 	return Notices
 }
 

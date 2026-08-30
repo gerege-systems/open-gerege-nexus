@@ -52,7 +52,7 @@ func (s *Service) HandleAICopilot(w http.ResponseWriter, r *http.Request) {
 		TenantID: tenantID,
 	})
 	if err != nil {
-		httpx.Error(w, http.StatusInternalServerError, err.Error())
+		fail(w, err, "answer a question")
 		return
 	}
 
@@ -75,7 +75,7 @@ func (s *Service) HandleAIChat(w http.ResponseWriter, r *http.Request) {
 	req.TenantID = tenantID
 	res, err := s.copilot.Query(r.Context(), req)
 	if err != nil {
-		httpx.Error(w, aiStatus(err), err.Error())
+		fail(w, err, "answer a question")
 		return
 	}
 	httpx.JSON(w, http.StatusOK, res)
@@ -93,7 +93,7 @@ func (s *Service) HandleAISTT(w http.ResponseWriter, r *http.Request) {
 	}
 	text, err := s.copilot.Transcribe(r.Context(), req.Audio)
 	if err != nil {
-		httpx.Error(w, aiStatus(err), err.Error())
+		fail(w, err, "transcribe audio")
 		return
 	}
 	httpx.JSON(w, http.StatusOK, map[string]string{"text": text})
@@ -111,7 +111,7 @@ func (s *Service) HandleAITTS(w http.ResponseWriter, r *http.Request) {
 	}
 	audio, err := s.copilot.Speak(r.Context(), req.Text)
 	if err != nil {
-		httpx.Error(w, aiStatus(err), err.Error())
+		fail(w, err, "speak an answer")
 		return
 	}
 	httpx.JSON(w, http.StatusOK, audio)
@@ -134,13 +134,13 @@ func (s *Service) HandleAITranslate(w http.ResponseWriter, r *http.Request) {
 		var err error
 		req.Text, err = s.copilot.Transcribe(r.Context(), *req.Audio)
 		if err != nil {
-			httpx.Error(w, aiStatus(err), err.Error())
+			fail(w, err, "transcribe audio")
 			return
 		}
 	}
 	translated, err := s.copilot.Translate(r.Context(), req.Text, req.Target)
 	if err != nil {
-		httpx.Error(w, aiStatus(err), err.Error())
+		fail(w, err, "translate")
 		return
 	}
 	result := map[string]any{"source_text": req.Text, "translated": translated}
@@ -157,8 +157,6 @@ func (s *Service) HandleAITranslate(w http.ResponseWriter, r *http.Request) {
 // deployment's rather than any one organisation's. What stays here is the
 // reading side: the copilot still takes the shared row first and an
 // organisation's own after it.
-
-func aiStatus(error) int { return http.StatusBadGateway }
 
 func (s *Service) HandleAIForecast(w http.ResponseWriter, r *http.Request) {
 	telemetry.RecordAIRequest("forecast")

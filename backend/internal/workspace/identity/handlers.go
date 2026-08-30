@@ -9,6 +9,7 @@ package identity
 import (
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
@@ -147,13 +148,19 @@ func (h *Handlers) HandleEIDLogin(w http.ResponseWriter, r *http.Request) {
 
 	// err may be nil while identity is nil — calling err.Error() unguarded
 	// panicked the request goroutine.
+	//
+	// The reason is logged, not rendered. eID's own failures arrive with the
+	// provider's words in them — `E-ID token error (400): {…}` carries the
+	// upstream response body verbatim (identity/eid/eid.go) — and this is the
+	// path a citizen stands in front of. It is the same mistake that once put
+	// "bcrypt: password length exceeds 72 bytes" on somebody's card screen,
+	// which is why auth.ReportSignInFailure exists at all.
 	if err != nil || identity == nil {
-		msg := "E-ID verification failed"
 		if err != nil {
-			msg = "E-ID verification failed: " + err.Error()
+			slog.Warn("eID verification failed", "error", err)
 		}
 		telemetry.RecordLogin(telemetry.LoginEID, false)
-		httpx.Error(w, http.StatusUnauthorized, msg)
+		httpx.Error(w, http.StatusUnauthorized, "E-ID verification failed")
 		return
 	}
 
