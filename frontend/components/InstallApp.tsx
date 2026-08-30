@@ -164,7 +164,7 @@ export default function InstallApp() {
           <button
             type="button"
             onClick={install}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--gerege-blue)] px-3 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--gerege-blue)] px-3 py-2 text-sm font-semibold text-[var(--gerege-on-blue)] transition hover:opacity-90"
           >
             <Download size={15} />
             {t("pwa.install.action")}

@@ -133,7 +133,7 @@ function ActionDialog({ request, onClose }: { request: Request; onClose: () => v
           <button
             type="submit"
             disabled={busy}
-            className={`rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-60 ${
+            className={`rounded-lg px-4 py-2 text-sm font-medium text-[var(--gerege-on-blue)] disabled:opacity-60 ${
               request.danger ? "bg-red-600 hover:bg-red-700" : "bg-[var(--gerege-blue)] hover:brightness-105"
             }`}
           >

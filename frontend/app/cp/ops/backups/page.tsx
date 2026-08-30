@@ -63,7 +63,7 @@ export default function Backups() {
               onDone: load,
             })
           }
-          className="inline-flex items-center gap-2 rounded-lg bg-[var(--gerege-blue)] px-3 py-2 text-sm font-medium text-white hover:brightness-105"
+          className="inline-flex items-center gap-2 rounded-lg bg-[var(--gerege-blue)] px-3 py-2 text-sm font-medium text-[var(--gerege-on-blue)] hover:brightness-105"
         >
           <ShieldCheck className="w-4 h-4" />
           {t("cp.action.record_restore_test")}

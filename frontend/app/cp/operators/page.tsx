@@ -73,7 +73,7 @@ export default function Operators() {
           <button
             type="button"
             onClick={() => setAdding(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-[var(--gerege-blue)] px-3 py-2 text-sm font-medium text-white hover:brightness-105"
+            className="inline-flex items-center gap-2 rounded-lg bg-[var(--gerege-blue)] px-3 py-2 text-sm font-medium text-[var(--gerege-on-blue)] hover:brightness-105"
           >
             <UserPlus className="w-4 h-4" />
             {t("cp.action.add_operator")}
@@ -339,7 +339,7 @@ function AddDialog({ onClose, onAdded }: { onClose: () => void; onAdded: (create
           <button
             type="submit"
             disabled={busy}
-            className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60"
+            className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-medium text-[var(--gerege-on-blue)] hover:brightness-105 disabled:opacity-60"
           >
             {t("cp.action.add_operator")}
           </button>
@@ -419,7 +419,7 @@ function HandoverDialog({ created, onClose }: { created: CreatedOperator; onClos
               <button
                 type="submit"
                 disabled={busy}
-                className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60"
+                className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-medium text-[var(--gerege-on-blue)] hover:brightness-105 disabled:opacity-60"
               >
                 {t("cp.action.confirm")}
               </button>
@@ -494,7 +494,7 @@ function PasswordDialog({ onClose }: { onClose: () => void }) {
           <button
             type="submit"
             disabled={busy}
-            className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-medium text-white hover:brightness-105 disabled:opacity-60"
+            className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-medium text-[var(--gerege-on-blue)] hover:brightness-105 disabled:opacity-60"
           >
             {t("base.action.save")}
           </button>
