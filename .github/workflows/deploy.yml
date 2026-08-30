@@ -200,7 +200,6 @@ jobs:
           EID_RP_UUID: ${{ secrets.EID_RP_UUID }}
           EID_RP_SECRET: ${{ secrets.EID_RP_SECRET }}
           GEREGE_CORE_TOKEN: ${{ secrets.GEREGE_CORE_TOKEN }}
-          PUBLIC_ORIGIN: ${{ secrets.PUBLIC_ORIGIN }}
         run: |
           if [ -z "${{ secrets.DEPLOY_SSH_KEY }}" ]; then
             echo "::warning::DEPLOY_SSH_KEY is not configured — skipping rollout."
@@ -213,9 +212,13 @@ jobs:
           # certificate is a deployment, and failing its rollout over a value it
           # was never meant to have would teach everybody to ignore this step.
           missing=""
+          # PUBLIC_ORIGIN нь энд байхгүй: тэр нь secret биш, workflow-ийн
+          # `env:` дэх `vars.PUBLIC_ORIGIN || 'https://nexus.gerege.mn'` —
+          # анхдагчтай тул хоосон байх боломжгүй. `secrets.PUBLIC_ORIGIN`-ээс
+          # уншсан хувилбар нь бүх rollout-ыг унагаах байсан.
           for name in POSTGRES_PASSWORD SSO_DEFAULT_CLIENT_SECRET \
                       INTEGRATION_ENCRYPTION_KEY EID_RP_UUID EID_RP_SECRET \
-                      GEREGE_CORE_TOKEN PUBLIC_ORIGIN; do
+                      GEREGE_CORE_TOKEN; do
             [ -n "${!name}" ] || missing="$missing $name"
           done
 
