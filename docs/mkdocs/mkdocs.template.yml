@@ -71,6 +71,130 @@ extra_css:
 
 plugins:
   - search
+  # Монгол (үндсэн) + НҮБ-ын зургаан албан ёсны хэл. Локал бүр өөрийн nav
+  # орчуулгатай; орчуулагдаагүй хуудас байвал fallback-аар Монгол эхээ
+  # харуулна — тэр нь худал орчуулга үзүүлэхээс дээр.
+  #
+  # Араб хэлний RTL чиглэлийг Material өөрөө `ar` локалиас олж тохируулна.
+  - i18n:
+      docs_structure: suffix
+      fallback_to_default: true
+      reconfigure_material: true
+      reconfigure_search: true
+      languages:
+        - locale: mn
+          default: true
+          name: Монгол
+          build: true
+
+        - locale: en
+          name: English
+          build: true
+          site_description: "Technical documentation for Gerege Nexus, the open-source platform core — architecture, module development, operations, native clients."
+          nav_translations:
+            "Танилцуулга": "Introduction"
+            "Архитектур": "Architecture"
+            "Хөгжүүлэлт": "Development"
+            "Модулиуд": "Modules"
+            "Ажиллагаа": "Operations"
+            "Native клиентүүд": "Native clients"
+            "Төслийн журам": "Project policy"
+            "Тойм": "Overview"
+            "Баримтын индекс": "Document index"
+            "Архитектурын тодорхойлолт": "Architecture specification"
+            "SSO холбоос": "SSO federation"
+            "Экосистемийн git стратеги": "Ecosystem git strategy"
+            "ADR 0001 — Домэйн эхэнд": "ADR 0001 — Domain first"
+            "ADR 0002 — Гарын үсгийн зам нэг": "ADR 0002 — One signing rail"
+            "ADR 0003 — Баримт файлаа авч явна": "ADR 0003 — A document carries what is signed"
+            "ADR 0004 — Гараагүй pilot": "ADR 0004 — A pilot that did not ship"
+            "ADR 0005 — Нэг бинарь, хоёр origin": "ADR 0005 — Two planes, one origin each"
+            "ADR 0007 — Рельс болохын тулд хоёр дахь дуудагч": "ADR 0007 — A rail needs a second caller"
+            "Хоёр урсгалын хэрэгжилтийн шалгалт": "Two planes — implementation review"
+            "Модуль хөгжүүлэх заавар": "Module authoring guide"
+            "Апп сторын ажиллагаа": "App store operations"
+            "Хувилбар гаргах": "Releasing"
+            "Орчуулгын гарын авлага": "Translation guide"
+            "Төрийн үйлчилгээний урсгал": "Government services workflow"
+            "Цахим гарын үсэг": "Document signing"
+            "Тайлангийн хөдөлгүүр": "Reporting engine"
+            "Тенант дамнасан тайлан": "Cross-tenant reports"
+            "Мониторинг": "Monitoring"
+            "Runbook-ууд": "Runbooks"
+            "Control plane": "Control plane"
+            "Ажиглалт ба тайлангийн санал": "Observability & reporting proposal"
+            "Bridge гэрээ": "Bridge contract"
+            "Native нэвтрэлт": "Native sign-in"
+            "Native тохиргоо": "Native settings"
+            "Хувь нэмэр оруулах": "Contributing"
+            "Аюулгүй байдал": "Security"
+            "Ёс зүйн дүрэм": "Code of conduct"
+            "Өөрчлөлтийн түүх": "Changelog"
+
+        - locale: ar
+          name: العربية
+          build: true
+          site_description: "الوثائق التقنية لـ Gerege Nexus، نواة المنصّة مفتوحة المصدر — البنية والوحدات والتشغيل والتطبيقات الأصلية."
+          nav_translations:
+            "Танилцуулга": "مقدمة"
+            "Архитектур": "البنية المعمارية"
+            "Хөгжүүлэлт": "التطوير"
+            "Модулиуд": "الوحدات"
+            "Ажиллагаа": "التشغيل"
+            "Native клиентүүд": "التطبيقات الأصلية"
+            "Төслийн журам": "سياسات المشروع"
+
+        - locale: zh
+          name: 中文
+          build: true
+          site_description: "Gerege Nexus 开源平台内核的技术文档——架构、模块开发、运维与原生客户端。"
+          nav_translations:
+            "Танилцуулга": "简介"
+            "Архитектур": "架构"
+            "Хөгжүүлэлт": "开发"
+            "Модулиуд": "模块"
+            "Ажиллагаа": "运维"
+            "Native клиентүүд": "原生客户端"
+            "Төслийн журам": "项目规范"
+
+        - locale: fr
+          name: Français
+          build: true
+          site_description: "Documentation technique de Gerege Nexus, le socle de plateforme open source — architecture, modules, exploitation, clients natifs."
+          nav_translations:
+            "Танилцуулга": "Présentation"
+            "Архитектур": "Architecture"
+            "Хөгжүүлэлт": "Développement"
+            "Модулиуд": "Modules"
+            "Ажиллагаа": "Exploitation"
+            "Native клиентүүд": "Clients natifs"
+            "Төслийн журам": "Règles du projet"
+
+        - locale: ru
+          name: Русский
+          build: true
+          site_description: "Техническая документация Gerege Nexus — открытого ядра платформы: архитектура, модули, эксплуатация, нативные клиенты."
+          nav_translations:
+            "Танилцуулга": "Введение"
+            "Архитектур": "Архитектура"
+            "Хөгжүүлэлт": "Разработка"
+            "Модулиуд": "Модули"
+            "Ажиллагаа": "Эксплуатация"
+            "Native клиентүүд": "Нативные клиенты"
+            "Төслийн журам": "Правила проекта"
+
+        - locale: es
+          name: Español
+          build: true
+          site_description: "Documentación técnica de Gerege Nexus, el núcleo de plataforma de código abierto — arquitectura, módulos, operación, clientes nativos."
+          nav_translations:
+            "Танилцуулга": "Introducción"
+            "Архитектур": "Arquitectura"
+            "Хөгжүүлэлт": "Desarrollo"
+            "Модулиуд": "Módulos"
+            "Ажиллагаа": "Operación"
+            "Native клиентүүд": "Clientes nativos"
+            "Төслийн журам": "Normas del proyecto"
 
 markdown_extensions:
   - admonition
