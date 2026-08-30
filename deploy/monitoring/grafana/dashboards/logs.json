@@ -91,7 +91,7 @@
             "uid": "nexus-loki"
           },
           "editorMode": "code",
-          "expr": "sum(rate({container=~\"$container\"} |= \"$search\" [$__auto]))",
+          "expr": "(sum(rate({container=~\"$container\"} |= \"$search\" [$__auto]))) or vector(0)",
           "legendFormat": "",
           "range": true,
           "instant": false,
@@ -400,7 +400,8 @@
           "color": {
             "mode": "palette-classic"
           },
-          "min": 0
+          "min": 0,
+          "noValue": "Хараахан болоогүй"
         },
         "overrides": []
       },
@@ -466,7 +467,8 @@
           "color": {
             "mode": "palette-classic"
           },
-          "min": 0
+          "min": 0,
+          "noValue": "Хараахан болоогүй"
         },
         "overrides": []
       },
