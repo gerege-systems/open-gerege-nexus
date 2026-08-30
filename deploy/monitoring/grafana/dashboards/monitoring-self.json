@@ -73,7 +73,8 @@
           "color": {
             "mode": "thresholds"
           },
-          "mappings": []
+          "mappings": [],
+          "noValue": "Хэмжигдэхгүй байна"
         },
         "overrides": []
       },
@@ -205,7 +206,8 @@
           "color": {
             "mode": "thresholds"
           },
-          "mappings": []
+          "mappings": [],
+          "noValue": "Хэмжигдэхгүй байна"
         },
         "overrides": []
       },
@@ -269,7 +271,8 @@
           "color": {
             "mode": "thresholds"
           },
-          "mappings": []
+          "mappings": [],
+          "noValue": "Хэмжигдэхгүй байна"
         },
         "overrides": []
       },
@@ -346,7 +349,8 @@
           "color": {
             "mode": "palette-classic"
           },
-          "min": 0
+          "min": 0,
+          "noValue": "Хэвийн — юу ч алга"
         },
         "overrides": []
       },
@@ -412,7 +416,8 @@
           "color": {
             "mode": "palette-classic"
           },
-          "min": 0
+          "min": 0,
+          "noValue": "Хэмжигдэхгүй байна"
         },
         "overrides": []
       },
@@ -478,7 +483,8 @@
           "color": {
             "mode": "palette-classic"
           },
-          "min": 0
+          "min": 0,
+          "noValue": "Хэмжигдэхгүй байна"
         },
         "overrides": []
       },
@@ -544,7 +550,8 @@
           "color": {
             "mode": "palette-classic"
           },
-          "min": 0
+          "min": 0,
+          "noValue": "Хэмжигдэхгүй байна"
         },
         "overrides": []
       },
@@ -635,7 +642,8 @@
           "color": {
             "mode": "palette-classic"
           },
-          "min": 0
+          "min": 0,
+          "noValue": "Хэвийн — юу ч алга"
         },
         "overrides": []
       },
@@ -835,7 +843,8 @@
           "color": {
             "mode": "palette-classic"
           },
-          "min": 0
+          "min": 0,
+          "noValue": "Хэмжигдэхгүй байна"
         },
         "overrides": []
       },
@@ -913,7 +922,8 @@
           "color": {
             "mode": "palette-classic"
           },
-          "min": null
+          "min": null,
+          "noValue": "Хэмжигдэхгүй байна"
         },
         "overrides": []
       },
@@ -981,6 +991,11 @@
         "enableLogDetails": true,
         "dedupStrategy": "none",
         "sortOrder": "Descending"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "Энэ хугацаанд ийм мөр алга"
+        }
       }
     }
   ],
