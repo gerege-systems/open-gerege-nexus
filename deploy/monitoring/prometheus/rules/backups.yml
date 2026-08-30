@@ -1,0 +1,58 @@
+# Нөөцлөлт — хийгдсэн эсэх, хийгдээгүй эсэх.
+#
+# Эдгээр дүрэм нь нөөцлөлтийн *агуулгыг* биш, түүний *оршин байхыг* хардаг.
+# Нөөцлөлтийн хамгийн түгээмэл бүтэлгүйтэл нь эвдэрсэн файл биш, огт байхгүй
+# байх явдал: cron суулгаагүй, скрипт хостод байхгүй, хэн ч анзаараагүй.
+# nexus.gerege.mn яг тэр байдалтай байсныг 2026-08-30-нд илрүүлсэн —
+# platform_backups хүснэгтэд нэг ч мөр байгаагүй.
+#
+# Хэмжүүрийг deploy/scripts/backup.sh нь node_exporter-ийн textfile хавтаст
+# бичдэг. Тэр скрипт хост бүр дээр гараар суудаг (docs/MONITORING.md §8-тай
+# ижил загвар), тиймээс эхний дүрэм нь "нөөцлөлт бүтэлгүйтэв" биш "хэн ч
+# нөөцөлж байгаа эсэхийг мэдэхгүй байна" гэдгийг барина.
+
+groups:
+  - name: nexus_backups
+    rules:
+      - alert: NexusBackupNeverSeen
+        # Метрик огт байхгүй. Скрипт суугаагүй, эсвэл textfile хавтас буруу.
+        # Энэ нь "нөөцлөлт унасан" биш — "нөөцлөлт байгаа эсэхийг хэн ч
+        # хэмжихгүй байна", тэр нь илүү муу.
+        expr: absent(nexus_backup_last_run_timestamp_seconds)
+        for: 30m
+        labels:
+          severity: ticket
+        annotations:
+          summary: "Нөөцлөлтийн хэмжүүр огт байхгүй"
+          description: >-
+            nexus_backup_last_run_timestamp_seconds цуврал алга. Ихэвчлэн
+            deploy/scripts/backup.sh хостод суугаагүй эсвэл cron бичигдээгүй
+            гэсэн үг. Сэргээх өдөр нь энэ тухай мэдэх өдөр байх ёсгүй.
+          runbook: "docs/RUNBOOKS.md#nexusbackupneverseen"
+
+      - alert: NexusBackupStale
+        # Өдөр бүр 03:15-д ажилладаг. 26 цаг нь нэг алдсаныг зөвшөөрөх бөгөөд
+        # хоёр дахийг зөвшөөрөхгүй.
+        expr: time() - nexus_backup_last_success_timestamp_seconds > 26 * 3600
+        for: 15m
+        labels:
+          severity: ticket
+        annotations:
+          summary: "Сүүлийн амжилттай нөөцлөлт 26 цагаас өмнө"
+          description: >-
+            Нөөцлөлт ажиллаж байгаа ч амжилтгүй болж байна, эсвэл огт
+            ажиллахаа больсон. Хостын лог (/var/log/nexus-backup.log) ба
+            консолын Нөөцлөлт дэлгэцийг хар.
+          runbook: "docs/RUNBOOKS.md#nexusbackupstale"
+
+      - alert: NexusBackupFailing
+        expr: nexus_backup_last_ok == 0
+        for: 15m
+        labels:
+          severity: ticket
+        annotations:
+          summary: "Сүүлийн нөөцлөлт амжилтгүй болов"
+          description: >-
+            Скрипт ажилласан ч дуусгаагүй. Хамгийн түгээмэл шалтгаан нь дискний
+            зай ба postgres контейнерийн нэр өөрчлөгдсөн явдал.
+          runbook: "docs/RUNBOOKS.md#nexusbackupfailing"

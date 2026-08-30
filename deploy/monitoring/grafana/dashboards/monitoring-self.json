@@ -997,6 +997,219 @@
           "noValue": "Энэ хугацаанд ийм мөр алга"
         }
       }
+    },
+    {
+      "type": "row",
+      "title": "Нөөцлөлт",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 58
+      },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "stat",
+      "title": "Сүүлийн амжилттай нөөцлөлтөөс хойш",
+      "description": "Өдөр бүр ажиллах ёстой. Хоосон бол нөөцлөлт хийгдэж байгаа эсэхийг хэн ч хэмжихгүй байна гэсэн үг — скрипт нь хост бүр дээр гараар суудаг (docs/MONITORING.md §8).",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nexus-prometheus"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 0,
+        "y": 59
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nexus-prometheus"
+          },
+          "editorMode": "code",
+          "expr": "time() - nexus_backup_last_success_timestamp_seconds",
+          "legendFormat": "age",
+          "range": true,
+          "instant": false,
+          "refId": "A",
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 0,
+          "noValue": "Хэмжигдэхгүй байна",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 90000
+              },
+              {
+                "color": "red",
+                "value": 172800
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Сүүлийн нөөцлөлтийн хэмжээ",
+      "description": "Огцом багасах нь хоосон dump-ын шинж — скрипт өөрөө 10 KB-аас доошийг татгалздаг.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nexus-prometheus"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 8,
+        "y": 59
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nexus-prometheus"
+          },
+          "editorMode": "code",
+          "expr": "nexus_backup_last_size_bytes",
+          "legendFormat": "size",
+          "range": true,
+          "instant": false,
+          "refId": "A",
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "decimals": 1,
+          "noValue": "Хэмжигдэхгүй байна",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Нөөцлөлтийн хэмжээ — хугацаагаар",
+      "description": "Тогтвортой өсөлт нь хэвийн. Тэгш шулуун нь ижил файл дахин дахин бичигдэж байгааг илтгэж болно.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nexus-prometheus"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 16,
+        "y": 59
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nexus-prometheus"
+          },
+          "editorMode": "code",
+          "expr": "nexus_backup_last_size_bytes",
+          "legendFormat": "size",
+          "range": true,
+          "instant": false,
+          "refId": "A",
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "noValue": "Хэмжигдэхгүй байна",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      }
     }
   ],
   "links": [

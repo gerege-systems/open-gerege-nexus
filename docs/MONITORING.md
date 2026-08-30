@@ -373,6 +373,45 @@ sudo /usr/local/bin/nexus-tls-expiry.sh
 
 ---
 
+## 8а. Нөөцлөлт
+
+Нөөцлөлт нь **хост бүр дээр гараар суудаг**, TLS-ийн ажилтай яг ижил — deploy
+нь үүнийг хийхгүй. 2026-08-30-нд nexus.gerege.mn дээр шалгахад cron суугаагүй,
+скрипт хостод байхгүй, `platform_backups` хүснэгтэд нэг ч мөр байгаагүй.
+Консолын Нөөцлөлт дэлгэц хоосон байсныг хэн ч анзаараагүй.
+
+```bash
+sudo install -m 755 /opt/open-gerege-nexus/deploy/scripts/backup.sh \
+    /usr/local/bin/nexus-backup.sh
+sudo mkdir -p /var/backups/gerege-nexus /var/lib/node_exporter
+sudo sh -c 'echo "15 3 * * * root /usr/local/bin/nexus-backup.sh >> /var/log/nexus-backup.log 2>&1" \
+    > /etc/cron.d/nexus-backup'
+sudo /usr/local/bin/nexus-backup.sh          # эхнийхийг нь одоо ажиллуул
+```
+
+Скрипт нь гурван зүйлийг хийнэ: `pg_dump` авах, хуучныг цэвэрлэх, үр дүнг
+**хоёр газар** бүртгэх — `platform_backups` (консол уншина) ба node_exporter-ийн
+textfile (Prometheus уншина). Хоёр дахь нь шөнө дунд хэн нэгэнд сэрэмжлүүлэг
+илгээж чадах цорын ганц хувилбар:
+
+| Хэмжүүр | Утга |
+| --- | --- |
+| `nexus_backup_last_run_timestamp_seconds` | Хамгийн сүүлд ажилласан мөч — амжилттай эсэхээс үл хамаарна |
+| `nexus_backup_last_success_timestamp_seconds` | Хамгийн сүүлд **амжилттай** болсон мөч |
+| `nexus_backup_last_size_bytes` | Сүүлийн амжилттай dump-ын хэмжээ |
+| `nexus_backup_last_ok` | 1 эсвэл 0 |
+
+Гурван дохио: `NexusBackupNeverSeen` (метрик огт байхгүй — скрипт суугаагүй),
+`NexusBackupStale` (26 цагаас удсан), `NexusBackupFailing` (ажилласан ч
+бүтээгүй). Эхнийх нь хамгийн чухал: "нөөцлөлт унасан"-аас "нөөцлөлт байгаа
+эсэхийг хэн ч мэдэхгүй" нь илүү муу.
+
+**Энэ нь хангалттай гэсэн амлалт биш.** Нэг хостын дискэн дээрх нөөцлөлт тэр
+хостыг алдвал хамт алга болно. Өөр байршил руу хуулах нь дараагийн алхам —
+`docs/CONTROL_PLANE.md` §4и.
+
+---
+
 ## 9. Гаднаас шалгах — Uptime Kuma
 
 **Энэ репод deploy хийгдэхгүй, зориудаар.** Энэ хост дээр ажиллаж байгаа
