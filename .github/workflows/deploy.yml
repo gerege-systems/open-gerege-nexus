@@ -167,10 +167,36 @@ jobs:
     name: Roll out to production
     runs-on: ubuntu-latest
     needs: [build-and-push]
+    # `id-token: write` нь Infisical-ийн OIDC нэвтрэлтэд хэрэгтэй бөгөөд
+    # зөвхөн энд: build job нь нууц уншдаггүй, эрхийг нь өргөтгөх шалтгаангүй.
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      # Нууцын эх сурвалж — secrets.gerege.mn (Infisical).
+      #
+      # OIDC-ээр, client secret-гүй: GitHub энэ ажиллагааны хувьд богино
+      # настай токен гаргаж, Infisical түүнийг шалгана. Тэгснээр «нууц
+      # хадгалах газар руу орох нууц» гэдэг асуудал огт үүсэхгүй — GitHub-д
+      # хадгалагдах урт настай Infisical хэрэглэгч байхгүй.
+      #
+      # Алхам нь `vars.INFISICAL_IDENTITY_ID` тавигдсан үед л ажиллана.
+      # Тавиагүй бол юу ч экспортлохгүй, доорх бүх утга GitHub-ийн secret-ээс
+      # хэвээр ирнэ — өөрөөр хэлбэл энэ өөрчлөлт нь өөрөө юуг ч шилжүүлэхгүй.
+      - name: Fetch secrets from the vault
+        if: vars.INFISICAL_IDENTITY_ID != ''
+        uses: Infisical/secrets-action@v1.0.9
+        with:
+          method: oidc
+          identity-id: ${{ vars.INFISICAL_IDENTITY_ID }}
+          domain: ${{ vars.INFISICAL_DOMAIN || 'https://secrets.gerege.mn' }}
+          project-slug: ${{ vars.INFISICAL_PROJECT_SLUG }}
+          env-slug: ${{ vars.INFISICAL_ENV_SLUG || 'prod' }}
+          secret-path: ${{ vars.INFISICAL_SECRET_PATH || '/' }}
 
       # Fork clones have no deployment secrets; skip instead of failing the run.
       #
@@ -194,12 +220,12 @@ jobs:
       - name: Check deployment secrets
         id: guard
         env:
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          SSO_DEFAULT_CLIENT_SECRET: ${{ secrets.SSO_DEFAULT_CLIENT_SECRET }}
-          INTEGRATION_ENCRYPTION_KEY: ${{ secrets.INTEGRATION_ENCRYPTION_KEY }}
-          EID_RP_UUID: ${{ secrets.EID_RP_UUID }}
-          EID_RP_SECRET: ${{ secrets.EID_RP_SECRET }}
-          GEREGE_CORE_TOKEN: ${{ secrets.GEREGE_CORE_TOKEN }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD || env.POSTGRES_PASSWORD }}
+          SSO_DEFAULT_CLIENT_SECRET: ${{ secrets.SSO_DEFAULT_CLIENT_SECRET || env.SSO_DEFAULT_CLIENT_SECRET }}
+          INTEGRATION_ENCRYPTION_KEY: ${{ secrets.INTEGRATION_ENCRYPTION_KEY || env.INTEGRATION_ENCRYPTION_KEY }}
+          EID_RP_UUID: ${{ secrets.EID_RP_UUID || env.EID_RP_UUID }}
+          EID_RP_SECRET: ${{ secrets.EID_RP_SECRET || env.EID_RP_SECRET }}
+          GEREGE_CORE_TOKEN: ${{ secrets.GEREGE_CORE_TOKEN || env.GEREGE_CORE_TOKEN }}
         run: |
           if [ -z "${{ secrets.DEPLOY_SSH_KEY }}" ]; then
             echo "::warning::DEPLOY_SSH_KEY is not configured — skipping rollout."
@@ -252,38 +278,38 @@ jobs:
           REGISTRY_USER: ${{ github.actor }}
           REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          SSO_DEFAULT_CLIENT_SECRET: ${{ secrets.SSO_DEFAULT_CLIENT_SECRET }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          EID_RP_UUID: ${{ secrets.EID_RP_UUID }}
-          EID_RP_SECRET: ${{ secrets.EID_RP_SECRET }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD || env.POSTGRES_PASSWORD }}
+          SSO_DEFAULT_CLIENT_SECRET: ${{ secrets.SSO_DEFAULT_CLIENT_SECRET || env.SSO_DEFAULT_CLIENT_SECRET }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || env.GEMINI_API_KEY }}
+          EID_RP_UUID: ${{ secrets.EID_RP_UUID || env.EID_RP_UUID }}
+          EID_RP_SECRET: ${{ secrets.EID_RP_SECRET || env.EID_RP_SECRET }}
           EID_BASE_URL: ${{ vars.EID_BASE_URL || 'https://eidmongolia.mn/v3' }}
-          GEREGE_CORE_TOKEN: ${{ secrets.GEREGE_CORE_TOKEN }}
+          GEREGE_CORE_TOKEN: ${{ secrets.GEREGE_CORE_TOKEN || env.GEREGE_CORE_TOKEN }}
           # Gerege eSign HSM credential. Left empty the HSM rail reports itself
           # unconfigured and refuses to sign, rather than silently returning the
           # document unchanged as mock mode did.
-          ESIGN_TOKEN: ${{ secrets.ESIGN_TOKEN }}
-          INTEGRATION_ENCRYPTION_KEY: ${{ secrets.INTEGRATION_ENCRYPTION_KEY }}
-          GOOGLE_LOGIN_CLIENT_ID: ${{ secrets.GOOGLE_LOGIN_CLIENT_ID }}
-          GOOGLE_LOGIN_CLIENT_SECRET: ${{ secrets.GOOGLE_LOGIN_CLIENT_SECRET }}
+          ESIGN_TOKEN: ${{ secrets.ESIGN_TOKEN || env.ESIGN_TOKEN }}
+          INTEGRATION_ENCRYPTION_KEY: ${{ secrets.INTEGRATION_ENCRYPTION_KEY || env.INTEGRATION_ENCRYPTION_KEY }}
+          GOOGLE_LOGIN_CLIENT_ID: ${{ secrets.GOOGLE_LOGIN_CLIENT_ID || env.GOOGLE_LOGIN_CLIENT_ID }}
+          GOOGLE_LOGIN_CLIENT_SECRET: ${{ secrets.GOOGLE_LOGIN_CLIENT_SECRET || env.GOOGLE_LOGIN_CLIENT_SECRET }}
           GOOGLE_LOGIN_TENANT: ${{ vars.GOOGLE_LOGIN_TENANT }}
           GOOGLE_LOGIN_ALLOWED_DOMAINS: ${{ vars.GOOGLE_LOGIN_ALLOWED_DOMAINS }}
           # Server Document-Signer for the PAdES fallback. Optional: signing
           # works without it, only the stamp-outage fallback does not.
-          EID_SIGN_SIGNER_CERT_PEM: ${{ secrets.EID_SIGN_SIGNER_CERT_PEM }}
-          EID_SIGN_SIGNER_KEY_PEM: ${{ secrets.EID_SIGN_SIGNER_KEY_PEM }}
+          EID_SIGN_SIGNER_CERT_PEM: ${{ secrets.EID_SIGN_SIGNER_CERT_PEM || env.EID_SIGN_SIGNER_CERT_PEM }}
+          EID_SIGN_SIGNER_KEY_PEM: ${{ secrets.EID_SIGN_SIGNER_KEY_PEM || env.EID_SIGN_SIGNER_KEY_PEM }}
           PUBLIC_ORIGIN: ${{ env.PUBLIC_ORIGIN }}
           # The app catalogue's source. Both empty (the default) keeps the
           # bundled file, which is what this deployment has always used.
           APP_CATALOG_URL: ${{ vars.APP_CATALOG_URL }}
-          APPSTORE_PUBLIC_KEY: ${{ secrets.APPSTORE_PUBLIC_KEY }}
+          APPSTORE_PUBLIC_KEY: ${{ secrets.APPSTORE_PUBLIC_KEY || env.APPSTORE_PUBLIC_KEY }}
           CATALOG_SYNC_INTERVAL: ${{ vars.CATALOG_SYNC_INTERVAL || '1h' }}
           CONSOLE_ORIGIN: ${{ vars.CONSOLE_ORIGIN }}
           # The operator console. Empty means this deployment has none: the
           # /cp routes answer 404 on every hostname, which is the safe reading
           # of a variable nobody set (docs/OPERATIONS.md).
           CONTROL_PLANE_HOST: ${{ vars.CONTROL_PLANE_HOST }}
-          CONTROL_PLANE_ALLOWED_CIDRS: ${{ secrets.CONTROL_PLANE_ALLOWED_CIDRS }}
+          CONTROL_PLANE_ALLOWED_CIDRS: ${{ secrets.CONTROL_PLANE_ALLOWED_CIDRS || env.CONTROL_PLANE_ALLOWED_CIDRS }}
           # What the console's front page reads. The monitoring stack listens
           # on the host's loopback, so the address is the host gateway — the
           # compose file adds the extra_hosts entry that resolves it.
@@ -310,7 +336,7 @@ jobs:
           # variable: GitHub refuses to create any secret whose name begins
           # with GITHUB_, so a secret of that name would silently be empty for
           # ever — which is the failure mode this comment exists to prevent.
-          GITHUB_DEPLOY_TOKEN: ${{ secrets.DEPLOY_DISPATCH_TOKEN }}
+          GITHUB_DEPLOY_TOKEN: ${{ secrets.DEPLOY_DISPATCH_TOKEN || env.DEPLOY_DISPATCH_TOKEN }}
           DEMO_MODE: ${{ env.DEMO_MODE }}
           EID_MOCK_MODE: ${{ env.EID_MOCK_MODE }}
           REDIS_URL: ${{ env.REDIS_URL }}
@@ -548,7 +574,7 @@ jobs:
         if: steps.guard.outputs.ready == 'true'
         uses: appleboy/ssh-action@v1.2.5
         env:
-          CONTROL_PLANE_ALLOWED_CIDRS: ${{ secrets.CONTROL_PLANE_ALLOWED_CIDRS }}
+          CONTROL_PLANE_ALLOWED_CIDRS: ${{ secrets.CONTROL_PLANE_ALLOWED_CIDRS || env.CONTROL_PLANE_ALLOWED_CIDRS }}
         with:
           host: ${{ secrets.DEPLOY_HOST || 'nexus.gerege.mn' }}
           username: ${{ secrets.DEPLOY_USER || 'deploy' }}
