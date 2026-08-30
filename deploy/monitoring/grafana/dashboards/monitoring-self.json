@@ -1020,7 +1020,7 @@
       },
       "gridPos": {
         "h": 5,
-        "w": 8,
+        "w": 6,
         "x": 0,
         "y": 59
       },
@@ -1093,8 +1093,8 @@
       },
       "gridPos": {
         "h": 5,
-        "w": 8,
-        "x": 8,
+        "w": 6,
+        "x": 6,
         "y": 59
       },
       "targets": [
@@ -1158,8 +1158,8 @@
       },
       "gridPos": {
         "h": 5,
-        "w": 8,
-        "x": 16,
+        "w": 6,
+        "x": 12,
         "y": 59
       },
       "targets": [
@@ -1209,6 +1209,87 @@
           "mode": "single",
           "sort": "none"
         }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Өөр байршилд хүрсэн эсэх",
+      "description": "Шифрлэгдсэн хуулбар нөөцийн санд очсон эсэх. 0 нь хуулбар зөвхөн хостын дискэн дээр байна гэсэн үг — тэр дискийг алдвал хамт алга болно.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "nexus-prometheus"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 59
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "nexus-prometheus"
+          },
+          "editorMode": "code",
+          "expr": "nexus_backup_offsite_ok",
+          "legendFormat": "offsite",
+          "range": true,
+          "instant": false,
+          "refId": "A",
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "noValue": "Хэмжигдэхгүй байна",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Үгүй",
+                  "color": "red",
+                  "index": 0
+                },
+                "1": {
+                  "text": "Тийм",
+                  "color": "green",
+                  "index": 1
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto"
       }
     }
   ],

@@ -23,6 +23,13 @@
 #   TEXTFILE_DIR     — node_exporter-ийн textfile хавтас
 #                      (анхдагч /var/lib/node_exporter, хоосон бол бичихгүй)
 #
+# Өөр байршил руу илгээх (бүгд хоосон бол алхам нь бүхэлдээ алгасагдана):
+#
+#   BACKUP_AGE_RECIPIENT — age-ийн НИЙТИЙН түлхүүр. Хостод зөвхөн энэ байна:
+#                          эвдэрсэн платформ өөрийн илгээсэн зүйлээ уншиж
+#                          чадахгүй. Хувийн түлхүүр нь операторт байна.
+#   BACKUP_S3_ENDPOINT / BACKUP_S3_BUCKET / BACKUP_S3_KEY / BACKUP_S3_SECRET
+#
 # ЭНЭ СКРИПТ НЬ ХАНГАЛТТАЙ ГЭДЭГ АМЛАЛТ БИШ. Нэг хостын дискэн дээрх нөөцлөлт
 # нь тэр хостыг алдвал хамт алга болно: docs/CONTROL_PLANE.md §4и-д бичсэнээр
 # өөр байршил руу хуулах (rclone, rsync, S3) нь дараагийн алхам. Гэхдээ
@@ -36,6 +43,12 @@ POSTGRES_CONTAINER="${POSTGRES_CONTAINER:-gerege_nexus_postgres}"
 POSTGRES_DB="${POSTGRES_DB:-platform_db}"
 POSTGRES_USER="${POSTGRES_USER:-postgres}"
 TEXTFILE_DIR="${TEXTFILE_DIR:-/var/lib/node_exporter}"
+BACKUP_AGE_RECIPIENT="${BACKUP_AGE_RECIPIENT:-}"
+BACKUP_S3_ENDPOINT="${BACKUP_S3_ENDPOINT:-}"
+BACKUP_S3_BUCKET="${BACKUP_S3_BUCKET:-}"
+BACKUP_S3_KEY="${BACKUP_S3_KEY:-}"
+BACKUP_S3_SECRET="${BACKUP_S3_SECRET:-}"
+offsite_ok=0
 
 # Хэмжигдэхгүй нөөцлөлт нь нөөцлөлт байхгүйтэй бараг адил: cron-ий чимээгүй
 # бүтэлгүйтэл нь сэргээх өдрөө л илэрдэг. Өгөгдлийн сан дахь мөр нь консол
@@ -69,6 +82,11 @@ write_metrics() {
         echo "# HELP nexus_backup_last_ok Whether the last run succeeded"
         echo "# TYPE nexus_backup_last_ok gauge"
         echo "nexus_backup_last_ok $([ "${ok}" = "true" ] && echo 1 || echo 0)"
+        # Тохируулаагүй суулгац дээр 0 хэвээр байна, тэр нь зөв: хуулбар өөр
+        # газар байхгүй гэдэг нь хэмжигдэх ёстой баримт.
+        echo "# HELP nexus_backup_offsite_ok Whether the encrypted copy reached the off-site store"
+        echo "# TYPE nexus_backup_offsite_ok gauge"
+        echo "nexus_backup_offsite_ok ${offsite_ok}"
     } > "${tmp}"
     chmod 0644 "${tmp}"
     mv -f "${tmp}" "${out}"
@@ -114,6 +132,48 @@ if [ "${size}" -lt 10240 ]; then
 fi
 
 find "${BACKUP_DIR}" -name 'nexus-*.sql.gz' -mtime "+${BACKUP_KEEP_DAYS}" -delete || true
+
+# Өөр байршил руу.
+#
+# Дискэн дээрх нөөцлөлт нь тэр дискийг алдвал хамт алга болно. Энэ алхам нь
+# хуулбарыг өөр газар үлдээнэ — гэхдээ эхлээд ШИФРЛЭНЭ. Хостод зөвхөн нийтийн
+# түлхүүр байгаа тул эвдэрсэн платформ ч, нөөцийн санг барьсан хэн ч уншиж
+# чадахгүй.
+#
+# Аль нэг тохиргоо дутуу бол алхам бүхэлдээ алгасагдана: тохируулаагүй суулгац
+# энэ скриптийг ажиллуулж чадах ёстой.
+offsite() {
+    [ -n "${BACKUP_AGE_RECIPIENT}" ] || return 0
+    [ -n "${BACKUP_S3_ENDPOINT}" ] && [ -n "${BACKUP_S3_BUCKET}" ] || return 0
+    [ -n "${BACKUP_S3_KEY}" ] && [ -n "${BACKUP_S3_SECRET}" ] || return 0
+    command -v age >/dev/null 2>&1 || { echo "backup: age суугаагүй" >&2; return 1; }
+
+    local enc="${target}.age" key host date_hdr sig
+    if ! age -r "${BACKUP_AGE_RECIPIENT}" -o "${enc}" "${target}"; then
+        rm -f "${enc}"
+        echo "backup: шифрлэж чадсангүй" >&2
+        return 1
+    fi
+
+    key="$(basename "${enc}")"
+    # AWS SigV4-ийн оронд S3-ийн хуучин, гэхдээ MinIO дэмждэг presigned биш
+    # энгийн гарын үсэг ашиглахгүй: mc-г контейнерээс дуудна. Хостод шинэ
+    # хоёртын файл суулгахгүй, MinIO-гийн өөрийнх нь клиент аль хэдийн бий.
+    if ! docker run --rm --network host \
+            -e MC_HOST_store="https://${BACKUP_S3_KEY}:${BACKUP_S3_SECRET}@${BACKUP_S3_ENDPOINT#https://}" \
+            -v "${enc}:/upload/${key}:ro" \
+            minio/mc:latest cp --quiet "/upload/${key}" "store/${BACKUP_S3_BUCKET}/${key}" >/dev/null 2>&1; then
+        rm -f "${enc}"
+        echo "backup: өөр байршил руу илгээж чадсангүй" >&2
+        return 1
+    fi
+    rm -f "${enc}"
+    offsite_ok=1
+    echo "backup: өөр байршилд ${BACKUP_S3_BUCKET}/${key}"
+    return 0
+}
+
+offsite || true
 
 record true "${size}" "${target}"
 write_metrics true "${size}"
