@@ -89,3 +89,28 @@ func TestNewTOTPSecretProducesAUsableEnrolment(t *testing.T) {
 		t.Fatalf("the enrolment URI is not an otpauth one: %s", uri)
 	}
 }
+
+// A host that runs several of these products gave every one of their consoles
+// the same authenticator entry, because the issuer was written into the image.
+// A phone showing four identical rows cannot tell you which code opens which
+// door.
+func TestTheEnrolmentIsNamedAfterTheDeployment(t *testing.T) {
+	t.Setenv("BRAND_NAME", "Gerege Salus")
+
+	_, uri, err := NewTOTPSecret("operator@example.mn")
+	if err != nil {
+		t.Fatalf("generate: %v", err)
+	}
+	if !strings.Contains(uri, "issuer=Gerege%20Salus%20Control%20Plane") {
+		t.Errorf("the issuer does not follow BRAND_NAME: %s", uri)
+	}
+	if strings.Contains(uri, "Gerege%20Nexus") {
+		t.Errorf("the built-in name is still in the URI: %s", uri)
+	}
+
+	// url.Values.Encode writes a space as `+`, and authenticator applications
+	// print it literally — the phone read "Gerege+Salus+Control+Plane".
+	if strings.Contains(uri, "+") {
+		t.Errorf("a space is encoded as + and will be shown as one: %s", uri)
+	}
+}
