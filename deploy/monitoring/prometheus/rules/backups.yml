@@ -56,3 +56,22 @@ groups:
             Скрипт ажилласан ч дуусгаагүй. Хамгийн түгээмэл шалтгаан нь дискний
             зай ба postgres контейнерийн нэр өөрчлөгдсөн явдал.
           runbook: "docs/RUNBOOKS.md#nexusbackupfailing"
+
+      - alert: NexusBackupNotLeavingTheHost
+        # Нөөцлөлт хийгдэж байгаа ч өөр байршилд хүрэхээ больсон. Диск дээрх
+        # хуулбар нь тэр дискийг алдвал хамт алга болно, тиймээс энэ нь
+        # "нөөцлөлт байхгүй"-гээс зөвхөн нэг алхмаар дээр.
+        #
+        # Тохируулаагүй суулгац дээр ч дуугарна, зориудаар: хуулбар нь өөр
+        # газар байхгүй гэдэг нь чимээгүй өнгөрөх ёсгүй баримт.
+        expr: nexus_backup_offsite_ok == 0
+        for: 2h
+        labels:
+          severity: ticket
+        annotations:
+          summary: "Нөөцлөлт өөр байршилд хүрэхгүй байна"
+          description: >-
+            Хостын дискэн дээр нөөцлөлт бий ч шифрлэгдсэн хуулбар нь нөөцийн
+            санд очихгүй байна. BACKUP_AGE_RECIPIENT ба BACKUP_S3_* тохиргоог
+            /etc/default/nexus-backup дотор шалга.
+          runbook: "docs/RUNBOOKS.md#nexusbackupnotleavingthehost"

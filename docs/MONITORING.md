@@ -406,9 +406,94 @@ textfile (Prometheus уншина). Хоёр дахь нь шөнө дунд х�
 бүтээгүй). Эхнийх нь хамгийн чухал: "нөөцлөлт унасан"-аас "нөөцлөлт байгаа
 эсэхийг хэн ч мэдэхгүй" нь илүү муу.
 
-**Энэ нь хангалттай гэсэн амлалт биш.** Нэг хостын дискэн дээрх нөөцлөлт тэр
-хостыг алдвал хамт алга болно. Өөр байршил руу хуулах нь дараагийн алхам —
-`docs/CONTROL_PLANE.md` §4и.
+### 8б. Өөр байршил — backups.nexus.gerege.mn
+
+Дискэн дээрх нөөцлөлт нь тэр дискийг алдвал хамт алга болно. `backups.*` нь
+S3-той нийцэх сан (MinIO), суулгац бүр өөрийн шифрлэгдсэн dump-аа тийш түлхэнэ.
+
+```bash
+cp deploy/.env.backups.example /opt/open-gerege-nexus/.env.backups   # утгуудыг бөглө
+cd /opt/open-gerege-nexus
+docker compose -f deploy/docker-compose.backups.yml --env-file .env.backups up -d
+sudo cp deploy/nginx/backups.nexus.gerege.mn.conf /etc/nginx/sites-available/backups.nexus.gerege.mn
+sudo ln -s /etc/nginx/sites-available/backups.nexus.gerege.mn /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+sudo certbot --nginx -d backups.nexus.gerege.mn
+```
+
+**Гурван шинж чанар, ач холбогдлын дарааллаар:**
+
+1. **Шифрлэгдсэн байдлаар ирнэ.** Эх хостод зөвхөн age-ийн *нийтийн* түлхүүр
+   байна, тиймээс эвдэрсэн платформ өөрийн илгээсэн зүйлээ уншиж чадахгүй, санг
+   барьсан хэн ч уншиж чадахгүй. Хувийн түлхүүр нь операторт байна.
+
+   ```bash
+   apt-get install -y age
+   age-keygen -o /root/backups-age-key.txt     # ЭНЭ ФАЙЛЫГ ХОСТООС ГАРГА
+   grep "^# public key:" /root/backups-age-key.txt
+   ```
+
+   **Хувийн түлхүүрээ алдвал бүх нөөц ашиггүй болно.** Түүнийг нууц үгийн
+   менежерт эсвэл офлайн хадгал — нөөц байгаа машин дээр биш.
+
+2. **Суулгац өөрийн түүхээ устгаж чадахгүй.** Bucket нь versioning-тэй, суулгац
+   бүрийн түлхүүр нь `PutObject`, `GetObject`, `ListBucket` авдаг ба
+   `DeleteObject` авдаггүй. Эвдэрсэн хост нэмж чадна, устгаж чадахгүй — энэ нь
+   ransomware-ийг давж гардаг шинж чанар.
+
+3. **Зөвхөн S3 API гадагш харна.** MinIO-гийн консол нь loopback дээр үлдэнэ
+   (127.0.0.1:9003, ssh tunnel-ээр). Хоёр дахь нэвтрэх гадаргуу бөгөөд түүний
+   ард бүх суулгацын өгөгдөл байна.
+
+**Суулгац бүрт bucket ба түлхүүр өгөх** — `mc mb`, `mc version enable`,
+дээрх бодлоготой `mc admin policy create`, `mc admin user add`. Дараа нь эх
+хост дээр:
+
+```bash
+sudo tee /etc/default/nexus-backup >/dev/null <<'ENV'
+BACKUP_AGE_RECIPIENT=age1...        # НИЙТИЙН түлхүүр
+BACKUP_S3_ENDPOINT=https://backups.nexus.gerege.mn
+BACKUP_S3_BUCKET=nexus-backups-<суулгац>
+BACKUP_S3_KEY=backup-<суулгац>
+BACKUP_S3_SECRET=...
+ENV
+sudo chmod 600 /etc/default/nexus-backup
+sudo sh -c 'echo "15 3 * * * root . /etc/default/nexus-backup && /usr/local/bin/nexus-backup.sh >> /var/log/nexus-backup.log 2>&1" > /etc/cron.d/nexus-backup'
+```
+
+Аль нэг тохиргоо дутуу бол алхам бүхэлдээ алгасагдана — тохируулаагүй суулгац
+скриптийг ажиллуулж чадах ёстой. Гэхдээ `nexus_backup_offsite_ok` нь 0 хэвээр
+байх ба хоёр цагийн дараа `NexusBackupNotLeavingTheHost` дуугарна: хуулбар өөр
+газар байхгүй гэдэг нь чимээгүй өнгөрөх ёсгүй баримт.
+
+### Сэргээх
+
+Нөөцлөлтийг сэргээж үзээгүй бол тэр нь нөөцлөлт биш, зөвхөн итгэл найдвар.
+
+```bash
+# 1. сангаас татах
+docker exec nexus_backups_minio mc cp store/nexus-backups-nexus/<файл>.age /tmp/
+docker cp nexus_backups_minio:/tmp/<файл>.age .
+
+# 2. хувийн түлхүүрээр тайлах
+age -d -i backups-age-key.txt <файл>.age > dump.sql.gz
+
+# 3. хаях зориулалттай санд сэргээж шалгах
+docker exec gerege_nexus_postgres psql -U postgres -c 'CREATE DATABASE restore_check'
+gunzip -c dump.sql.gz | docker exec -i gerege_nexus_postgres psql -U postgres -d restore_check
+docker exec gerege_nexus_postgres psql -U postgres -d restore_check -c 'SELECT count(*) FROM registry.tenants'
+docker exec gerege_nexus_postgres psql -U postgres -c 'DROP DATABASE restore_check'
+```
+
+Үр дүнг консолын Нөөцлөлт дэлгэц дээрээс бүртгэ — `platform_backups` дотор
+`restore_test` төрлөөр хадгалагдана, ингэснээр сэргээлт хамгийн сүүлд хэзээ
+шалгагдсаныг хожим асууж болно.
+
+**Nexus-ийн өөрийн хуулбарын хувьд энэ сан нь нэг машин дээр байна.** Хүснэгт
+устгасан, буруу migration, volume дахин үүсгэсэн зэргээс хамгаална — хостоо
+алдахаас хамгаалахгүй. Бусад хост дээрх суулгацуудын хувьд энэ нь жинхэнэ өөр
+байршил юм. Сүүлийн цоорхойг хаах алхам нь энэ санг өөр газар руу
+толилуулах — `mc mirror` таймер дээр.
 
 ---
 
