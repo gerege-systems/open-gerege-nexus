@@ -35,7 +35,7 @@ import (
 //
 // Both empty by default. The monitoring stack publishes on the host's loopback
 // (deploy/docker-compose.monitoring.yml), so a containerised API reaches it
-// through the host gateway — see docs/CONTROL_PLANE.md §4з for the two lines
+// through the host gateway — see docs/OPERATIONS.md for the two lines
 // that arrange it.
 func prometheusURL() string   { return strings.TrimRight(settings.Get(settings.PrometheusURL), "/") }
 func alertmanagerURL() string { return strings.TrimRight(settings.Get(settings.AlertmanagerURL), "/") }

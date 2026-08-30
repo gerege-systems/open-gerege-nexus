@@ -106,7 +106,7 @@ var ErrNoDocumentFiler = errors.New("nexus: this deployment has no document stor
 // Deprecated: use Provide[DocumentFiler] instead. This is a wrapper over it and
 // behaves identically, including UseDocumentFiler(nil) to withdraw. It stays
 // for one major version so a distribution pinned to v1 keeps compiling, and
-// goes in v2 — see docs/RELEASING.md.
+// goes in v2 — see docs/MODULES.md.
 func UseDocumentFiler(filer DocumentFiler) { Provide[DocumentFiler](filer) }
 
 // Documents returns the document capability, or ErrNoDocumentFiler.

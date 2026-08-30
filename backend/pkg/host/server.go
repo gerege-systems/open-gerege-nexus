@@ -12,7 +12,7 @@
  * than to either plane.
  *
  * That the console is a route table on this router rather than a second binary
- * is the arrangement docs/CONTROL_PLANE.md describes and this file implements.
+ * is the arrangement docs/OPERATIONS.md describes and this file implements.
  * It is also the one place a deployment could decide to mount only one of them,
  * which is what makes that a configuration question rather than a fork.
  */

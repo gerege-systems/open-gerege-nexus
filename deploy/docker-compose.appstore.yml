@@ -2,7 +2,7 @@
 #
 # This is the same binary every other deployment runs. What makes it a store is
 # two settings: a catalogue file listing the three store modules, and a signing
-# key. Nothing here is a special build — see docs/APPSTORE_PHASE2_PLAN.md §3.
+# key. Nothing here is a special build.
 #
 # It is brought up *beside* the standalone registry it replaces, on its own
 # ports and its own database, and it changes nothing about that service. The

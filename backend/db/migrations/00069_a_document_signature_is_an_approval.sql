@@ -12,7 +12,7 @@
 --
 -- Багана нь байрандаа: нэрийг нь солих нь уншиж байгаа клиентүүдийг
 -- эвдэнэ. API нь `proof` гэсэн талбар нийтэлж, аль нь болохыг хэлнэ.
--- docs/adr/0002-one-signing-rail.md-г үз.
+-- docs/SIGNING.md-г үз.
 
 -- +goose Up
 COMMENT ON COLUMN document_signatures.signature_hash IS

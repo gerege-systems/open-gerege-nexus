@@ -3,8 +3,8 @@
 # This file used to name one path, on the argument that a CODEOWNERS naming an
 # owner for every directory turns review into a formality nobody reads. That
 # argument still holds and this list is still short: what has been added is not
-# "the core", it is the twelve paths docs/CORE_BOUNDARY_PLAN.md §2.1 measured as
-# the ones app work drags along with it. Of the last 300 commits, 133 touched
+# "the core", it is the twelve paths measured as the ones app work drags along
+# with it. Of the last 300 commits, 133 touched
 # backend/internal/apps; the files below are the ones they touched at the same
 # time, most often. Every one of them is a place where an app's change lands in
 # the platform because the platform gave it nowhere else to go.
@@ -46,7 +46,7 @@
 
 # The ecosystem's contract. Every distribution repository compiles against this
 # package and pins it by tag, so a change here is a change to code that is not
-# in this repository and cannot be fixed from it — see docs/RELEASING.md §1.
+# in this repository and cannot be fixed from it — see docs/MODULES.md.
 #
 # The golden file beside it is part of the same review: its diff is the plain
 # statement of what the contract gained or lost.

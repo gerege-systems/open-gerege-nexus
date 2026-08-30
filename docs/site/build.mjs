@@ -223,7 +223,7 @@ function shell({title, slug, body, toc = "", page}) {
   <nav class="topnav" aria-label="Үндсэн цэс">
     <a href="index.html">Тойм</a>
     <a href="architecture.html">Архитектур</a>
-    <a href="module-authoring.html">Хөгжүүлэлт</a>
+    <a href="modules.html">Модуль</a>
     <a href="documents.html">Баримтын индекс</a>
   </nav>
   <div class="topactions">

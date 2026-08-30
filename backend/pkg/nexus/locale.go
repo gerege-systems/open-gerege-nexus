@@ -21,7 +21,7 @@ import (
 // language was asked for, which is why this is here rather than in
 // internal/kernel/config, where it was.
 //
-// docs/TRANSLATION_GUIDE.md is the policy: Mongolian plus the six official
+// docs/TRANSLATION.md is the policy: Mongolian plus the six official
 // languages of the United Nations. Growing the list is a decision — every entry
 // is one more column every future translation has to fill.
 var SupportedLocales = []string{"mn", "ar", "zh", "en", "fr", "ru", "es"}

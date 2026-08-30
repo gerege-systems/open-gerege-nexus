@@ -9,7 +9,7 @@
 --
 -- Нууц үг энд байхгүй бөгөөд байх ч ёсгүй — миграц бол репод хадгалагддаг
 -- файл. Role нь нууц үггүй үүсэх тул одоохондоо нэвтэрч чадахгүй; оператор
--- дараах тушаалаар нэг удаа өгнө (docs/MONITORING.md §Босгох):
+-- дараах тушаалаар нэг удаа өгнө (docs/OPERATIONS.md):
 --
 --   docker exec -i gerege_nexus_postgres psql -U postgres -d platform_db \
 --     -c "ALTER ROLE monitoring WITH PASSWORD '<generated>'"

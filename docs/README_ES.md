@@ -329,8 +329,8 @@ Informe de vulnerabilidades según lo descrito en [`SECURITY.md`](../SECURITY.md
 | Documento | Descripción |
 | --- | --- |
 | [Centro de documentación](README.md) | Índice de todos los documentos y traducciones |
-| [Especificación de arquitectura](ARCHITECTURE_SPECIFICATION.md) | Capas de la plataforma y decisiones de diseño |
-| [Guía de creación de módulos](MODULE_AUTHORING_GUIDE.md) | Cómo construir un nuevo módulo de aplicación |
+| [Arquitectura](ARCHITECTURE.md) | Los dos planos, los tres esquemas, el aislamiento de datos |
+| [Escribir un módulo](MODULES.md) | El contrato `pkg/nexus` y cómo llega una aplicación a un despliegue |
 | [Contribuir](../CONTRIBUTING.md) | Flujo de contribución |
 | [Política de seguridad](../SECURITY.md) | Notificación de vulnerabilidades |
 | [Código de conducta](../CODE_OF_CONDUCT.md) | Normas de la comunidad |

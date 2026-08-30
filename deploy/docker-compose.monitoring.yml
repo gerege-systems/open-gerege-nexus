@@ -18,7 +18,7 @@
 #   docker compose -f deploy/docker-compose.monitoring.yml --env-file .env.monitoring up -d
 #
 # Full instructions, including the one manual step (the monitoring database
-# password), are in docs/MONITORING.md.
+# password), are in docs/OPERATIONS.md.
 #
 # Required environment: see deploy/.env.monitoring.example. Everything has a
 # default except GRAFANA_ADMIN_PASSWORD, which is required on purpose — a
@@ -312,7 +312,7 @@ services:
       - --path.procfs=/host/proc
       - --path.sysfs=/host/sys
       - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
-      # Where the TLS expiry cron writes its file. See docs/MONITORING.md —
+      # Where the TLS expiry cron writes its file. See docs/OPERATIONS.md —
       # without that job, NexusTLSExpiryUnknown fires and says so.
       - --collector.textfile.directory=/host/var/lib/node_exporter
     pid: host

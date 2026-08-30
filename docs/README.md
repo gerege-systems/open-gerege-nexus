@@ -1,25 +1,12 @@
-# Баримт бичгийн төв — Documentation Hub
+# Баримт бичгийн төв
 
-> Одоогийн нийтлэх баримтууд вэб хэлбэрээр
-> **[gerege-systems.github.io/open-gerege-nexus](https://gerege-systems.github.io/open-gerege-nexus/)**
-> хаяг дээр нийтлэгддэг. Сайт нь энэ хавтасны Markdown файлуудаас
-> угсрагддаг тул эх сурвалж нь энд хэвээр байна —
-> [`docs/site/`](site/) хавтсыг үзнэ үү.
+Эдгээр баримтууд нь **кодоос уншиж бичигдсэн**. Тэдгээр нь юу байх ёстойг
+биш, юу байгааг тайлбарлана. Дугаар, нэр, хэмжээ бүр `backend/`, `frontend/`
+эсвэл `deploy/` дотор шалгагдсан.
 
-Энэ хавтас нь **Gerege Nexus**-ын баримт бичиг, түүхэн design record болон
-байгаа орчуулгуудыг агуулна. Үндсэн хэл нь монгол; орчуулга байгаа файл
-`_AR`, `_ZH`, `_EN`, `_FR`, `_RU`, `_ES` дагавар хэрэглэнэ. Бүтээгдэхүүний
-тойм долоон хэлээр бүрэн; техникийн баримт бүр заавал долоон хувилбартай биш.
-
-**Хэлний бодлого: монгол хэл + НҮБ-ын албан ёсны 6 хэл** (араб, хятад, англи,
-франц, орос, испани) — нийт 7 хэл. Монгол хэл эх сурвалж, бусад нь орчуулга.
-Шинэ хэл нэмэхийн өмнө энэ бодлогыг өөрчлөх шаардлагатай: жагсаалт нь дур
-зоргоор биш, олон улсын байгууллагуудын хэрэглэдэг жишигт тулгуурласан.
-
-This directory holds Gerege Nexus documentation, historical design records,
-and the translations that exist. Mongolian is the source language. The product
-overview follows the language policy of Mongolian plus the six official UN
-languages; individual technical documents may remain in their source language.
+Хуучин төлөвлөгөө, шийдвэрийн бүртгэл, гараагүй pilot-ийн тодорхойлолтууд
+устгагдсан: тэдгээр нь замын дундах баримт байсан бөгөөд одоогийн кодыг
+тайлбарлахаа больсон. Түүх нь git-д байна.
 
 <p>
   <a href="../README.md"><img src="assets/icons/flag-mn.png" width="18" height="18" alt=""> Монгол</a>
@@ -39,7 +26,36 @@ languages; individual technical documents may remain in their source language.
 
 ---
 
-## Танилцуулга — Overview
+## Платформ
+
+| Баримт | Юу хариулах вэ |
+| --- | --- |
+| [Архитектур](ARCHITECTURE.md) | Нэг бинарь дотор яагаад хоёр урсгал байдаг, гурван schema юу эзэмшдэг, өгөгдөл хэрхэн тусгаарлагддаг |
+| [Танилт ба эрх](IDENTITY.md) | Хэн нэвтэрч байна, ямар замаар, хэр удаан, юу хийж чадах |
+
+## Модуль
+
+| Баримт | Юу хариулах вэ |
+| --- | --- |
+| [Модуль бичих](MODULES.md) | `pkg/nexus`-ийн гэрээ, эрхийг платформд даалгах, өөрийн schema |
+| [Тайлан](REPORTS.md) | Тайлан зарлах, ажиллуулах, хуваарилах, байгууллага хооронд хуваалцах |
+| [Баримт ба гарын үсэг](SIGNING.md) | Хоёр рэйл, тэдгээрийн хуулийн ялгаа |
+
+## Ажиллагаа
+
+| Баримт | Юу хариулах вэ |
+| --- | --- |
+| [Ажиллагаа](OPERATIONS.md) | Байршуулалт, ажиглалтын стек, нөөцлөлт ба сэргээлт |
+| [Гарын авлага](RUNBOOKS.md) | Ямар нэг зүйл эвдэрсэн үед |
+
+## Клиент
+
+| Баримт | Юу хариулах вэ |
+| --- | --- |
+| [Bridge гэрээ](SHELL_CONTRACT.md) | Native бүрхүүл ба вэб shell хэрхэн ярилцдаг |
+| [Орчуулга](TRANSLATION.md) | Долоон хэл, гурван давхарга, орчуулгын үүсгэгч |
+
+## Танилцуулга
 
 | Хэл | Файл |
 | --- | --- |
@@ -51,108 +67,9 @@ languages; individual technical documents may remain in their source language.
 | Русский | [`README_RU.md`](README_RU.md) |
 | Español | [`README_ES.md`](README_ES.md) |
 
-## Одоогийн ажиллагааны баримт — Current documentation
+## Төслийн журам
 
-| Баримт | Хэл | Тайлбар |
-| --- | --- | --- |
-| [`ARCHITECTURE_SPECIFICATION.md`](ARCHITECTURE_SPECIFICATION.md) | MN | Платформын давхаргууд, өгөгдлийн загвар, архитектурын шийдвэрүүд |
-| [`ARCHITECTURE_SPECIFICATION_EN.md`](ARCHITECTURE_SPECIFICATION_EN.md) | EN | Architecture specification |
-| [`SSO_FEDERATION.md`](SSO_FEDERATION.md) | MN | Нэг суулгацыг нөгөөгийн SSO клиент болгох: env, урсгал, гарах зам |
-| [`SHELL_CONTRACT.md`](SHELL_CONTRACT.md) | MN | Native бүрхүүл ба web ажлын мужийн `window.GeregeShell` гэрээ |
-| [`NATIVE_LOGIN_SPEC.md`](NATIVE_LOGIN_SPEC.md) | MN | Swift, C#, Kotlin клиентүүдийн нэвтрэлтийн зан төлөв |
-| [`NATIVE_SETTINGS_SPEC.md`](NATIVE_SETTINGS_SPEC.md) | MN | Бүрхүүл, төхөөрөмж, peripheral, fleet тохиргоо |
-| [`MODULE_AUTHORING_GUIDE.md`](MODULE_AUTHORING_GUIDE.md) | EN | Шинэ апп модуль хөгжүүлэх алхам алхмаар заавар |
-| [`RELEASING.md`](RELEASING.md) | MN | `pkg/nexus`-ийн semver амлалт, түүнийг хамгаалдаг тест, tag гаргах журам |
-| [`GOV_SERVICES_WORKFLOW.md`](GOV_SERVICES_WORKFLOW.md) | EN | `gov-gerege-nexus` distribution-д байдаг төрийн үйлчилгээний модулийн reference |
-| [`DOCUMENTS_SIGNING.md`](DOCUMENTS_SIGNING.md) | EN | `client-gerege-nexus` distribution-ийн Documents модуль ба core signing rail-ийн хил |
-| [`APPSTORE_OPERATIONS.md`](APPSTORE_OPERATIONS.md) | EN | Апп сторын каталог нийтлэх, хувилбар шилжүүлэх ажиллагаа |
-| [`REPORTS.md`](REPORTS.md) | MN | Core тайлангийн хөдөлгүүр ба `client-gerege-nexus`-ийн report UI модулийн хил |
-| [`REPORT_SHARING.md`](REPORT_SHARING.md) | MN | Тенант дамнасан тайлан: grant, counterparty хүрээ, хоёр талын audit |
-| [`URTUU.md`](https://github.com/gerege-systems/client-gerege-nexus/blob/main/docs/URTUU.md) | MN | **Энэ репод байхаа больсон.** Өртөө — суваг ба самбар хоёул `client-gerege-nexus`-д |
-| [`RING_STANDARD.md`](https://github.com/gerege-systems/client-gerege-nexus/blob/main/docs/RING_STANDARD.md) | MN | **Энэ репод байхаа больсон.** Кодын бүртгэлийн формат Өртөөгийн хамт явав |
-| [`MONITORING.md`](MONITORING.md) | MN | Ажиглалтын стек: асаах, Grafana, лог хайх, шинэ хэмжүүр нэмэх |
-| [`RUNBOOKS.md`](RUNBOOKS.md) | MN | Дохио бүрд: юу болсон, юу шалгах, яаж засах, хэзээ өргөжүүлэх |
-| [`CONTROL_PLANE.md`](CONTROL_PLANE.md) | MN | Операторын консол: босгох, эрх, анхны оператор үүсгэх, аюулгүй байдлын дүрмүүд |
-| [`TRANSLATION_GUIDE.md`](TRANSLATION_GUIDE.md) | MN | Долоон хэлний толь бичиг, орчуулга нэмэх урсгал |
-
-## Архитектурын шийдвэр — Architecture decisions
-
-ADR нь кодын одоогийн хэлбэрийг **яагаад** сонгосныг тайлбарлана. Одоогийн
-зан төлөвийг мэдэхдээ дээрх ажиллагааны баримтыг, шалтгааныг мэдэхдээ ADR-ыг
-уншина.
-
-| Баримт | Хэл | Тайлбар |
-| --- | --- | --- |
-| [`ECOSYSTEM_GIT_STRATEGY.md`](ECOSYSTEM_GIT_STRATEGY.md) | MN | Цөм, distribution, каталог ба нийтийн SDK-ийн хил |
-| [`adr/0001-domain-first.md`](adr/0001-domain-first.md) | MN | Аппын дүрэм платформоо импортлохгүй |
-| [`adr/0002-one-signing-rail.md`](adr/0002-one-signing-rail.md) | MN | Гарын үсгийн зам нэг (`eidmongolia`) |
-| [`adr/0003-a-document-carries-what-is-signed.md`](adr/0003-a-document-carries-what-is-signed.md) | MN | Баримт файлаа авч явна: pades, detached, approval |
-| [`adr/0004-a-pilot-that-did-not-ship.md`](adr/0004-a-pilot-that-did-not-ship.md) | MN | Өртөөний distribution pilot яагаад гараагүй вэ |
-| [`adr/0005-two-planes-one-origin-each.md`](adr/0005-two-planes-one-origin-each.md) | MN | Нэг бинарь, хоёр origin: тенант ба операторын хаалга |
-| [`adr/0006-a-person-owns-a-space.md`](adr/0006-a-person-owns-a-space.md) | MN | Хүн муж эзэмшинэ: `workspace`/`operator`/`registry` нэршил, гэр ба байгууллага, иргэний буулт (нэршил ба гэр хэрэгжсэн; хувийн муж **санал**) |
-| [`adr/0007-a-rail-needs-a-second-caller.md`](adr/0007-a-rail-needs-a-second-caller.md) | MN | Рельс болохын тулд хоёр дахь дуудагч хэрэгтэй: Өртөө ба холбогч цөмөөс бүрэн гарсан шалтгаан |
-
-## Санал, төлөвлөгөө, ажлын түүх — Historical design records
-
-Эдгээр нь шийдвэр гаргах үеийн хэмжилт, хувилбар, хэрэгжүүлэлтийн дарааллыг
-хадгална. **Одоогийн API, package зам, тохиргооны source of truth биш.** Файл
-бүрийн status banner болон холбоосоор canonical баримт руу орно.
-
-| Баримт | Хэл | Тайлбар |
-| --- | --- | --- |
-| [`URTUU_PROPOSAL.md`](https://github.com/gerege-systems/client-gerege-nexus/blob/main/docs/URTUU_PROPOSAL.md) | MN | **Энэ репод байхаа больсон.** «Өртөө» сувгийн анхны дизайны санал |
-
-## Хэрэгжүүлэлтийн prompt-ууд — Implementation prompts
-
-Хийгдсэн ажлыг хэрхэн даалгасныг үлдээсэн бичвэрүүд. Тэдгээр нь түүх:
-prompt-ын төлөвлөгөө ба эцэст нь хэрэгжсэн зүйл заримдаа зөрдөг, тэр
-зөрүү нь ADR-д тэмдэглэгддэг.
-
-| Баримт | Хэл | Тайлбар |
-| --- | --- | --- |
-
-## Төслийн журам — Project governance
-
-| Баримт | Хэл | Тайлбар |
-| --- | --- | --- |
-| [`../CONTRIBUTING.md`](../CONTRIBUTING.md) | MN | Хувь нэмэр оруулах журам |
-| [`CONTRIBUTING_EN.md`](CONTRIBUTING_EN.md) | EN | Contribution guide |
-| [`../CODE_OF_CONDUCT.md`](../CODE_OF_CONDUCT.md) | MN | Ёс зүйн дүрэм |
-| [`CODE_OF_CONDUCT_EN.md`](CODE_OF_CONDUCT_EN.md) | EN | Code of conduct |
-| [`../SECURITY.md`](../SECURITY.md) | MN | Аюулгүй байдлын бодлого |
-| [`SECURITY_EN.md`](SECURITY_EN.md) | EN | Security policy |
-| [`../CHANGELOG.md`](../CHANGELOG.md) | EN | Өөрчлөлтийн түүх |
-
----
-
-## Орчуулга нэмэх — Adding a translation
-
-1. Эх баримтыг хуулж, файлын нэрэнд ISO 639-1 хэлний код бүхий дагавар нэмнэ:
-   `README_JA.md`, `CONTRIBUTING_JA.md` гэх мэт.
-2. Баримтын эхэнд, оршил догол мөрийн дараа, badge-үүдийн өмнө хэлний
-   сонголтын мөрийг байрлуулна. Туг бүрийн зураг
-   [`assets/icons/`](assets/icons/)-д хадгалагдана.
-3. Бүх хэлний хувилбар дээрх сонголтын мөрийг шинэ хэлээр нөхнө — сонголт нь
-   хэлүүдийн хооронд тэгш хэмтэй байх ёстой.
-4. Энэ индекс файлын хүснэгтэд шинэ мөр нэмнэ.
-
-Хэлний сонголтын мөрийн загвар (`docs/` доторх файлд):
-
-```html
-<p>
-  <a href="../README.md"><img src="assets/icons/flag-mn.png" width="18" height="18" alt=""> Монгол</a>
-  &nbsp;·&nbsp;
-  <a href="README_EN.md"><img src="assets/icons/flag-en.png" width="18" height="18" alt=""> English</a>
-</p>
-```
-
-Идэвхтэй байгаа хэлийг холбоосгүй, `<b>` тэгээр тодруулна.
-
----
-
-## Дүрсний эх сурвалж — Icon source
-
-Тугны дүрсийг [Flaticon](https://www.flaticon.com/)-оос авч репод хадгалсан.
-Дэлгэрэнгүйг [`assets/icons/ATTRIBUTION.md`](assets/icons/ATTRIBUTION.md)-ээс
-үзнэ үү. Баримт бичигт emoji дүрс ашиглахгүй — бүх дүрс нь Flaticon-ы дүрсийн
-сангаас авсан зураг байна.
+[Хувь нэмэр оруулах](../CONTRIBUTING.md) ([EN](CONTRIBUTING_EN.md)) ·
+[Аюулгүй байдал](../SECURITY.md) ([EN](SECURITY_EN.md)) ·
+[Ёс зүйн дүрэм](../CODE_OF_CONDUCT.md) ([EN](CODE_OF_CONDUCT_EN.md)) ·
+[Өөрчлөлтийн түүх](../CHANGELOG.md)

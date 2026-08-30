@@ -21,7 +21,7 @@
 #   * The dumps arrive already encrypted. The source host holds only an age
 #     *public* key, so a compromised platform cannot read what it has already
 #     sent, and whoever holds this store cannot read any of it. The private key
-#     lives with the operator and nowhere else — see docs/MONITORING.md §8б.
+#     lives with the operator and nowhere else — see docs/OPERATIONS.md.
 #   * Versioning is on and the per-deployment key may not delete. A source host
 #     that is taken over can add objects and cannot remove the history, which is
 #     the property that survives ransomware.

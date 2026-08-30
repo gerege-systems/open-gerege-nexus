@@ -5,7 +5,7 @@
  *
  * The exported surface of this package, written down.
  *
- * `docs/RELEASING.md` promises that `pkg/nexus` does not break inside a major
+ * `docs/MODULES.md` promises that `pkg/nexus` does not break inside a major
  * version. A promise a build cannot check is a promise somebody keeps until the
  * afternoon they are in a hurry, and the way this one would be broken is not by
  * anybody deciding to break it: it is by renaming a parameter during a

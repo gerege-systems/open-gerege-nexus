@@ -343,7 +343,7 @@ type AuditSink func(ctx context.Context, workspaceID, userID, action, resource s
 // Deprecated: use Provide[AuditSink] instead. This is a wrapper over it and
 // behaves identically, including UseAuditSink(nil) to withdraw. It stays for
 // one major version so a distribution pinned to v1 keeps compiling, and goes in
-// v2 — see docs/RELEASING.md.
+// v2 — see docs/MODULES.md.
 func UseAuditSink(sink AuditSink) { Provide[AuditSink](sink) }
 
 // Audit records that something happened, for the log that answers "who read my

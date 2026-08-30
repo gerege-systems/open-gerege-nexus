@@ -154,7 +154,7 @@ If the authenticator step was interrupted, finish it without creating anything:
   docker exec -it gerege_nexus_backend /app/operator-bootstrap -confirm -email ...
 
 Roles: superadmin (everything), operator (daily work), support (people),
-auditor (read-only). See docs/CONTROL_PLANE.md.
+auditor (read-only). See docs/OPERATIONS.md.
 
 `)
 	flag.PrintDefaults()

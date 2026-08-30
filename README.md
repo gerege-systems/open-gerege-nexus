@@ -71,11 +71,9 @@ compile-time Go module хэлбэрээр distribution репо нэмдэг. Э
   зан мөн цөмөөс хасагдав
 - Ерөнхий adaptive circuit breaker, singleflight, generic retry engine
 
-Эдгээрийн зарим нь product distribution репо руу салсан. Түүхэн шийдвэр ба
-хуваарилалтыг [`docs/ECOSYSTEM_GIT_STRATEGY.md`](docs/ECOSYSTEM_GIT_STRATEGY.md),
-одоогийн архитектурыг
-[`docs/ARCHITECTURE_SPECIFICATION.md`](docs/ARCHITECTURE_SPECIFICATION.md)-ээс
-үзнэ үү.
+Эдгээрийн зарим нь product distribution репо руу салсан. Модуль хэрхэн
+бичигдэж, каталогоор ирдгийг [`docs/MODULES.md`](docs/MODULES.md), одоогийн
+архитектурыг [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)-ээс үзнэ үү.
 
 ## Гол боломжууд
 
@@ -179,7 +177,7 @@ NEXT_PUBLIC_CONTROL_PLANE_API_URL=http://admin.localhost:8080/api/platform/v1 \
 Production тохиргоог README-гээс таахгүй. Бүрэн хувьсагч ба аюулгүй default-ыг
 [`.env.example`](.env.example), production жишээг
 [`deploy/.env.prod.example`](deploy/.env.prod.example), анхны tenant/operator
-үүсгэх алхмыг [`docs/CONTROL_PLANE.md`](docs/CONTROL_PLANE.md)-ээс дагана.
+үүсгэх алхмыг [`docs/OPERATIONS.md`](docs/OPERATIONS.md)-ээс дагана.
 
 ## API ба каталогийн бодит эх сурвалж
 
