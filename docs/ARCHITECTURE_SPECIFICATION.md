@@ -1,7 +1,7 @@
 # Архитектурын тодорхойлолт
 
 **Gerege Nexus**-ын одоогийн кодын бүтэц, хоёр урсгалын хил ба өгөгдлийн
-эзэмшил. Шинэчлэгдсэн: 2026-08-25.
+эзэмшил. Шинэчлэгдсэн: 2026-08-30.
 
 <p>
   <img src="assets/icons/flag-mn.png" width="18" height="18" alt=""> <b>Монгол</b>
@@ -50,6 +50,49 @@ store, middleware, router-ийг босгож хоёр route table-ийг зэр
 Хоёр урсгал хоорондоо import хийхгүй; `internal/planes_test.go` үүнийг
 компиляцын граф дээр шалгана.
 
+## 1a. Хэмжсэн хэмжээс
+
+Доорх тоонууд нь 2026-08-30-нд кодоос хэмжигдсэн — тайлбар биш, тоолол.
+
+| | |
+| --- | --- |
+| Go эх код (тестгүй) | 46,762 мөр |
+| Go тест | 22,245 мөр, 143 файл |
+| Frontend (TS/TSX) | 26,776 мөр |
+| HTTP маршрут | 199, түүнээс 47 нь операторын |
+| Migration | 94 |
+| Каталог дахь апп | 0 |
+
+Сүүлийн мөр нь алдаа биш. Экосистемийн git стратегийн тавьсан шалгуур нь
+«нэг ч бизнес аппгүйгээр ачаалж, апп бүрийг каталогоос авдаг платформ»
+байсан; хоосон каталог нь тэр шалгуур хангагдсаны баталгаа юм.
+
+Тест нь эх кодын **47%** — энэ репод тестийг дараа бичдэггүй. Ялангуяа
+хамгаалалтын шинжтэй нь: маршрутын golden file (`routes.txt`), схемийн
+хилийн шалгалт, RLS-ийн бодлогын хэлбэр, хоёр урсгалын import граф. Эдгээр нь
+онолын зөв байдлыг биш, буруу зүйл чимээгүй нэвтрэхийг хардаг.
+
+### Юуг гаднаас авдаг вэ
+
+| Зам | Хэрэглээ |
+| --- | --- |
+| eID Mongolia | Иргэний танилт, гарын үсэг |
+| ДАН | Төрийн танилт |
+| ХУР (XYP) | Лавлагаа |
+| Gerege eSign (HSM) | Байгууллагын гарын үсэг |
+| Gemini | AI туслах |
+| Hosted email verify | Хаяг баталгаажуулалт |
+
+Нэвтрэх зам тав: нууц үг, eID, ДАН, Google, SSO. Гадаад дуудлага бүр нэг
+histogram-аар хэмжигдэнэ (`external_request_duration_seconds`) — систем,
+үйлдэл, үр дүнгээр. Аль тал нь удааширсныг маргах шаардлагагүй байхын тулд.
+
+### Native бүрхүүл
+
+macOS, iOS/iPadOS, Windows, Android — бүгд нэг web shell-ийг ачаалж, нэг
+bridge гэрээгээр (`docs/SHELL_CONTRACT.md`) ярина. Гурван удаа бичсэн апп биш,
+гурван удаа савласан нэг апп.
+
 ## 2. Кодын хил ба хариуцлага
 
 | Байршил | Хариуцлага |
@@ -57,7 +100,7 @@ store, middleware, router-ийг босгож хоёр route table-ийг зэр
 | `backend/internal/kernel` | Аль ч урсгалыг import хийдэггүй cache, config, security, telemetry, settings, flags зэрэг суурь primitive |
 | `backend/internal/workspace` | Auth, access, directory, devices, identity, integrations, profile, SSO, app install зэрэг нэг тенантын ажиллагаа |
 | `backend/internal/operator` | Operator session, tenants, approvals, settings, flags, audit, support, metering, backup, catalog, observability |
-| `backend/internal/apps` | Distribution модулийн угсрах цэг. 2026-08-25-нд SSO Clients App Store руу явсны дараа **хоосон** — апп бүр `pkg/nexus`-ээр бүртгэгдэж каталогоор ирнэ |
+| `backend/internal/apps` | Distribution модулийн угсрах уяа. Багц нь `Bootstrap`-ийн уяа ба түүний тестээс бүрдэх ба **нэг ч бизнес апп агуулахгүй** — 2026-08-25-нд SSO Clients App Store руу явсны дараах төгссөн төлөв. Апп бүр `pkg/nexus`-ээр бүртгэгдэж каталогоор ирнэ |
 | `backend/pkg/host` | Хоёр урсгалыг нэг HTTP процесст угсрах public host package |
 | `backend/pkg/nexus` | Гадаад module/distribution-д зориулсан тогтвортой SDK contract |
 
@@ -163,8 +206,7 @@ distribution `stock_forecast` capability нийлүүлсэн үед delegation 
 | API route санамсаргүй өөрчлөгдөхгүй | `backend/pkg/host/testdata/routes.txt` |
 | Origin ба `/cp` host routing | `frontend/tests/control-plane-host.test.mjs`, `frontend/scripts/check-control-plane-host.mjs`, `frontend/scripts/smoke-control-plane-host.mjs` |
 
-Шийдвэрийн үндэслэлийг [хоёр урсгалын санал](TWO_PLANES_PROPOSAL.md),
-[хэрэгжилтийн шалгалт](TWO_PLANES_REVIEW.md),
-[ADR-0005](adr/0005-two-planes-one-origin-each.md)-аас үзнэ үү. Санал, prompt,
-plan баримтууд нь түүхэн design record; энэ файл ба ажиллаж буй код нь
-одоогийн эх сурвалж.
+Шийдвэрийн үндэслэлийг [ADR-0005](adr/0005-two-planes-one-origin-each.md)-аас
+үзнэ үү. Түүнийг гаргах хүртэлх санал, prompt, plan баримтуудыг устгасан:
+тэдгээр нь ажлын тэмдэглэл байсан бөгөөд шийдвэр нь ADR-д, хэрэгжилт нь кодод
+байна. Энэ файл ба ажиллаж буй код нь одоогийн эх сурвалж.

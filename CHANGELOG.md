@@ -2719,7 +2719,7 @@ their job without being able to do quiet damage.
 Somebody has to be able to see which organisations exist, which apps they run
 and what has been done to them — and until now that somebody used `psql`. This
 is the first phase of the operator console described in
-[`docs/CONTROL_PLANE_PLAN.md`](docs/CONTROL_PLANE_PLAN.md): the foundation, on
+`docs/CONTROL_PLANE_PLAN.md`: the foundation, on
 which suspension, support and configuration are built next. Guide in
 [`docs/CONTROL_PLANE.md`](docs/CONTROL_PLANE.md).
 
@@ -2973,7 +2973,7 @@ the R and the D of RED and nothing else — no saturation, no business volume, n
 sign that a call to ХУР or eID had gone slow, and no way to tell a breach of the
 in-flight ceiling from any other 503. Everything a dashboard would need was
 missing before the dashboards were, which is why this lands before the stack
-that reads it (design: [`docs/MONITORING_AND_REPORTING_PROPOSAL.md`](docs/MONITORING_AND_REPORTING_PROPOSAL.md)).
+that reads it (design: `docs/MONITORING_AND_REPORTING_PROPOSAL.md`).
 
 - **Saturation.** The Go runtime and process collectors are asserted rather than
   assumed — client_golang registers both, and a test now fails if that ever

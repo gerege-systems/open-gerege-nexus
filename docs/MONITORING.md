@@ -4,7 +4,7 @@ Gerege Nexus-ийн хэмжүүр, лог, дохиоллын систем: ю�
 шинэ хэмжүүр яаж нэмэх.
 
 [Баримт бичгийн төв рүү буцах](README.md) ·
-[Дизайны санал](MONITORING_AND_REPORTING_PROPOSAL.md) ·
+Дизайны санал ·
 [Runbook-ууд](RUNBOOKS.md)
 
 ---
@@ -675,4 +675,4 @@ Rendering server-ийн өөрийн алдааг runtime-ийн `FRONTEND_SENTR
 ## 13. Дараагийн үе шат
 
 Тайлангийн модуль нь
-[дизайны саналын](MONITORING_AND_REPORTING_PROPOSAL.md) 4-р үе шат.
+дизайны саналын 4-р үе шат.

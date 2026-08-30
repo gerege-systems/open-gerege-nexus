@@ -73,7 +73,6 @@ languages; individual technical documents may remain in their source language.
 | [`MONITORING.md`](MONITORING.md) | MN | Ажиглалтын стек: асаах, Grafana, лог хайх, шинэ хэмжүүр нэмэх |
 | [`RUNBOOKS.md`](RUNBOOKS.md) | MN | Дохио бүрд: юу болсон, юу шалгах, яаж засах, хэзээ өргөжүүлэх |
 | [`CONTROL_PLANE.md`](CONTROL_PLANE.md) | MN | Операторын консол: босгох, эрх, анхны оператор үүсгэх, аюулгүй байдлын дүрмүүд |
-| [`TWO_PLANES_REVIEW.md`](TWO_PLANES_REVIEW.md) | MN | Хоёр урсгалын хэрэгжсэн төлөв, баталгаа, үлдсэн backlog |
 | [`TRANSLATION_GUIDE.md`](TRANSLATION_GUIDE.md) | MN | Долоон хэлний толь бичиг, орчуулга нэмэх урсгал |
 
 ## Архитектурын шийдвэр — Architecture decisions
@@ -101,16 +100,7 @@ ADR нь кодын одоогийн хэлбэрийг **яагаад** сон�
 
 | Баримт | Хэл | Тайлбар |
 | --- | --- | --- |
-| [`CORE_BOUNDARY_PLAN.md`](CORE_BOUNDARY_PLAN.md) | MN | Цөмийн хилийн хэмжилт ба хэрэгжсэн салгалтын төлөвлөгөө |
-| [`TWO_PLANES_PROPOSAL.md`](TWO_PLANES_PROPOSAL.md) | MN | `tenant`/`platform`/`kernel`, хоёр schema-ийн анхны санал |
-| [`WORKSPACE_NAMING_PROPOSAL.md`](WORKSPACE_NAMING_PROPOSAL.md) | MN | Нэршлийн засвар, хувийн орон зай, эрэлтийн тал (100 нийлүүлэгч), иргэний `/me` буулт — үе A–G (**A, B, C1-lite, E, F, G хэрэгжсэн**) |
-| [`MONITORING_AND_REPORTING_PROPOSAL.md`](MONITORING_AND_REPORTING_PROPOSAL.md) | MN | Ажиглалт ба тайлангийн дизайны санал |
 | [`URTUU_PROPOSAL.md`](https://github.com/gerege-systems/client-gerege-nexus/blob/main/docs/URTUU_PROPOSAL.md) | MN | **Энэ репод байхаа больсон.** «Өртөө» сувгийн анхны дизайны санал |
-| [`CONTROL_PLANE_PLAN.md`](CONTROL_PLANE_PLAN.md) | MN | Операторын консолын анхны дизайн ба үе шатууд |
-| [`PEER_PROPOSAL.md`](PEER_PROPOSAL.md) | MN | Nexus биш системийг Өртөөний талд оруулах санал |
-| [`APPSTORE_SEPARATION_PLAN.md`](APPSTORE_SEPARATION_PLAN.md) | MN | App Store салгах төлөвлөгөө |
-| [`APPSTORE_PHASE2_PLAN.md`](APPSTORE_PHASE2_PLAN.md) | MN | «Шастир» ба платформ нэгдлийн 2-р үе шат |
-| [`DOCUMENTS_WORKLOG.md`](DOCUMENTS_WORKLOG.md) | MN | Баримт ба цахим гарын үсгийн ажлын түүх |
 
 ## Хэрэгжүүлэлтийн prompt-ууд — Implementation prompts
 
@@ -120,12 +110,6 @@ prompt-ын төлөвлөгөө ба эцэст нь хэрэгжсэн зүй�
 
 | Баримт | Хэл | Тайлбар |
 | --- | --- | --- |
-| [`MODULE_RENAME_PROMPT.md`](MODULE_RENAME_PROMPT.md) | MN | Цөмийн модулиудын нэршлийн засвар (салгалтын 0-р алхам) |
-| [`MONITORING_AND_REPORTING_IMPLEMENTATION_PROMPT.md`](MONITORING_AND_REPORTING_IMPLEMENTATION_PROMPT.md) | MN | Мониторинг ба тайлангийн системийг хэрэгжүүлэх prompt |
-| [`DOMAIN_FIRST_PROMPT.md`](DOMAIN_FIRST_PROMPT.md) | MN | Домэйн давхаргыг салгах prompt — үр дүн нь [`adr/0001-domain-first.md`](adr/0001-domain-first.md) |
-| [`CORE_BOUNDARY_PROMPTS.md`](CORE_BOUNDARY_PROMPTS.md) | MN | [`CORE_BOUNDARY_PLAN.md`](CORE_BOUNDARY_PLAN.md)-ыг хэрэгжүүлэх үе шат бүрийн prompt — арваулаа хэрэгжсэн, үр дүнгийн хүснэгттэй |
-| [`TWO_PLANES_PROMPTS.md`](TWO_PLANES_PROMPTS.md) | MN | [`TWO_PLANES_PROPOSAL.md`](TWO_PLANES_PROPOSAL.md)-ыг хэрэгжүүлэх Үе A–H-ийн prompt |
-| [`PERSON_PLANE_PROMPTS.md`](PERSON_PLANE_PROMPTS.md) | MN | Иргэний урсгал (`internal/person`) — P0–P3-ийн prompt: порт, `gerege_nexus_person` role, policy, `/me` (**хэрэгжээгүй**; §«Гурван засвар» — P2 нь модулийн репод) |
 
 ## Төслийн журам — Project governance
 

@@ -50,6 +50,37 @@ stores, middleware, and the router, then mounts both route tables. The planes do
 not import one another; `internal/planes_test.go` enforces that rule over the Go
 import graph.
 
+## 1a. Measured
+
+Counted from the code on 2026-08-30 — measurements, not claims.
+
+| | |
+| --- | --- |
+| Go source (excluding tests) | 46,762 lines |
+| Go tests | 22,245 lines across 143 files |
+| Frontend (TS/TSX) | 26,776 lines |
+| HTTP routes | 199, of which 47 are the operator plane's |
+| Migrations | 94 |
+| Apps in the catalogue | 0 |
+
+The last row is not a gap. The criterion the ecosystem git strategy set was a
+platform that boots with no business app at all and takes every one of them
+from a catalogue; an empty catalogue is the evidence that it holds.
+
+Tests are **47%** of the source. The ones that matter most are the guards: the
+route golden file, the schema boundary checks, the RLS policy shape, and the
+import graph between the two planes. They do not verify that the code is
+correct in theory — they catch the wrong thing arriving quietly.
+
+Five sign-in rails: password, eID, DAN, Google, SSO. Six external systems, each
+timed by one histogram (`external_request_duration_seconds`) broken down by
+system, operation and outcome — so that "whose side is slow" is never an
+argument.
+
+Native shells for macOS, iOS/iPadOS, Windows and Android all load the same web
+shell and speak one bridge contract (`docs/SHELL_CONTRACT.md`). One application
+packaged four times, not four applications.
+
 ## 2. Code boundaries
 
 | Location | Responsibility |
@@ -167,8 +198,8 @@ returns `404` when no provider exists.
 | The HTTP surface does not drift silently | `backend/pkg/host/testdata/routes.txt` |
 | Origin and `/cp` host routing remain separated | `frontend/tests/control-plane-host.test.mjs`, `frontend/scripts/check-control-plane-host.mjs`, `frontend/scripts/smoke-control-plane-host.mjs` |
 
-For rationale, see the [two-plane proposal](TWO_PLANES_PROPOSAL.md),
-[implementation review](TWO_PLANES_REVIEW.md), and
-[ADR-0005](adr/0005-two-planes-one-origin-each.md). Proposal, prompt, and plan
-documents are historical design records; this document and executable code are
-the current sources of truth.
+For rationale, see [ADR-0005](adr/0005-two-planes-one-origin-each.md). The
+proposal, prompt, and plan documents that led to it have been removed: they were
+working notes, and the decision lives in the ADR while the implementation lives
+in the code. This document and the executable code are the current sources of
+truth.

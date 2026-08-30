@@ -29,7 +29,6 @@ export const PAGES = [
   {src: "docs/adr/0004-a-pilot-that-did-not-ship.md", slug: "adr-0004-pilot", title: "ADR 0004 — Гараагүй pilot", group: "Архитектур"},
   {src: "docs/adr/0005-two-planes-one-origin-each.md", slug: "adr-0005-two-origins", title: "ADR 0005 — Нэг бинарь, хоёр origin", group: "Архитектур"},
   {src: "docs/adr/0007-a-rail-needs-a-second-caller.md", slug: "adr-0007-a-rail-needs-a-second-caller", title: "ADR 0007 — Рельс болохын тулд хоёр дахь дуудагч", group: "Архитектур"},
-  {src: "docs/TWO_PLANES_REVIEW.md", slug: "two-planes-review", title: "Хоёр урсгалын хэрэгжилтийн шалгалт", group: "Архитектур"},
 
   {src: "docs/MODULE_AUTHORING_GUIDE.md", slug: "module-authoring", title: "Модуль хөгжүүлэх заавар", group: "Хөгжүүлэлт"},
   {src: "docs/APPSTORE_OPERATIONS.md", slug: "appstore-operations", title: "Апп сторын ажиллагаа", group: "Хөгжүүлэлт"},
@@ -44,7 +43,6 @@ export const PAGES = [
   {src: "docs/MONITORING.md", slug: "monitoring", title: "Мониторинг", group: "Ажиллагаа"},
   {src: "docs/RUNBOOKS.md", slug: "runbooks", title: "Runbook-ууд", group: "Ажиллагаа"},
   {src: "docs/CONTROL_PLANE.md", slug: "control-plane", title: "Control plane", group: "Ажиллагаа"},
-  {src: "docs/MONITORING_AND_REPORTING_PROPOSAL.md", slug: "monitoring-proposal", title: "Ажиглалт ба тайлангийн санал", group: "Ажиллагаа"},
 
   {src: "docs/SHELL_CONTRACT.md", slug: "shell-contract", title: "Bridge гэрээ", group: "Native клиентүүд"},
   {src: "docs/NATIVE_LOGIN_SPEC.md", slug: "native-login", title: "Native нэвтрэлт", group: "Native клиентүүд"},

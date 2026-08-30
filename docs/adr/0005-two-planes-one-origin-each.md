@@ -2,8 +2,8 @@
 
 - **Огноо:** 2026-08-24
 - **Байдал:** Хүлээн авсан, хэрэгжсэн.
-- **Холбоотой:** [`TWO_PLANES_PROPOSAL.md`](../TWO_PLANES_PROPOSAL.md);
-  [`TWO_PLANES_REVIEW.md`](../TWO_PLANES_REVIEW.md);
+- **Холбоотой:** `TWO_PLANES_PROPOSAL.md`;
+  `TWO_PLANES_REVIEW.md`;
   [`CONTROL_PLANE.md` §2](../CONTROL_PLANE.md);
   `deploy/nginx/cp.nexus.gerege.mn.conf`,
   `deploy/nginx/snippets/cp-allowlist.conf`,

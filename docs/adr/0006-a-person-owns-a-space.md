@@ -11,8 +11,8 @@
   үүсээгүй — шинэ schema, шинэ role, шинэ GUC аль нь ч нэмэгдээгүй.
   Хэрэгжээгүй нь модулийн тал: нийлүүлэгчийн апп `Publish` дуудах — гэр рүү бичигдэх
   `person_items`, `publish_person_item` ба `PersonFeed` гэрээ;
-  [`PERSON_PLANE_PROMPTS.md`](../PERSON_PLANE_PROMPTS.md) §4, Үе P2a/P2b.
-- **Холбоотой:** [`WORKSPACE_NAMING_PROPOSAL.md`](../WORKSPACE_NAMING_PROPOSAL.md);
+  `PERSON_PLANE_PROMPTS.md` §4, Үе P2a/P2b.
+- **Холбоотой:** `WORKSPACE_NAMING_PROPOSAL.md`;
   [`adr/0001-domain-first.md`](0001-domain-first.md);
   [`adr/0005-two-planes-one-origin-each.md`](0005-two-planes-one-origin-each.md);
   `backend/internal/workspace/auth/tenants.go` (`FirstTenantFor`),
@@ -151,7 +151,7 @@ ADR 0001-ийн дүрэм:
 гэр нь сэлгүүрийн нэг мөр болно. Апп дэлгүүрийг иргэний нүүр болгох нь
 буруу — апп суулгах бол админы үйлдэл.
 
-Дараалал, өртөг, эрсдэлийг [`WORKSPACE_NAMING_PROPOSAL.md`](../WORKSPACE_NAMING_PROPOSAL.md)-д
+Дараалал, өртөг, эрсдэлийг `WORKSPACE_NAMING_PROPOSAL.md`-д
 бичсэн: нэршил §2, гэр §3.4, эрэлтийн тал §3.5, буулт §4, үе шатууд §5.
 
 ## Яагаад хувийн муж гурав дахь plane биш вэ
@@ -213,9 +213,9 @@ DB role-той байх ёстой мэт санагдана. Гурван ша�
 алдаа биш: дүрэм plane тоолдоггүй тул нэмэлт нэр нь хэрэгжихгүй байгаа
 хэдий ч зөв хэвээр, мөн ирээдүйд хэрэг болвол бэлэн байна.
 
-Дэлгэрэнгүйг [`WORKSPACE_NAMING_PROPOSAL.md`](../WORKSPACE_NAMING_PROPOSAL.md)
+Дэлгэрэнгүйг `WORKSPACE_NAMING_PROPOSAL.md`
 §4.9 (татгалзсан хувилбарыг §4.9.6), хэрэгжүүлэлтийг
-[`PERSON_PLANE_PROMPTS.md`](../PERSON_PLANE_PROMPTS.md)-д бичсэн.
+`PERSON_PLANE_PROMPTS.md`-д бичсэн.
 
 ## Энэ шийдвэр юу гэж хэлээгүй вэ
 
@@ -233,7 +233,7 @@ DB role-той байх ёстой мэт санагдана. Гурван ша�
   хүсэлт нь **нийлүүлэгчийн мужид** үүсч тэндээ амьдарна — ажил тэнд хийгдэж,
   audit тэднийх, SLA тэднийх. Гэрт очдог нь түүний **проекц**: төлөв, код,
   хугацаа, хариу. Баримт, нотолгоо, хувийн мэдээлэл нийлүүлэгч дээрээ үлдэнэ
-  ([`WORKSPACE_NAMING_PROPOSAL.md`](../WORKSPACE_NAMING_PROPOSAL.md) §3.4.8,
+  (`WORKSPACE_NAMING_PROPOSAL.md` §3.4.8,
   §4.9.4).
 - **«100 нийлүүлэгчээс сонгох нь шинэ дэд бүтэц шаардана» гэж хэлээгүй.**
   Үгсийн сан (`urtuu_request_codes`, ring) ба шугамын ялгаа (`line='service'`)

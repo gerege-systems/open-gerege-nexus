@@ -307,7 +307,7 @@ legacy redirect-ийг smoke test хийнэ. Allowlist-аас гаднах ха
 
 ## 9. Түүхэн баримт
 
-[CONTROL_PLANE_PLAN.md](CONTROL_PLANE_PLAN.md) нь хэрэгжүүлэх үеийн ажлын
-төлөвлөгөө бөгөөд хуучин `/cp/api` нэр, CP үе шатны тайлбар агуулж болно.
+Хэрэгжүүлэх үеийн ажлын төлөвлөгөөг устгасан: тэр нь хуучин `/cp/api` нэр, CP
+үе шатны тайлбар агуулдаг байсан бөгөөд аль нь ч өнөөдрийн үнэн биш.
 Одоогийн operational contract-д энэ файл, route golden file, migration test,
 frontend host test-ийг эх сурвалж болгоно.
