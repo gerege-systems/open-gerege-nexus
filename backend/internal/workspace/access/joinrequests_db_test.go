@@ -75,7 +75,7 @@ func asker(t *testing.T, pool *pgxpool.Pool) (userID, orgID, requestID string) {
 	// function makes rather than one this file invented.
 	feed := person.New(pool)
 	nexus.Provide[nexus.PersonFeed](person.AsPersonFeed(feed))
-	if err := feed.Ask(ctx, userID, slug, "Намайг оруулна уу"); err != nil {
+	if _, err := feed.Ask(ctx, userID, slug, "Намайг оруулна уу"); err != nil {
 		t.Fatal(err)
 	}
 	if err := pool.QueryRow(ctx,
