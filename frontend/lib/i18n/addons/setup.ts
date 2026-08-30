@@ -14,11 +14,13 @@ export const setup = {
   "setup.view.step_console": { mn: "Консол", en: "Console" },
 
   "setup.field.registration_number": { mn: "Регистрийн дугаар", en: "Registration number" },
-  "setup.field.person_registration_number": { mn: "Хүний регистрийн дугаар", en: "Person's registration number" },
   "setup.field.organisation_name": { mn: "Байгууллагын нэр", en: "Organisation name" },
   "setup.field.legal_name": { mn: "Албан ёсны нэр", en: "Legal name" },
   "setup.field.slug": { mn: "Богино нэр (URL)", en: "Slug (URL)" },
-  "setup.field.admin_name": { mn: "Админы нэр", en: "Administrator's name" },
+  "setup.hint.super_admin": {
+    mn: "Эхний бүртгэл нь Super Admin нэрээр автоматаар үүснэ. Энэ нь хүн биш — байгууллага үүсгэж, ажилчдаа урих хаалга. И-мэйл нь нууц үг сэргээх мессеж хүлээн авахад хэрэгтэй.",
+    en: "The first account is created as Super Admin. It is a door rather than a person: it creates the organisations and invites the people who will work here. The address is where a password reset is sent.",
+  },
   "setup.field.password_again": { mn: "Нууц үгээ давтах", en: "Repeat the password" },
   "setup.field.totp_code": { mn: "Authenticator-ийн код", en: "Code from the authenticator" },
 

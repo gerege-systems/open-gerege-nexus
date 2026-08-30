@@ -59,8 +59,6 @@ export default function SetupPage() {
   const [legalName, setLegalName] = useState("");
   const [slug, setSlug] = useState("");
 
-  const [adminRegNo, setAdminRegNo] = useState("");
-  const [adminName, setAdminName] = useState("");
   const [adminEmail, setAdminEmail] = useState("");
 
   const [password, setPassword] = useState("");
@@ -131,19 +129,6 @@ export default function SetupPage() {
     }
   }
 
-  async function lookupPerson() {
-    setError("");
-    setBusy(true);
-    try {
-      const found = await api.setupFindPerson(token, adminRegNo);
-      setAdminName(found.name);
-      setAdminEmail(found.email);
-    } catch (err: any) {
-      failed(err);
-    } finally {
-      setBusy(false);
-    }
-  }
 
   async function finish() {
     setError("");
@@ -156,7 +141,7 @@ export default function SetupPage() {
       await api.setupComplete(
         token,
         { name, slug, legal_name: legalName, registration_number: regNo },
-        { email: adminEmail, name: adminName },
+        { email: adminEmail },
         password,
       );
       setStep(5);
@@ -395,20 +380,7 @@ export default function SetupPage() {
             setStep(3);
           }}
         >
-          <label>
-            <span>{t("setup.field.person_registration_number")}</span>
-            <div className="setup-lookup">
-              <input value={adminRegNo} onChange={(e) => setAdminRegNo(e.target.value)} />
-              <button type="button" onClick={lookupPerson} disabled={busy || !status?.core || !adminRegNo}>
-                {busy ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
-                {t("setup.action.lookup")}
-              </button>
-            </div>
-          </label>
-          <label>
-            <span>{t("setup.field.admin_name")}</span>
-            <input value={adminName} onChange={(e) => setAdminName(e.target.value)} required />
-          </label>
+          <p className="setup-note">{t("setup.hint.super_admin")}</p>
           <label>
             <span>{t("base.field.email")}</span>
             <input type="email" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} required />
@@ -431,10 +403,12 @@ export default function SetupPage() {
               void finish();
               return;
             }
-            // Seeded from the administrator, not shared with them: on a first
-            // deployment it is the same person, and making them type the same
-            // address twice is how the two accounts end up one letter apart.
-            setOperatorName(operatorName || adminName);
+            // The address is seeded from the first account, not shared with
+            // it: the same person is behind both on a first deployment, and
+            // making them type the same address twice is how the two end up one
+            // letter apart. Only the address — the operator is a real person
+            // and the account above is called Super Admin, so seeding the name
+            // from it would put a role where a person belongs.
             setOperatorEmail(operatorEmail || adminEmail);
             setStep(4);
           }}
