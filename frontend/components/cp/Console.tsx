@@ -512,7 +512,7 @@ function SignIn({ onSignedIn }: { onSignedIn: (operator: Operator) => void }) {
   */
   return (
     <div className="gp-landing" id="top">
-      <header className="gp-nav">
+      <header className="gp-nav gp-nav--plain">
         <span className="gp-brand">
           <img src={brand.logoUrl} alt="" />
           <span>{brand.name}</span>
