@@ -388,6 +388,7 @@ services:
       # Энэ суулгацын хажууд ажиллаж байгаа үйлчилгээнүүдийн хаяг. Тохируулсан
       # нь л нүүр хуудсан дээр карт болж гарна — байхгүй нэг нь зурагдахгүй,
       # тиймээс консолгүй, агуулахгүй суулгац юу ч тайлбарлах шаардлагагүй.
+      SERVICE_URL_EID: ${SERVICE_URL_EID:-}
       SERVICE_URL_ADMIN: ${SERVICE_URL_ADMIN:-}
       SERVICE_URL_DWH: ${SERVICE_URL_DWH:-}
       SERVICE_URL_BACKUPS: ${SERVICE_URL_BACKUPS:-}

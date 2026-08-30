@@ -206,10 +206,15 @@ export const website = {
   "website.service.eyebrow": { mn: "ЭНЭ СУУЛГАЦ", en: "THIS DEPLOYMENT" },
   "website.service.title": { mn: "Платформын хажууд юу ажиллаж байна вэ", en: "What runs beside the platform" },
   "website.service.lede": {
-    mn: "Nexus бол нэг хаяг биш. Консол, дата агуулах, нөөцлөлт, хяналт, баримт бичиг тус бүр өөрийн хаягтай — доорх картуудаас шууд орно.",
-    en: "Nexus is not one hostname. The console, the warehouse, the backup store, the monitoring stack and the manual each answer on their own address — the cards below open them.",
+    mn: "Nexus бол нэг хаяг биш. Консол, дата агуулах, нөөцлөлт, хяналт, баримт бичиг тус бүр өөрийн хаягтай. Эхнийх нь бидний биш — иргэнийг таних үндэсний дэд бүтэц.",
+    en: "Nexus is not one hostname. The console, the warehouse, the backup store, the monitoring stack and the manual each answer on their own address. The first is not ours — it is the national identity infrastructure.",
   },
 
+  "website.service.eid_title": { mn: "eID Mongolia", en: "eID Mongolia" },
+  "website.service.eid_body": {
+    mn: "Иргэнийг таних үндэсний дэд бүтэц. Энэ платформ нууц үг хадгалахын оронд түүн рүү асууна — QR, регистр, эсвэл App2App.",
+    en: "The national identity infrastructure. Rather than keeping a password, this platform asks it — by QR, registration number or App2App.",
+  },
   "website.service.admin_title": { mn: "Операторын консол", en: "Operator console" },
   "website.service.admin_body": {
     mn: "Байгууллага үүсгэх, түдгэлзүүлэх, эрх олгох, audit унших. Хэрэглэгчийн бүртгэлээс тусдаа identity, тусдаа cookie.",
