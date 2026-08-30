@@ -173,7 +173,6 @@ POST /api/v1/setup/complete
 POST /api/v1/setup/operator
 POST /api/v1/setup/operator/confirm
 POST /api/v1/setup/organisation
-POST /api/v1/setup/person
 POST /api/v1/store/apps/{slug}/auto-update
 POST /api/v1/store/apps/{slug}/disable
 POST /api/v1/store/apps/{slug}/enable

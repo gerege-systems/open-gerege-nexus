@@ -71,3 +71,43 @@ func TestTheConsoleCannotBeOpenedWithoutAnAddress(t *testing.T) {
 		t.Errorf("the refusal does not name the setting that is missing: %s", rec.Body.String())
 	}
 }
+
+// The first account is the deployment's own door, not a citizen.
+//
+// The wizard used to look a person up in the Gerege Core directory and put
+// their name on it, which made a real person permanently answerable for an
+// account nobody signs in as after the first hour — and left them in the user
+// list as the one entry with no eID and no organisation but the first. The name
+// is now fixed and the lookup is gone; the address stays, because a password
+// reset has to reach somebody.
+func TestTheFirstAccountIsNamedAfterItsRoleNotAPerson(t *testing.T) {
+	if SuperAdminName != "Super Admin" {
+		t.Errorf("the first account is called %q", SuperAdminName)
+	}
+
+	// A caller cannot choose the name: the field is not on the request at all,
+	// so an old client sending one is ignored rather than obeyed.
+	var completion Completion
+	if _, ok := any(completion.Admin).(struct {
+		Email string `json:"email"`
+	}); !ok {
+		t.Errorf("the admin step accepts more than an address: %#v", completion.Admin)
+	}
+}
+
+// The directory lookup for a person is gone from the wizard. It is still
+// available to the console (internal/operator/tenants), where an operator is
+// asking about somebody real.
+func TestTheWizardNoLongerLooksPeopleUp(t *testing.T) {
+	r := routerWithToken("open-sesame")
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/setup/person",
+		strings.NewReader(`{"registration_number":"УБ12345678"}`))
+	req.Header.Set("X-Setup-Token", "open-sesame")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("the person lookup answered %d; it should not exist", rec.Code)
+	}
+}

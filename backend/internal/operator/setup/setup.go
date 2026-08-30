@@ -146,7 +146,6 @@ func (s *Service) Routes(r chi.Router) {
 		r.Group(func(r chi.Router) {
 			r.Use(s.requireToken)
 			r.Post("/organisation", s.handleFindOrganisation)
-			r.Post("/person", s.handleFindPerson)
 			// The console's first operator, and the code that proves its
 			// authenticator. Both before /complete, never after: completing
 			// disarms the token these two are gated by.
@@ -214,6 +213,20 @@ func (s *Service) handleStatus(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// SuperAdminName is what the deployment's first account is called.
+//
+// It is a name rather than a person, and that is the point. The first account
+// exists to open the door: it creates the organisations, invites the people who
+// will actually work here, and after that nobody signs in as it again. Asking
+// the directory for a citizen and putting their name on it made a real person
+// permanently answerable for an account that is really the deployment's own —
+// and left them sitting in the user list as the one entry with no eID and no
+// organisation but the first, which is how this was noticed.
+//
+// The address is still the operator's, because somebody has to receive the
+// password reset.
+const SuperAdminName = "Super Admin"
+
 // Completion is the wizard's last step.
 type Completion struct {
 	Organisation struct {
@@ -224,7 +237,6 @@ type Completion struct {
 	} `json:"organisation"`
 	Admin struct {
 		Email string `json:"email"`
-		Name  string `json:"name"`
 	} `json:"admin"`
 	Password string `json:"password"`
 }
@@ -242,7 +254,7 @@ func (s *Service) handleComplete(w http.ResponseWriter, r *http.Request) {
 		LegalName:          in.Organisation.LegalName,
 		RegistrationNumber: in.Organisation.RegistrationNumber,
 		AdminEmail:         in.Admin.Email,
-		AdminName:          in.Admin.Name,
+		AdminName:          SuperAdminName,
 		Password:           in.Password,
 	})
 	if errors.Is(err, tenants.ErrAlreadyProvisioned) {
@@ -399,31 +411,6 @@ func (s *Service) handleFindOrganisation(w http.ResponseWriter, r *http.Request)
 		"email":               org.Email,
 		"phone":               org.PhoneNo,
 		"address":             org.AddressDetail,
-	})
-}
-
-// handleFindPerson fills the administrator step from the directory.
-func (s *Service) handleFindPerson(w http.ResponseWriter, r *http.Request) {
-	var in struct {
-		RegistrationNumber string `json:"registration_number"`
-		CountryCode        string `json:"country_code"`
-	}
-	if err := httpx.DecodeLimited(r, &in, 1<<14); err != nil {
-		httpx.Error(w, http.StatusBadRequest, "the request could not be read")
-		return
-	}
-
-	person, err := s.core.FindPerson(r.Context(), in.RegistrationNumber, in.CountryCode)
-	if err != nil {
-		s.failLookup(w, err)
-		return
-	}
-	httpx.JSON(w, http.StatusOK, map[string]any{
-		"core_id":             person.ID,
-		"name":                person.FullName(),
-		"email":               person.Email,
-		"phone":               person.PhoneNo,
-		"registration_number": person.RegNo,
 	})
 }
 

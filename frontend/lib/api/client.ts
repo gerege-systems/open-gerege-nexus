@@ -144,14 +144,6 @@ export interface SetupOrganisation {
   address: string;
 }
 
-export interface SetupPerson {
-  core_id: number;
-  name: string;
-  email: string;
-  phone: string;
-  registration_number: string;
-}
-
 /**
  * The first-run wizard.
  *
@@ -166,13 +158,6 @@ export const coreApi = {
 
   setupFindOrganisation: (token: string, registrationNumber: string) =>
     request<SetupOrganisation>("/setup/organisation", {
-      method: "POST",
-      headers: setupHeaders(token),
-      body: JSON.stringify({ registration_number: registrationNumber }),
-    }),
-
-  setupFindPerson: (token: string, registrationNumber: string) =>
-    request<SetupPerson>("/setup/person", {
       method: "POST",
       headers: setupHeaders(token),
       body: JSON.stringify({ registration_number: registrationNumber }),
@@ -195,7 +180,7 @@ export const coreApi = {
   setupComplete: (
     token: string,
     organisation: { name: string; slug: string; legal_name: string; registration_number: string },
-    admin: { email: string; name: string },
+    admin: { email: string },
     password: string,
   ) =>
     request<{ tenant_id: string; slug: string }>("/setup/complete", {

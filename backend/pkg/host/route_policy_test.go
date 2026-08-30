@@ -61,13 +61,12 @@ var publicRoutes = []string{
 	// The first-run wizard. Nobody can hold a session on a deployment with no
 	// organisation, which is the only state in which any of these answer at
 	// all: /status reports the one bit somebody would learn by trying to sign
-	// in, and the three that act carry the setup token instead — 256 bits,
+	// in, and the ones that act carry the setup token instead — 256 bits,
 	// minted in memory at boot, written once to the log, dropped the moment an
 	// organisation exists. Unarmed, they are 404 rather than 401, so a stranger
 	// is not told there is a token to guess. See internal/operator/setup.
 	"/api/v1/setup/status",
 	"/api/v1/setup/organisation",
-	"/api/v1/setup/person",
 	// The console's first operator, on the same token and only while this
 	// deployment has none: see internal/operator/setup.
 	"/api/v1/setup/operator",
