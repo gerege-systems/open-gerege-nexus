@@ -5,16 +5,22 @@
  *
  * A person's own workspace, and the requests they made to other people's.
  *
- * Not a plane. The first design for this was one — internal/person, its own
- * database role, its own GUC, its own policy on the supplier's tables — because
- * the question looked like "how does a citizen read across a hundred
+ * Not a plane in the database. The first design for this was one — its own
+ * role, its own GUC, its own policy on the supplier's tables — because the
+ * question looked like "how does a citizen read across a hundred
  * organisations". Migration 00085 changed the question by giving every person a
  * workspace of their own, and a citizen acting inside one is an ordinary member
  * of an ordinary workspace: app.current_tenant is set, tenant_isolation
  * applies, gerege_nexus_tenant is the role. There is nothing to read across.
  *
- * So this is a subpackage of the workspace plane, and the whole of the read
- * side is the one statement below.
+ * It is still its own package, and planes_test.go holds it to that in both
+ * directions: it imports neither workspace nor operator, and neither imports
+ * it. A workspace query is written for somebody acting inside an organisation,
+ * and importing one here is how it comes to run for somebody who is in none.
+ * What this package needs from a session is one question — who is this token —
+ * and a question is a port, which pkg/host passes in.
+ *
+ * The whole of the read side is the one statement below.
  */
 
 package person

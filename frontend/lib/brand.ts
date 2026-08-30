@@ -74,7 +74,7 @@ export type Brand = {
    * sending them to a book about a different product.
    *
    * The default is the platform's own, built from the Markdown in this
-   * repository by `docs/site` and served from GitHub Pages.
+   * repository by `docs/mkdocs` and served from docs.nexus.gerege.mn.
    */
   docsUrl: string;
 };
@@ -90,7 +90,7 @@ export const DEFAULT_BRAND: Brand = {
   // one is separate artwork rather than the same file relabelled.
   iconUrl: "",
   maskableIconUrl: "",
-  docsUrl: "https://gerege-systems.github.io/open-gerege-nexus/",
+  docsUrl: "https://docs.nexus.gerege.mn/",
 };
 
 /**
