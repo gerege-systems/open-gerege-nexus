@@ -332,8 +332,8 @@ Signalez les vulnérabilités comme décrit dans [`SECURITY.md`](../SECURITY.md)
 | Document | Description |
 | --- | --- |
 | [Centre de documentation](README.md) | Index de tous les documents et traductions |
-| [Spécification d'architecture](ARCHITECTURE_SPECIFICATION.md) | Couches de la plateforme et décisions de conception |
-| [Guide de création de module](MODULE_AUTHORING_GUIDE.md) | Comment construire un nouveau module applicatif |
+| [Architecture](ARCHITECTURE.md) | Les deux plans, les trois schémas, l'isolation des données |
+| [Écrire un module](MODULES.md) | Le contrat `pkg/nexus`, et comment une application atteint un déploiement |
 | [Contribuer](../CONTRIBUTING.md) | Processus de contribution |
 | [Politique de sécurité](../SECURITY.md) | Signalement des vulnérabilités |
 | [Code de conduite](../CODE_OF_CONDUCT.md) | Règles de la communauté |

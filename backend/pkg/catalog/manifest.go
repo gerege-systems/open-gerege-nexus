@@ -7,11 +7,10 @@
 // the third-party publisher who never writes Go at all and only needs the JSON
 // shape these types define.
 //
-// `docs/ECOSYSTEM_GIT_STRATEGY.md` §2.4 names this one of three contracts that
-// outlive the core's release cycle. It is versioned with this module today and
-// may become a repository of its own once more than one team publishes against
-// it; keeping it in `pkg/` rather than `internal/` is what makes that a move
-// rather than a rewrite.
+// This is one of the contracts that outlive the core's release cycle. It is
+// versioned with this module today and may become a repository of its own once
+// more than one team publishes against it; keeping it in `pkg/` rather than
+// `internal/` is what makes that a move rather than a rewrite.
 //
 // What is here is the schema and its validation. Anything that knows where a
 // catalogue lives on a particular deployment — the bundled file, the disk

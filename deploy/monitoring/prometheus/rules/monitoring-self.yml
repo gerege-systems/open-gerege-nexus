@@ -3,7 +3,7 @@
 # Every other rule in this directory is silent when the thing that evaluates it
 # is broken. These are the ones that catch the failure mode where the platform
 # looks healthy because nothing is looking at it any more — and they are also
-# the reason docs/MONITORING.md insists on an Uptime Kuma outside this host:
+# the reason docs/OPERATIONS.md insists on an Uptime Kuma outside this host:
 # nothing in this file survives the server going down.
 
 groups:

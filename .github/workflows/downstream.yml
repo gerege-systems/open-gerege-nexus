@@ -23,7 +23,7 @@
 # merge until a repository the platform does not own had been updated and
 # pushed. On 2026-08-27 that arrived as designed. `pkg/nexus`'s `tenant*` names
 # became `workspace*` — a deliberate major-version rename, written down in
-# docs/RELEASING.md §1 with the table of what a caller changes — and the job
+# docs/MODULES.md with the table of what a caller changes — and the job
 # reported it as a failure, because a job that compiles a pinned downstream has
 # no way to be told that a break is the point.
 #

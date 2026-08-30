@@ -39,7 +39,7 @@ var ErrPDFSigningUnavailable = errors.New("nexus: this signing rail cannot sign 
 // checked before a signature is recorded, about what a signature covers — and
 // the day they disagreed would be a day with legal consequences.
 //
-// See docs/adr/0002-one-signing-rail.md for the finding this exists to settle:
+// See docs/SIGNING.md for the finding this exists to settle:
 // one product held two different things under the word "signature", and only
 // one of them was a signature over a document.
 //

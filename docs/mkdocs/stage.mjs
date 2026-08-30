@@ -27,8 +27,8 @@ const out = path.join(here, "build");
 const docsDir = path.join(out, "docs");
 
 // A page's source path → the slug it is published under. Used to rewrite the
-// links between documents: `docs/MONITORING.md` in the source becomes
-// `monitoring.md` here, and a link that still points at the old path would 404
+// links between documents: `docs/OPERATIONS.md` in the source becomes
+// `operations.md` here, and a link that still points at the old path would 404
 // on a site whose files have been renamed.
 const bySource = new Map(PAGES.map((p) => [p.src, p]));
 
@@ -52,7 +52,6 @@ const TRANSLATION_OF = new Map(Object.entries({
   "docs/README_FR.md":                     ["index", "fr"],
   "docs/README_RU.md":                     ["index", "ru"],
   "docs/README_ES.md":                     ["index", "es"],
-  "docs/ARCHITECTURE_SPECIFICATION_EN.md": ["architecture", "en"],
   "docs/CONTRIBUTING_EN.md":               ["contributing", "en"],
   "docs/SECURITY_EN.md":                   ["security", "en"],
   "docs/CODE_OF_CONDUCT_EN.md":            ["code-of-conduct", "en"],

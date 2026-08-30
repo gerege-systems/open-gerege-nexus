@@ -276,8 +276,8 @@ export const cp = {
     en: "Fetches the latest app catalogue from the registry and updates the deployment.",
   },
   "cp.message.no_monitoring": {
-    mn: "Энэ суулгацад PROMETHEUS_URL тохируулаагүй тул хэмжүүрийн хэсэг хоосон байна. docs/CONTROL_PLANE.md §4з-г үз.",
-    en: "PROMETHEUS_URL is not set on this deployment, so the metric panels are empty. See docs/CONTROL_PLANE.md §4з.",
+    mn: "Энэ суулгацад PROMETHEUS_URL тохируулаагүй тул хэмжүүрийн хэсэг хоосон байна. docs/OPERATIONS.md-г үз.",
+    en: "PROMETHEUS_URL is not set on this deployment, so the metric panels are empty. See docs/OPERATIONS.md.",
   },
   "cp.message.no_alerts": { mn: "Идэвхтэй дохио алга.", en: "Nothing is alerting." },
   "cp.message.no_backups": {

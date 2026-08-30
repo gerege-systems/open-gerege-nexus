@@ -20,7 +20,7 @@
 #   docker exec -it gerege_nexus_glitchtip_web ./manage.py createsuperuser
 #
 # Required environment: GLITCHTIP_DB_PASSWORD, GLITCHTIP_SECRET_KEY. See
-# deploy/.env.monitoring.example and docs/MONITORING.md §12.
+# deploy/.env.monitoring.example and docs/OPERATIONS.md.
 
 name: gerege-nexus-glitchtip
 

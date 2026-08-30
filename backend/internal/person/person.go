@@ -14,7 +14,7 @@
  * applies, gerege_nexus_tenant is the role. There is nothing to read across.
  *
  * So this is a subpackage of the workspace plane, and the whole of the read
- * side is the one statement below. See docs/WORKSPACE_NAMING_PROPOSAL.md §4.9.
+ * side is the one statement below.
  */
 
 package person

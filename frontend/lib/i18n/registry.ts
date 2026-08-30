@@ -12,9 +12,9 @@ import type { Locale } from "../locale";
  * The dictionary used to be one `as const` object built in index.tsx out of
  * twenty-five imports and twenty-five spreads, with five overlay files of about
  * 1381 lines each beside it. Adding an app meant editing all of them, which is
- * why they sit near the top of docs/CORE_BOUNDARY_PLAN.md §2.1: the locale files
- * were changed by 21 of the last app commits, and the file that assembles them
- * by nearly as many. Not because anybody wanted a shared dictionary — because
+ * why they were among the files app work dragged along with it: the locale
+ * files were changed by 21 of the last app commits, and the file that assembles
+ * them by nearly as many. Not because anybody wanted a shared dictionary — because
  * there was nowhere else for an app's words to go.
  *
  * Now there is. An app hands its own strings over at import time:

@@ -12,7 +12,7 @@
 // the deployment rather than on anybody's behalf inside it. The other plane,
 // internal/workspace, is the opposite of that, and neither imports the other.
 //
-// The distinction the design rests on (docs/CONTROL_PLANE.md §1) is the one
+// The distinction the design rests on (docs/OPERATIONS.md) is the one
 // every multi-tenant platform eventually draws: the data plane is where
 // organisations do their work, the control plane is where the platform is
 // operated. They share a binary here, because a second Go process would double

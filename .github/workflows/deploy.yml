@@ -235,7 +235,7 @@ jobs:
           CONSOLE_ORIGIN: ${{ vars.CONSOLE_ORIGIN }}
           # The operator console. Empty means this deployment has none: the
           # /cp routes answer 404 on every hostname, which is the safe reading
-          # of a variable nobody set (docs/CONTROL_PLANE.md §2).
+          # of a variable nobody set (docs/OPERATIONS.md).
           CONTROL_PLANE_HOST: ${{ vars.CONTROL_PLANE_HOST }}
           CONTROL_PLANE_ALLOWED_CIDRS: ${{ secrets.CONTROL_PLANE_ALLOWED_CIDRS }}
           # What the console's front page reads. The monitoring stack listens

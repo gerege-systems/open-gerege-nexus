@@ -26,8 +26,7 @@ import (
 // is to go — TestCountTodaysCrossPlaneImports prints the number Үе C has to
 // bring to zero.
 //
-// One rule, from docs/TWO_PLANES_PROPOSAL.md §2.3 and §2.8, and it does not
-// count planes:
+// One rule, and it does not count planes:
 //
 //	a plane must not import another plane
 //	internal/kernel must import none of them; all may import it, and pkg/…
@@ -185,7 +184,7 @@ func TestOperatorDoesNotImportWorkspace(t *testing.T) {
 // What the person plane actually needs is an answer to one question — who is
 // this token — and a question is a port. It declares the interface; pkg/host,
 // the only place allowed to name more than one plane, passes the implementation
-// in. docs/PERSON_PLANE_PROMPTS.md P0 is where that port is written.
+// in.
 func TestPersonDoesNotImportAnotherPlane(t *testing.T) {
 	assertNoImportsAcross(t, "person", "workspace",
 		"The person plane answers for one human across every organisation; a workspace "+

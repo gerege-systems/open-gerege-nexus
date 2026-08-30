@@ -373,7 +373,7 @@ func (ai *AppInstaller) grantAppPermissions(ctx context.Context, tx pgx.Tx, tena
 // contract — it cannot express "apply for a service", it cannot be checked, and
 // it silently decides who may do something for every module that has not heard
 // of it. A permission with no DefaultRoles will reach no default role in v2;
-// see docs/RELEASING.md. Until then a module that says nothing keeps exactly
+// see docs/MODULES.md. Until then a module that says nothing keeps exactly
 // the grants it had.
 func defaultRolesFor(perm nexus.PermissionDefinition) []string {
 	if len(perm.DefaultRoles) > 0 {

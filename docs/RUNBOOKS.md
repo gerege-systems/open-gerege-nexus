@@ -4,7 +4,7 @@ Prometheus-ийн дохио бүрд: **юу болсон**, **эхний 5 м�
 **яаж засах**, **хэзээ өргөжүүлэх**.
 
 [Баримт бичгийн төв рүү буцах](README.md) ·
-[Мониторингийн заавар](MONITORING.md)
+[Ажиллагаа](OPERATIONS.md)
 
 Дүрмүүд нь `deploy/monitoring/prometheus/rules/` дотор. Дохио бүрийн
 `runbook` annotation нь энэ файлын харгалзах хэсэг рүү заана.
@@ -394,7 +394,8 @@ docker logs --tail 100 gerege_nexus_postgres
 ```
 
 `/ready` нь `{"status":"ready"}` гэж хариулж байвал → Postgres хэвийн,
-асуудал нь exporter-ийн нууц үг. `MONITORING.md` §2.2-ыг дахин хий.
+асуудал нь exporter-ийн нууц үг. `backend/db/migrations/00044_monitoring_role.sql`
+доторх GRANT-ыг дахин ажиллуул.
 
 **Postgres үнэхээр унасан бол.**
 
@@ -580,7 +581,7 @@ sudo nginx -t && sudo systemctl reload nginx
 гэсэн үг. "Хэмжилт байхгүй" нь dashboard дээр "бүх зүйл хэвийн"-тэй яг
 адилхан харагддаг.
 
-**Засах.** [`MONITORING.md` §8](MONITORING.md#8-tls-ийн-хугацаа) доторх cron
+**Засах.** [`OPERATIONS.md`](OPERATIONS.md#гараар-хийгддэг-зүйлс) доторх cron
 ажлыг дахин суулга, эсвэл гараар ажиллуулж алдааг нь хар:
 
 ```bash
@@ -727,7 +728,8 @@ docker compose -f deploy/docker-compose.monitoring.yml \
 1. Скрипт хостод байгаа эсэх: `ls -l /usr/local/bin/nexus-backup.sh`
 2. Cron бичигдсэн эсэх: `cat /etc/cron.d/nexus-backup`
 3. textfile хавтас байгаа эсэх: `ls -ld /var/lib/node_exporter`
-4. Байхгүй бол `docs/MONITORING.md` §8а-гийн блокийг буулгаад ажиллуул.
+4. Байхгүй бол [`OPERATIONS.md`](OPERATIONS.md#нөөцлөлт)-ийн нөөцлөлтийн
+   хэсгийг дагаж суулга.
 
 Хамгийн сүүлд гарсан: 2026-08-30, nexus.gerege.mn — гурвуулаа байхгүй байсан.
 
@@ -761,7 +763,7 @@ docker compose -f deploy/docker-compose.monitoring.yml \
 
 Тохируулаагүй суулгац дээр ч энэ дуугарна, зориудаар: хуулбар өөр газар
 байхгүй гэдэг нь чимээгүй өнгөрөх ёсгүй баримт. Тохируулах бол
-`docs/MONITORING.md` §8б.
+`deploy/.env.backups.example`.
 
 ## Операторын консол
 
