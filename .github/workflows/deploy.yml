@@ -173,15 +173,58 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       # Fork clones have no deployment secrets; skip instead of failing the run.
+      #
+      # Everything past this point writes the server's .env from scratch, and a
+      # secret that is not configured is written as an empty line rather than
+      # left out. The platform then starts with it: an empty POSTGRES_PASSWORD
+      # is a database that will not open, an empty INTEGRATION_ENCRYPTION_KEY is
+      # worse than that. Nothing in the rollout notices — the containers come
+      # up, the health check passes on a fresh process, and the failure is
+      # whatever asks for the missing value first.
+      #
+      # This has already happened once in a smaller way: five SERVICE_URL_*
+      # values were added to the server by hand, erased by the next rollout, and
+      # written back as empty lines. Nobody was paged; the cards simply stopped
+      # being drawn.
+      #
+      # So the values that cannot be empty are checked here, before the first
+      # byte reaches the server. Only emptiness is tested and only names are
+      # printed — a guard that echoes a secret to prove it is set has published
+      # it to every reader of the run log.
       - name: Check deployment secrets
         id: guard
+        env:
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          SSO_DEFAULT_CLIENT_SECRET: ${{ secrets.SSO_DEFAULT_CLIENT_SECRET }}
+          INTEGRATION_ENCRYPTION_KEY: ${{ secrets.INTEGRATION_ENCRYPTION_KEY }}
+          EID_RP_UUID: ${{ secrets.EID_RP_UUID }}
+          EID_RP_SECRET: ${{ secrets.EID_RP_SECRET }}
+          GEREGE_CORE_TOKEN: ${{ secrets.GEREGE_CORE_TOKEN }}
+          PUBLIC_ORIGIN: ${{ secrets.PUBLIC_ORIGIN }}
         run: |
           if [ -z "${{ secrets.DEPLOY_SSH_KEY }}" ]; then
             echo "::warning::DEPLOY_SSH_KEY is not configured — skipping rollout."
             echo "ready=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "ready=true" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+
+          # Optional settings are deliberately absent from this list. A
+          # deployment with no assistant, no Google sign-in and no signing
+          # certificate is a deployment, and failing its rollout over a value it
+          # was never meant to have would teach everybody to ignore this step.
+          missing=""
+          for name in POSTGRES_PASSWORD SSO_DEFAULT_CLIENT_SECRET \
+                      INTEGRATION_ENCRYPTION_KEY EID_RP_UUID EID_RP_SECRET \
+                      GEREGE_CORE_TOKEN PUBLIC_ORIGIN; do
+            [ -n "${!name}" ] || missing="$missing $name"
+          done
+
+          if [ -n "$missing" ]; then
+            echo "::error::These deployment secrets are empty and would be written to the server as blank lines:$missing"
+            exit 1
+          fi
+
+          echo "ready=true" >> "$GITHUB_OUTPUT"
 
       - name: Resolve image tag
         id: tag
