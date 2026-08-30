@@ -19,7 +19,10 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// What 00106 did, asserted from the role the application actually uses.
+// What 00106 did — `organisations_are_read_across`,
+// `an_organisation_is_changed_by_its_own` and
+// `the_console_sees_every_organisation` — asserted from the role the
+// application actually uses.
 //
 // Every check below runs after SET LOCAL ROLE gerege_nexus_tenant, because a
 // test that stays the login role proves nothing about a policy: the login role
