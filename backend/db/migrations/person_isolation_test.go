@@ -23,7 +23,8 @@ import (
 // deployment, every e-mail address, and every eID or SSO link. The application
 // filter was the only thing between a forgotten WHERE and that list.
 //
-// The rule is "me, or somebody I work with", and the second half is inherited
+// The policy is `person_isolation`. The rule is "me, or somebody I work with",
+// and the second half is inherited
 // rather than restated: the EXISTS reads workspace.memberships, which is itself
 // under row-level security, so it can only see the memberships of the
 // organisations the caller is acting in.
@@ -235,6 +236,7 @@ func TestTheTenantRoleCannotReachTheSigningKey(t *testing.T) {
 
 // The console still reads the two identity tables.
 //
+// `console_reads_sso_identities` and `console_reads_eid_identities`:
 // 00099 and 00100 granted gerege_nexus_operator SELECT on them, and the
 // migration above turns row-level security on. A grant with no policy behind it
 // is a screen that answers "nobody is verified" with no error anywhere: the
@@ -286,5 +288,73 @@ func TestTheConsoleStillReadsTheIdentityTables(t *testing.T) {
 		if n != 1 {
 			t.Errorf("the console reads %d rows from %s, want 1", n, table)
 		}
+	}
+}
+
+// The console still works with people: reading them, inviting one, and
+// unlocking an account that locked itself out.
+//
+// Three policies (`console_reads_people`, `console_invites_people`,
+// `console_unlocks_people`) restate three grants 00049 gave the operator role,
+// because turning row-level security on above closed the table to a role with
+// no policy however many grants it holds. What may be *written* is still
+// decided by 00049's column grants — UPDATE reaches locked_until and
+// failed_login_attempts and nothing else — and that is asserted here too, so
+// the policy cannot quietly become the wider permission it looks like.
+func TestTheConsoleStillWorksWithPeople(t *testing.T) {
+	pool := personPool(t)
+	ctx := context.Background()
+	tx, err := pool.Begin(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	stamp := time.Now().UnixNano()
+	var locked string
+	if err := tx.QueryRow(ctx,
+		`INSERT INTO registry.users (email, password_hash, name, locked_until)
+		 VALUES ($1, 'x', 'Locked out', NOW() + INTERVAL '1 hour') RETURNING id::text`,
+		fmt.Sprintf("locked-%d@isolation.test", stamp)).Scan(&locked); err != nil {
+		t.Fatalf("set up: %v", err)
+	}
+
+	if _, err := tx.Exec(ctx, `SET LOCAL ROLE gerege_nexus_operator`); err != nil {
+		t.Fatalf("become the operator role: %v", err)
+	}
+
+	// Reads: the support screen.
+	var seen int
+	if err := tx.QueryRow(ctx,
+		`SELECT count(*) FROM registry.users WHERE id = $1::uuid`, locked).Scan(&seen); err != nil {
+		t.Fatalf("the console cannot read a person: %v", err)
+	}
+	if seen != 1 {
+		t.Error("the console reads no people; the invite and support screens are blank")
+	}
+
+	// Invites: the first administrator of a new organisation.
+	if _, err := tx.Exec(ctx,
+		`INSERT INTO registry.users (email, password_hash, name) VALUES ($1, 'x', 'Invited')`,
+		fmt.Sprintf("invited-%d@isolation.test", stamp)); err != nil {
+		t.Errorf("the console cannot invite anybody: %v", err)
+	}
+
+	// Unlocks: the reason the console has UPDATE on this table at all.
+	tag, err := tx.Exec(ctx,
+		`UPDATE registry.users SET locked_until = NULL, failed_login_attempts = 0 WHERE id = $1::uuid`, locked)
+	if err != nil {
+		t.Fatalf("the console cannot unlock an account: %v", err)
+	}
+	if tag.RowsAffected() != 1 {
+		t.Errorf("the console unlocked %d accounts, want 1", tag.RowsAffected())
+	}
+
+	// And no further. The policy admits the row; the column grants decide what
+	// of it may be written, and a password is not among them.
+	if _, err := tx.Exec(ctx,
+		`UPDATE registry.users SET password_hash = 'chosen by an operator' WHERE id = $1::uuid`,
+		locked); err == nil {
+		t.Error("the console can set somebody's password; 00049 gave it two columns and this is not one")
 	}
 }

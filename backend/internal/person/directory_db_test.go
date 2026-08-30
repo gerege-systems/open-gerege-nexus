@@ -116,9 +116,9 @@ func TestASuspendedOrganisationIsNotOffered(t *testing.T) {
 
 // One organisation cannot publish in another's name.
 //
-// registry has no row-level security on most of its tables, so this one says
-// what would otherwise be missing: the policy reads wide and writes narrow, and
-// the narrow half is what stops a session claiming somebody else's services.
+// The policy is `directory_is_public_but_owned` (00090): it reads wide and
+// writes narrow, and the narrow half is what stops a session claiming somebody
+// else's services.
 func TestAnOrganisationCannotPublishForAnother(t *testing.T) {
 	pool := openPool(t)
 	ctx := context.Background()
