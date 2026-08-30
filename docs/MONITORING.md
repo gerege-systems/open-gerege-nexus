@@ -466,6 +466,16 @@ sudo sh -c 'echo "15 3 * * * root . /etc/default/nexus-backup && /usr/local/bin/
 байх ба хоёр цагийн дараа `NexusBackupNotLeavingTheHost` дуугарна: хуулбар өөр
 газар байхгүй гэдэг нь чимээгүй өнгөрөх ёсгүй баримт.
 
+Домэйны үндэс дээр тайлбарын хуудас байна
+(`deploy/nginx/backups-landing/index.html`). S3-ийн клиент хүсэлт бүрээ гарын
+үсэг зурдаг, браузер зурдаггүй — vhost нь `Authorization` толгойгүй `GET /`-д
+хуудсыг, бусад бүхэнд MinIO-г өгнө. Хуудсыг байрлуулах:
+
+```bash
+sudo mkdir -p /var/www/backups
+sudo cp deploy/nginx/backups-landing/index.html /var/www/backups/index.html
+```
+
 ### Сэргээх
 
 Нөөцлөлтийг сэргээж үзээгүй бол тэр нь нөөцлөлт биш, зөвхөн итгэл найдвар.
