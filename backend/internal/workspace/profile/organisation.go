@@ -67,13 +67,27 @@ type TenantProfile struct {
 	// office is a department, not this.
 	ParentTenantID string `json:"parent_tenant_id,omitempty"`
 	ParentName     string `json:"parent_name,omitempty"`
+	// How somebody who is not a member gets in: "on_request" (they ask, an
+	// administrator answers) or "open" (they join at the moment of asking).
+	// Migration 00104. It sits on the organisation rather than in the
+	// platform's settings because it is this organisation's decision and two
+	// organisations on one deployment may answer differently.
+	JoinPolicy string `json:"join_policy"`
 }
+
+// The two answers an organisation can give. Named here as well as in the
+// database's CHECK because a handler that refuses early says which values are
+// allowed, and a column constraint reached through a 500 says nothing.
+const (
+	JoinOnRequest = "on_request"
+	JoinOpen      = "open"
+)
 
 const tenantProfileColumns = `SELECT t.id::text, t.slug, t.name,
 	p.legal_name, p.registration_number, p.tax_number, p.country_code,
 	p.province, p.district, p.khoroo, p.address_line, p.postal_code,
 	p.phone, p.email, p.website, p.logo_url, p.timezone, p.locale, p.currency,
-	COALESCE(p.parent_tenant_id::text, ''), COALESCE(parent.name, '')
+	COALESCE(p.parent_tenant_id::text, ''), COALESCE(parent.name, ''), t.join_policy
 	FROM registry.tenants t
 	JOIN workspace.tenant_profiles p ON p.tenant_id = t.id
 	LEFT JOIN registry.tenants parent ON parent.id = p.parent_tenant_id
@@ -93,7 +107,7 @@ func (h *Handlers) HandleGetTenantProfile(w http.ResponseWriter, r *http.Request
 		&o.TenantID, &o.Slug, &o.Name, &o.LegalName, &o.RegistrationNumber, &o.TaxNumber,
 		&o.CountryCode, &o.Province, &o.District, &o.Khoroo, &o.AddressLine, &o.PostalCode,
 		&o.Phone, &o.Email, &o.Website, &o.LogoURL, &o.Timezone, &o.Locale, &o.Currency,
-		&o.ParentTenantID, &o.ParentName)
+		&o.ParentTenantID, &o.ParentName, &o.JoinPolicy)
 	if err != nil {
 		// The profile row is created with the tenant and by the migration, so
 		// its absence is a broken invariant rather than a missing page.
@@ -136,6 +150,7 @@ func (h *Handlers) HandleUpdateTenantProfile(w http.ResponseWriter, r *http.Requ
 		Locale             *string `json:"locale"`
 		Currency           *string `json:"currency"`
 		ParentTenantID     *string `json:"parent_tenant_id"`
+		JoinPolicy         *string `json:"join_policy"`
 	}
 	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<16)).Decode(&body); err != nil {
 		httpx.Error(w, http.StatusBadRequest, "malformed request body")
@@ -174,6 +189,24 @@ func (h *Handlers) HandleUpdateTenantProfile(w http.ResponseWriter, r *http.Requ
 		if _, err := tx.Exec(r.Context(),
 			`UPDATE registry.tenants SET name = $1 WHERE id = $2`, strings.TrimSpace(*body.Name), tenantID); err != nil {
 			slog.Error("tenant: could not rename the organisation", "error", err, "tenant_id", tenantID)
+			httpx.Error(w, http.StatusInternalServerError, "could not save the organisation")
+			return
+		}
+	}
+
+	// Refused here rather than left to the column's CHECK: a value this
+	// endpoint does not know is somebody's typo or an older client, and both
+	// deserve a sentence naming what is allowed instead of a 500 carrying a
+	// constraint name.
+	if body.JoinPolicy != nil {
+		policy := strings.TrimSpace(*body.JoinPolicy)
+		if policy != JoinOnRequest && policy != JoinOpen {
+			httpx.Error(w, http.StatusBadRequest, "join_policy must be on_request or open")
+			return
+		}
+		if _, err := tx.Exec(r.Context(),
+			`UPDATE registry.tenants SET join_policy = $1 WHERE id = $2`, policy, tenantID); err != nil {
+			slog.Error("tenant: could not set the join policy", "error", err, "tenant_id", tenantID)
 			httpx.Error(w, http.StatusInternalServerError, "could not save the organisation")
 			return
 		}

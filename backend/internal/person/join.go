@@ -49,35 +49,59 @@ var ErrNotAsked = errors.New("no organisation answers to that name")
 // crossing and is deliberately narrow about it. Everything this function adds
 // is the part that is not a database rule: turning the outcome into something
 // the person can read.
-func (s *Store) Ask(ctx context.Context, userID, slug, message string) error {
+func (s *Store) Ask(ctx context.Context, userID, slug, message string) (Outcome, error) {
 	slug = strings.ToLower(strings.TrimSpace(slug))
 	if slug == "" {
-		return ErrNotAsked
+		return Outcome{}, ErrNotAsked
 	}
 
 	var requestID, tenantID, tenantName string
+	var joined bool
 	err := s.db.QueryRow(ctx,
-		`SELECT request_id::text, workspace_id::text, workspace_name
+		`SELECT request_id::text, workspace_id::text, workspace_name, joined
 		   FROM registry.request_to_join($1::uuid, $2::text, $3::text)`,
-		userID, slug, message).Scan(&requestID, &tenantID, &tenantName)
+		userID, slug, message).Scan(&requestID, &tenantID, &tenantName, &joined)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return ErrNotAsked
+			return Outcome{}, ErrNotAsked
 		}
-		return fmt.Errorf("ask %q to let this person in: %w", slug, err)
+		return Outcome{}, fmt.Errorf("ask %q to let this person in: %w", slug, err)
+	}
+
+	// The status the person's own copy carries is the one the organisation's
+	// row already has. An open organisation decided at the moment of asking —
+	// by its policy rather than by a person — and a projection that said
+	// PENDING there would be a screen telling somebody to wait for an answer
+	// they have already been given.
+	status := StatusPending
+	if joined {
+		status = StatusAccepted
 	}
 
 	// The person's own copy. Published rather than read back, because the row
 	// itself is in a workspace this session cannot see — which is the whole
 	// reason the projection exists.
-	return s.PublishTo(ctx, userID, nexus.PersonItem{
+	if err := s.PublishTo(ctx, userID, nexus.PersonItem{
 		SourceApp:           CoreApp,
 		SourceRef:           requestID,
 		ProviderWorkspaceID: tenantID,
 		Code:                JoinRequestCode,
-		Status:              StatusPending,
+		Status:              status,
 		Answer:              "",
-	})
+	}); err != nil {
+		return Outcome{}, err
+	}
+	return Outcome{Joined: joined, WorkspaceID: tenantID, WorkspaceName: tenantName}, nil
+}
+
+// Outcome is what happened, because two things can: an organisation that
+// answers requests took one, or an open organisation let the person straight
+// in. The screen says something different in each case and the workspace list
+// only needs reloading in the second, so the caller is told which.
+type Outcome struct {
+	Joined        bool
+	WorkspaceID   string
+	WorkspaceName string
 }
 
 // The three states a join request is in, named once.

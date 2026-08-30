@@ -176,6 +176,11 @@ export const auth = {
   // Байгууллагад орох хүсэлт. Иргэн өөрөө эхлүүлнэ — 00089 хүртэл орох ганц
   // зам нь урилга байсан.
   "me.view.ask_title": { mn: "Байгууллагад нэгдэх", en: "Join an organisation" },
+  "me.message.joined": {
+    mn: "{name}-д нэгдлээ.",
+    en: "You are now a member of {name}.",
+  },
+  "me.action.open_workspace": { mn: "Тийш нь орох", en: "Go there" },
   "me.view.ask_subtitle": {
     mn: "Байгууллагын нэрийг (хаяган дахь богино нэр) бичээд хүсэлт илгээнэ. Тэдний админ хариулна.",
     en: "Give the organisation's short name — the one in its address — and ask. Their administrator answers.",

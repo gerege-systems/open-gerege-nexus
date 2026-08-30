@@ -42,6 +42,7 @@ export const core = {
   // otherwise, and a person may still choose their own language over them.
   "core.group.defaults": { mn: "Үндсэн тохиргоо", en: "Defaults" },
   "core.group.affiliation": { mn: "Харьяалал", en: "Affiliation" },
+  "core.group.joining": { mn: "Хаалга", en: "The door" },
 
   "core.field.name": { mn: "Дэлгэцэнд харагдах нэр", en: "Display name" },
   "core.field.legal_name": { mn: "Албан ёсны нэр", en: "Legal name" },
@@ -61,6 +62,14 @@ export const core = {
   "core.field.parent": { mn: "Харьяалагдах нэгж", en: "Reports to" },
   "core.field.parent_organisation": { mn: "Толгой байгууллага", en: "Parent organisation" },
   "core.state.independent": { mn: "Бие даасан", en: "Independent" },
+  "core.state.join_on_request": {
+    mn: "Хүсэлтээр — админ шийднэ",
+    en: "On request — an administrator decides",
+  },
+  "core.state.join_open": {
+    mn: "Нээлттэй — шууд нэгдэнэ",
+    en: "Open — they join at once",
+  },
   "core.field.manager": { mn: "Хариуцсан ажилтан", en: "Manager" },
   "core.field.people_count": { mn: "{count} ажилтан", en: "{count} people" },
   "core.field.job_title": { mn: "Албан тушаал", en: "Job title" },
@@ -95,6 +104,16 @@ export const core = {
   "core.message.saved": { mn: "Байгууллагын мэдээлэл хадгалагдлаа", en: "The organisation's details were saved" },
   // Says what this is and, just as importantly, what it is not: recording a
   // parent grants nobody anything.
+  "core.field.join_policy": { mn: "Хэн орж болох вэ", en: "Who may come in" },
+  "core.message.join_policy_hint": {
+    mn: "Гишүүн бус хүн байгууллагын богино нэрээр нэгдэхийг хүсэхэд юу болохыг заана.",
+    en: "What happens when somebody who is not a member asks to join by this organisation's short name.",
+  },
+  "core.message.join_open_note": {
+    mn: "Богино нэрийг мэдсэн хэн ч гишүүн болно. Шинэ гишүүн платформын анхдагч «user» ролийг авдаг тул суусан аппуудын уншиж болох мэдээллийг шууд харна — хүсэлтийг зөвшөөрсөнтэй ижил.",
+    en: "Anybody who knows the short name becomes a member. A new member receives the platform's default «user» role, so they can read what the installed apps allow — exactly as an approved request would.",
+  },
+
   "core.message.parent_hint": {
     mn: "Салбар, нэгжийг Хэлтэс, нэгж хэсэгт бүртгэнэ. Энд зөвхөн тусдаа хуулийн этгээд болох толгой байгууллагаа заана — өөрийн ажилладаг байгууллагуудаас сонгоно. Энэ нь мэдээллийн хандалтыг өөрчлөхгүй.",
     en: "Branches and offices are departments. This is for a parent that is a separate legal entity, chosen from the organisations you work in. Recording it changes nothing about who can see what.",

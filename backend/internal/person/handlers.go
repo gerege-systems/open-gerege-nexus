@@ -79,9 +79,20 @@ func (s *Store) HandleAsk(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	switch err := s.Ask(r.Context(), claims.UserID, body.Slug, body.Message); {
+	outcome, err := s.Ask(r.Context(), claims.UserID, body.Slug, body.Message)
+	switch {
 	case err == nil:
-		httpx.JSON(w, http.StatusOK, map[string]any{"ok": true})
+		// `joined` rather than a second endpoint: the person pressed one
+		// button and the organisation's policy decided what that button did.
+		// The screen reads this to know whether to say "asked" or "you are in"
+		// — and, in the second case, to reload a workspace list that just
+		// gained an entry.
+		httpx.JSON(w, http.StatusOK, map[string]any{
+			"ok":             true,
+			"joined":         outcome.Joined,
+			"workspace_id":   outcome.WorkspaceID,
+			"workspace_name": outcome.WorkspaceName,
+		})
 	case errors.Is(err, ErrNotAsked):
 		httpx.Error(w, http.StatusNotFound, "no organisation answers to that name")
 	default:

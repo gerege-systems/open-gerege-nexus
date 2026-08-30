@@ -130,6 +130,10 @@ function AskToJoin({ onAsked }: { onAsked: () => void }) {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState("");
+  // Нээлттэй байгууллагад орсон хүний хараа: хүсэлт биш, гишүүнчлэл. Нэрийг
+  // нь барьж байгаа нь мессежид хэрэгтэй тул — «нэгдлээ» гэдэг өгүүлбэр
+  // хаана нэгдсэнээ хэлэхгүй бол хагас мэдээлэл.
+  const [joined, setJoined] = useState<{ id: string; name: string } | null>(null);
   // Хайлт нь slug-ийн **тусламж**, орлуулга биш. Байгууллагаа мэддэг хүн
   // шууд бичээд явна; мэдэхгүй хүн үйлчилгээгээрээ хайж, олсноо талбарт
   // хийнэ. Хоёр зам нэг товч руу нийлнэ.
@@ -151,9 +155,14 @@ function AskToJoin({ onAsked }: { onAsked: () => void }) {
     setBusy(true);
     setFailed("");
     try {
-      await api.askToJoin(slug.trim(), message.trim());
+      const answer = await api.askToJoin(slug.trim(), message.trim());
       setSlug("");
       setMessage("");
+      // Нээлттэй байгууллага энэ товчийг дарсан агшинд шийдчихсэн. Дараалалд
+      // орсон гэж хэлэх нь худал байх тул хоёр өөр хариу.
+      if (answer.joined) {
+        setJoined({ id: answer.workspace_id, name: answer.workspace_name });
+      }
       onAsked();
     } catch (err: unknown) {
       setFailed(err instanceof Error ? err.message : "—");
@@ -168,6 +177,27 @@ function AskToJoin({ onAsked }: { onAsked: () => void }) {
         <h2 className="text-sm font-bold text-slate-900">{t("me.view.ask_title")}</h2>
         <p className="text-xs text-slate-500 mt-0.5">{t("me.view.ask_subtitle")}</p>
       </div>
+
+      {/* Шилжих товч нь чимэглэл биш: хүн энэ агшинд гишүүн болсон бөгөөд
+          дараагийн зүйл нь тэр байгууллага руугаа орох явдал. Бүрхүүл өөрийн
+          мужийн жагсаалтыг ачаалах үедээ уншсан тул хуудсыг дахин ачаалж
+          байж шинэ бичлэг харагдана. */}
+      {joined && (
+        <div className="rounded-lg border border-[var(--gerege-blue)] bg-[var(--gerege-blue-soft)] px-3 py-2.5 flex items-center gap-3">
+          <p className="flex-1 text-sm text-[var(--gerege-blue-text)]">
+            {t("me.message.joined", { name: joined.name })}
+          </p>
+          <button
+            type="button"
+            className="rounded-lg bg-[var(--gerege-blue)] px-3 py-1.5 text-xs font-semibold text-white"
+            onClick={() => {
+              void api.switchTenant(joined.id).then(() => window.location.assign("/"));
+            }}
+          >
+            {t("me.action.open_workspace")}
+          </button>
+        </div>
+      )}
       <div className="flex flex-col gap-2 sm:flex-row">
         <input
           required

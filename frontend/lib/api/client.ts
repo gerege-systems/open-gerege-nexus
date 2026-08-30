@@ -342,10 +342,15 @@ export const coreApi = {
     }),
   withdrawService: (id: string) =>
     request<{ ok: boolean }>(`/tenant/services/${id}`, { method: "DELETE" }),
-  // Asking an organisation to let you in, by the slug in its address. The
-  // reply is a place in its queue; what comes of it arrives in getMyItems.
+  // Asking an organisation to let you in, by the slug in its address.
+  //
+  // What the reply is depends on the organisation: one that answers requests
+  // gives back a place in its queue and the outcome arrives later through
+  // getMyItems; an open one has already admitted the person, which `joined`
+  // says and which the screen has to act on — the workspace list gained an
+  // entry a moment ago.
   askToJoin: (slug: string, message: string) =>
-    request<{ ok: boolean }>("/me/join-requests", {
+    request<{ ok: boolean; joined: boolean; workspace_id: string; workspace_name: string }>("/me/join-requests", {
       method: "POST",
       body: JSON.stringify({ slug, message }),
     }),
@@ -425,6 +430,9 @@ export const coreApi = {
       // The organisation this one is a subsidiary of. A branch or an office is
       // a department; this is another legal entity, and so another tenant.
       parent_tenant_id?: string; parent_name?: string;
+      // How somebody who is not a member gets in: "on_request" or "open".
+      // Migration 00104.
+      join_policy?: string;
     }>("/tenant/profile"),
 
   // Partial by design: a form that sends the fields it changed must not blank
