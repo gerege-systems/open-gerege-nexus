@@ -12,8 +12,8 @@ import type {ServiceId} from "@/lib/services";
  * The style is deliberately plain-spoken — thick rounded strokes, flat fills,
  * no gradients or shadows. These sit next to a paragraph each, and a drawing
  * that competes with its own caption is decoration. Each one shows the thing
- * the service actually is: a desk of controls, a warehouse, a vault, a pulse,
- * a book.
+ * the service actually is: an ID card, a desk of controls, a warehouse, a
+ * vault, a pulse, a book.
  *
  * `aria-hidden` on every one of them: the card's heading and body already say
  * what the drawing shows, and a screen reader announcing "image" a second time
@@ -28,6 +28,34 @@ const TINT = "#dbe9fb";
 const INK = "#15233b";
 
 type Props = {className?: string};
+
+/** eID Mongolia — an ID card, and the thumb that unlocks it. */
+function EidArt({className}: Props) {
+  return (
+    <svg className={className} viewBox="0 0 160 108" fill="none" aria-hidden="true">
+      <rect x="10" y="16" width="140" height="76" rx="12" fill={TINT} />
+      {/* the card */}
+      <rect x="26" y="30" width="80" height="52" rx="8" fill={PAPER} stroke={NAVY} strokeWidth="3" />
+      {/* the citizen */}
+      <circle cx="48" cy="49" r="8" fill={NAVY} />
+      <path d="M36 68c0-7 5-11 12-11s12 4 12 11" fill={NAVY} />
+      {/* the fields */}
+      <g stroke={TINT} strokeWidth="4" strokeLinecap="round">
+        <path d="M70 46h24" />
+        <path d="M70 56h24" />
+        <path d="M70 66h16" />
+      </g>
+      {/* the thumb, reading */}
+      <circle cx="120" cy="56" r="20" fill={PAPER} stroke={NAVY} strokeWidth="3" />
+      <g stroke={GOLD} strokeWidth="2.6" strokeLinecap="round" fill="none">
+        <path d="M120 46a10 10 0 00-10 10v6" />
+        <path d="M120 46a10 10 0 0110 10v6" />
+        <path d="M120 52a4 4 0 00-4 4v8" />
+        <path d="M120 52a4 4 0 014 4v8" />
+      </g>
+    </svg>
+  );
+}
 
 /** Операторын консол — a desk of controls, with one switch thrown. */
 function AdminArt({className}: Props) {
@@ -165,6 +193,7 @@ function DocsArt({className}: Props) {
 }
 
 const ART: Record<ServiceId, (props: Props) => React.JSX.Element> = {
+  eid: EidArt,
   admin: AdminArt,
   dwh: DwhArt,
   backups: BackupsArt,
