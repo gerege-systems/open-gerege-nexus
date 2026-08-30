@@ -110,8 +110,8 @@ export const core = {
     en: "What happens when somebody who is not a member asks to join by this organisation's short name.",
   },
   "core.message.join_open_note": {
-    mn: "Нээлттэй байгууллага хаалгаа онгойлгож байгаа болохоос эрхээ тараагаагүй: шинэ гишүүн ямар ч рольгүй ирнэ.",
-    en: "An open organisation opens its door, not its permissions: a new member arrives holding no role at all.",
+    mn: "Богино нэрийг мэдсэн хэн ч гишүүн болно. Шинэ гишүүн платформын анхдагч «user» ролийг авдаг тул суусан аппуудын уншиж болох мэдээллийг шууд харна — хүсэлтийг зөвшөөрсөнтэй ижил.",
+    en: "Anybody who knows the short name becomes a member. A new member receives the platform's default «user» role, so they can read what the installed apps allow — exactly as an approved request would.",
   },
 
   "core.message.parent_hint": {

@@ -165,13 +165,15 @@ func TestAnOpenOrganisationAdmitsAtTheMomentOfAsking(t *testing.T) {
 	}
 }
 
-// A membership is not a role.
+// What a new member arrives holding.
 //
-// The open door lets somebody stand inside; it does not hand them anything.
-// This is the same thing an approved request does (access/joinrequests.go) and
-// the reason "open" is not dangerous by default: an administrator still decides
-// what the new member may do.
-func TestAnOpenOrganisationGrantsNoRole(t *testing.T) {
+// Not nothing: 00008's `membership_default_role` trigger gives every new
+// membership the organisation's `user` role, and that role carries every
+// `%.read` permission. The same is true of an approved request — this is one
+// path, not two — but it is the fact that decides what "open" means, so it is
+// asserted rather than assumed. The first draft of this change claimed the
+// opposite in three places; this test is why none of them shipped.
+func TestAnOpenOrganisationGrantsThePlatformsDefaultRole(t *testing.T) {
 	pool := openPool(t)
 	store := person.New(pool)
 	ctx := context.Background()
@@ -185,16 +187,28 @@ func TestAnOpenOrganisationGrantsNoRole(t *testing.T) {
 		t.Fatalf("ask: %v", err)
 	}
 
-	var roles int
-	if err := pool.QueryRow(ctx,
-		`SELECT count(*) FROM workspace.membership_roles mr
+	var codes []string
+	rows, err := pool.Query(ctx,
+		`SELECT r.code FROM workspace.membership_roles mr
 		   JOIN workspace.memberships m ON m.id = mr.membership_id
+		   JOIN workspace.roles r ON r.id = mr.role_id
 		  WHERE m.tenant_id = $1::uuid AND m.user_id = $2::uuid`,
-		orgID, userID).Scan(&roles); err != nil {
+		orgID, userID)
+	if err != nil {
 		t.Fatal(err)
 	}
-	if roles != 0 {
-		t.Errorf("the new member arrived holding %d roles, want 0", roles)
+	defer rows.Close()
+	for rows.Next() {
+		var code string
+		if err := rows.Scan(&code); err != nil {
+			t.Fatal(err)
+		}
+		codes = append(codes, code)
+	}
+
+	if len(codes) != 1 || codes[0] != "user" {
+		t.Errorf("the new member holds %v, want exactly [user] — the door decides membership, "+
+			"and the platform's own trigger decides what a membership is worth", codes)
 	}
 }
 
