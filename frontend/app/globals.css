@@ -337,6 +337,12 @@ html[data-theme="dark"] :where(input, textarea)::placeholder { color: var(--gere
    .gp-feature-ийн хэмжээ, радиус, hover-ийг дагана: тэдгээр нь энэ хуудасны
    картны хэл бөгөөд шинэ хэсэг өөр хэлээр ярих шаардлагагүй. Ялгаа нь зөвхөн
    дээд талын зураг ба доод талын хаяг. */
+/* Консолын нүүрийн хоёр жижиг зүйл: nav дахь ялгах тэмдэг ба картуудын доорх
+   нэг мөрийн тэмдэглэл. Аль аль нь өөрийн хэсэг зохион байгуулах хэмжээнд том
+   биш тул шинэ бүрэлдэхүүн болгосонгүй. */
+.gp-brand__chip{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;font-weight:800;letter-spacing:.12em;color:var(--gp-on-navy-45);border:1px solid rgba(255,255,255,.22);border-radius:6px;padding:3px 7px;margin-left:2px}
+.signin-shell__nav .gp-brand__chip{color:var(--sg-muted);border-color:var(--sg-border)}
+.cp-landing__note{max-width:740px;margin:22px auto 0;text-align:center;color:var(--gp-muted);font-size:15px;line-height:1.7}
 .gp-services{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px}
 .gp-service{display:flex;flex-direction:column;border:1px solid #dfe6ef;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 8px 24px rgba(15,35,63,.04);text-decoration:none;color:inherit;transition:.2s}
 .gp-service:hover{transform:translateY(-3px);border-color:#7a9fca}
@@ -407,14 +413,22 @@ html[data-theme="dark"] :where(input, textarea)::placeholder { color: var(--gere
    `h1..h4 { color: var(--gerege-fg) }` суурь дүрэм нь өвлөлтөөс хүчтэй тул
    харанхуй горимд --gerege-fg (бараг цагаан) нь энэ ЦАЙВАР картан дээр
    бичигдэж, «Нэвтрэх» гарчиг цагаан дээр цагаан болдог байв. */
-.signin-shell{
+/* Токенууд ба зохион байгуулалт нь хоёр өөр зүйл.
+   Консолын нүүр хуудас нь navy hero дээр яг ижил цагаан картыг суулгадаг тул
+   токенууд хэрэгтэй ч `min-height:100vh` бүхий цайвар дэлгэц хэрэггүй. Хоёрыг
+   нь салгаснаар карт хоёр газарт нэг тодорхойлолтоор ажиллана. */
+.signin-shell,.cp-signin{
   --sg-bg:#f9fafc;--sg-surface:#fff;--sg-surface-2:#f1f3f7;
   --sg-fg:#11161e;--sg-muted:#5e646c;--sg-faint:#9b9fa5;
   --sg-border:#e2e5e9;--sg-border-strong:#c0c4cb;
   --sg-blue:#0065da;--sg-blue-hover:#0056c6;--sg-blue-soft:#e4f0ff;--sg-blue-text:#005ccd;
-  --sg-danger:#cc272e;--sg-danger-soft:#ffecea;
-  background:var(--sg-bg);color:var(--sg-fg);min-height:100vh;display:flex;flex-direction:column
+  --sg-danger:#cc272e;--sg-danger-soft:#ffecea
 }
+.signin-shell{background:var(--sg-bg);color:var(--sg-fg);min-height:100vh;display:flex;flex-direction:column}
+/* Hero дотор карт нь өөрийн дэлгэц биш, багана — нарийхан, багавтар зайтай. */
+.cp-signin{color:var(--sg-fg)}
+.cp-signin .signin-card{max-width:460px;padding:30px;box-shadow:0 24px 60px rgba(0,11,30,.24)}
+.cp-signin .signin-card__title{font-size:23px}
 .signin-shell__nav{border-bottom:1px solid var(--sg-border);display:flex;align-items:center;justify-content:space-between;padding:18px 32px}
 .signin-shell__nav .gp-brand{color:var(--sg-fg)}
 .signin-shell__nav .gp-brand img{width:26px;height:26px;border-radius:6px}
