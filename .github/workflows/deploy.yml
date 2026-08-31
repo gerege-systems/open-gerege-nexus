@@ -283,42 +283,6 @@ jobs:
           source: "docker-compose.prod.yml,deploy/nginx/snippets/nexus-oauth.conf,deploy/nginx/snippets/cp-api.conf,deploy/scripts/render_cp_allowlist.py,deploy/monitoring/grafana/dashboards,deploy/monitoring/grafana/provisioning,deploy/monitoring/prometheus"
           target: /opt/open-gerege-nexus
 
-      # Grafana picks the dashboards up on its own; Prometheus does not. Without
-      # this the rule files on disk and the rules being evaluated drift apart
-      # silently, and the divergence only surfaces the next time the container
-      # restarts — which is the worst possible moment to discover a bad rule.
-      #
-      # A reload that fails leaves the running config untouched, so the alerting
-      # keeps working, but the file on disk is now one that Prometheus will
-      # refuse at next boot. That is a red step, not a warning.
-      - name: Reload Prometheus
-        if: steps.guard.outputs.ready == 'true'
-        uses: appleboy/ssh-action@v1.2.5
-        with:
-          host: ${{ secrets.DEPLOY_HOST || 'nexus.gerege.mn' }}
-          username: ${{ secrets.DEPLOY_USER || 'deploy' }}
-          port: ${{ secrets.DEPLOY_PORT || 22 }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          script: |
-            set -euo pipefail
-            if ! docker ps --format '{{.Names}}' | grep -qx gerege_nexus_prometheus; then
-              echo "Prometheus is not running on this host; nothing to reload."
-              exit 0
-            fi
-            curl -fsS -X POST http://127.0.0.1:9091/-/reload
-            # /-/reload returns 200 before the new config is in place, so ask
-            # Prometheus what it actually loaded rather than trusting the POST.
-            for _ in $(seq 1 10); do
-              if [ "$(curl -fsS http://127.0.0.1:9091/api/v1/status/config \
-                      | python3 -c 'import sys,json; print(len(json.load(sys.stdin)["data"]["yaml"]) > 0)')" = "True" ]; then
-                echo "Prometheus reloaded its configuration."
-                exit 0
-              fi
-              sleep 2
-            done
-            echo "Prometheus did not report a configuration after the reload." >&2
-            exit 1
-
       - name: Pull images, migrate and restart
         if: steps.guard.outputs.ready == 'true'
         uses: appleboy/ssh-action@v1.2.5
@@ -810,3 +774,42 @@ jobs:
               echo "::error::legacy control-plane API returned status=$LEGACY_STATUS location=$LEGACY_LOCATION"
               exit 1
             fi
+
+      # Last, and deliberately so. Placed before the rollout, a refused reload
+      # would cancel every step after it and a monitoring problem would stop the
+      # application from shipping. Grafana picks the dashboards up on its own;
+      # Prometheus does not. Without
+      # this the rule files on disk and the rules being evaluated drift apart
+      # silently, and the divergence only surfaces the next time the container
+      # restarts — which is the worst possible moment to discover a bad rule.
+      #
+      # A reload that fails leaves the running config untouched, so the alerting
+      # keeps working, but the file on disk is now one that Prometheus will
+      # refuse at next boot. That is a red step, not a warning.
+      - name: Reload Prometheus
+        if: steps.guard.outputs.ready == 'true'
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ secrets.DEPLOY_HOST || 'nexus.gerege.mn' }}
+          username: ${{ secrets.DEPLOY_USER || 'deploy' }}
+          port: ${{ secrets.DEPLOY_PORT || 22 }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            if ! docker ps --format '{{.Names}}' | grep -qx gerege_nexus_prometheus; then
+              echo "Prometheus is not running on this host; nothing to reload."
+              exit 0
+            fi
+            curl -fsS -X POST http://127.0.0.1:9091/-/reload
+            # /-/reload returns 200 before the new config is in place, so ask
+            # Prometheus what it actually loaded rather than trusting the POST.
+            for _ in $(seq 1 10); do
+              if [ "$(curl -fsS http://127.0.0.1:9091/api/v1/status/config \
+                      | python3 -c 'import sys,json; print(len(json.load(sys.stdin)["data"]["yaml"]) > 0)')" = "True" ]; then
+                echo "Prometheus reloaded its configuration."
+                exit 0
+              fi
+              sleep 2
+            done
+            echo "Prometheus did not report a configuration after the reload." >&2
+            exit 1
