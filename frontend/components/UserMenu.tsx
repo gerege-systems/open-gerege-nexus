@@ -157,10 +157,26 @@ export default function UserMenu({
              replaces it with the room actually below the button. */
           className="gerege-topbar-onlight absolute right-0 mt-2 w-[320px] rounded-2xl border border-slate-200 bg-white shadow-xl overflow-y-auto overscroll-contain max-h-[calc(100dvh-5rem)] z-50"
         >
-          <div className="px-4 py-3.5 border-b border-slate-100">
-            <p className="text-sm font-semibold text-slate-900 truncate">{user?.name}</p>
-            <p className="text-xs text-slate-500 truncate">{user?.email}</p>
-            {subtitle && <p className="mt-0.5 text-xs text-[var(--gerege-blue)] truncate">{subtitle}</p>}
+          <div className="px-4 py-3.5 border-b border-slate-100 flex items-start gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-slate-900 truncate">{user?.name}</p>
+              <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+              {subtitle && <p className="mt-0.5 text-xs text-[var(--gerege-blue)] truncate">{subtitle}</p>}
+            </div>
+            {/* Signing out is also the last row of this menu, and on a phone
+                with several organisations that row is a whole scroll away.
+                The header is the one part of the menu that never moves, and
+                the space beside a truncated name was empty. */}
+            <button
+              type="button"
+              onClick={onLogout}
+              role="menuitem"
+              aria-label={t("web.action.logout")}
+              title={t("web.action.logout")}
+              className="shrink-0 grid place-items-center w-8 h-8 rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
 
           {/* Only when there is a choice to make. A list of one would be a
