@@ -630,7 +630,7 @@
     {
       "type": "table",
       "title": "Хамгийн ачаалалтай 20 зам",
-      "description": "path нь chi-ийн routed pattern — түүхий URL биш. Тиймээс /documents/{id} нь нэг мөр, сая мөр биш.",
+      "description": "Дээр сонгосон хугацааны нийт хүсэлтийн тоо. http_route нь chi-ийн routed pattern — түүхий URL биш, тиймээс /documents/{id} нь нэг мөр, сая мөр биш.",
       "datasource": {
         "type": "prometheus",
         "uid": "nexus-prometheus"
@@ -648,7 +648,7 @@
             "uid": "nexus-prometheus"
           },
           "editorMode": "code",
-          "expr": "topk(20, sum by (http_route, http_request_method) (rate(http_server_request_duration_seconds_count[$__rate_interval])))",
+          "expr": "topk(20, sum by (http_route, http_request_method) (increase(http_server_request_duration_seconds_count[$__range])) > 0)",
           "legendFormat": "",
           "range": false,
           "instant": true,
@@ -671,7 +671,9 @@
           "custom": {
             "align": "auto"
           },
-          "noValue": "Хэмжигдэхгүй байна"
+          "noValue": "Хэмжигдэхгүй байна",
+          "unit": "short",
+          "decimals": 0
         },
         "overrides": []
       },
@@ -688,7 +690,7 @@
     {
       "type": "table",
       "title": "Алдаа хамгийн их гаргаж буй замууд",
-      "description": "Хоосон байх нь хамгийн сайн байдал.",
+      "description": "Дээр сонгосон хугацааны нийт 5xx. Хоосон байх нь хэвийн байдал.\n\nТоолуур backend дахин эхлэхэд тэглэгддэг тул цонхны дунд deploy болбол давтагдаагүй ганц алдаа энд үлдэхгүй. Тухайн тохиолдлуудыг доорх логийн самбараас хар: энэ хүснэгт эзлэхүүнийг, лог тохиолдлыг харуулна.",
       "datasource": {
         "type": "prometheus",
         "uid": "nexus-prometheus"
@@ -706,7 +708,7 @@
             "uid": "nexus-prometheus"
           },
           "editorMode": "code",
-          "expr": "topk(20, sum by (http_route, http_request_method, http_response_status_code) (rate(http_server_request_duration_seconds_count{http_response_status_code=~\"5..\"}[$__rate_interval])))",
+          "expr": "topk(20, sum by (http_route, http_request_method, http_response_status_code) (increase(http_server_request_duration_seconds_count{http_response_status_code=~\"5..\"}[$__range])) > 0)",
           "legendFormat": "",
           "range": false,
           "instant": true,
@@ -729,7 +731,9 @@
           "custom": {
             "align": "auto"
           },
-          "noValue": "Хэвийн — юу ч алга"
+          "noValue": "Хэвийн — юу ч алга",
+          "unit": "short",
+          "decimals": 0
         },
         "overrides": []
       },
