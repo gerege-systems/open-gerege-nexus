@@ -66,7 +66,16 @@ func (m *Rails) hsmSettings(probe *Probe) HSMSettings {
 	if signURL == "" {
 		signURL = "https://hsm.gerege.mn/signer/signpdf"
 	}
-	mock := os.Getenv("ESIGN_MOCK_MODE") != "false"
+	// The same reading the signing engine uses, rather than a second one.
+	//
+	// This computed `os.Getenv("ESIGN_MOCK_MODE") != "false"`, which treats an
+	// unset flag as mock ON — the opposite of what config.MockEnabled decides
+	// in production. On a deployment that leaves the flag unset, the engine
+	// would refuse to sign while this screen told the administrator the rail
+	// was enabled and merely mocking. The production compose file always
+	// passes a value, so the two never disagreed in practice; a screen that is
+	// only accidentally right is still worth making right on purpose.
+	mock := config.MockEnabled("ESIGN_MOCK_MODE")
 	token := strings.TrimSpace(os.Getenv("ESIGN_TOKEN"))
 
 	return HSMSettings{
