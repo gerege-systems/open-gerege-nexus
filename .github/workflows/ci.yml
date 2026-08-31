@@ -524,3 +524,31 @@ jobs:
           push: false
           tags: open-gerege-nexus-backend:ci
           cache-from: type=gha,scope=backend
+
+  # Grafana самбар болон Prometheus дүрмийг сервер рүү явахаас нь өмнө шалгана.
+  # Эдгээр файл хост дээр зөвхөн уншигдахаар холбогдож, 30 секунд тутам дахин
+  # уншигддаг. Тэгэхээр эвдэрсэн файлыг Grafana лог руугаа бичээд өмнөх
+  # хувилбараа үргэлжлүүлэн үзүүлнэ — хэн ч гар хүрээгүй самбартай яг адилхан
+  # харагдана. Улаан юу ч болохгүй тул энэ шалгуур энд байх ёстой.
+  monitoring:
+    name: Monitoring config
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check Grafana dashboards
+        run: python3 deploy/scripts/check_dashboards.py
+
+      # promtool нь prom/prometheus image дотор ирдэг тул тусад нь суулгах
+      # шаардлагагүй. Зөвхөн дүрмүүдийг шалгана: prometheus.yml дэх зам нь
+      # контейнерийн зам (/etc/prometheus/rules) учир repo-гийн байрлал дээр
+      # `check config` нь байхгүй файл гэж гомдоно.
+      - name: Check Prometheus rules
+        run: |
+          # Глоб нь контейнерийн доторх shell-ээр задрах ёстой. --entrypoint
+          # promtool гэвэл задлах shell байхгүй тул хостын bash задална — /rules
+          # хостод байхгүй учраас санамсаргүйгээр ажиллаад байсан.
+          docker run --rm \
+            -v "$PWD/deploy/monitoring/prometheus/rules:/rules:ro" \
+            --entrypoint sh \
+            prom/prometheus:v3.1.0 -c 'promtool check rules /rules/*.yml'
