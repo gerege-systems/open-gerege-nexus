@@ -775,7 +775,16 @@ docker compose -f deploy/docker-compose.monitoring.yml \
 Нөөцлөлт хийгдэж байгаа ч шифрлэгдсэн хуулбар нөөцийн санд очихгүй байна.
 
 1. Тохиргоо байгаа эсэх: `sudo cat /etc/default/nexus-backup` — таван мөр бүгд
-   утгатай байх ёстой.
+   утгатай, мөн бүгд **`export`-той** байх ёстой:
+
+   ```bash
+   sudo grep -c '^export ' /etc/default/nexus-backup   # 5 байх ёстой
+   ```
+
+   `export`-гүй бол sourcing нь утгыг зөвхөн дуудагч бүрхүүлд үлдээнэ.
+   Скрипт нь тусдаа процесс тул тэднийг хоосон гэж уншиж, offsite алхам
+   эрт буцна — dump амжилттай, хуулбар хаана ч очихгүй. Энэ дохио яг
+   үүнийг барьдаг.
 2. `age` суусан эсэх: `command -v age`
 3. Сан хүрэлцэхүйц эсэх: `curl -sI https://backups.nexus.gerege.mn/minio/health/live`
 4. Гараар ажиллуулж алдааг нь хар:
