@@ -35,7 +35,8 @@ func TestABatchOpensWhatItCanAndReportsEachRow(t *testing.T) {
 	// One organisation is opened the ordinary way first, so the batch below
 	// contains a row that is already in place.
 	existing, err := service.CreateTenant(ctx, sess, NewTenant{
-		Name: "Already Here", Slug: first, Reason: "seed the duplicate"})
+		Name: "Already Here", Slug: first, Reason: "seed the duplicate",
+		AdminEmail: fmt.Sprintf("%s@example.mn", first), AdminName: "Admin"})
 	if err != nil {
 		t.Fatalf("seed: %v", err)
 	}
@@ -45,9 +46,12 @@ func TestABatchOpensWhatItCanAndReportsEachRow(t *testing.T) {
 	})
 
 	outcomes, err := service.CreateTenants(ctx, sess, []NewTenant{
-		{Name: "Already Here", Slug: first, Reason: "re-run the file"},
-		{Name: "Bad Slug", Slug: "NOT a slug", Reason: "the row that cannot open"},
-		{Name: "Genuinely New", Slug: second, Reason: "the row after the bad one"},
+		{Name: "Already Here", Slug: first, Reason: "re-run the file",
+			AdminEmail: fmt.Sprintf("%s@example.mn", first), AdminName: "Admin"},
+		{Name: "Bad Slug", Slug: "NOT a slug", Reason: "the row that cannot open",
+			AdminEmail: "bad@example.mn", AdminName: "Admin"},
+		{Name: "Genuinely New", Slug: second, Reason: "the row after the bad one",
+			AdminEmail: fmt.Sprintf("%s@example.mn", second), AdminName: "Admin"},
 	})
 	if err != nil {
 		t.Fatalf("the batch itself was refused: %v", err)
@@ -94,7 +98,9 @@ func TestATooLargeBatchOpensNothing(t *testing.T) {
 
 	list := make([]NewTenant, MaxBulkTenants+1)
 	for i := range list {
-		list[i] = NewTenant{Name: "Too Many", Slug: fmt.Sprintf("toomany-%d-%d", time.Now().UnixNano(), i)}
+		list[i] = NewTenant{Name: "Too Many",
+			Slug:       fmt.Sprintf("toomany-%d-%d", time.Now().UnixNano(), i),
+			AdminEmail: fmt.Sprintf("too-many-%d@example.mn", i), AdminName: "Admin"}
 	}
 
 	outcomes, err := service.CreateTenants(context.Background(), optest.Session(account), list)
