@@ -81,3 +81,15 @@ test("the public paths are every linked section, whatever one deployment turned 
   // show a page that does not exist.
   expect(SECTION_PATHS).toEqual(["/architecture", "/platform", "/trust"]);
 });
+
+test("нүүр хуудас эхлээд юу ажиллаж байгааг нэрлээд, дараа нь каталогоо үзүүлнэ", () => {
+  const order: string[] = [...LANDING_SECTIONS];
+
+  // Юу ажиллаж байгааг хараагүй хүнд каталог нь юуны тухай яриа болох нь
+  // ойлгомжгүй — тиймээс `services` эхэлж, `applications` түүний доор.
+  expect(order.indexOf("services")).toBeLessThan(order.indexOf("applications"));
+  expect(order.indexOf("applications")).toBeLessThan(order.indexOf("capabilities"));
+
+  // Гурван картын мөр бол дүгнэлт: бүх зүйлийг уншсаны дараа, footer-ийн дээр.
+  expect(order[order.length - 1]).toBe("technology");
+});
