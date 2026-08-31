@@ -28,6 +28,13 @@ func TestABatchOpensWhatItCanAndReportsEachRow(t *testing.T) {
 	sess := optest.Session(account)
 	ctx := context.Background()
 
+	// A chosen administrator rather than an invited one, for the reason
+	// TestAChosenAdministratorIsNotInvited exists: an e-mail address sends the
+	// creation down the invitation path, and this test's Deps carry no mail
+	// service. What is under test is the batch, not the invitation.
+	home, _ := optest.Tenant(t, pool)
+	admin := verifiedUser(t, pool, home)
+
 	stamp := time.Now().UnixNano()
 	first := fmt.Sprintf("bulk-a-%d", stamp)
 	second := fmt.Sprintf("bulk-b-%d", stamp)
@@ -36,7 +43,7 @@ func TestABatchOpensWhatItCanAndReportsEachRow(t *testing.T) {
 	// contains a row that is already in place.
 	existing, err := service.CreateTenant(ctx, sess, NewTenant{
 		Name: "Already Here", Slug: first, Reason: "seed the duplicate",
-		AdminEmail: fmt.Sprintf("%s@example.mn", first), AdminName: "Admin"})
+		AdminUserID: admin})
 	if err != nil {
 		t.Fatalf("seed: %v", err)
 	}
@@ -46,12 +53,9 @@ func TestABatchOpensWhatItCanAndReportsEachRow(t *testing.T) {
 	})
 
 	outcomes, err := service.CreateTenants(ctx, sess, []NewTenant{
-		{Name: "Already Here", Slug: first, Reason: "re-run the file",
-			AdminEmail: fmt.Sprintf("%s@example.mn", first), AdminName: "Admin"},
-		{Name: "Bad Slug", Slug: "NOT a slug", Reason: "the row that cannot open",
-			AdminEmail: "bad@example.mn", AdminName: "Admin"},
-		{Name: "Genuinely New", Slug: second, Reason: "the row after the bad one",
-			AdminEmail: fmt.Sprintf("%s@example.mn", second), AdminName: "Admin"},
+		{Name: "Already Here", Slug: first, Reason: "re-run the file", AdminUserID: admin},
+		{Name: "Bad Slug", Slug: "NOT a slug", Reason: "the row that cannot open", AdminUserID: admin},
+		{Name: "Genuinely New", Slug: second, Reason: "the row after the bad one", AdminUserID: admin},
 	})
 	if err != nil {
 		t.Fatalf("the batch itself was refused: %v", err)
@@ -99,8 +103,7 @@ func TestATooLargeBatchOpensNothing(t *testing.T) {
 	list := make([]NewTenant, MaxBulkTenants+1)
 	for i := range list {
 		list[i] = NewTenant{Name: "Too Many",
-			Slug:       fmt.Sprintf("toomany-%d-%d", time.Now().UnixNano(), i),
-			AdminEmail: fmt.Sprintf("too-many-%d@example.mn", i), AdminName: "Admin"}
+			Slug: fmt.Sprintf("toomany-%d-%d", time.Now().UnixNano(), i)}
 	}
 
 	outcomes, err := service.CreateTenants(context.Background(), optest.Session(account), list)
