@@ -202,7 +202,7 @@ services:
         condition: service_healthy
 
   grafana:
-    image: grafana/grafana:11.5.2
+    image: grafana/grafana:13.2.0
     container_name: gerege_nexus_grafana
     restart: unless-stopped
     environment:
@@ -214,6 +214,15 @@ services:
       GF_SERVER_SERVE_FROM_SUB_PATH: "true"
       # Nobody signs up for an operations dashboard.
       GF_USERS_ALLOW_SIGN_UP: "false"
+      # Загвар. 11.x-д зөвхөн dark/light байсан; 12-оос хойш desertbloom,
+      # gildedgrove, sapphiredusk, tron, gloom нэмэгдсэн бөгөөд хэрэглэгч
+      # бүр өөрийнхөө сонголтыг Profile → Preferences дотроос сольж болно.
+      GF_USERS_DEFAULT_THEME: ${GRAFANA_DEFAULT_THEME:-light}
+      # Хэл. `sv-SE` нь Монгол хэлний үүр: Grafana-д `mn` locale байхгүй тул
+      # deploy/scripts/setup_monitor_branding.sh тэр chunk-ийг монгол
+      # орчуулгаар nginx дээр орлуулдаг. Скриптийг ажиллуулаагүй хостод
+      # энэ утгыг битгий sv-SE болго — швед хэл гарч ирнэ.
+      GF_USERS_DEFAULT_LANGUAGE: ${GRAFANA_DEFAULT_LANGUAGE:-en-US}
       GF_AUTH_ANONYMOUS_ENABLED: "false"
       GF_ANALYTICS_REPORTING_ENABLED: "false"
       GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
