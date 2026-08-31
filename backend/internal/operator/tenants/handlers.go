@@ -252,6 +252,11 @@ func (s *Service) Routes(r chi.Router) {
 	// that does the deed.
 	r.With(s.op.RequireCapability(operator.CapTenantCreate)).
 		Post("/tenants", s.handleCreateTenant)
+	// The same act, many times. Same capability for the same reason: it is not
+	// a different privilege, it is the one the console already has, exercised
+	// on a list. See bulk.go for why it is not one transaction.
+	r.With(s.op.RequireCapability(operator.CapTenantCreate)).
+		Post("/tenants/bulk", s.handleCreateTenants)
 	r.With(s.op.RequireCapability(operator.CapTenantSuspend), s.op.RequireStepUp).
 		Post("/tenants/{id}/suspend", s.handleSuspendTenant)
 	r.With(s.op.RequireCapability(operator.CapTenantSuspend), s.op.RequireStepUp).
