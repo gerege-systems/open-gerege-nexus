@@ -28,7 +28,16 @@ const TOLERATED_FAILURES=3;
 const BACKSTOP=15*60_000;
 
 function mobile(){return typeof navigator!=="undefined"&&/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)}
-function callbackURL(){return typeof window==="undefined"?"":`${window.location.origin}/auth/eid/callback`}
+// Аль browser-ээс эхэлснийг eID апп руу дамжуулна — approve хийсний дараа ЯГ ТЭР browser руу
+// буцна. Үгүй бол апп системийн default browser-ыг нээж (iOS дээр ихэвчлэн Safari), иргэн
+// нэвтэрч эхэлсэн цонхоо алддаг. iOS: browser-ийн scheme/token; Android: package. Танихгүй
+// browser (ж Brave — UA нь ялгарахгүй) → hint байхгүй → default. Зөвшөөрөх жагсаалт апп талд.
+const IOS_BROWSERS:Array<[RegExp,string]>=[[/CriOS/i,"googlechromes"],[/EdgiOS/i,"microsoft-edge-https"],[/FxiOS/i,"firefox"],[/Focus\//i,"firefox-focus"],[/OPT\//i,"touch-https"],[/OPiOS|OPR\//i,"opera-https"],[/DuckDuckGo/i,"ddgQuickLink"],[/YaBrowser|YaSearchBrowser/i,"yandexbrowser-open-url"]]
+// "Chrome/" хамгийн сүүлд: Chromium суурьтай бүх browser (Edge, Opera, Samsung, Yandex…) UA-даа
+// түүнийг агуулдаг тул эхэнд шалгавал бүгд Chrome болж таарна.
+const ANDROID_BROWSERS:Array<[RegExp,string]>=[[/EdgA\//i,"com.microsoft.emmx"],[/OPR\//i,"com.opera.browser"],[/Opera Mini/i,"com.opera.mini.native"],[/SamsungBrowser\//i,"com.sec.android.app.sbrowser"],[/YaBrowser\//i,"com.yandex.browser"],[/DuckDuckGo\//i,"com.duckduckgo.mobile.android"],[/Vivaldi\//i,"com.vivaldi.browser"],[/Whale\//i,"com.naver.whale"],[/UCBrowser\//i,"com.UCMobile.intl"],[/Focus\//i,"org.mozilla.focus"],[/Firefox\//i,"org.mozilla.firefox"],[/Chrome\//i,"com.android.chrome"]]
+export function browserHint(ua:string){const table=/iPhone|iPad|iPod/i.test(ua)?IOS_BROWSERS:/Android/i.test(ua)?ANDROID_BROWSERS:[];const hit=table.find(([re])=>re.test(ua));return hit?`?${table===IOS_BROWSERS?"retScheme":"retPkg"}=${encodeURIComponent(hit[1])}`:""}
+function callbackURL(){return typeof window==="undefined"?"":`${window.location.origin}/auth/eid/callback${browserHint(navigator.userAgent)}`}
 function deadlineOf(start:Start){const at=Date.parse(start.expires_at??"");return Number.isNaN(at)?Date.now()+BACKSTOP:at}
 function hasDeadline(start:Start){return !Number.isNaN(Date.parse(start.expires_at??""))}
 function sleep(ms:number){return new Promise(resolve=>setTimeout(resolve,ms))}
