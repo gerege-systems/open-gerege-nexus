@@ -112,7 +112,7 @@ export default function UserMenu({
       {open && (
         <div
           role="menu"
-          className="gerege-topbar-onlight absolute right-0 mt-2 w-[320px] rounded-2xl border border-slate-200 bg-white shadow-xl overflow-hidden z-50"
+          className="gerege-topbar-onlight absolute right-0 mt-2 w-[320px] rounded-2xl border border-slate-200 bg-white shadow-xl overflow-y-auto overscroll-contain max-h-[calc(100dvh-5rem)] z-50"
         >
           <div className="px-4 py-3.5 border-b border-slate-100">
             <p className="text-sm font-semibold text-slate-900 truncate">{user?.name}</p>
