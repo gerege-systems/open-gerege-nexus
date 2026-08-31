@@ -167,10 +167,18 @@ jobs:
     name: Roll out to production
     runs-on: ubuntu-latest
     needs: [build-and-push]
-    # `id-token: write` нь Infisical-ийн OIDC нэвтрэлтэд хэрэгтэй бөгөөд
-    # зөвхөн энд: build job нь нууц уншдаггүй, эрхийг нь өргөтгөх шалтгаангүй.
+    # Job түвшний `permissions` нь workflow түвшнийхийг НЭМДЭГГҮЙ, бүхэлд нь
+    # ОРЛОДОГ. Энэ блокийг `id-token: write`-ийн төлөө нэмэхэд `packages`
+    # эрх нь хамт алга болж, серверт дамждаг GITHUB_TOKEN нь ghcr.io-д
+    # нэвтэрч чадсан атлаа хувийн image уншиж чадахгүй болов — «Login
+    # Succeeded», дараа нь «denied». Rollout зогсож, ажиллаж байсан
+    # контейнерууд хөндөгдөөгүй нь доорх дахин оролдох логикийн ач.
+    #
+    # `read` нь хангалттай: энэ job түлхдэггүй, зөвхөн татдаг.
     permissions:
       contents: read
+      packages: read
+      # Infisical-ийн OIDC нэвтрэлтэд.
       id-token: write
     steps:
       - uses: actions/checkout@v7
