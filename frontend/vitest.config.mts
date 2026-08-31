@@ -26,6 +26,12 @@ export default defineConfig({
     globals: false,
     unstubGlobals: true,
     restoreMocks: true,
+    // Vitest 3-т `restoreMocks` нь дуудлагын түүхийг ч цэвэрлэдэг байсан;
+    // 4-т тэр нь зөвхөн `vi.spyOn`-ийг эх хэлбэрт нь буцаадаг болсон тул
+    // `vi.fn()`-ийн тоолуур файл дотор хуримтлагдаж, «нэг удаа дуудагдсан
+    // байх ёстой» гэсэн зургаан шалгалт «тав удаа» гэж уначихсан. Түүхийг
+    // цэвэрлэх нь одоо тусдаа тохиргоо.
+    clearMocks: true,
   },
   resolve: {
     alias: { "@": fileURLToPath(new URL(".", import.meta.url)) },

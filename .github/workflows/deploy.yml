@@ -197,7 +197,7 @@ jobs:
       # хэвээр ирнэ — өөрөөр хэлбэл энэ өөрчлөлт нь өөрөө юуг ч шилжүүлэхгүй.
       - name: Fetch secrets from the vault
         if: vars.INFISICAL_IDENTITY_ID != ''
-        uses: Infisical/secrets-action@v1.0.9
+        uses: Infisical/secrets-action@v1.0.17
         with:
           method: oidc
           identity-id: ${{ vars.INFISICAL_IDENTITY_ID }}
