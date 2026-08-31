@@ -10,6 +10,9 @@
  *
  * So the assertion is arithmetic, not appearance: whatever the menu ends up
  * being, its bottom edge must sit inside the viewport.
+ *
+ * The same fix's other half is here too: signing out is now also reachable from
+ * the menu's header, which never scrolls away.
  */
 
 import { expect, test, vi, afterEach } from "vitest";
@@ -63,4 +66,22 @@ test("a viewport too short to be worth capping still leaves a usable menu", asyn
 
   const panel = screen.getByRole("menu") as HTMLElement;
   expect(Number.parseInt(panel.style.maxHeight, 10)).toBe(200);
+});
+
+test("signing out is reachable without scrolling to the bottom of the menu", async () => {
+  const signedOut = vi.fn();
+  window.innerHeight = 700;
+  render(
+    <ThemeProvider>
+      <UserMenu user={{ name: "Цэнддорж Эрдэнэбат", email: "cs@example.mn" }} onLogout={signedOut} showTenants={false} />
+    </ThemeProvider>,
+  );
+  await userEvent.click(screen.getByRole("button", { expanded: false }));
+
+  // Two ways out, and the one in the header comes before the organisations.
+  const exits = screen.getAllByRole("menuitem", { name: "web.action.logout" });
+  expect(exits.length).toBe(2);
+
+  await userEvent.click(exits[0]);
+  expect(signedOut).toHaveBeenCalledTimes(1);
 });
