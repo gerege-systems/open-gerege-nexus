@@ -28,7 +28,7 @@ jobs:
       # хөрвүүлэгдсэн хоёртын файл.
       - name: Cache the golangci-lint binary
         id: lint-binary
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/go/bin/golangci-lint
           key: golangci-v2.1.6-${{ runner.os }}-${{ hashFiles('backend/go.mod') }}
