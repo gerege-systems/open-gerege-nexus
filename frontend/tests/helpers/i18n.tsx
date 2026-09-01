@@ -20,8 +20,8 @@ import React from "react";
 export type Locale = "mn" | "en";
 
 export const LOCALES = [
-  { code: "mn", label: "Монгол", flag: "/icons/flag-mn.png" },
-  { code: "en", label: "English", flag: "/icons/flag-en.png" },
+  { code: "mn", label: "Монгол" },
+  { code: "en", label: "English" },
 ];
 
 export const DEFAULT_LOCALES: Locale[] = ["mn", "en"];

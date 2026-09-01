@@ -25,14 +25,14 @@ import { DEFAULT_LOCALE as DEFAULT_LOCALE_VALUE, LOCALE_KEY, type Locale } from 
  * wishlist: every entry here is one more column every future translation has to
  * fill, so growing it is a decision, not a convenience.
  */
-export const LOCALES: { code: Locale; label: string; flag: string; rtl?: boolean }[] = [
-  { code: "mn", label: "Монгол", flag: "/icons/flag-mn.png" },
-  { code: "ar", label: "العربية", flag: "/icons/flag-ar.png", rtl: true },
-  { code: "zh", label: "中文", flag: "/icons/flag-zh.png" },
-  { code: "en", label: "English", flag: "/icons/flag-en.png" },
-  { code: "fr", label: "Français", flag: "/icons/flag-fr.png" },
-  { code: "ru", label: "Русский", flag: "/icons/flag-ru.png" },
-  { code: "es", label: "Español", flag: "/icons/flag-es.png" },
+export const LOCALES: { code: Locale; label: string; rtl?: boolean }[] = [
+  { code: "mn", label: "Монгол" },
+  { code: "ar", label: "العربية", rtl: true },
+  { code: "zh", label: "中文" },
+  { code: "en", label: "English" },
+  { code: "fr", label: "Français" },
+  { code: "ru", label: "Русский" },
+  { code: "es", label: "Español" },
 ];
 
 /**

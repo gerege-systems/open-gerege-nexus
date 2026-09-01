@@ -60,7 +60,6 @@ export default function AppearanceSettingsPage() {
             const isOn = availableLocales.includes(option.code);
             return (
               <li key={option.code} className="flex items-center gap-3 px-4 py-3">
-                <img src={option.flag} alt="" width={20} height={20} className="rounded-sm shrink-0" />
                 <span className="text-sm font-medium text-foreground min-w-0 truncate">{option.label}</span>
                 <span className="text-[11px] uppercase tracking-wider text-muted">{option.code}</span>
                 <span className="ml-auto">
@@ -75,7 +74,7 @@ export default function AppearanceSettingsPage() {
                       aria-checked={isOn}
                       aria-label={option.label}
                       onClick={() => setLocaleEnabled(option.code, !isOn)}
-                      className={`relative w-11 h-6 rounded-full transition ${isOn ? "bg-accent" : "bg-slate-200"}`}
+                      className={`relative w-11 h-6 rounded-full transition ${isOn ? "bg-accent" : "bg-line-strong"}`}
                     >
                       <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-surface shadow transition-all ${isOn ? "left-[22px]" : "left-0.5"}`} />
                     </button>
