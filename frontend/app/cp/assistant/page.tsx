@@ -20,7 +20,7 @@ import { cp, type Knowledge, type Prompt } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 
 export default function Assistant() {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const action = useAction();
   const [prompts, setPrompts] = useState<Prompt[]>([]);
   const [knowledge, setKnowledge] = useState<Knowledge[]>([]);
@@ -45,15 +45,15 @@ export default function Assistant() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-slate-900 flex items-center gap-2">
-          <BrainCircuit className="w-6 h-6 text-[var(--gerege-blue)]" />
+        <h1 className="text-2xl font-semibold text-foreground flex items-center gap-2">
+          <BrainCircuit className="w-6 h-6 text-accent" />
           {t("cp.section.assistant")}
         </h1>
-        <p className="mt-1 text-sm text-slate-500">{t("cp.hint.assistant")}</p>
+        <p className="mt-1 text-sm text-muted">{t("cp.hint.assistant")}</p>
       </div>
 
       {failure && (
-        <p className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+        <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
       )}
 
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,.65fr)] gap-6 items-start">
@@ -73,7 +73,7 @@ export default function Assistant() {
                 }
               />
             ))}
-            {prompts.length === 0 && <p className="text-sm text-slate-500">{t("cp.message.no_activity")}</p>}
+            {prompts.length === 0 && <p className="text-sm text-muted">{t("cp.message.no_activity")}</p>}
           </div>
         </Card>
 
@@ -84,20 +84,20 @@ export default function Assistant() {
                 placeholder={t("ai.field.knowledge_title")}
                 value={draft.title}
                 onChange={(event) => setDraft({ ...draft, title: event.target.value })}
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                className="rounded-lg border border-input px-3 py-2 text-sm"
               />
               <input
                 placeholder={t("ai.field.source_url")}
                 value={draft.source_url}
                 onChange={(event) => setDraft({ ...draft, source_url: event.target.value })}
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                className="rounded-lg border border-input px-3 py-2 text-sm"
               />
               <textarea
                 placeholder={t("ai.field.knowledge_content")}
                 value={draft.content}
                 onChange={(event) => setDraft({ ...draft, content: event.target.value })}
                 rows={6}
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                className="rounded-lg border border-input px-3 py-2 text-sm"
               />
             </div>
             <button
@@ -114,20 +114,20 @@ export default function Assistant() {
                   },
                 })
               }
-              className="inline-flex items-center gap-2 rounded-lg bg-[var(--gerege-blue)] px-3 py-2 text-sm font-medium text-[var(--gerege-on-blue)] hover:brightness-105 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-lg bg-accent px-3 py-2 text-sm font-medium text-on-accent hover:brightness-105 disabled:opacity-50"
             >
               <Plus className="w-4 h-4" />
               {t("ai.action.add_knowledge")}
             </button>
 
-            <div className="divide-y divide-slate-100 max-h-96 overflow-y-auto">
+            <div className="divide-y divide-line max-h-96 overflow-y-auto">
               {knowledge.map((entry) => (
                 <article key={entry.id} className="py-3 flex items-start gap-3">
-                  <BookOpen className="w-4 h-4 mt-0.5 text-slate-400 shrink-0" />
+                  <BookOpen className="w-4 h-4 mt-0.5 text-muted shrink-0" />
                   <div className="min-w-0 flex-1">
-                    <h3 className="text-sm font-semibold text-slate-900 truncate">{entry.title}</h3>
-                    <p className="text-xs text-slate-500 line-clamp-2">{entry.content}</p>
-                    <p className="text-[11px] text-slate-400">{formatMoment(entry.updated_at, locale)}</p>
+                    <h3 className="text-sm font-semibold text-foreground truncate">{entry.title}</h3>
+                    <p className="text-xs text-muted line-clamp-2">{entry.content}</p>
+                    <p className="text-[11px] text-muted">{formatMoment(entry.updated_at)}</p>
                   </div>
                   <button
                     type="button"
@@ -141,13 +141,13 @@ export default function Assistant() {
                         onDone: load,
                       })
                     }
-                    className="shrink-0 rounded-lg border border-slate-200 p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-600"
+                    className="shrink-0 rounded-lg border border-line p-1.5 text-muted hover:bg-red-50 hover:text-red-600"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </article>
               ))}
-              {knowledge.length === 0 && <p className="py-3 text-sm text-slate-500">{t("cp.message.no_activity")}</p>}
+              {knowledge.length === 0 && <p className="py-3 text-sm text-muted">{t("cp.message.no_activity")}</p>}
             </div>
           </div>
         </Card>
@@ -165,7 +165,7 @@ export default function Assistant() {
  * them when the list reloads after somebody else's save.
  */
 function PromptEditor({ prompt, onSave }: { prompt: Prompt; onSave: (content: string, active: boolean) => void }) {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const [content, setContent] = useState(prompt.content);
   const [active, setActive] = useState(prompt.active);
 
@@ -177,28 +177,28 @@ function PromptEditor({ prompt, onSave }: { prompt: Prompt; onSave: (content: st
   return (
     <div>
       <div className="flex items-center justify-between gap-3 mb-1.5">
-        <label className="text-sm font-semibold text-slate-900 font-mono">{prompt.key}</label>
-        <span className="text-xs text-slate-400">
-          {prompt.updated_at ? formatMoment(prompt.updated_at, locale) : t("cp.state.never")}
+        <label className="text-sm font-semibold text-foreground font-mono">{prompt.key}</label>
+        <span className="text-xs text-muted">
+          {prompt.updated_at ? formatMoment(prompt.updated_at) : t("cp.state.never")}
         </span>
       </div>
       <textarea
         rows={7}
         value={content}
         onChange={(event) => setContent(event.target.value)}
-        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-mono"
+        className="w-full rounded-lg border border-input px-3 py-2 text-sm font-mono"
       />
       <div className="mt-2 flex items-center gap-3">
         <button
           type="button"
           disabled={!content.trim()}
           onClick={() => onSave(content, active)}
-          className="inline-flex items-center gap-2 rounded-lg bg-[var(--gerege-blue)] px-3 py-2 text-sm font-medium text-[var(--gerege-on-blue)] hover:brightness-105 disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-lg bg-accent px-3 py-2 text-sm font-medium text-on-accent hover:brightness-105 disabled:opacity-50"
         >
           <Save className="w-4 h-4" />
           {t("base.action.save")}
         </button>
-        <label className="flex items-center gap-2 text-sm text-slate-600">
+        <label className="flex items-center gap-2 text-sm text-muted">
           <input type="checkbox" checked={active} onChange={(event) => setActive(event.target.checked)} />
           {t("cp.field.active")}
         </label>

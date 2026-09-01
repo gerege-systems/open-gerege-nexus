@@ -35,7 +35,7 @@ import { cp, type Usage, type UsageSeries } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 
 export default function UsageScreen() {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const params = useParams<{ id: string }>();
   const id = params?.id ?? "";
   const [usage, setUsage] = useState<Usage | null>(null);
@@ -55,15 +55,15 @@ export default function UsageScreen() {
   }, [id, load]);
 
   if (failure) {
-    return <p className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>;
+    return <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>;
   }
-  if (!usage) return <div className="text-slate-500">…</div>;
+  if (!usage) return <div className="text-muted">…</div>;
 
   return (
     <div className="space-y-6">
       <Link
         href={`/cp/tenants/${id}`}
-        className="inline-flex items-center gap-1.5 text-sm text-slate-600 hover:text-slate-900"
+        className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-foreground"
       >
         <ArrowLeft className="w-4 h-4" />
         {t("cp.action.back")}
@@ -71,16 +71,16 @@ export default function UsageScreen() {
 
       <div className="flex flex-wrap items-start gap-3">
         <div className="flex-1">
-          <h1 className="text-2xl font-semibold text-slate-900">{t("cp.section.usage")}</h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <h1 className="text-2xl font-semibold text-foreground">{t("cp.section.usage")}</h1>
+          <p className="mt-1 text-sm text-muted">
             {usage.collected
-              ? `${t("cp.field.counted")}: ${formatMoment(usage.collected, locale)}`
+              ? `${t("cp.field.counted")}: ${formatMoment(usage.collected)}`
               : t("cp.message.never_counted")}
           </p>
         </div>
         <a
           href={cp.usageCSVURL(id)}
-          className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50"
+          className="inline-flex items-center gap-2 rounded-lg border border-input px-3 py-2 text-sm hover:bg-surface-hover"
         >
           <Download className="w-4 h-4" />
           CSV
@@ -114,13 +114,13 @@ function MetricCard({ series }: { series: UsageSeries }) {
             {series.enforced ? "" : ` · ${t("cp.state.not_enforced")}`}
           </Badge>
         ) : (
-          <span className="text-xs text-slate-400">{series.total}</span>
+          <span className="text-xs text-muted">{series.total}</span>
         )
       }
     >
       <div className="p-4 h-48">
         {series.points.length === 0 ? (
-          <p className="text-sm text-slate-500">{t("cp.message.no_usage")}</p>
+          <p className="text-sm text-muted">{t("cp.message.no_usage")}</p>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             {asLine ? (

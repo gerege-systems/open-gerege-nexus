@@ -36,7 +36,7 @@ import { useI18n } from "@/lib/i18n";
 import { Modal } from "@/components/ui";
 
 export default function Detail() {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const { operator } = useConsole();
   const params = useParams<{ id: string }>();
   const id = params?.id ?? "";
@@ -64,13 +64,13 @@ export default function Detail() {
     return (
       <div className="space-y-4">
         <BackLink label={t("cp.action.back")} />
-        <p className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">
+        <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">
           {t("cp.message.load_failed")}
         </p>
       </div>
     );
   }
-  if (!tenant) return <div className="text-slate-500">…</div>;
+  if (!tenant) return <div className="text-muted">…</div>;
 
   const suspended = !!tenant.suspended_at;
   const deleting = !!tenant.deletion_scheduled_at;
@@ -81,13 +81,13 @@ export default function Detail() {
       <BackLink label={t("cp.action.back")} />
 
       <div className="flex flex-wrap items-start gap-3">
-        <Building2 className="w-6 h-6 text-slate-400 mt-1" />
+        <Building2 className="w-6 h-6 text-muted mt-1" />
         <div className="flex-1 min-w-0">
-          <h1 className="text-2xl font-semibold text-slate-900 flex items-center gap-2">
+          <h1 className="text-2xl font-semibold text-foreground flex items-center gap-2">
             {tenant.name}
             <StateBadge tenant={tenant} />
           </h1>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-muted">
             {tenant.slug}
             {tenant.legal_name ? ` · ${tenant.legal_name}` : ""}
           </p>
@@ -96,14 +96,14 @@ export default function Detail() {
           )}
           {deleting && (
             <p className="mt-1 text-sm text-red-700">
-              {formatMoment(tenant.deletion_scheduled_at, locale)}
+              {formatMoment(tenant.deletion_scheduled_at)}
             </p>
           )}
         </div>
       </div>
 
-      <section className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
-        <h2 className="text-sm font-medium text-slate-500 mb-3">{t("cp.section.actions")}</h2>
+      <section className="bg-surface rounded-xl border border-line p-4">
+        <h2 className="text-sm font-medium text-muted mb-3">{t("cp.section.actions")}</h2>
         <div className="flex flex-wrap gap-2">
           {may("tenant.suspend") && !suspended && (
             <ActionButton
@@ -188,7 +188,7 @@ export default function Detail() {
           )}
           <Link
             href={`/cp/tenants/${tenant.id}/usage`}
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+            className="inline-flex items-center gap-2 rounded-lg border border-input px-3 py-2 text-sm text-foreground hover:bg-surface-hover"
           >
             <BarChart3 className="w-4 h-4" />
             {t("cp.action.usage")}
@@ -196,7 +196,7 @@ export default function Detail() {
           {may("tenant.delete") && (
             <a
               href={cp.exportURL(tenant.id)}
-              className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50"
+              className="inline-flex items-center gap-2 rounded-lg border border-input px-3 py-2 text-sm hover:bg-surface-hover"
             >
               <Download className="w-4 h-4" />
               {t("cp.action.export")}
@@ -208,7 +208,7 @@ export default function Detail() {
       <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Fact label={t("cp.field.registration")} value={tenant.registration_number || "—"} />
         <Fact label={t("cp.field.tax_number")} value={tenant.tax_number || "—"} />
-        <Fact label={t("cp.field.created")} value={formatMoment(tenant.created_at, locale)} />
+        <Fact label={t("cp.field.created")} value={formatMoment(tenant.created_at)} />
         <Fact
           label={t("cp.field.users")}
           value={
@@ -226,7 +226,7 @@ export default function Detail() {
             app.name,
             app.version,
             app.enabled ? app.status : `${app.status} · off`,
-            formatMoment(app.installed_at, locale),
+            formatMoment(app.installed_at),
           ])}
           empty={t("cp.message.no_activity")}
         />
@@ -239,7 +239,7 @@ export default function Detail() {
             <button
               type="button"
               onClick={() => setAddingPerson(true)}
-              className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-50"
+              className="inline-flex items-center gap-2 rounded-lg border border-input px-2.5 py-1.5 text-xs text-foreground hover:bg-surface-hover"
             >
               <UserPlus className="w-3.5 h-3.5" />
               {t("cp.action.add_person")}
@@ -275,7 +275,7 @@ export default function Detail() {
                     },
                   })
                 }
-                className="inline-flex items-center gap-1.5 text-xs rounded-lg border border-slate-300 px-2 py-1 hover:bg-slate-50"
+                className="inline-flex items-center gap-1.5 text-xs rounded-lg border border-input px-2 py-1 hover:bg-surface-hover"
               >
                 <Eye className="w-3.5 h-3.5" />
                 {t("cp.action.impersonate")}
@@ -292,7 +292,7 @@ export default function Detail() {
         <Table
           head={[t("cp.field.when"), t("cp.field.operator"), t("cp.field.person"), t("cp.field.reason")]}
           rows={tenant.impersonations.map((visit) => [
-            formatMoment(visit.created_at, locale),
+            formatMoment(visit.created_at),
             visit.operator_email,
             visit.user_email,
             visit.reason,
@@ -305,7 +305,7 @@ export default function Detail() {
         <Table
           head={[t("cp.field.when"), t("cp.field.action"), t("cp.field.resource")]}
           rows={tenant.activity.map((entry) => [
-            formatMoment(entry.created_at, locale),
+            formatMoment(entry.created_at),
             entry.action,
             entry.resource,
           ])}
@@ -317,7 +317,7 @@ export default function Detail() {
         <Table
           head={[t("cp.field.when"), t("cp.field.operator"), t("cp.field.action"), t("cp.field.reason")]}
           rows={tenant.operator_actions.map((entry) => [
-            formatMoment(entry.created_at, locale),
+            formatMoment(entry.created_at),
             entry.operator_email,
             entry.action,
             entry.reason || "—",
@@ -401,7 +401,7 @@ function ActionButton({
       className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${
         danger
           ? "border-red-200 text-red-700 hover:bg-red-50"
-          : "border-slate-300 text-slate-700 hover:bg-slate-50"
+          : "border-input text-foreground hover:bg-surface-hover"
       }`}
     >
       {icon}
@@ -455,12 +455,12 @@ function QuotaDialog({
   }
 
   return (
-    <Modal label={t("cp.section.limits")}>
+    <Modal onClose={onClose} label={t("cp.section.limits")}>
       <form onSubmit={submit} className="p-5 space-y-4">
-        <h2 className="text-lg font-semibold text-slate-900">{t("cp.section.limits")}</h2>
+        <h2 className="text-lg font-semibold text-foreground">{t("cp.section.limits")}</h2>
 
         {failure && (
-          <p className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+          <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
         )}
 
         <Field label={t("cp.field.max_users")} value={users} onChange={setUsers} />
@@ -468,11 +468,11 @@ function QuotaDialog({
         <Field label={t("cp.field.max_ai")} value={ai} onChange={setAI} hint={t("cp.hint.not_enforced")} />
 
         <label className="block text-sm">
-          <span className="text-slate-600">{t("cp.field.enforcement")}</span>
+          <span className="text-muted">{t("cp.field.enforcement")}</span>
           <select
             value={enforcement}
             onChange={(event) => setEnforcement(event.target.value as "soft" | "hard")}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+            className="mt-1 w-full rounded-lg border border-input px-3 py-2"
           >
             <option value="soft">{t("cp.state.soft")}</option>
             <option value="hard">{t("cp.state.hard")}</option>
@@ -480,23 +480,23 @@ function QuotaDialog({
         </label>
 
         <label className="block text-sm">
-          <span className="text-slate-600">{t("cp.field.reason")}</span>
+          <span className="text-muted">{t("cp.field.reason")}</span>
           <input
             required
             value={reason}
             onChange={(event) => setReason(event.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+            className="mt-1 w-full rounded-lg border border-input px-3 py-2"
           />
         </label>
 
         <div className="flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-100">
+          <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-muted hover:bg-surface-hover">
             {t("cp.action.cancel")}
           </button>
           <button
             type="submit"
             disabled={busy}
-            className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-medium text-[var(--gerege-on-blue)] hover:brightness-105 disabled:opacity-60"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:brightness-105 disabled:opacity-60"
           >
             {t("cp.action.confirm")}
           </button>
@@ -519,12 +519,12 @@ function Field({
 }) {
   return (
     <label className="block text-sm">
-      <span className="text-slate-600">{label}</span>
+      <span className="text-muted">{label}</span>
       <input
         inputMode="numeric"
         value={value}
         onChange={(event) => onChange(event.target.value.replace(/\D/g, ""))}
-        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+        className="mt-1 w-full rounded-lg border border-input px-3 py-2"
       />
       {hint && <span className="mt-1 block text-xs text-amber-700">{hint}</span>}
     </label>
@@ -533,7 +533,7 @@ function Field({
 
 function BackLink({ label }: { label: string }) {
   return (
-    <Link href="/cp/tenants" className="inline-flex items-center gap-1.5 text-sm text-slate-600 hover:text-slate-900">
+    <Link href="/cp/tenants" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-foreground">
       <ArrowLeft className="w-4 h-4" />
       {label}
     </Link>
@@ -542,9 +542,9 @@ function BackLink({ label }: { label: string }) {
 
 function Fact({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-4 py-3">
-      <dt className="text-xs uppercase tracking-wide text-slate-400">{label}</dt>
-      <dd className="mt-1 text-sm text-slate-900">{value}</dd>
+    <div className="bg-surface rounded-xl border border-line px-4 py-3">
+      <dt className="text-xs uppercase tracking-wide text-muted">{label}</dt>
+      <dd className="mt-1 text-sm text-foreground">{value}</dd>
     </div>
   );
 }
@@ -569,7 +569,7 @@ function AddPersonDialog({
   onClose: () => void;
   onAdded: () => void;
 }) {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const [people, setPeople] = useState<VerifiedPerson[]>([]);
   const [search, setSearch] = useState("");
   const [chosen, setChosen] = useState<VerifiedPerson | null>(null);
@@ -606,25 +606,25 @@ function AddPersonDialog({
   }
 
   return (
-    <Modal label={t("cp.action.add_person")}>
+    <Modal onClose={onClose} label={t("cp.action.add_person")}>
       <form onSubmit={submit} className="p-5 space-y-4">
-        <h2 className="text-lg font-semibold text-slate-900">{t("cp.action.add_person")}</h2>
-        <p className="text-xs text-slate-500">{t("cp.hint.member_is_chosen")}</p>
+        <h2 className="text-lg font-semibold text-foreground">{t("cp.action.add_person")}</h2>
+        <p className="text-xs text-muted">{t("cp.hint.member_is_chosen")}</p>
 
         {failure && (
-          <p className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+          <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
         )}
 
         {chosen ? (
-          <div className="flex items-center gap-3 rounded-lg border border-[var(--gerege-blue)] bg-[var(--gerege-blue-soft)] px-3 py-2">
+          <div className="flex items-center gap-3 rounded-lg border border-accent bg-accent-soft px-3 py-2">
             <span className="min-w-0 flex-1">
-              <strong className="block text-sm text-slate-900 truncate">{chosen.name}</strong>
-              <span className="block text-xs text-slate-600 truncate">{chosen.email}</span>
+              <strong className="block text-sm text-foreground truncate">{chosen.name}</strong>
+              <span className="block text-xs text-muted truncate">{chosen.email}</span>
             </span>
             <button
               type="button"
               onClick={() => setChosen(null)}
-              className="text-xs rounded-lg border border-slate-300 bg-white px-2 py-1 hover:bg-slate-50"
+              className="text-xs rounded-lg border border-input bg-surface px-2 py-1 hover:bg-surface-hover"
             >
               {t("cp.action.change")}
             </button>
@@ -638,39 +638,39 @@ function AddPersonDialog({
                 void loadPeople(event.target.value);
               }}
               placeholder={t("cp.field.search_people")}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-input px-3 py-2 text-sm"
             />
-            <div className="max-h-48 overflow-y-auto divide-y divide-slate-100 rounded-lg border border-slate-200">
+            <div className="max-h-48 overflow-y-auto divide-y divide-line rounded-lg border border-line">
               {people.map((person) => (
                 <button
                   key={person.user_id}
                   type="button"
                   onClick={() => setChosen(person)}
-                  className="w-full text-left px-3 py-2 hover:bg-slate-50"
+                  className="w-full text-left px-3 py-2 hover:bg-surface-hover"
                 >
-                  <strong className="block text-sm text-slate-900 truncate">{person.name}</strong>
-                  <span className="block text-xs text-slate-500 truncate">
+                  <strong className="block text-sm text-foreground truncate">{person.name}</strong>
+                  <span className="block text-xs text-muted truncate">
                     {person.email}
                     {person.reg_number ? ` · ${person.reg_number}` : ""}
                     {" · "}
-                    {formatMoment(person.last_seen_at, locale)}
+                    {formatMoment(person.last_seen_at)}
                   </span>
                 </button>
               ))}
               {people.length === 0 && (
-                <p className="px-3 py-3 text-sm text-slate-500">{t("cp.message.no_verified_people")}</p>
+                <p className="px-3 py-3 text-sm text-muted">{t("cp.message.no_verified_people")}</p>
               )}
             </div>
           </div>
         )}
 
         <label className="block text-sm">
-          <span className="text-slate-600">{t("cp.field.reason")}</span>
+          <span className="text-muted">{t("cp.field.reason")}</span>
           <input
             required
             value={reason}
             onChange={(event) => setReason(event.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+            className="mt-1 w-full rounded-lg border border-input px-3 py-2"
           />
         </label>
 
@@ -678,7 +678,7 @@ function AddPersonDialog({
             to an organisation's data; confirming it here keeps what has been
             typed. */}
         <label className="block text-sm">
-          <span className="text-slate-600">{t("cp.field.code")}</span>
+          <span className="text-muted">{t("cp.field.code")}</span>
           <input
             inputMode="numeric"
             pattern="[0-9]*"
@@ -696,19 +696,19 @@ function AddPersonDialog({
                 }
               }
             }}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono tracking-[0.4em]"
+            className="mt-1 w-full rounded-lg border border-input px-3 py-2 font-mono tracking-[0.4em]"
           />
-          <small className="text-xs text-slate-500">{t("cp.hint.step_up")}</small>
+          <small className="text-xs text-muted">{t("cp.hint.step_up")}</small>
         </label>
 
         <div className="flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-100">
+          <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-muted hover:bg-surface-hover">
             {t("cp.action.cancel")}
           </button>
           <button
             type="submit"
             disabled={busy || !chosen}
-            className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-medium text-[var(--gerege-on-blue)] hover:brightness-105 disabled:opacity-60"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:brightness-105 disabled:opacity-60"
           >
             {t("cp.action.add_person")}
           </button>

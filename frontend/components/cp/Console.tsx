@@ -247,7 +247,7 @@ export default function Console({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen grid place-items-center text-slate-500">
+      <div className="min-h-dvh grid place-items-center text-muted">
         <div className="animate-pulse">…</div>
       </div>
     );
@@ -270,8 +270,8 @@ export default function Console({ children }: { children: React.ReactNode }) {
         What is shared is the stylesheet: every class here is the workspace's,
         so a change to the design reaches both.
       */}
-      <div className="gerege-shell min-h-screen flex flex-col">
-        <header className="gerege-topbar h-16 flex items-center border-b sticky top-0 z-50">
+      <div className="gerege-shell min-h-dvh flex flex-col">
+        <header className="gerege-topbar h-16 flex items-center border-b sticky top-0 z-sticky">
           <Link
             href="/cp"
             aria-label={t("cp.view.title")}
@@ -289,14 +289,14 @@ export default function Console({ children }: { children: React.ReactNode }) {
             )}
           </Link>
           <div className={`gerege-header-context h-full flex items-center gap-3 overflow-hidden transition-all duration-200 ${panelOpen ? "is-open" : ""}`}>
-            <span className="shrink-0 text-[var(--gerege-blue)]">{app.icon}</span>
+            <span className="shrink-0 text-accent">{app.icon}</span>
             <span className="min-w-0">
-              <small className="block text-[11px] leading-4 text-slate-500 truncate">{brand.name}</small>
-              <strong className="block text-[15px] leading-5 text-slate-900 truncate">{t(app.label)}</strong>
+              <small className="block text-[11px] leading-4 text-muted truncate">{brand.name}</small>
+              <strong className="block text-[15px] leading-5 text-foreground truncate">{t(app.label)}</strong>
             </span>
           </div>
           <div className="gerege-menu-toggle h-full shrink-0 flex items-center justify-center gap-1">
-            <button type="button" onClick={togglePanel} aria-label={t("web.action.toggle_menu")} aria-expanded={mobileOpen} className="grid place-items-center w-10 h-10 rounded-lg text-slate-600 hover:bg-slate-50">
+            <button type="button" onClick={togglePanel} aria-label={t("web.action.toggle_menu")} aria-expanded={mobileOpen} className="grid place-items-center w-10 h-10 rounded-lg text-muted hover:bg-surface-hover">
               <HamburgerIcon className="w-5 h-5" />
             </button>
             <button
@@ -305,7 +305,7 @@ export default function Console({ children }: { children: React.ReactNode }) {
               aria-expanded={allGroupsOpen}
               aria-label={allGroupsOpen ? t("web.action.collapse_all") : t("web.action.expand_all")}
               title={allGroupsOpen ? t("web.action.collapse_all") : t("web.action.expand_all")}
-              className="grid place-items-center w-10 h-10 rounded-lg text-slate-600 hover:bg-slate-50"
+              className="grid place-items-center w-10 h-10 rounded-lg text-muted hover:bg-surface-hover"
             >
               {allGroupsOpen ? <ChevronsDownUp className="w-5 h-5" /> : <ChevronsUpDown className="w-5 h-5" />}
             </button>
@@ -314,26 +314,26 @@ export default function Console({ children }: { children: React.ReactNode }) {
               operator: the same cell answers "whose session is this". */}
           <div className="hidden lg:flex items-center gap-2 px-4 min-w-0">
             <span className="gerege-session-dot w-2 h-2 rounded-full shrink-0" />
-            <strong className="text-base text-slate-800 font-semibold truncate max-w-56">{operator.name}</strong>
+            <strong className="text-base text-foreground font-semibold truncate max-w-56">{operator.name}</strong>
           </div>
           <div className="gerege-header-search hidden md:flex flex-1 items-center justify-center min-w-0 px-5 relative">
             <div className="relative w-full max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 onKeyDown={(event) => { if (event.key === "Enter" && results[0]) { router.push(results[0].href); setQuery(""); } }}
                 placeholder={t("web.view.search_placeholder")}
-                className="w-full h-10 rounded-full border border-slate-200 bg-slate-100/80 pl-10 pr-4 text-sm outline-none focus:border-[var(--gerege-blue)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--gerege-blue)_15%,transparent)]"
+                className="w-full h-10 rounded-full border border-line bg-surface-2 pl-10 pr-4 text-sm focus:border-accent focus:ring-2 focus:ring-[color-mix(in_srgb,var(--gerege-blue)_15%,transparent)]"
               />
               {results.length > 0 && (
-                <div className="gerege-topbar-onlight absolute top-12 inset-x-0 bg-white border border-slate-200 rounded-xl shadow-xl p-1.5 z-[70]">
+                <div className="gerege-topbar-onlight absolute top-12 inset-x-0 bg-surface border border-line rounded-xl shadow-lg p-1.5 z-dropdown">
                   {results.map((item) => (
-                    <button key={item.href} type="button" onClick={() => { router.push(item.href); setQuery(""); }} className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-[var(--gerege-surface-2)]">
-                      <span className="text-[var(--gerege-blue)]">{item.icon}</span>
+                    <button key={item.href} type="button" onClick={() => { router.push(item.href); setQuery(""); }} className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-surface-2">
+                      <span className="text-accent">{item.icon}</span>
                       <span className="min-w-0">
                         <strong className="block text-sm truncate">{t(item.label)}</strong>
-                        <small className="text-slate-500 truncate">{t(item.group)}</small>
+                        <small className="text-muted truncate">{t(item.group)}</small>
                       </span>
                     </button>
                   ))}
@@ -360,10 +360,10 @@ export default function Console({ children }: { children: React.ReactNode }) {
         </header>
 
         <div className="flex flex-1 min-h-0">
-          {mobileOpen && <button type="button" className="gerege-mobile-backdrop fixed inset-0 top-16 bg-slate-950/40 z-30" aria-label={t("web.action.close_menu")} onClick={() => setMobileOpen(false)} />}
-          <div className={`gerege-sidebar top-16 bottom-0 left-0 z-40 flex overflow-hidden ${mobileOpen ? "is-mobile-open" : ""} ${panelOpen ? "is-desktop-open" : ""}`}>
+          {mobileOpen && <button type="button" className="gerege-mobile-backdrop fixed inset-0 top-16 bg-slate-950/40 z-overlay" aria-label={t("web.action.close_menu")} onClick={() => setMobileOpen(false)} />}
+          <div className={`gerege-sidebar top-16 bottom-0 left-0 z-modal flex overflow-hidden ${mobileOpen ? "is-mobile-open" : ""} ${panelOpen ? "is-desktop-open" : ""}`}>
             {/* Division one: the app rail, a tile per console app. */}
-            <nav className="w-16 min-w-16 shrink-0 py-3 flex flex-col items-center gap-2 border-r border-[var(--gerege-border)]">
+            <nav className="w-16 min-w-16 shrink-0 py-3 flex flex-col items-center gap-2 border-r border-line">
               {APPS.map((entry) => (
                 <Link
                   key={entry.id}
@@ -373,8 +373,8 @@ export default function Console({ children }: { children: React.ReactNode }) {
                   aria-current={entry.id === app.id ? "page" : undefined}
                   className={`w-11 h-11 rounded-xl grid place-items-center transition ${
                     entry.id === app.id
-                      ? "bg-[var(--gerege-blue-soft)] text-[var(--gerege-blue)] shadow-sm"
-                      : "text-slate-500 hover:bg-[var(--gerege-surface-2)] hover:text-slate-800"
+                      ? "bg-accent-soft text-accent shadow-sm"
+                      : "text-muted hover:bg-[var(--gerege-surface-2)] hover:text-foreground"
                   }`}
                 >
                   {entry.icon}
@@ -416,7 +416,7 @@ function MenuGroup({ id, title, closed, onToggle, children }: { id: string; titl
   return (
     <section className="gerege-menu-group mb-6">
       <h3 className="mb-2">
-        <button type="button" onClick={() => onToggle(id)} aria-expanded={!closed} aria-controls={bodyId} className="w-full flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider text-slate-400 hover:text-slate-600 hover:bg-[var(--gerege-surface-2)] transition">
+        <button type="button" onClick={() => onToggle(id)} aria-expanded={!closed} aria-controls={bodyId} className="w-full flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-semibold uppercase tracking-wider text-muted hover:text-muted hover:bg-surface-2 transition">
           <span className="min-w-0 truncate text-left">{title}</span>
           <ChevronDown className={`w-3.5 h-3.5 ml-auto shrink-0 transition-transform duration-200 ${closed ? "" : "rotate-180"}`} />
         </button>

@@ -45,19 +45,19 @@ export default function ContractInboxDetailPage() {
       </Link>
 
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-bold text-slate-900">{item.title}</h1>
+        <h1 className="text-2xl font-semibold text-foreground">{item.title}</h1>
         <PartyBadge state={item.state} />
       </div>
 
       {item.parties.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {item.parties.map((party, index) => (
-            <span key={index} className="inline-flex items-center gap-2 bg-white border border-slate-200 rounded-full px-3 py-1 text-xs">
+            <span key={index} className="inline-flex items-center gap-2 bg-surface border border-line rounded-full px-3 py-1 text-xs">
               <span className={`w-2 h-2 rounded-full ${
                 party.state === "signed" ? "bg-emerald-500" :
                 party.state === "declined" ? "bg-red-500" :
                 party.state === "invited" || party.state === "viewed" ? "bg-amber-400" : "bg-slate-300"}`} />
-              <span className="font-medium text-slate-700">
+              <span className="font-medium text-foreground">
                 {party.display_name}{party.mine ? ` ${t("contracts.msg.you")}` : ""}
               </span>
               <PartyBadge state={party.state} />
@@ -71,27 +71,27 @@ export default function ContractInboxDetailPage() {
       {item.has_copy ? (
         <section className={`${cardClass} p-5 space-y-3`}>
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-slate-800">{t("contracts.section.body")}</h2>
+            <h2 className="text-sm font-semibold text-foreground">{t("contracts.section.body")}</h2>
             <a href={contracts.inboxCopyUrl(pid)} target="_blank" rel="noopener noreferrer"
-              className="text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5">
+              className="text-xs font-semibold text-foreground bg-surface-2 hover:bg-slate-200 px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5">
               <FileText className="w-3.5 h-3.5" />
               {t("contracts.action.view_pdf")}
             </a>
           </div>
-          <div className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700 bg-slate-50 border border-slate-200 rounded-lg p-4 max-h-[28rem] overflow-auto">
+          <div className="whitespace-pre-wrap text-sm leading-relaxed text-foreground bg-surface-2 border border-line rounded-lg p-4 max-h-[28rem] overflow-auto">
             {item.body_text}
           </div>
-          <p className="text-[11px] text-slate-400 font-mono">{t("contracts.msg.sha", { sha: item.sha256 || "—" })}</p>
+          <p className="text-[11px] text-muted font-mono">{t("contracts.msg.sha", { sha: item.sha256 || "—" })}</p>
         </section>
       ) : (
         <Banner tone="warning" message={t("contracts.msg.not_delivered")} />
       )}
 
       <section className={`${cardClass} p-5 space-y-3`}>
-        <h2 className="text-sm font-bold text-slate-800">{t("contracts.section.signatory")}</h2>
+        <h2 className="text-sm font-semibold text-foreground">{t("contracts.section.signatory")}</h2>
         {named ? (
           item.my_signatories.map((signatory) => (
-            <p key={signatory.id} className="text-sm text-slate-700">
+            <p key={signatory.id} className="text-sm text-foreground">
               {signatory.full_name}
               {signatory.position ? ` (${signatory.position})` : ""}
               {signatory.reg_number ? ` · ${signatory.reg_number}` : ""}
@@ -99,14 +99,14 @@ export default function ContractInboxDetailPage() {
             </p>
           ))
         ) : (
-          <p className="text-sm text-slate-500">{t("contracts.msg.no_signatory")}</p>
+          <p className="text-sm text-muted">{t("contracts.msg.no_signatory")}</p>
         )}
         {mayNominate && open && <NominateForm pid={pid} onAdded={detail.reload} onError={fail} />}
       </section>
 
       {open && item.has_copy && maySign && (
         <section className={`${cardClass} p-5 space-y-3`}>
-          <h2 className="text-sm font-bold text-slate-800">{t("contracts.section.decision")}</h2>
+          <h2 className="text-sm font-semibold text-foreground">{t("contracts.section.decision")}</h2>
           <div className="flex flex-wrap gap-2">
             <CeremonyButton
               label={t("contracts.action.sign")}
@@ -117,7 +117,7 @@ export default function ContractInboxDetailPage() {
                 await detail.reload();
               }}
               onError={(value) => setMessage({ tone: "error", text: value })}
-              className="bg-amber-400 hover:bg-amber-500 text-slate-900 text-sm font-bold px-4 py-2 rounded-lg inline-flex items-center gap-1.5"
+              className="bg-amber-400 hover:bg-amber-500 text-foreground text-sm font-semibold px-4 py-2 rounded-lg inline-flex items-center gap-1.5"
             />
             <button onClick={() => setDeclining(true)}
               className="bg-red-50 hover:bg-red-100 text-red-700 text-sm font-semibold px-4 py-2 rounded-lg">
@@ -131,7 +131,7 @@ export default function ContractInboxDetailPage() {
         <section className={`${cardClass} p-5 space-y-3`}>
           <Banner tone="success" message={t("contracts.msg.signed_done")} />
           <a href={contracts.inboxSignedUrl(pid)} target="_blank" rel="noopener noreferrer"
-            className="text-xs font-semibold text-emerald-700 bg-white border border-emerald-200 hover:bg-emerald-50 px-3 py-1.5 rounded-lg inline-block">
+            className="text-xs font-semibold text-emerald-700 bg-surface border border-emerald-200 hover:bg-emerald-50 px-3 py-1.5 rounded-lg inline-block">
             {t("contracts.action.signed_pdf")}
           </a>
         </section>
@@ -177,8 +177,8 @@ function NominateForm({ pid, onAdded, onError }: {
   };
 
   return (
-    <div className="border-t border-slate-200 pt-3 space-y-3">
-      <p className="text-xs text-slate-500">{t("contracts.msg.nominate_hint")}</p>
+    <div className="border-t border-line pt-3 space-y-3">
+      <p className="text-xs text-muted">{t("contracts.msg.nominate_hint")}</p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <input className={fieldClass} placeholder={t("contracts.field.full_name")} value={form.full_name} onChange={set("full_name")} />
         <input className={fieldClass} placeholder={t("contracts.field.reg")} value={form.reg_number} onChange={set("reg_number")} />
@@ -212,13 +212,13 @@ function DeclineModal({ pid, onClose, onDeclined, onError }: {
     }
   };
   return (
-    <Modal label={t("contracts.action.decline")}>
+    <Modal onClose={onClose} label={t("contracts.action.decline")}>
       <div className="space-y-4">
-        <h2 className="text-lg font-bold text-slate-900">{t("contracts.action.decline")}</h2>
-        <p className="text-xs text-slate-500">{t("contracts.msg.decline_hint")}</p>
+        <h2 className="text-lg font-semibold text-foreground">{t("contracts.action.decline")}</h2>
+        <p className="text-xs text-muted">{t("contracts.msg.decline_hint")}</p>
         <textarea autoFocus className={`${fieldClass} min-h-[100px]`} value={reason} onChange={(event) => setReason(event.target.value)} />
         <div className="flex justify-end gap-2">
-          <button onClick={onClose} className="text-sm font-medium text-slate-500 px-4 py-2 rounded-lg hover:bg-slate-100">
+          <button onClick={onClose} className="text-sm font-medium text-muted px-4 py-2 rounded-lg hover:bg-surface-hover">
             {t("contracts.action.cancel")}
           </button>
           <button onClick={() => void decline()} disabled={busy || !reason.trim()}

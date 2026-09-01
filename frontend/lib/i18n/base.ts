@@ -50,6 +50,31 @@ export const base = {
     en: "Page {page} of {pages} · {total} records",
   },
 
+  // The pages a person lands on when the address is wrong or the screen threw.
+  // Until these existed both were Next's own English default — a stack-trace
+  // shell on a Mongolian platform, with no way back other than the browser's
+  // Back button. They belong to the shell, so they sit in base.
+  "base.error.not_found_title": {
+    mn: "Хуудас олдсонгүй",
+    en: "Page not found",
+  },
+  "base.error.not_found_body": {
+    mn: "Хаяг буруу эсвэл энэ хуудсыг устгасан байна. Хаягаа шалгаад дахин оролдоно уу.",
+    en: "The address is wrong, or this page has been removed. Check the address and try again.",
+  },
+  "base.error.crash_title": {
+    mn: "Энэ хуудсыг нээж чадсангүй",
+    en: "This page could not be opened",
+  },
+  "base.error.crash_body": {
+    mn: "Алдааг бүртгэлээ. Дахин оролдоод үзнэ үү; давтагдвал системийн админд хандана уу.",
+    en: "The error has been logged. Try again; if it keeps happening, contact your administrator.",
+  },
+  "base.error.home": {
+    mn: "Нүүр хуудас руу",
+    en: "Go to the home page",
+  },
+
   // Installing the platform from the browser. It sits in base rather than in an
   // addon because it belongs to the shell, not to any one application.
   "pwa.install.title": {

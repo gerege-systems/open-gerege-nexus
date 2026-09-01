@@ -72,20 +72,20 @@ export default function PublishedServices() {
   return (
     <div className="w-full space-y-6">
       <header>
-        <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-900">
-          <Megaphone className="w-6 h-6 text-[var(--gerege-blue)]" />
+        <h1 className="flex items-center gap-2 text-2xl font-semibold text-foreground">
+          <Megaphone className="w-6 h-6 text-accent" />
           {t("core.view.services_title")}
         </h1>
-        <p className="mt-1 text-sm text-slate-500">{t("core.view.services_hint")}</p>
+        <p className="mt-1 text-sm text-muted">{t("core.view.services_hint")}</p>
       </header>
 
-      <section className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+      <section className="rounded-xl border border-line bg-surface overflow-hidden">
       {failed && <div className="p-4"><Banner tone="error" message={failed} /></div>}
       {services.length === 0
-        ? <p className="p-6 text-center text-sm italic text-slate-500">{t("core.message.no_services")}</p>
+        ? <p className="p-6 text-center text-sm italic text-muted">{t("core.message.no_services")}</p>
         : <ul className="divide-y">{services.map((one) => (
             <li key={one.id} className="flex items-center justify-between gap-3 p-4">
-              <span className="min-w-0"><strong className="block text-sm">{one.title || one.code}</strong><code className="text-xs text-slate-500">{one.code}</code></span>
+              <span className="min-w-0"><strong className="block text-sm">{one.title || one.code}</strong><code className="text-xs text-muted">{one.code}</code></span>
               {canManage && <button disabled={busy} onClick={() => void withdraw(one.id)} aria-label={t("core.action.withdraw")} className="rounded-lg border border-red-200 p-2 text-red-600 disabled:opacity-50"><Trash2 className="w-4 h-4" /></button>}
             </li>))}
           </ul>}
@@ -93,7 +93,7 @@ export default function PublishedServices() {
         <div className="flex flex-col gap-2 border-t p-4 sm:flex-row">
           <input value={code} onChange={(e) => setCode(e.target.value)} placeholder={t("core.field.service_code")} className={`${fieldClass} sm:w-56`} />
           <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("core.field.service_title")} className={`${fieldClass} flex-1`} />
-          <button disabled={busy || code.trim() === ""} onClick={() => void publish()} className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-semibold text-[var(--gerege-on-blue)] disabled:opacity-50">
+          <button disabled={busy || code.trim() === ""} onClick={() => void publish()} className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-on-accent disabled:opacity-50">
             <Plus className="inline w-4 h-4 mr-1" />{t("core.action.publish")}
           </button>
         </div>

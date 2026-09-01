@@ -69,7 +69,11 @@ export const cp = {
     en: "Every operator write leaves a new row saying who acted, what it touched, and why.",
   },
   "cp.audit.filter": { mn: "Бүртгэлийг нарийсгах", en: "Narrow the ledger" },
-  "cp.audit.empty": { mn: "Энэ нөхцөлд таарах бүртгэл алга.", en: "Nothing matches these filters." },
+  // Хоёр хоосон: бүртгэл огт байхгүй, эсвэл шүүлтүүр нь бүгдийг нуусан.
+  // Нэг өгүүлбэр хоёуланд нь тохирохгүй — эхнийх нь юу энд гарахыг хэлнэ,
+  // хоёр дахь нь шүүлтүүрээ цэвэрлэхийг санал болгоно.
+  "cp.audit.empty": { mn: "Одоогоор бүртгэгдсэн үйлдэл алга.", en: "No actions have been recorded yet." },
+  "cp.audit.empty_filtered": { mn: "Энэ нөхцөлд таарах бүртгэл алга.", en: "Nothing matches these filters." },
   "cp.audit.change": { mn: "Өмнөх ба дараах утга", en: "Before and after" },
   "cp.audit.before": { mn: "Өмнө", en: "Before" },
   "cp.audit.after": { mn: "Дараа", en: "After" },

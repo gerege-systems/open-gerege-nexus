@@ -35,6 +35,17 @@ function resolveMode(mode: ColorMode): "light" | "dark" {
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [preferences, setPreferences] = useState<ThemePreferences>(defaults);
   const [resolvedMode, setResolvedMode] = useState<"light" | "dark">("light");
+  /**
+   * Whether the stored preferences have been read yet.
+   *
+   * Without it the first commit ran the effect below with `defaults` still in
+   * hand — mode "light" — and painted the document light before the effect
+   * above had finished reading localStorage. `public/theme-init.js` has
+   * already put the right class on <html> by then, so that pass was not a
+   * missing style, it was React actively undoing the pre-paint script and
+   * flashing white at anyone who had chosen dark.
+   */
+  const [restored, setRestored] = useState(false);
 
   useEffect(() => {
     try {
@@ -46,14 +57,19 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     } catch {
       localStorage.removeItem(STORAGE_KEY);
     }
+    setRestored(true);
   }, []);
 
   useEffect(() => {
+    if (!restored) return;
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     const apply = () => {
       const nextMode = resolveMode(preferences.mode);
       setResolvedMode(nextMode);
-      document.documentElement.dataset.theme = nextMode;
+      // A class, not a `data-theme` attribute: it is the signal Tailwind's
+      // `dark:` variant reads and the one the pre-paint script sets, and two
+      // names for one state is how they came to disagree.
+      document.documentElement.classList.toggle("dark", nextMode === "dark");
       document.documentElement.dataset.accent = preferences.accent;
       document.documentElement.dataset.density = preferences.density;
       document.documentElement.dataset.design = preferences.design;
@@ -69,7 +85,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     media.addEventListener("change", apply);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
     return () => media.removeEventListener("change", apply);
-  }, [preferences]);
+  }, [preferences, restored]);
 
   const value = useMemo<ThemeContextValue>(() => ({
     ...preferences,

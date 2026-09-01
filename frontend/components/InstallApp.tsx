@@ -135,9 +135,9 @@ export default function InstallApp() {
   return (
     // Above the native switcher rather than beside it: two cards competing for
     // the same corner is how a screen starts to look unmaintained.
-    <div className="fixed bottom-24 right-5 z-[9998] w-[min(20rem,calc(100vw-2.5rem))]">
+    <div className="fixed bottom-24 right-5 z-toast w-[min(20rem,calc(100vw-2.5rem))]">
       <div
-        className="flex flex-col gap-3 rounded-2xl border p-4 shadow-2xl"
+        className="flex flex-col gap-3 rounded-xl border p-4 shadow-lg"
         style={{
           background: "var(--gerege-surface)",
           borderColor: "var(--gerege-border)",
@@ -164,7 +164,7 @@ export default function InstallApp() {
           <button
             type="button"
             onClick={install}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--gerege-blue)] px-3 py-2 text-sm font-semibold text-[var(--gerege-on-blue)] transition hover:opacity-90"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-on-accent transition hover:opacity-90"
           >
             <Download size={15} />
             {t("pwa.install.action")}

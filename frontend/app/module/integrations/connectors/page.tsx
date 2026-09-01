@@ -9,6 +9,7 @@ import {
   Activity, AlertTriangle, CheckCircle2, Cloud, Globe, HardDrive, Link2, Plus,
   RefreshCw, Share2, ShieldAlert, Trash2, Unlink, Video,
 } from "lucide-react";
+import { formatMoment } from "@/lib/datetime";
 
 /**
  * Two kinds of connector share this screen.
@@ -187,7 +188,7 @@ export default function IntegrationsPage() {
   if (!checking && !isAdmin) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-slate-900 flex items-center space-x-2">
+        <h1 className="text-2xl font-semibold text-foreground flex items-center space-x-2">
           <Share2 className="w-7 h-7 text-indigo-600" />
           <span>{t("integrations.view.title")}</span>
         </h1>
@@ -200,17 +201,17 @@ export default function IntegrationsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 flex items-center space-x-2">
+          <h1 className="text-2xl font-semibold text-foreground flex items-center space-x-2">
             <Share2 className="w-7 h-7 text-indigo-600" />
             <span>{t("integrations.view.title")}</span>
           </h1>
-          <p className="text-sm text-slate-500 mt-1">{t("integrations.view.subtitle")}</p>
+          <p className="text-sm text-muted mt-1">{t("integrations.view.subtitle")}</p>
         </div>
         <div className="flex items-center space-x-2">
           <button
             onClick={() => void loadData()}
             aria-label={t("base.action.retry")}
-            className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg border border-slate-200 transition"
+            className="p-2 text-muted hover:bg-surface-hover rounded-lg border border-line transition"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -237,7 +238,7 @@ export default function IntegrationsPage() {
       {loading ? (
         <LoadingBlock label={t("integrations.message.loading")} />
       ) : integrations.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-xl p-12 text-center text-slate-500 text-sm">
+        <div className="bg-surface border border-line rounded-xl p-12 text-center text-muted text-sm">
           {t("integrations.message.empty")}
         </div>
       ) : (
@@ -252,7 +253,7 @@ export default function IntegrationsPage() {
             return (
               <div
                 key={item.id}
-                className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between gap-3"
+                className="bg-surface p-5 rounded-xl border border-line flex flex-col justify-between gap-3"
               >
                 <div>
                   <div className="flex items-start justify-between mb-3 gap-3">
@@ -261,14 +262,14 @@ export default function IntegrationsPage() {
                         {PROVIDER_ICONS[item.provider]}
                       </div>
                       <div className="min-w-0">
-                        <h3 className="font-bold text-slate-900 text-base truncate">{item.name}</h3>
-                        <span className="text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
+                        <h3 className="font-semibold text-foreground text-base truncate">{item.name}</h3>
+                        <span className="text-[11px] bg-surface-2 text-muted px-2 py-0.5 rounded">
                           {t(PROVIDER_LABEL_KEYS[item.provider])}
                         </span>
                       </div>
                     </div>
                     <span
-                      className={`inline-flex items-center space-x-1 text-xs font-bold px-2.5 py-1 rounded-full shrink-0 ${
+                      className={`inline-flex items-center space-x-1 text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${
                         health === "ok"
                           ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                           : health === "failing"
@@ -287,7 +288,7 @@ export default function IntegrationsPage() {
                     </span>
                   </div>
 
-                  <div className="text-xs text-slate-500 space-y-1 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                  <div className="text-xs text-muted space-y-1 bg-surface-2 p-2.5 rounded-lg border border-line">
                     {oauth ? (
                       <div className="truncate">
                         {item.connected
@@ -303,7 +304,7 @@ export default function IntegrationsPage() {
                     {item.last_ping_at && (
                       <div className="flex items-center gap-1">
                         <Activity className="w-3 h-3" />
-                        {new Date(item.last_ping_at).toLocaleString()}
+                        {formatMoment(item.last_ping_at)}
                       </div>
                     )}
                     {item.last_error && <div className="text-red-600 break-words">{item.last_error}</div>}
@@ -316,7 +317,7 @@ export default function IntegrationsPage() {
                       <button
                         onClick={() => void handleDisconnect(item)}
                         disabled={busy === item.id}
-                        className="flex-1 flex items-center justify-center gap-1.5 border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-semibold py-2 rounded-lg disabled:opacity-50"
+                        className="flex-1 flex items-center justify-center gap-1.5 border border-input text-foreground hover:bg-surface-hover text-xs font-semibold py-2 rounded-lg disabled:opacity-50"
                       >
                         <Unlink className="w-3.5 h-3.5" />
                         {t("integrations.action.disconnect")}
@@ -335,7 +336,7 @@ export default function IntegrationsPage() {
                     onClick={() => void handleDelete(item)}
                     disabled={busy === item.id}
                     aria-label={t("base.action.delete")}
-                    className="p-2 border border-slate-300 text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-50"
+                    className="p-2 border border-input text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-50"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -347,11 +348,11 @@ export default function IntegrationsPage() {
       )}
 
       {showModal && (
-        <Modal className="max-h-[90vh] overflow-y-auto" label={t("integrations.view.create_title")}>
-          <h2 className="text-xl font-bold text-slate-900 mb-4">{t("integrations.view.create_title")}</h2>
+        <Modal onClose={() => setShowModal(false)} className="max-h-[90vh] overflow-y-auto" label={t("integrations.view.create_title")}>
+          <h2 className="text-xl font-semibold text-foreground mb-4">{t("integrations.view.create_title")}</h2>
           <form onSubmit={handleCreate} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label className="block text-xs font-semibold text-foreground mb-1">
                 {t("integrations.field.type")}
               </label>
               <select
@@ -375,7 +376,7 @@ export default function IntegrationsPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label className="block text-xs font-semibold text-foreground mb-1">
                 {t("integrations.field.name")} *
               </label>
               <input
@@ -391,7 +392,7 @@ export default function IntegrationsPage() {
             {!isOAuth && (
               <>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-foreground mb-1">
                     {t("integrations.field.target_url")} *
                   </label>
                   <input
@@ -404,7 +405,7 @@ export default function IntegrationsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-foreground mb-1">
                     {t("integrations.field.secret")}
                   </label>
                   <input
@@ -421,7 +422,7 @@ export default function IntegrationsPage() {
             {(form.provider === "google_drive" || form.provider === "dropbox") && (
               <>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-foreground mb-1">
                     {form.provider === "google_drive"
                       ? t("integrations.field.drive_folder")
                       : t("integrations.field.dropbox_folder")}
@@ -438,7 +439,7 @@ export default function IntegrationsPage() {
                     className={fieldClass}
                   />
                 </div>
-                <label className="flex items-start gap-2 text-xs text-slate-700">
+                <label className="flex items-start gap-2 text-xs text-foreground">
                   <input
                     type="checkbox"
                     checked={form.auto_export}
@@ -452,7 +453,7 @@ export default function IntegrationsPage() {
 
             {form.provider === "google_meet" && (
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-foreground mb-1">
                   {t("integrations.field.calendar_id")}
                 </label>
                 <input
@@ -462,17 +463,17 @@ export default function IntegrationsPage() {
                   onChange={(e) => setForm({ ...form, calendar_id: e.target.value })}
                   className={fieldClass}
                 />
-                <p className="mt-1 text-[11px] text-slate-500">{t("integrations.message.meet_via_calendar")}</p>
+                <p className="mt-1 text-[11px] text-muted">{t("integrations.message.meet_via_calendar")}</p>
               </div>
             )}
 
-            {isOAuth && <p className="text-[11px] text-slate-500">{t("integrations.message.connect_after_save")}</p>}
+            {isOAuth && <p className="text-[11px] text-muted">{t("integrations.message.connect_after_save")}</p>}
 
             <div className="flex items-center space-x-2 pt-2">
               <button
                 type="button"
                 onClick={() => setShowModal(false)}
-                className="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 rounded-lg text-xs"
+                className="w-1/2 bg-surface-2 hover:bg-slate-200 text-foreground font-medium py-2 rounded-lg text-xs"
               >
                 {t("base.action.cancel")}
               </button>

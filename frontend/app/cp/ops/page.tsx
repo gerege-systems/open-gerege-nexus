@@ -42,18 +42,18 @@ export default function Metrics() {
     <div className="space-y-6">
       <div className="flex items-start gap-3">
         <div className="flex-1">
-          <h1 className="text-2xl font-semibold text-slate-900 flex items-center gap-2">
-            <GaugeIcon className="w-6 h-6 text-[var(--gerege-blue)]" />
+          <h1 className="text-2xl font-semibold text-foreground flex items-center gap-2">
+            <GaugeIcon className="w-6 h-6 text-accent" />
             {t("cp.section.metrics")}
           </h1>
-          <p className="mt-1 text-sm text-slate-500">{t("cp.hint.metrics")}</p>
+          <p className="mt-1 text-sm text-muted">{t("cp.hint.metrics")}</p>
         </div>
         {health?.grafana_url && (
           <a
             href={health.grafana_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-input px-3 py-2 text-sm text-foreground hover:bg-surface-hover"
           >
             Grafana
             <ExternalLink className="w-3.5 h-3.5" />
@@ -63,7 +63,7 @@ export default function Metrics() {
           type="button"
           onClick={() => void load()}
           disabled={busy}
-          className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-lg border border-input px-3 py-2 text-sm text-foreground hover:bg-surface-hover disabled:opacity-50"
         >
           <RefreshCw className={`w-4 h-4 ${busy ? "animate-spin" : ""}`} />
           {t("cp.action.refresh")}
@@ -71,7 +71,7 @@ export default function Metrics() {
       </div>
 
       {failure && (
-        <p className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+        <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
       )}
 
       {health && !health.monitoring && (
@@ -97,7 +97,7 @@ export default function Metrics() {
         <Table
           head={[t("cp.field.gauge"), t("cp.field.value"), t("cp.field.warning_at"), t("cp.field.status")]}
           rows={(health?.infra ?? []).map((gauge) => [
-            <span key="n" className="font-mono text-xs uppercase text-slate-600">{gauge.name}</span>,
+            <span key="n" className="font-mono text-xs uppercase text-muted">{gauge.name}</span>,
             gauge.measured ? `${gauge.value.toFixed(1)}${gauge.unit}` : <Unmeasured key="v" />,
             `${gauge.warning}${gauge.unit}`,
             <StateBadge key="s" state={gauge.state} />,
@@ -110,7 +110,7 @@ export default function Metrics() {
         <Table
           head={[t("cp.field.system"), t("cp.metric.error_rate"), t("cp.metric.p95"), t("cp.field.status")]}
           rows={(health?.external ?? []).map((system) => [
-            <span key="n" className="font-medium text-slate-800">{system.system}</span>,
+            <span key="n" className="font-medium text-foreground">{system.system}</span>,
             system.measured ? `${(system.error_rate * 100).toFixed(1)}%` : <Unmeasured key="e" />,
             system.measured ? `${Math.round(system.p95_seconds * 1000)} ms` : <Unmeasured key="p" />,
             <StateBadge key="s" state={system.state} />,
@@ -138,14 +138,14 @@ function StateBadge({ state }: { state: string }) {
 /** A number nobody measured is a dash and a word, never a zero. */
 function Unmeasured() {
   const { t } = useI18n();
-  return <span className="text-xs text-slate-400">{t("cp.state.unmeasured")}</span>;
+  return <span className="text-xs text-muted">{t("cp.state.unmeasured")}</span>;
 }
 
 function Stat({ label, value, tone }: { label: string; value: string; tone?: "red" }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
-      <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{label}</p>
-      <p className={`mt-1 text-2xl font-semibold ${tone === "red" ? "text-red-600" : "text-slate-900"}`}>{value}</p>
+    <div className="rounded-xl border border-line bg-surface p-4">
+      <p className="text-xs font-semibold uppercase tracking-wider text-muted">{label}</p>
+      <p className={`mt-1 text-2xl font-semibold ${tone === "red" ? "text-red-600" : "text-foreground"}`}>{value}</p>
     </div>
   );
 }

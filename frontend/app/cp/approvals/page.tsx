@@ -19,7 +19,7 @@ import { cp, type Approval } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 
 export default function Approvals() {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const action = useAction();
   const [approvals, setApprovals] = useState<Approval[]>([]);
   const [failure, setFailure] = useState("");
@@ -40,16 +40,16 @@ export default function Approvals() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-slate-900">{t("cp.section.approvals")}</h1>
-        <p className="mt-1 text-sm text-slate-500">{t("cp.message.deletion_requested")}</p>
+        <h1 className="text-2xl font-semibold text-foreground">{t("cp.section.approvals")}</h1>
+        <p className="mt-1 text-sm text-muted">{t("cp.message.deletion_requested")}</p>
       </div>
 
       {failure && (
-        <p className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+        <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
       )}
 
       {approvals.length === 0 && (
-        <p className="text-center text-slate-500 py-10">{t("cp.message.no_approvals")}</p>
+        <p className="text-center text-muted py-10">{t("cp.message.no_approvals")}</p>
       )}
 
       {approvals.map((approval) => (
@@ -57,28 +57,28 @@ export default function Approvals() {
           <div className="p-4 space-y-3">
             <dl className="grid gap-3 sm:grid-cols-3 text-sm">
               <div>
-                <dt className="text-xs uppercase tracking-wide text-slate-400">
+                <dt className="text-xs uppercase tracking-wide text-muted">
                   {t("cp.field.organisation")}
                 </dt>
                 <dd className="mt-0.5">
-                  <Link href={`/cp/tenants/${approval.target_id}`} className="text-slate-900 hover:underline">
+                  <Link href={`/cp/tenants/${approval.target_id}`} className="text-foreground hover:underline">
                     {approval.target_name || approval.target_id}
                   </Link>
                 </dd>
               </div>
               <div>
-                <dt className="text-xs uppercase tracking-wide text-slate-400">
+                <dt className="text-xs uppercase tracking-wide text-muted">
                   {t("cp.field.requested_by")}
                 </dt>
-                <dd className="mt-0.5 text-slate-700">{approval.requested_by_name}</dd>
+                <dd className="mt-0.5 text-foreground">{approval.requested_by_name}</dd>
               </div>
               <div>
-                <dt className="text-xs uppercase tracking-wide text-slate-400">{t("cp.field.when")}</dt>
-                <dd className="mt-0.5 text-slate-700">{formatMoment(approval.requested_at, locale)}</dd>
+                <dt className="text-xs uppercase tracking-wide text-muted">{t("cp.field.when")}</dt>
+                <dd className="mt-0.5 text-foreground">{formatMoment(approval.requested_at)}</dd>
               </div>
             </dl>
 
-            <p className="text-sm rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 text-slate-700">
+            <p className="text-sm rounded-lg bg-surface-2 border border-line px-3 py-2 text-foreground">
               {approval.requested_reason}
             </p>
 
@@ -109,7 +109,7 @@ export default function Approvals() {
                     onDone: load,
                   })
                 }
-                className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                className="inline-flex items-center gap-2 rounded-lg border border-input px-3 py-2 text-sm text-foreground hover:bg-surface-hover"
               >
                 <X className="w-4 h-4" />
                 {t("cp.action.reject")}

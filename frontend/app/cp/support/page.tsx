@@ -20,11 +20,15 @@ import { useAction } from "@/components/cp/Action";
 import { Badge, Card, formatMoment, Table } from "@/components/cp/ui";
 import { cp, type Person } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
+import { useUrlState } from "@/lib/urlState";
 
 export default function Support() {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const action = useAction();
-  const [query, setQuery] = useState("");
+  // Хайлт хаягт үлдэнэ — дэмжлэгийн ажилтан олсон хүнийхээ линкийг
+  // хамтрагчдаа явуулж чадна.
+  const [urlState, setUrlState] = useUrlState({ q: "" });
+  const [query, setQuery] = useState(urlState.q);
   const [people, setPeople] = useState<Person[]>([]);
   const [failure, setFailure] = useState("");
 
@@ -39,40 +43,43 @@ export default function Support() {
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => void load(query), 250);
+    const timer = setTimeout(() => {
+      setUrlState({ q: query });
+      void load(query);
+    }, 250);
     return () => clearTimeout(timer);
-  }, [query, load]);
+  }, [query, load, setUrlState]);
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-slate-900">{t("cp.section.support")}</h1>
-        <p className="mt-1 text-sm text-slate-500">{t("cp.hint.search_people")}</p>
+        <h1 className="text-2xl font-semibold text-foreground">{t("cp.section.support")}</h1>
+        <p className="mt-1 text-sm text-muted">{t("cp.hint.search_people")}</p>
       </div>
 
       <div className="relative">
-        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder={t("cp.field.email")}
-          className="w-full rounded-xl border border-slate-300 bg-white pl-9 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+          className="w-full rounded-xl border border-input bg-surface pl-9 pr-3 py-2.5"
         />
       </div>
 
       {failure && (
-        <p className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+        <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
       )}
 
       <div className="space-y-4">
         {people.map((person) => (
           <Card key={person.id} title={person.email}>
             <div className="p-4 space-y-4">
-              <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
+              <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
                 <span>{person.name}</span>
                 {person.locked_until && (
                   <Badge tone="amber">
-                    {t("cp.state.locked")} · {formatMoment(person.locked_until, locale)}
+                    {t("cp.state.locked")} · {formatMoment(person.locked_until)}
                   </Badge>
                 )}
                 <Badge tone="slate">
@@ -149,7 +156,7 @@ export default function Support() {
         ))}
 
         {people.length === 0 && query.length >= 3 && (
-          <p className="text-center text-slate-500 py-8">{t("cp.message.no_people")}</p>
+          <p className="text-center text-muted py-8">{t("cp.message.no_people")}</p>
         )}
       </div>
 
@@ -163,7 +170,7 @@ function SupportButton({ icon, label, onClick }: { icon: React.ReactNode; label:
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+      className="inline-flex items-center gap-2 rounded-lg border border-input px-3 py-2 text-sm text-foreground hover:bg-surface-hover"
     >
       {icon}
       {label}

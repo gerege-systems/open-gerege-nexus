@@ -12,6 +12,7 @@
 import { useState } from "react";
 import { AlertTriangle, Check, Copy, Loader2, X } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { Modal as UIModal } from "@/components/ui";
 
 export { useAccess, ReadOnlyNote } from "@/lib/permissions";
 
@@ -27,8 +28,8 @@ export function Screen({ icon, title, subtitle, action, children }: {
             {icon}
           </span>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">{title}</h1>
-            <p className="text-sm text-slate-500 mt-0.5 max-w-2xl">{subtitle}</p>
+            <h1 className="text-2xl font-semibold text-foreground">{title}</h1>
+            <p className="text-sm text-muted mt-0.5 max-w-2xl">{subtitle}</p>
           </div>
         </div>
         {action}
@@ -39,21 +40,21 @@ export function Screen({ icon, title, subtitle, action, children }: {
 }
 
 export function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <section className={`bg-white border border-slate-200 rounded-xl ${className}`}>{children}</section>;
+  return <section className={`bg-surface border border-line rounded-xl ${className}`}>{children}</section>;
 }
 
 export function Empty({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className="p-12 text-center border border-dashed border-slate-300 rounded-xl bg-white">
+    <div className="p-12 text-center border border-dashed border-input rounded-xl bg-surface">
       <span className="text-slate-300 grid place-content-center mb-3">{icon}</span>
-      <p className="text-sm text-slate-500 max-w-md mx-auto">{children}</p>
+      <p className="text-sm text-muted max-w-md mx-auto">{children}</p>
     </div>
   );
 }
 
 export function Loading({ label }: { label: string }) {
   return (
-    <p className="p-12 text-center text-slate-400 flex items-center justify-center gap-2">
+    <p className="p-12 text-center text-muted flex items-center justify-center gap-2">
       <Loader2 className="w-4 h-4 animate-spin" /> {label}
     </p>
   );
@@ -71,7 +72,7 @@ export function Chip({ children, tone = "slate", mono }: {
   children: React.ReactNode; tone?: "slate" | "blue" | "amber" | "emerald" | "rose"; mono?: boolean;
 }) {
   const tones = {
-    slate: "bg-slate-100 text-slate-600",
+    slate: "bg-surface-2 text-muted",
     blue: "bg-blue-50 text-blue-700",
     amber: "bg-amber-50 text-amber-700 border border-amber-200",
     emerald: "bg-emerald-50 text-emerald-700",
@@ -101,22 +102,36 @@ export function CopyButton({ value, id, copied, onCopy }: {
   value: string; id: string; copied: string; onCopy: (value: string, id: string) => void;
 }) {
   return (
-    <button onClick={() => onCopy(value, id)} className="shrink-0 text-slate-400 hover:text-slate-700" aria-label="copy">
+    <button onClick={() => onCopy(value, id)} className="shrink-0 text-muted hover:text-foreground" aria-label="copy">
       {copied === id ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
     </button>
   );
 }
 
+/**
+ * The module dialogs' shell, now the same one every other dialog uses.
+ *
+ * It had its own copy: a dimmed backdrop with `backdrop-blur-sm`, no focus
+ * trap, no Escape, and a z-index picked by hand. The blur was the visible half
+ * of the problem — glass surfaces are on the design system's forbidden list —
+ * and the missing trap was the real one: Tab walked straight out of an open
+ * dialog into the page behind it. Delegating keeps the X, which these dialogs
+ * do want, and inherits the rest.
+ */
 export function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+  const { t } = useI18n();
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-start justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-white rounded-xl w-full max-w-md p-6 shadow-2xl my-8 relative">
-        <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600" aria-label="close">
-          <X className="w-4 h-4" />
-        </button>
-        {children}
-      </div>
-    </div>
+    <UIModal onClose={onClose} scrollable className="my-8 relative">
+      <button
+        type="button"
+        onClick={onClose}
+        className="absolute top-4 right-4 text-muted hover:text-foreground"
+        aria-label={t("base.action.close")}
+      >
+        <X className="w-4 h-4" />
+      </button>
+      {children}
+    </UIModal>
   );
 }
 
@@ -128,13 +143,13 @@ export function ConfirmDialog({ title, body, confirmLabel, danger, onCancel, onC
   return (
     <Modal onClose={onCancel}>
       <div className="space-y-4">
-        <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+        <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
           <AlertTriangle className={`w-5 h-5 ${danger ? "text-rose-600" : "text-amber-600"}`} />
           {title}
         </h2>
-        <p className="text-sm text-slate-600">{body}</p>
+        <p className="text-sm text-muted">{body}</p>
         <div className="flex justify-end gap-2">
-          <button onClick={onCancel} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">
+          <button onClick={onCancel} className="px-4 py-2 text-sm text-muted hover:bg-surface-hover rounded-lg">
             {t("base.action.cancel")}
           </button>
           <button

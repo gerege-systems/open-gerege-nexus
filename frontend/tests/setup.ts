@@ -84,6 +84,13 @@ afterEach(() => {
   if (!hasDocument) return;
   cleanup();
   localStorage.clear();
+  // Screens that keep their filters in the address write to jsdom's location,
+  // and jsdom keeps it between tests in a file. Without this the next test
+  // mounts with the previous one's search term already typed in — which is how
+  // "an empty search says nothing" started finding a result for "батболд".
+  if (window.location.search || window.location.hash) {
+    window.history.replaceState(null, "", window.location.pathname);
+  }
 });
 
 // Nothing in this suite talks to a network. A component that reaches one is a

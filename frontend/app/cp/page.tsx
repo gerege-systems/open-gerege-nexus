@@ -34,7 +34,7 @@ import { cp, type Overview } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 
 export default function Health() {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const { operator } = useConsole();
   const action = useAction();
   const [health, setHealth] = useState<Overview | null>(null);
@@ -59,9 +59,9 @@ export default function Health() {
   }, [load]);
 
   if (failure) {
-    return <p className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>;
+    return <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>;
   }
-  if (!health) return <div className="text-slate-500">…</div>;
+  if (!health) return <div className="text-muted">…</div>;
 
   const grafana = (path: string) =>
     health.grafana_url ? `${health.grafana_url}${path}` : "";
@@ -70,8 +70,8 @@ export default function Health() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-start gap-3">
         <div className="flex-1">
-          <h1 className="text-2xl font-semibold text-slate-900">{t("cp.section.health")}</h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <h1 className="text-2xl font-semibold text-foreground">{t("cp.section.health")}</h1>
+          <p className="mt-1 text-sm text-muted">
             {health.version.platform}
             {health.version.release ? ` · ${health.version.release}` : ""}
             {health.version.migration ? ` · db ${health.version.migration}` : ""}
@@ -91,7 +91,7 @@ export default function Health() {
                 },
               })
             }
-            className="inline-flex items-center gap-2 rounded-lg bg-[var(--gerege-blue)] px-3 py-2 text-sm font-medium text-[var(--gerege-on-blue)] hover:brightness-105"
+            className="inline-flex items-center gap-2 rounded-lg bg-accent px-3 py-2 text-sm font-medium text-on-accent hover:brightness-105"
           >
             <Rocket className="w-4 h-4" />
             {t("cp.action.deploy")}
@@ -106,7 +106,7 @@ export default function Health() {
       ))}
 
       {!health.monitoring && (
-        <p className="text-sm rounded-xl bg-slate-100 border border-slate-200 text-slate-700 px-4 py-3">
+        <p className="text-sm rounded-xl bg-surface-2 border border-line text-foreground px-4 py-3">
           {t("cp.message.no_monitoring")}
         </p>
       )}
@@ -138,13 +138,13 @@ export default function Health() {
             head={[t("cp.field.alert"), t("cp.field.severity"), t("cp.field.when"), ""]}
             rows={health.alerts.map((alert) => [
               <span key="n">
-                <strong className="text-slate-900">{alert.name}</strong>
-                <span className="block text-xs text-slate-500">{alert.summary}</span>
+                <strong className="text-foreground">{alert.name}</strong>
+                <span className="block text-xs text-muted">{alert.summary}</span>
               </span>,
               <Badge key="s" tone={alert.severity === "page" ? "red" : "amber"}>
                 {alert.severity}
               </Badge>,
-              formatMoment(alert.starts_at, locale),
+              formatMoment(alert.starts_at),
               alert.silenced ? <Badge key="q" tone="slate">{t("cp.state.silenced")}</Badge> : "",
             ])}
             empty={t("cp.message.no_alerts")}
@@ -159,12 +159,12 @@ export default function Health() {
         >
           <div className="p-4 flex flex-wrap gap-3">
             {health.external.map((system) => (
-              <div key={system.system} className="rounded-xl border border-slate-200 px-3 py-2 min-w-[9rem]">
+              <div key={system.system} className="rounded-xl border border-line px-3 py-2 min-w-[9rem]">
                 <div className="flex items-center gap-2">
                   <span className={`w-2.5 h-2.5 rounded-full ${dot(system.state)}`} />
-                  <strong className="text-sm text-slate-900">{system.system}</strong>
+                  <strong className="text-sm text-foreground">{system.system}</strong>
                 </div>
-                <p className="mt-1 text-xs text-slate-500 tabular-nums">
+                <p className="mt-1 text-xs text-muted tabular-nums">
                   {system.measured
                     ? `${(system.error_rate * 100).toFixed(1)}% · ${(system.p95_seconds * 1000).toFixed(0)} ms`
                     : t("cp.state.unmeasured")}
@@ -182,8 +182,8 @@ export default function Health() {
         >
           <div className="p-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {health.infra.map((gauge) => (
-              <div key={gauge.name} className="rounded-xl border border-slate-200 px-3 py-2">
-                <p className="text-xs uppercase tracking-wide text-slate-400">{gauge.name}</p>
+              <div key={gauge.name} className="rounded-xl border border-line px-3 py-2">
+                <p className="text-xs uppercase tracking-wide text-muted">{gauge.name}</p>
                 <p className={`mt-1 text-lg tabular-nums ${textFor(gauge.state)}`}>
                   {gauge.measured ? `${gauge.value.toFixed(1)}${gauge.unit}` : t("cp.state.unmeasured")}
                 </p>
@@ -201,11 +201,11 @@ export default function Health() {
             // otherwise, so a job added later shows up rather than rendering
             // an empty cell.
             jobName(job.name, t),
-            formatMoment(job.last_run, locale) || "—",
+            formatMoment(job.last_run) || "—",
             <Badge key="s" tone={job.ok ? "emerald" : "red"}>
               {job.ok ? t("cp.state.ok") : t("cp.state.failing")}
             </Badge>,
-            <span key="d" className="text-xs text-slate-500">
+            <span key="d" className="text-xs text-muted">
               {job.detail}
               {job.pending > 0 ? ` · ${job.pending}` : ""}
             </span>,
@@ -219,11 +219,11 @@ export default function Health() {
           <Table
             head={[t("cp.field.organisation"), t("cp.field.failures"), t("cp.field.action")]}
             rows={health.tenant_trouble.map((row) => [
-              <Link key="t" href={`/cp/tenants/${row.tenant_id}`} className="hover:underline text-slate-900">
+              <Link key="t" href={`/cp/tenants/${row.tenant_id}`} className="hover:underline text-foreground">
                 {row.name || row.tenant_id}
               </Link>,
               <span key="c" className="tabular-nums">{row.failures}</span>,
-              <span key="s" className="text-xs text-slate-500 font-mono">{row.sample}</span>,
+              <span key="s" className="text-xs text-muted font-mono">{row.sample}</span>,
             ])}
             empty={t("cp.message.no_activity")}
           />
@@ -241,12 +241,12 @@ export default function Health() {
               <>
                 <Row
                   label={t("cp.field.last_backup")}
-                  value={`${formatMoment(health.backups.last_backup_at, locale)} · ${health.backups.last_size_mb.toFixed(1)} MB`}
+                  value={`${formatMoment(health.backups.last_backup_at)} · ${health.backups.last_size_mb.toFixed(1)} MB`}
                   tone={health.backups.last_ok ? undefined : "red"}
                 />
                 <Row
                   label={t("cp.field.last_restore_test")}
-                  value={formatMoment(health.backups.last_restore_test_at, locale) || t("cp.message.never_tested")}
+                  value={formatMoment(health.backups.last_restore_test_at) || t("cp.message.never_tested")}
                   tone={health.backups.last_restore_test_at ? undefined : "amber"}
                 />
               </>
@@ -261,7 +261,7 @@ export default function Health() {
                   onDone: load,
                 })
               }
-              className="mt-2 inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50"
+              className="mt-2 inline-flex items-center gap-2 rounded-lg border border-input px-3 py-2 text-sm hover:bg-surface-hover"
             >
               <DatabaseBackup className="w-4 h-4" />
               {t("cp.action.record_restore_test")}
@@ -273,15 +273,15 @@ export default function Health() {
           <div className="p-4 space-y-2 text-sm">
             <Row
               label={t("cp.field.last_sync")}
-              value={formatMoment(health.catalog.last_sync_at, locale) || health.catalog.detail || "—"}
+              value={formatMoment(health.catalog.last_sync_at) || health.catalog.detail || "—"}
               tone={health.catalog.ok ? undefined : "red"}
             />
             <div className="pt-2 space-y-1">
               {health.catalog.apps.map((app) => (
                 <div key={app.app_id} className="flex items-center gap-2 text-xs">
-                  <Boxes className="w-3 h-3 text-slate-400" />
-                  <span className="flex-1 truncate text-slate-700">{app.name}</span>
-                  <span className="text-slate-500 font-mono">
+                  <Boxes className="w-3 h-3 text-muted" />
+                  <span className="flex-1 truncate text-foreground">{app.name}</span>
+                  <span className="text-muted font-mono">
                     {Object.entries(app.versions)
                       .map(([version, count]) => `${version}×${count}`)
                       .join("  ")}
@@ -299,7 +299,7 @@ export default function Health() {
                   onDone: load,
                 })
               }
-              className="mt-2 inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50"
+              className="mt-2 inline-flex items-center gap-2 rounded-lg border border-input px-3 py-2 text-sm hover:bg-surface-hover"
             >
               <RefreshCw className="w-4 h-4" />
               {t("cp.action.sync_catalog")}
@@ -325,12 +325,12 @@ function Stat({
   icon: React.ReactNode;
 }) {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-4 py-3">
-      <p className="text-xs uppercase tracking-wide text-slate-400 flex items-center gap-1.5">
+    <div className="bg-surface rounded-xl border border-line px-4 py-3">
+      <p className="text-xs uppercase tracking-wide text-muted flex items-center gap-1.5">
         {icon}
         {label}
       </p>
-      <p className={`mt-1 text-2xl tabular-nums ${tone === "red" ? "text-red-600" : "text-slate-900"}`}>{value}</p>
+      <p className={`mt-1 text-2xl tabular-nums ${tone === "red" ? "text-red-600" : "text-foreground"}`}>{value}</p>
     </div>
   );
 }
@@ -338,8 +338,8 @@ function Stat({
 function Row({ label, value, tone }: { label: string; value: string; tone?: Tone }) {
   return (
     <div className="flex items-baseline gap-3">
-      <span className="text-xs uppercase tracking-wide text-slate-400 w-40 shrink-0">{label}</span>
-      <span className={tone === "red" ? "text-red-700" : tone === "amber" ? "text-amber-700" : "text-slate-800"}>
+      <span className="text-xs uppercase tracking-wide text-muted w-40 shrink-0">{label}</span>
+      <span className={tone === "red" ? "text-red-700" : tone === "amber" ? "text-amber-700" : "text-foreground"}>
         {value}
       </span>
     </div>
@@ -353,7 +353,7 @@ function DeepLink({ href }: { href: string }) {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-slate-900"
+      className="inline-flex items-center gap-1 text-xs text-muted hover:text-foreground"
     >
       {t("cp.action.open_grafana")}
       <ExternalLink className="w-3 h-3" />
@@ -383,5 +383,5 @@ function dot(state: string): string {
 
 function textFor(state: string): string {
   if (state === "unknown") return "text-slate-400";
-  return state === "red" ? "text-red-600" : state === "amber" ? "text-amber-700" : "text-slate-900";
+  return state === "red" ? "text-red-600" : state === "amber" ? "text-amber-700" : "text-foreground";
 }

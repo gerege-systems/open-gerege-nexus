@@ -16,6 +16,7 @@ import {
   Chip, ConfirmDialog, Empty, ErrorNote, Loading, Panel, ReadOnlyNote, Screen,
   relativeDate, useAccess,
 } from "../shared";
+import { formatDay } from "@/lib/datetime";
 
 type Pending =
   | { kind: "tokens"; client: ClientActivity }
@@ -88,8 +89,8 @@ export default function AccessAuditPage() {
         <Panel className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50 border-b border-slate-200 text-left">
-                <tr className="text-[11px] uppercase tracking-wide text-slate-500">
+              <thead className="bg-surface-2 border-b border-line text-left">
+                <tr className="text-[11px] uppercase tracking-wide text-muted">
                   <th className="px-4 py-2.5 font-semibold">{t("sso_clients.field.name")}</th>
                   <th className="px-4 py-2.5 font-semibold text-right">{t("sso_clients.audit.active_access")}</th>
                   <th className="px-4 py-2.5 font-semibold text-right">{t("sso_clients.audit.active_refresh")}</th>
@@ -98,26 +99,26 @@ export default function AccessAuditPage() {
                   <th className="px-4 py-2.5" />
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-line">
                 {clients.map((client) => {
                   const live = client.active_access_tokens + client.active_refresh_tokens;
                   return (
                     <tr key={client.client_id} className="hover:bg-slate-50/60">
                       <td className="px-4 py-3">
-                        <div className="font-semibold text-slate-900 flex items-center gap-2">
+                        <div className="font-semibold text-foreground flex items-center gap-2">
                           {client.client_name}
                           {client.disabled && <Chip tone="rose">{t("sso_clients.message.disabled")}</Chip>}
                         </div>
-                        <div className="text-[11px] font-mono text-slate-400">{client.client_id}</div>
+                        <div className="text-[11px] font-mono text-muted">{client.client_id}</div>
                       </td>
-                      <td className="px-4 py-3 text-right tabular-nums font-semibold text-slate-900">
+                      <td className="px-4 py-3 text-right tabular-nums font-semibold text-foreground">
                         {client.active_access_tokens}
                       </td>
-                      <td className="px-4 py-3 text-right tabular-nums font-semibold text-slate-900">
+                      <td className="px-4 py-3 text-right tabular-nums font-semibold text-foreground">
                         {client.active_refresh_tokens}
                       </td>
-                      <td className="px-4 py-3 text-right tabular-nums text-slate-600">{client.consented_users}</td>
-                      <td className="px-4 py-3 text-slate-500 text-xs">
+                      <td className="px-4 py-3 text-right tabular-nums text-muted">{client.consented_users}</td>
+                      <td className="px-4 py-3 text-muted text-xs">
                         {relativeDate(client.last_used_at, t("sso_clients.message.never_used"), locale)}
                       </td>
                       <td className="px-4 py-3 text-right">
@@ -140,23 +141,23 @@ export default function AccessAuditPage() {
       )}
 
       <section className="space-y-3">
-        <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-          <Users className="w-4 h-4 text-slate-400" /> {t("sso_clients.audit.consents_title")}
+        <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <Users className="w-4 h-4 text-muted" /> {t("sso_clients.audit.consents_title")}
         </h2>
         {loading ? null : consents.length === 0 ? (
           <Empty icon={<Users className="w-9 h-9 mx-auto" />}>{t("sso_clients.audit.no_consents")}</Empty>
         ) : (
-          <Panel className="divide-y divide-slate-100">
+          <Panel className="divide-y divide-line">
             {consents.map((consent) => (
               <div key={`${consent.client_id}:${consent.user_id}`} className="p-4 flex flex-wrap items-start gap-3">
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-slate-900">
+                  <p className="text-sm font-semibold text-foreground">
                     {consent.user_name || consent.user_email}
-                    <span className="font-normal text-slate-400"> → </span>
+                    <span className="font-normal text-muted"> → </span>
                     {consent.client_name}
                   </p>
-                  <p className="text-[11px] text-slate-400">
-                    {consent.user_email} · {new Date(consent.granted_at).toLocaleDateString()}
+                  <p className="text-[11px] text-muted">
+                    {consent.user_email} · {formatDay(consent.granted_at)}
                   </p>
                   <div className="flex flex-wrap gap-1 mt-1.5">
                     {consent.scopes.map((scope) => <Chip key={scope} mono tone="blue">{scope}</Chip>)}

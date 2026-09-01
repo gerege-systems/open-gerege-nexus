@@ -66,9 +66,9 @@ export default function ConsentPage() {
     locale === "mn" ? scope.description_mn : scope.description;
 
   return (
-    <main className="min-h-screen bg-slate-50 flex flex-col">
+    <main className="min-h-dvh bg-surface-2 flex flex-col">
       <header className="h-[72px] px-6 max-w-3xl w-full mx-auto flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2.5 font-extrabold tracking-tight text-slate-900">
+        <Link href="/" className="flex items-center gap-2.5 font-semibold tracking-tight text-foreground">
           <img src={brand.logoUrl} alt="" className="w-9 h-9 rounded-lg" />
           <span>{brand.name}</span>
         </Link>
@@ -76,30 +76,30 @@ export default function ConsentPage() {
       </header>
 
       <div className="flex-1 flex items-start justify-center px-4 pb-16">
-        <div className="w-full max-w-lg bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+        <div className="w-full max-w-lg bg-surface border border-line rounded-xl overflow-hidden">
           {loading ? (
-            <p className="p-12 text-center text-sm text-slate-500 flex items-center justify-center gap-2">
+            <p className="p-12 text-center text-sm text-muted flex items-center justify-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin" /> {t("oauth.consent.loading")}
             </p>
           ) : !prompt ? (
             <div className="p-10 text-center space-y-3">
               <AlertTriangle className="w-8 h-8 text-amber-500 mx-auto" />
-              <h1 className="font-bold text-slate-900">{t("oauth.consent.invalid")}</h1>
-              {error && <p className="text-sm text-slate-500">{error}</p>}
+              <h1 className="font-semibold text-foreground">{t("oauth.consent.invalid")}</h1>
+              {error && <p className="text-sm text-muted">{error}</p>}
             </div>
           ) : (
             <>
-              <div className="p-6 border-b border-slate-100 flex items-start gap-4">
+              <div className="p-6 border-b border-line flex items-start gap-4">
                 {prompt.logo_uri ? (
-                  <img src={prompt.logo_uri} alt="" className="w-12 h-12 rounded-xl object-cover border border-slate-200" />
+                  <img src={prompt.logo_uri} alt="" className="w-12 h-12 rounded-xl object-cover border border-line" />
                 ) : (
                   <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 grid place-content-center">
                     <ShieldCheck className="w-6 h-6" />
                   </div>
                 )}
                 <div className="min-w-0">
-                  <h1 className="text-lg font-bold text-slate-900">{t("oauth.consent.title")}</h1>
-                  <p className="text-sm text-slate-600 mt-0.5">
+                  <h1 className="text-lg font-semibold text-foreground">{t("oauth.consent.title")}</h1>
+                  <p className="text-sm text-muted mt-0.5">
                     {t("oauth.consent.lede", { app: prompt.client_name })}
                   </p>
                   {prompt.client_uri && (
@@ -116,7 +116,7 @@ export default function ConsentPage() {
               </div>
 
               <div className="p-6 space-y-3">
-                <p className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
+                <p className="text-xs font-semibold text-foreground uppercase tracking-wide">
                   {t("oauth.consent.will_be_able")}
                 </p>
                 <ul className="space-y-2">
@@ -127,16 +127,16 @@ export default function ConsentPage() {
                         <Check
                           className={`w-4 h-4 mt-0.5 shrink-0 ${scope.sensitive ? "text-amber-600" : "text-emerald-600"}`}
                         />
-                        <span className="flex-1 text-slate-700">
+                        <span className="flex-1 text-foreground">
                           {describe(scope)}
-                          <span className="ml-2 text-[11px] font-mono text-slate-400">{scope.name}</span>
+                          <span className="ml-2 text-[11px] font-mono text-muted">{scope.name}</span>
                           {scope.sensitive && (
                             <span className="ml-2 text-[11px] bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded">
                               {t("oauth.consent.sensitive")}
                             </span>
                           )}
                           {known && (
-                            <span className="ml-2 text-[11px] text-slate-400">
+                            <span className="ml-2 text-[11px] text-muted">
                               · {t("oauth.consent.already_granted")}
                             </span>
                           )}
@@ -148,9 +148,9 @@ export default function ConsentPage() {
               </div>
 
               <div className="px-6 pb-4">
-                <p className="text-[11px] text-slate-400">
+                <p className="text-[11px] text-muted">
                   {t("oauth.consent.redirect_note")}{" "}
-                  <span className="font-mono break-all text-slate-500">{prompt.redirect_uri}</span>
+                  <span className="font-mono break-all text-muted">{prompt.redirect_uri}</span>
                 </p>
               </div>
 
@@ -160,11 +160,11 @@ export default function ConsentPage() {
                 </p>
               )}
 
-              <div className="p-4 bg-slate-50 border-t border-slate-100 flex gap-2 justify-end">
+              <div className="p-4 bg-surface-2 border-t border-line flex gap-2 justify-end">
                 <button
                   onClick={() => decide(false)}
                   disabled={busy !== null}
-                  className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-200 rounded-lg disabled:opacity-50"
+                  className="px-4 py-2 text-sm font-semibold text-muted hover:bg-slate-200 rounded-lg disabled:opacity-50"
                 >
                   {t("oauth.consent.deny")}
                 </button>

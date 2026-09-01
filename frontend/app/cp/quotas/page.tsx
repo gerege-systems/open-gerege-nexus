@@ -22,7 +22,7 @@ import { cp, type QuotaLine } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 
 export default function Quotas() {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const [quotas, setQuotas] = useState<QuotaLine[]>([]);
   const [failure, setFailure] = useState("");
 
@@ -44,15 +44,15 @@ export default function Quotas() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-slate-900 flex items-center gap-2">
-          <Scale className="w-6 h-6 text-[var(--gerege-blue)]" />
+        <h1 className="text-2xl font-semibold text-foreground flex items-center gap-2">
+          <Scale className="w-6 h-6 text-accent" />
           {t("cp.section.quotas")}
         </h1>
-        <p className="mt-1 text-sm text-slate-500">{t("cp.hint.quotas")}</p>
+        <p className="mt-1 text-sm text-muted">{t("cp.hint.quotas")}</p>
       </div>
 
       {failure && (
-        <p className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+        <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
       )}
 
       {unlimited > 0 && (
@@ -73,28 +73,28 @@ export default function Quotas() {
           ]}
           rows={quotas.map((line) => [
             <span key="n" className="min-w-0">
-              <Link href={`/cp/tenants/${line.tenant_id}`} className="font-medium text-[var(--gerege-blue)] hover:underline">
+              <Link href={`/cp/tenants/${line.tenant_id}`} className="font-medium text-accent hover:underline">
                 {line.tenant_name}
               </Link>
-              <span className="block text-xs text-slate-500 font-mono">{line.slug}</span>
+              <span className="block text-xs text-muted font-mono">{line.slug}</span>
               {line.suspended && <Badge tone="red">{t("cp.state.suspended")}</Badge>}
             </span>,
             <span key="u" className="tabular-nums">
               {line.users}
               {line.max_users === null ? (
-                <span className="text-slate-400"> / {t("cp.state.no_limit")}</span>
+                <span className="text-muted"> / {t("cp.state.no_limit")}</span>
               ) : (
-                <span className={line.users > line.max_users ? "text-red-600 font-semibold" : "text-slate-500"}>
+                <span className={line.users > line.max_users ? "text-red-600 font-semibold" : "text-muted"}>
                   {" "}/ {line.max_users}
                 </span>
               )}
             </span>,
-            line.max_storage_mb === null ? <span key="s" className="text-slate-400">{t("cp.state.no_limit")}</span> : `${line.max_storage_mb} MB`,
-            line.max_ai_calls_monthly === null ? <span key="a" className="text-slate-400">{t("cp.state.no_limit")}</span> : String(line.max_ai_calls_monthly),
+            line.max_storage_mb === null ? <span key="s" className="text-muted">{t("cp.state.no_limit")}</span> : `${line.max_storage_mb} MB`,
+            line.max_ai_calls_monthly === null ? <span key="a" className="text-muted">{t("cp.state.no_limit")}</span> : String(line.max_ai_calls_monthly),
             <Badge key="e" tone={line.enforcement === "hard" ? "red" : "slate"}>
               {t(line.enforcement === "hard" ? "cp.state.hard" : "cp.state.soft")}
             </Badge>,
-            formatMoment(line.updated_at, locale),
+            formatMoment(line.updated_at),
           ])}
           empty={t("cp.message.no_tenants")}
         />

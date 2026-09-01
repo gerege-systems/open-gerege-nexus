@@ -148,7 +148,7 @@ export function TenantChoices({
 
   return (
     <>
-      {tenants === null && <p className="px-4 py-2 text-sm text-slate-500">{t("base.message.loading")}</p>}
+      {tenants === null && <p className="px-4 py-2 text-sm text-muted">{t("base.message.loading")}</p>}
       {tenants?.map((option) => (
         <button
           key={option.id}
@@ -156,8 +156,8 @@ export function TenantChoices({
           role="menuitem"
           disabled={switching}
           onClick={() => (option.id === current ? onStay() : onChoose(option.id))}
-          className={`w-full flex items-center gap-3 rounded-lg px-4 py-2.5 text-left hover:bg-[var(--gerege-surface-2)] disabled:opacity-60 ${
-            option.id === current ? "bg-[var(--gerege-blue-soft)]" : ""
+          className={`w-full flex items-center gap-3 rounded-lg px-4 py-2.5 text-left hover:bg-surface-2 disabled:opacity-60 ${
+            option.id === current ? "bg-accent-soft" : ""
           }`}
         >
           {/* The home wears a different mark and says so in words. Its slug is
@@ -165,16 +165,16 @@ export function TenantChoices({
               so the second line says what the row is instead of repeating an
               identifier — this is the one row where "which of these am I in"
               cannot be answered by the name, because the name is their own. */}
-          <span className={option.id === current ? "text-[var(--gerege-blue)]" : "text-slate-400"}>
+          <span className={option.id === current ? "text-accent" : "text-slate-400"}>
             {isHome(option) ? <House className="w-4 h-4" /> : <Building2 className="w-4 h-4" />}
           </span>
           <span className="min-w-0 flex-1">
             <strong className="block text-sm font-medium truncate">{option.name}</strong>
-            <small className="block text-xs text-slate-500 truncate">
+            <small className="block text-xs text-muted truncate">
               {isHome(option) ? t("web.label.my_home") : option.slug}
             </small>
           </span>
-          {option.id === current && <Check className="w-4 h-4 shrink-0 text-[var(--gerege-blue)]" />}
+          {option.id === current && <Check className="w-4 h-4 shrink-0 text-accent" />}
         </button>
       ))}
       {/* Reading alongside is offered only to somebody who has somewhere to
@@ -182,8 +182,8 @@ export function TenantChoices({
           apart from the rows above because the two do different things —
           switching moves where new records are written, this does not. */}
       {onToggleActive && tenants && tenants.length > 1 && (
-        <div className="mt-1 border-t border-slate-200 pt-2">
-          <p className="px-4 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+        <div className="mt-1 border-t border-line pt-2">
+          <p className="px-4 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted">
             {t("web.label.read_alongside")}
           </p>
           {tenants
@@ -191,23 +191,23 @@ export function TenantChoices({
             .map((option) => (
               <label
                 key={option.id}
-                className="w-full flex items-center gap-3 rounded-lg px-4 py-2 text-left hover:bg-[var(--gerege-surface-2)] cursor-pointer"
+                className="w-full flex items-center gap-3 rounded-lg px-4 py-2 text-left hover:bg-surface-2 cursor-pointer"
               >
                 <input
                   type="checkbox"
                   disabled={switching}
                   checked={(activeIDs || []).includes(option.id)}
                   onChange={() => onToggleActive(option.id)}
-                  className="w-4 h-4 rounded border-slate-300 text-[var(--gerege-blue)]"
+                  className="w-4 h-4 rounded border-input text-accent"
                 />
                 <span className="min-w-0 flex-1 text-sm truncate">{option.name}</span>
               </label>
             ))}
-          <p className="px-4 pt-1 pb-1 text-[11px] text-slate-500">{t("web.message.read_alongside_hint")}</p>
+          <p className="px-4 pt-1 pb-1 text-[11px] text-muted">{t("web.message.read_alongside_hint")}</p>
         </div>
       )}
       {tenants?.length === 1 && (
-        <p className="px-4 pb-2 pt-1 text-xs text-slate-500">{t("web.message.only_tenant")}</p>
+        <p className="px-4 pb-2 pt-1 text-xs text-muted">{t("web.message.only_tenant")}</p>
       )}
       {failed !== "" && (
         <p role="alert" className="px-4 pb-2 pt-1 text-xs text-rose-600">

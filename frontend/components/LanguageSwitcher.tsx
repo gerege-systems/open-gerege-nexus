@@ -15,7 +15,7 @@ export default function LanguageSwitcher({ variant = "light" }: { variant?: "lig
   const base =
     variant === "dark"
       ? "border-slate-700 bg-slate-900/70"
-      : "border-slate-200 bg-white";
+      : "border-line bg-surface";
   const activeStyle =
     variant === "dark"
       ? "bg-indigo-500/20 text-white"
@@ -23,7 +23,7 @@ export default function LanguageSwitcher({ variant = "light" }: { variant?: "lig
   const idleStyle =
     variant === "dark"
       ? "text-slate-400 hover:text-slate-200"
-      : "text-slate-500 hover:text-slate-800";
+      : "text-muted hover:text-foreground";
 
   return (
     <div

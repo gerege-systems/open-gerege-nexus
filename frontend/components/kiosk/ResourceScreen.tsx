@@ -6,6 +6,7 @@ import { useI18n } from "@/lib/i18n";
 import type { KioskResource } from "@/lib/kiosk/types";
 import { Plus, Pencil, Trash2, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, RefreshCw } from "lucide-react";
 import { MediaCell, MediaViewer } from "./MediaCell";
+import { formatNumber } from "@/lib/datetime";
 
 const PAGE_SIZES = [25, 50, 100, 200, 500];
 const DEFAULT_PAGE_SIZE = 50;
@@ -166,15 +167,15 @@ export default function ResourceScreen({ resource }: { resource: KioskResource }
     // on top of each other and the page buttons could not be clicked. The
     // padding keeps the end of the content clear of it.
     <div className="space-y-6 pb-24">
-      <div className="flex items-start justify-between border-b border-slate-200 pb-4 gap-4">
+      <div className="flex items-start justify-between border-b border-line pb-4 gap-4">
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold text-slate-900">{t(resource.title)}</h1>
-          <p className="text-sm text-slate-500">{t(resource.description)}</p>
+          <h1 className="text-2xl font-semibold text-foreground">{t(resource.title)}</h1>
+          <p className="text-sm text-muted">{t(resource.description)}</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => void load()}
-            className="border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium text-sm py-2 px-3 rounded-lg flex items-center gap-2"
+            className="border border-input text-foreground hover:bg-surface-hover font-medium text-sm py-2 px-3 rounded-lg flex items-center gap-2"
             aria-label={t("kiosk.action.refresh")}
           >
             <RefreshCw className="w-4 h-4" />
@@ -192,7 +193,7 @@ export default function ResourceScreen({ resource }: { resource: KioskResource }
       </div>
 
       {!canWrite && resource.readOnlyReason && (
-        <div className="p-3 bg-slate-50 border border-slate-200 text-slate-600 text-sm rounded-lg">
+        <div className="p-3 bg-surface-2 border border-line text-muted text-sm rounded-lg">
           {t(resource.readOnlyReason)}
         </div>
       )}
@@ -202,17 +203,17 @@ export default function ResourceScreen({ resource }: { resource: KioskResource }
       )}
 
       {loading ? (
-        <div className="py-8 text-slate-500 text-sm">{t("kiosk.message.loading")}</div>
+        <div className="py-8 text-muted text-sm">{t("kiosk.message.loading")}</div>
       ) : rows.length === 0 && !error ? (
-        <div className="bg-white border border-slate-200 rounded-xl p-12 text-center text-slate-500 text-sm">
+        <div className="bg-surface border border-line rounded-xl p-12 text-center text-muted text-sm">
           {t("kiosk.message.empty")}
         </div>
       ) : rows.length > 0 ? (
         <>
-          <div className="bg-white border border-slate-200 rounded-xl overflow-x-auto shadow-sm">
+          <div className="bg-surface border border-line rounded-xl overflow-x-auto">
             <table className="w-full text-left border-collapse text-sm">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-xs uppercase tracking-wider">
+                <tr className="bg-surface-2 border-b border-line text-muted font-semibold text-xs uppercase tracking-wider">
                   {resource.media && <th className="py-3 px-4 w-px">{t("kiosk.field.preview")}</th>}
                   {resource.columns.map((c) => (
                     <th key={c.key} className="py-3 px-4 whitespace-nowrap">{t(c.label)}</th>
@@ -220,9 +221,9 @@ export default function ResourceScreen({ resource }: { resource: KioskResource }
                   {actionCount > 0 && <th className="py-3 px-4 w-px" />}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-line">
                 {visible.map((row, i) => (
-                  <tr key={String(row[idKey] ?? i)} className="hover:bg-slate-50">
+                  <tr key={String(row[idKey] ?? i)} className="hover:bg-surface-hover">
                     {resource.media && (
                       <td className="py-2 px-4">
                         <MediaCell
@@ -238,7 +239,7 @@ export default function ResourceScreen({ resource }: { resource: KioskResource }
                       </td>
                     )}
                     {resource.columns.map((c) => (
-                      <td key={c.key} className="py-3.5 px-4 text-slate-700 max-w-xs truncate">
+                      <td key={c.key} className="py-3.5 px-4 text-foreground max-w-xs truncate">
                         {c.render ? c.render(row) : format(row[c.key])}
                       </td>
                     ))}
@@ -248,7 +249,7 @@ export default function ResourceScreen({ resource }: { resource: KioskResource }
                           {resource.update && (
                             <button
                               onClick={() => openEdit(row)}
-                              className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                              className="p-1.5 rounded-lg text-muted hover:bg-surface-hover hover:text-foreground"
                               aria-label={t("kiosk.action.edit")}
                             >
                               <Pencil className="w-4 h-4" />
@@ -257,7 +258,7 @@ export default function ResourceScreen({ resource }: { resource: KioskResource }
                           {resource.remove && (
                             <button
                               onClick={() => setConfirming(row)}
-                              className="p-1.5 rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-600"
+                              className="p-1.5 rounded-lg text-muted hover:bg-red-50 hover:text-red-600"
                               aria-label={t("kiosk.action.delete")}
                             >
                               <Trash2 className="w-4 h-4" />
@@ -272,17 +273,17 @@ export default function ResourceScreen({ resource }: { resource: KioskResource }
             </table>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
+          <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted">
             <div className="flex items-center gap-3">
               <span>
-                {firstShown.toLocaleString()}–{lastShown.toLocaleString()} / {total.toLocaleString()}
+                {formatNumber(firstShown)}–{formatNumber(lastShown)} / {formatNumber(total)}
               </span>
               <label className="flex items-center gap-1.5">
-                <span className="text-slate-500">{t("kiosk.label.per_page")}</span>
+                <span className="text-muted">{t("kiosk.label.per_page")}</span>
                 <select
                   value={pageSize}
                   onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
-                  className="border border-slate-300 rounded-lg px-2 py-1 text-sm bg-white"
+                  className="border border-input rounded-lg px-2 py-1 text-sm bg-surface"
                 >
                   {PAGE_SIZES.map((n) => <option key={n} value={n}>{n}</option>)}
                 </select>
@@ -293,7 +294,7 @@ export default function ResourceScreen({ resource }: { resource: KioskResource }
                 <button
                   disabled={page <= 1}
                   onClick={() => setPage(1)}
-                  className="p-1.5 rounded-lg border border-slate-300 disabled:opacity-40 hover:bg-slate-50"
+                  className="p-1.5 rounded-lg border border-input disabled:opacity-40 hover:bg-surface-hover"
                   aria-label={t("kiosk.action.first_page")}
                 >
                   <ChevronsLeft className="w-4 h-4" />
@@ -301,16 +302,16 @@ export default function ResourceScreen({ resource }: { resource: KioskResource }
                 <button
                   disabled={page <= 1}
                   onClick={() => setPage((p) => p - 1)}
-                  className="p-1.5 rounded-lg border border-slate-300 disabled:opacity-40 hover:bg-slate-50"
+                  className="p-1.5 rounded-lg border border-input disabled:opacity-40 hover:bg-surface-hover"
                   aria-label={t("kiosk.action.prev_page")}
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
-                <span className="px-1 tabular-nums">{page} / {pages.toLocaleString()}</span>
+                <span className="px-1 tabular-nums">{page} / {formatNumber(pages)}</span>
                 <button
                   disabled={page >= pages}
                   onClick={() => setPage((p) => p + 1)}
-                  className="p-1.5 rounded-lg border border-slate-300 disabled:opacity-40 hover:bg-slate-50"
+                  className="p-1.5 rounded-lg border border-input disabled:opacity-40 hover:bg-surface-hover"
                   aria-label={t("kiosk.action.next_page")}
                 >
                   <ChevronRight className="w-4 h-4" />
@@ -318,7 +319,7 @@ export default function ResourceScreen({ resource }: { resource: KioskResource }
                 <button
                   disabled={page >= pages}
                   onClick={() => setPage(pages)}
-                  className="p-1.5 rounded-lg border border-slate-300 disabled:opacity-40 hover:bg-slate-50"
+                  className="p-1.5 rounded-lg border border-input disabled:opacity-40 hover:bg-surface-hover"
                   aria-label={t("kiosk.action.last_page")}
                 >
                   <ChevronsRight className="w-4 h-4" />
@@ -330,14 +331,14 @@ export default function ResourceScreen({ resource }: { resource: KioskResource }
       ) : null}
 
       {editing && resource.fields && (
-        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-lg w-full shadow-xl border border-slate-200 max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 bg-overlay flex items-center justify-center z-modal p-4">
+          <div className="bg-surface rounded-xl max-w-lg w-full shadow-lg border border-line max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between p-6 pb-4">
-              <h2 className="text-xl font-bold text-slate-900">
+              <h2 className="text-xl font-semibold text-foreground">
                 {isNew ? t("kiosk.action.create") : t("kiosk.action.edit")} — {t(resource.title)}
               </h2>
               <button onClick={() => setEditing(null)} aria-label={t("kiosk.action.cancel")}>
-                <X className="w-5 h-5 text-slate-400 hover:text-slate-700" />
+                <X className="w-5 h-5 text-muted hover:text-foreground" />
               </button>
             </div>
             <form onSubmit={submit} className="px-6 pb-6 space-y-4 overflow-y-auto">
@@ -348,7 +349,7 @@ export default function ResourceScreen({ resource }: { resource: KioskResource }
               )}
               {resource.fields.filter((f) => !f.readOnly).map((f) => (
                 <div key={f.key}>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-foreground mb-1">
                     {t(f.label)}{f.required && " *"}
                   </label>
                   {f.type === "boolean" ? (
@@ -365,7 +366,7 @@ export default function ResourceScreen({ resource }: { resource: KioskResource }
                       required={f.required}
                       rows={f.type === "json" ? 6 : 3}
                       placeholder={f.placeholder}
-                      className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 font-mono"
+                      className="w-full px-3 py-2 text-sm border border-input rounded-lg font-mono"
                     />
                   ) : (
                     <input
@@ -374,7 +375,7 @@ export default function ResourceScreen({ resource }: { resource: KioskResource }
                       onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
                       required={f.required}
                       placeholder={f.placeholder}
-                      className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 text-sm border border-input rounded-lg"
                     />
                   )}
                 </div>
@@ -383,7 +384,7 @@ export default function ResourceScreen({ resource }: { resource: KioskResource }
                 <button
                   type="button"
                   onClick={() => setEditing(null)}
-                  className="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 rounded-lg text-sm"
+                  className="w-1/2 bg-surface-2 hover:bg-slate-200 text-foreground font-medium py-2 rounded-lg text-sm"
                 >
                   {t("kiosk.action.cancel")}
                 </button>
@@ -403,14 +404,14 @@ export default function ResourceScreen({ resource }: { resource: KioskResource }
       {viewing && <MediaViewer url={viewing.url} name={viewing.name} onClose={() => setViewing(null)} />}
 
       {confirming && (
-        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-sm w-full p-6 shadow-xl border border-slate-200">
-            <h2 className="text-lg font-bold text-slate-900 mb-2">{t("kiosk.action.delete")}</h2>
-            <p className="text-sm text-slate-600 mb-5">{t("kiosk.message.confirm_delete")}</p>
+        <div className="fixed inset-0 bg-overlay flex items-center justify-center z-modal p-4">
+          <div className="bg-surface rounded-xl max-w-sm w-full p-6 shadow-lg border border-line">
+            <h2 className="text-lg font-semibold text-foreground mb-2">{t("kiosk.action.delete")}</h2>
+            <p className="text-sm text-muted mb-5">{t("kiosk.message.confirm_delete")}</p>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setConfirming(null)}
-                className="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 rounded-lg text-sm"
+                className="w-1/2 bg-surface-2 hover:bg-slate-200 text-foreground font-medium py-2 rounded-lg text-sm"
               >
                 {t("kiosk.action.cancel")}
               </button>

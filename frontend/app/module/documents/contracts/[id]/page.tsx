@@ -57,7 +57,7 @@ export default function ContractPage() {
       </Link>
 
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-bold text-slate-900">{contract.title}</h1>
+        <h1 className="text-2xl font-semibold text-foreground">{contract.title}</h1>
         <ContractBadge state={state} />
       </div>
 
@@ -65,9 +65,9 @@ export default function ContractPage() {
       {contract.parties.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {contract.parties.map((party) => (
-            <span key={party.id} className="inline-flex items-center gap-2 bg-white border border-slate-200 rounded-full px-3 py-1 text-xs">
+            <span key={party.id} className="inline-flex items-center gap-2 bg-surface border border-line rounded-full px-3 py-1 text-xs">
               <PartyDot state={party.state} />
-              <span className="font-medium text-slate-700">{party.display_name}</span>
+              <span className="font-medium text-foreground">{party.display_name}</span>
               <PartyBadge state={party.state} />
             </span>
           ))}
@@ -166,7 +166,7 @@ function FactsCard({
 
   const field = (label: string, node: React.ReactNode) => (
     <div>
-      <label className="block text-xs font-medium text-slate-500 mb-1">{label}</label>
+      <label className="block text-xs font-medium text-muted mb-1">{label}</label>
       {node}
     </div>
   );
@@ -174,7 +174,7 @@ function FactsCard({
   return (
     <section className={`${cardClass} p-5 space-y-4`}>
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-bold text-slate-800">{t("contracts.section.facts")}</h2>
+        <h2 className="text-sm font-semibold text-foreground">{t("contracts.section.facts")}</h2>
         {editable && (
           <button onClick={() => void save()} disabled={busy}
             className="text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg disabled:opacity-50">
@@ -223,7 +223,7 @@ function BodyCard({
   return (
     <section className={`${cardClass} p-5 space-y-3`}>
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-bold text-slate-800">{t("contracts.section.body")}</h2>
+        <h2 className="text-sm font-semibold text-foreground">{t("contracts.section.body")}</h2>
         {editable && !frozen && (
           <button onClick={() => void save()} disabled={busy}
             className="text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg disabled:opacity-50">
@@ -239,7 +239,7 @@ function BodyCard({
         onChange={(event) => setText(event.target.value)}
         readOnly={frozen || !editable}
       />
-      <p className="text-[11px] text-slate-400">
+      <p className="text-[11px] text-muted">
         {t("contracts.body.hint", { tokens: "{{тал}} {{регистр}} {{төлөөлөгч}} {{хаяг}} {{гэрээ}} {{дугаар}} {{огноо}}" })}
       </p>
     </section>
@@ -267,8 +267,8 @@ function PartiesCard({
 
   return (
     <section className={`${cardClass} p-5 space-y-4`}>
-      <h2 className="text-sm font-bold text-slate-800">{t("contracts.section.parties")}</h2>
-      {contract.parties.length === 0 && <p className="text-sm text-slate-500">{t("contracts.msg.no_parties")}</p>}
+      <h2 className="text-sm font-semibold text-foreground">{t("contracts.section.parties")}</h2>
+      {contract.parties.length === 0 && <p className="text-sm text-muted">{t("contracts.msg.no_parties")}</p>}
 
       {contract.parties.map((party) => (
         <PartyRow
@@ -336,24 +336,24 @@ function PartyRow({
   const contact = [party.registration_number, party.contact_email, party.contact_phone].filter(Boolean).join(" · ");
 
   return (
-    <div className="border border-slate-200 rounded-xl p-4 bg-slate-50/60 space-y-2">
+    <div className="border border-line rounded-xl p-4 bg-slate-50/60 space-y-2">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="font-semibold text-slate-800">{party.display_name}</span>
-        <span className="text-[11px] bg-slate-200/70 text-slate-600 rounded-full px-2 py-0.5">{partyRole(party.party_role)}</span>
-        <span className="text-[11px] bg-slate-200/70 text-slate-600 rounded-full px-2 py-0.5">{partyKind(party.party_kind)}</span>
+        <span className="font-semibold text-foreground">{party.display_name}</span>
+        <span className="text-[11px] bg-slate-200/70 text-muted rounded-full px-2 py-0.5">{partyRole(party.party_role)}</span>
+        <span className="text-[11px] bg-slate-200/70 text-muted rounded-full px-2 py-0.5">{partyKind(party.party_kind)}</span>
         {party.sign_order != null && (
-          <span className="text-[11px] bg-slate-200/70 text-slate-600 rounded-full px-2 py-0.5">
+          <span className="text-[11px] bg-slate-200/70 text-muted rounded-full px-2 py-0.5">
             {t("contracts.msg.signs_at", { n: party.sign_order })}
           </span>
         )}
         <span className="ml-auto"><PartyBadge state={party.state} /></span>
       </div>
-      {contact && <div className="text-xs text-slate-500">{contact}</div>}
+      {contact && <div className="text-xs text-muted">{contact}</div>}
       {party.decline_reason && (
         <Banner tone="error" message={t("contracts.msg.decline_reason_of", { reason: party.decline_reason })} />
       )}
       {(party.signatories?.length ?? 0) > 0 && (
-        <div className="text-xs text-slate-500">
+        <div className="text-xs text-muted">
           {party.signatories!.map((signatory) => (
             <span key={signatory.id} className="mr-3">
               {signatory.full_name}
@@ -366,19 +366,19 @@ function PartyRow({
       )}
       <div className="flex flex-wrap gap-2 pt-1">
         {mayParties && party.party_role !== "issuer" && !party.counterparty_tenant_id && (
-          <button onClick={onAddSignatory} className="text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 px-3 py-1.5 rounded-lg">
+          <button onClick={onAddSignatory} className="text-xs font-semibold text-foreground bg-surface border border-line hover:bg-surface-hover px-3 py-1.5 rounded-lg">
             {t("contracts.action.add_signatory")}
           </button>
         )}
         {party.has_copy && (
           <a href={contracts.copyUrl(id, party.id)} target="_blank" rel="noopener noreferrer"
-            className="text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 px-3 py-1.5 rounded-lg">
+            className="text-xs font-semibold text-foreground bg-surface border border-line hover:bg-surface-hover px-3 py-1.5 rounded-lg">
             {t("contracts.action.frozen_pdf")}
           </a>
         )}
         {party.has_signed_copy && (
           <a href={contracts.signedUrl(id, party.id)} target="_blank" rel="noopener noreferrer"
-            className="text-xs font-semibold text-emerald-700 bg-white border border-emerald-200 hover:bg-emerald-50 px-3 py-1.5 rounded-lg">
+            className="text-xs font-semibold text-emerald-700 bg-surface border border-emerald-200 hover:bg-emerald-50 px-3 py-1.5 rounded-lg">
             {t("contracts.action.signed_pdf")}
           </a>
         )}
@@ -392,7 +392,7 @@ function PartyRow({
           />
         )}
         {maySend && party.party_role !== "issuer" && open && (
-          <button onClick={() => void onInvite()} className="text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 px-3 py-1.5 rounded-lg inline-flex items-center gap-1">
+          <button onClick={() => void onInvite()} className="text-xs font-semibold text-foreground bg-surface border border-line hover:bg-surface-hover px-3 py-1.5 rounded-lg inline-flex items-center gap-1">
             <Link2 className="w-3.5 h-3.5" />
             {t("contracts.action.invite")}
           </button>
@@ -400,7 +400,7 @@ function PartyRow({
         {mayParties && draft && party.state === "draft" && (
           <button
             onClick={() => { void contracts.removeParty(id, party.id).then(onChanged).catch(onError); }}
-            className="text-xs font-semibold text-red-700 bg-white border border-red-200 hover:bg-red-50 px-3 py-1.5 rounded-lg"
+            className="text-xs font-semibold text-red-700 bg-surface border border-red-200 hover:bg-red-50 px-3 py-1.5 rounded-lg"
           >
             {t("contracts.action.remove")}
           </button>
@@ -449,14 +449,14 @@ function AddPartyForm({ id, onAdded, onError }: {
 
   const field = (label: string, node: React.ReactNode) => (
     <div>
-      <label className="block text-xs font-medium text-slate-500 mb-1">{label}</label>
+      <label className="block text-xs font-medium text-muted mb-1">{label}</label>
       {node}
     </div>
   );
 
   return (
-    <div className="border-t border-slate-200 pt-4 space-y-3">
-      <h3 className="text-xs font-bold uppercase tracking-wide text-slate-400">{t("contracts.section.add_party")}</h3>
+    <div className="border-t border-line pt-4 space-y-3">
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">{t("contracts.section.add_party")}</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {field(t("contracts.field.name"), <input className={fieldClass} value={form.display_name} onChange={set("display_name")} />)}
         {field(t("contracts.field.reg"), <input className={fieldClass} value={form.registration_number} onChange={set("registration_number")} />)}
@@ -485,8 +485,8 @@ function AddPartyForm({ id, onAdded, onError }: {
           <input className={fieldClass} placeholder="UUID" value={form.home} onChange={set("home")} />,
         )}
       </div>
-      {needsHome && <p className="text-[11px] text-slate-400">{t("contracts.field.home_tenant_hint")}</p>}
-      <p className="text-[11px] text-slate-400">{t("contracts.field.sign_order_hint")}</p>
+      {needsHome && <p className="text-[11px] text-muted">{t("contracts.field.home_tenant_hint")}</p>}
+      <p className="text-[11px] text-muted">{t("contracts.field.sign_order_hint")}</p>
       <button onClick={() => void add()} disabled={busy || !form.display_name.trim()}
         className="bg-slate-800 hover:bg-slate-900 disabled:opacity-50 text-white text-xs font-semibold px-4 py-2 rounded-lg inline-flex items-center gap-1.5">
         <Plus className="w-3.5 h-3.5" />
@@ -523,24 +523,24 @@ function SignatoryModal({ id, party, onClose, onAdded, onError }: {
   };
 
   return (
-    <Modal label={t("contracts.action.add_signatory")}>
+    <Modal onClose={onClose} label={t("contracts.action.add_signatory")}>
       <div className="space-y-4">
-        <h2 className="text-lg font-bold text-slate-900">{party.display_name} — {t("contracts.section.signatory")}</h2>
-        <p className="text-xs text-slate-500">{t("contracts.msg.nominate_hint")}</p>
+        <h2 className="text-lg font-semibold text-foreground">{party.display_name} — {t("contracts.section.signatory")}</h2>
+        <p className="text-xs text-muted">{t("contracts.msg.nominate_hint")}</p>
         <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">{t("contracts.field.full_name")}</label>
+          <label className="block text-xs font-medium text-muted mb-1">{t("contracts.field.full_name")}</label>
           <input autoFocus className={fieldClass} value={form.full_name} onChange={set("full_name")} />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">{t("contracts.field.position")}</label>
+          <label className="block text-xs font-medium text-muted mb-1">{t("contracts.field.position")}</label>
           <input className={fieldClass} value={form.position} onChange={set("position")} />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">{t("contracts.field.reg")}</label>
+          <label className="block text-xs font-medium text-muted mb-1">{t("contracts.field.reg")}</label>
           <input className={fieldClass} value={form.reg_number} onChange={set("reg_number")} />
         </div>
         <div className="flex justify-end gap-2">
-          <button onClick={onClose} className="text-sm font-medium text-slate-500 px-4 py-2 rounded-lg hover:bg-slate-100">
+          <button onClick={onClose} className="text-sm font-medium text-muted px-4 py-2 rounded-lg hover:bg-surface-hover">
             {t("contracts.action.cancel")}
           </button>
           <button onClick={() => void add()} disabled={busy || !form.full_name.trim()}
@@ -561,13 +561,13 @@ function InviteModal({ party, invitation, onClose }: {
   const { t } = useI18n();
   const url = typeof window !== "undefined" ? `${window.location.origin}${invitation.path}` : invitation.path;
   return (
-    <Modal label={t("contracts.action.invite")}>
+    <Modal onClose={onClose} label={t("contracts.action.invite")}>
       <div className="space-y-4">
-        <h2 className="text-lg font-bold text-slate-900">{t("contracts.action.invite")}</h2>
-        <p className="text-sm text-slate-600">{t("contracts.msg.invite_for", { name: party.display_name })}</p>
-        <div className="font-mono text-xs bg-slate-100 rounded-lg p-3 break-all">{url}</div>
+        <h2 className="text-lg font-semibold text-foreground">{t("contracts.action.invite")}</h2>
+        <p className="text-sm text-muted">{t("contracts.msg.invite_for", { name: party.display_name })}</p>
+        <div className="font-mono text-xs bg-surface-2 rounded-lg p-3 break-all">{url}</div>
         <Banner tone="warning" message={t("contracts.msg.invite_once")} />
-        <p className="text-xs text-slate-400">{t("contracts.msg.invite_expires", { when: fmtWhen(invitation.expires_at) })}</p>
+        <p className="text-xs text-muted">{t("contracts.msg.invite_expires", { when: fmtWhen(invitation.expires_at) })}</p>
         <div className="flex justify-end gap-2">
           <button
             onClick={() => { void navigator.clipboard?.writeText(url); }}
@@ -576,7 +576,7 @@ function InviteModal({ party, invitation, onClose }: {
             <Copy className="w-4 h-4" />
             {t("contracts.action.copy_link")}
           </button>
-          <button onClick={onClose} className="text-sm font-medium text-slate-500 px-4 py-2 rounded-lg hover:bg-slate-100">
+          <button onClick={onClose} className="text-sm font-medium text-muted px-4 py-2 rounded-lg hover:bg-surface-hover">
             {t("contracts.action.cancel")}
           </button>
         </div>
@@ -614,11 +614,11 @@ function SendCard({ id, state, mode, onChanged, onError, onInfo }: {
 
   return (
     <section className={`${cardClass} p-5 space-y-3`}>
-      <h2 className="text-sm font-bold text-slate-800">{t("contracts.section.send")}</h2>
-      <p className="text-xs text-slate-500">{t("contracts.send.note")}</p>
+      <h2 className="text-sm font-semibold text-foreground">{t("contracts.section.send")}</h2>
+      <p className="text-xs text-muted">{t("contracts.send.note")}</p>
       {state === "WITHDRAWN" && <Banner tone="warning" message={t("contracts.send.withdrawn_note")} />}
       <div className="max-w-xs">
-        <label className="block text-xs font-medium text-slate-500 mb-1">{t("contracts.field.mode")}</label>
+        <label className="block text-xs font-medium text-muted mb-1">{t("contracts.field.mode")}</label>
         <select className={selectClass} value={signingMode} onChange={(event) => setSigningMode(event.target.value as "counterpart" | "joint")}>
           <option value="counterpart">{t("contracts.mode.counterpart")}</option>
           <option value="joint">{t("contracts.mode.joint")}</option>
@@ -658,7 +658,7 @@ function SendCard({ id, state, mode, onChanged, onError, onInfo }: {
           <button
             onClick={() => void act(() => contracts.reopen(id))}
             disabled={busy}
-            className="bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-700 text-sm font-semibold px-4 py-2 rounded-lg inline-flex items-center gap-1.5"
+            className="bg-surface-2 hover:bg-slate-200 disabled:opacity-50 text-foreground text-sm font-semibold px-4 py-2 rounded-lg inline-flex items-center gap-1.5"
           >
             <Undo2 className="w-4 h-4" />
             {t("contracts.action.reopen")}
@@ -720,7 +720,7 @@ function MasterPdfCard({ id, contract, mayManage, maySign, onChanged, onError, o
   return (
     <section className={`${cardClass} p-5 space-y-3`}>
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-bold text-slate-800">{t("contracts.section.pdf")}</h2>
+        <h2 className="text-sm font-semibold text-foreground">{t("contracts.section.pdf")}</h2>
         {mayManage && (
           <>
             <input
@@ -744,17 +744,17 @@ function MasterPdfCard({ id, contract, mayManage, maySign, onChanged, onError, o
           </>
         )}
       </div>
-      <p className="text-xs text-slate-500">{t("contracts.pdf.note")}</p>
+      <p className="text-xs text-muted">{t("contracts.pdf.note")}</p>
       {attachment ? (
-        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-slate-50/60 px-4 py-3">
-          <FileUp className="w-4 h-4 text-slate-400" />
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-line bg-slate-50/60 px-4 py-3">
+          <FileUp className="w-4 h-4 text-muted" />
           <a href={contracts.fileUrl(id)} target="_blank" rel="noopener noreferrer"
             className="text-sm font-semibold text-indigo-700 hover:underline">
             {attachment.file_name}
           </a>
-          <span className="text-xs text-slate-400">{(attachment.size_bytes / (1024 * 1024)).toFixed(1)} MB</span>
+          <span className="text-xs text-muted">{(attachment.size_bytes / (1024 * 1024)).toFixed(1)} MB</span>
           {attachment.master_signed ? (
-            <span className="text-xs font-bold text-emerald-700 bg-emerald-50 rounded-full px-2.5 py-0.5">
+            <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 rounded-full px-2.5 py-0.5">
               {t("contracts.pdf.master_signed")}
             </span>
           ) : maySign ? (
@@ -779,7 +779,7 @@ function MasterPdfCard({ id, contract, mayManage, maySign, onChanged, onError, o
           ) : null}
         </div>
       ) : (
-        <p className="text-xs text-slate-400">{t("contracts.pdf.none")}</p>
+        <p className="text-xs text-muted">{t("contracts.pdf.none")}</p>
       )}
     </section>
   );
@@ -813,9 +813,9 @@ function ImportPartiesForm({ id, onImported, onError }: {
   };
 
   return (
-    <div className="border-t border-slate-200 pt-4 space-y-2">
+    <div className="border-t border-line pt-4 space-y-2">
       <div className="flex flex-wrap items-center gap-2">
-        <h3 className="text-xs font-bold uppercase tracking-wide text-slate-400 grow">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-muted grow">
           {t("contracts.section.import")}
         </h3>
         <a href={contracts.importTemplateUrl()} className="text-xs text-indigo-700 hover:underline">
@@ -834,13 +834,13 @@ function ImportPartiesForm({ id, onImported, onError }: {
         <button
           onClick={() => fileInput.current?.click()}
           disabled={busy}
-          className="text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 px-3 py-1.5 rounded-lg disabled:opacity-50 inline-flex items-center gap-1.5"
+          className="text-xs font-semibold text-foreground bg-surface border border-line hover:bg-surface-hover px-3 py-1.5 rounded-lg disabled:opacity-50 inline-flex items-center gap-1.5"
         >
           <FileUp className="w-3.5 h-3.5" />
           {t("contracts.action.import_excel")}
         </button>
       </div>
-      <p className="text-[11px] text-slate-400">{t("contracts.import.hint")}</p>
+      <p className="text-[11px] text-muted">{t("contracts.import.hint")}</p>
       {result && (
         <Banner
           tone={result.skipped.length ? "warning" : "success"}

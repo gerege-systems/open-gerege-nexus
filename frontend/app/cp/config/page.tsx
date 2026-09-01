@@ -22,7 +22,7 @@ import { useI18n } from "@/lib/i18n";
 import { Modal } from "@/components/ui";
 
 export default function Configuration() {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const action = useAction();
 
   const [settings, setSettings] = useState<Setting[]>([]);
@@ -62,8 +62,8 @@ export default function Configuration() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-slate-900">{t("cp.section.config")}</h1>
-        <p className="mt-1 text-sm text-slate-500">{t("cp.hint.config")}</p>
+        <h1 className="text-2xl font-semibold text-foreground">{t("cp.section.config")}</h1>
+        <p className="mt-1 text-sm text-muted">{t("cp.hint.config")}</p>
       </div>
 
       {warnings.map((warning) => (
@@ -72,7 +72,7 @@ export default function Configuration() {
         </p>
       ))}
       {failure && (
-        <p className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+        <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
       )}
 
       <Card title={t("cp.section.settings")}>
@@ -80,8 +80,8 @@ export default function Configuration() {
           head={[t("cp.field.setting"), t("cp.field.value"), t("cp.field.source"), ""]}
           rows={settings.map((setting) => [
             <span key="k">
-              <span className="font-mono text-xs text-slate-900">{setting.key}</span>
-              <span className="block text-xs text-slate-500">{setting.description}</span>
+              <span className="font-mono text-xs text-foreground">{setting.key}</span>
+              <span className="block text-xs text-muted">{setting.description}</span>
             </span>,
             <span key="v" className="font-mono text-xs">
               {setting.current === "" ? "—" : setting.current}
@@ -93,7 +93,7 @@ export default function Configuration() {
               <button
                 type="button"
                 onClick={() => setEditing(setting)}
-                className="text-xs rounded-lg border border-slate-300 px-2 py-1 hover:bg-slate-50"
+                className="text-xs rounded-lg border border-input px-2 py-1 hover:bg-surface-hover"
               >
                 {t("cp.action.change")}
               </button>
@@ -102,7 +102,7 @@ export default function Configuration() {
                 onClick={() => void openHistory(setting.key)}
                 aria-label={`${t("cp.section.history")}: ${setting.key}`}
                 title={t("cp.section.history")}
-                className="text-xs rounded-lg border border-slate-300 px-2 py-1 hover:bg-slate-50 inline-flex items-center gap-1"
+                className="text-xs rounded-lg border border-input px-2 py-1 hover:bg-surface-hover inline-flex items-center gap-1"
               >
                 <History className="w-3 h-3" />
               </button>
@@ -113,7 +113,7 @@ export default function Configuration() {
       </Card>
 
       <Card title={t("cp.section.credentials")}>
-        <p className="px-4 pt-4 text-sm text-slate-500">{t("cp.hint.credentials")}</p>
+        <p className="px-4 pt-4 text-sm text-muted">{t("cp.hint.credentials")}</p>
         {!sealing && (
           <p className="mx-4 mt-3 text-sm rounded-lg bg-amber-50 text-amber-900 border border-amber-200 px-3 py-2">
             {t("cp.message.sealing_off")}
@@ -123,9 +123,9 @@ export default function Configuration() {
           head={[t("cp.field.credential"), t("cp.field.source"), t("cp.field.updated"), ""]}
           rows={credentials.map((credential) => [
             <span key="k">
-              <span className="font-mono text-xs text-slate-900">{credential.name}</span>
-              <span className="block text-xs text-slate-500">{credential.description}</span>
-              <span className="block text-xs text-slate-400 font-mono">{credential.env}</span>
+              <span className="font-mono text-xs text-foreground">{credential.name}</span>
+              <span className="block text-xs text-muted">{credential.description}</span>
+              <span className="block text-xs text-muted font-mono">{credential.env}</span>
             </span>,
             <span key="s" className="inline-flex items-center gap-2">
               <Badge tone={credential.source === "database" ? "emerald" : credential.source === "environment" ? "slate" : "red"}>
@@ -134,17 +134,17 @@ export default function Configuration() {
               {/* The last four characters, and only of a value long enough that
                   four does not give it away. It is how an operator tells two
                   keys apart and sees that a rotation landed. */}
-              {credential.hint && <span className="font-mono text-xs text-slate-400">…{credential.hint}</span>}
+              {credential.hint && <span className="font-mono text-xs text-muted">…{credential.hint}</span>}
             </span>,
-            <span key="u" className="text-xs text-slate-500">
-              {credential.updated_at ? formatMoment(credential.updated_at, locale) : "—"}
+            <span key="u" className="text-xs text-muted">
+              {credential.updated_at ? formatMoment(credential.updated_at) : "—"}
             </span>,
             <span key="a" className="flex gap-2">
               <button
                 type="button"
                 disabled={!sealing}
                 onClick={() => setEditingCredential(credential)}
-                className="text-xs rounded-lg border border-slate-300 px-2 py-1 hover:bg-slate-50 disabled:opacity-50 inline-flex items-center gap-1"
+                className="text-xs rounded-lg border border-input px-2 py-1 hover:bg-surface-hover disabled:opacity-50 inline-flex items-center gap-1"
               >
                 <KeyRound className="w-3 h-3" />
                 {t("cp.action.set_credential")}
@@ -163,7 +163,7 @@ export default function Configuration() {
                   }
                   aria-label={`${t("cp.action.clear_credential")}: ${credential.name}`}
                   title={t("cp.action.clear_credential")}
-                  className="text-xs rounded-lg border border-slate-300 px-2 py-1 hover:bg-slate-50"
+                  className="text-xs rounded-lg border border-input px-2 py-1 hover:bg-surface-hover"
                 >
                   ✕
                 </button>
@@ -179,7 +179,7 @@ export default function Configuration() {
           <button
             type="button"
             onClick={() => setNewFlag(true)}
-            className="rounded-lg bg-[var(--gerege-blue)] px-3 py-2 text-sm font-medium text-[var(--gerege-on-blue)] hover:brightness-105"
+            className="rounded-lg bg-accent px-3 py-2 text-sm font-medium text-on-accent hover:brightness-105"
           >
             {t("cp.action.new_flag")}
           </button>
@@ -188,8 +188,8 @@ export default function Configuration() {
           head={[t("cp.field.flag"), t("cp.field.kind"), t("cp.field.rollout"), t("cp.field.expires"), ""]}
           rows={flags.map((flag) => [
             <span key="k">
-              <span className="font-mono text-xs text-slate-900">{flag.key}</span>
-              <span className="block text-xs text-slate-500">
+              <span className="font-mono text-xs text-foreground">{flag.key}</span>
+              <span className="block text-xs text-muted">
                 {flag.description}
                 {flag.owner ? ` · ${flag.owner}` : ""}
               </span>
@@ -201,7 +201,7 @@ export default function Configuration() {
               {flag.enabled ? `${flag.rollout}%` : t("cp.state.off")}
             </span>,
             <span key="e" className={flag.expires_at && new Date(flag.expires_at) < new Date() ? "text-amber-700" : ""}>
-              {formatMoment(flag.expires_at, locale) || "—"}
+              {formatMoment(flag.expires_at) || "—"}
             </span>,
             <span key="a" className="flex gap-2">
               <button
@@ -218,7 +218,7 @@ export default function Configuration() {
                 }
                 aria-label={`${flag.enabled ? t("cp.action.turn_off") : t("cp.action.turn_on")}: ${flag.key}`}
                 title={flag.enabled ? t("cp.action.turn_off") : t("cp.action.turn_on")}
-                className="text-xs rounded-lg border border-slate-300 px-2 py-1 hover:bg-slate-50 inline-flex items-center gap-1"
+                className="text-xs rounded-lg border border-input px-2 py-1 hover:bg-surface-hover inline-flex items-center gap-1"
               >
                 {flag.enabled ? <ToggleRight className="w-4 h-4 text-emerald-600" /> : <ToggleLeft className="w-4 h-4" />}
               </button>
@@ -235,7 +235,7 @@ export default function Configuration() {
                 }
                 aria-label={`${t("cp.action.delete_flag")}: ${flag.key}`}
                 title={t("cp.action.delete_flag")}
-                className="text-xs rounded-lg border border-slate-300 px-2 py-1 hover:bg-slate-50"
+                className="text-xs rounded-lg border border-input px-2 py-1 hover:bg-surface-hover"
               >
                 ✕
               </button>
@@ -268,13 +268,13 @@ export default function Configuration() {
       )}
 
       {history && (
-        <Modal label={history.key}>
+        <Modal onClose={() => setHistory(null)} label={history.key}>
           <div className="p-5 space-y-4">
-            <h2 className="text-lg font-semibold text-slate-900 font-mono text-sm">{history.key}</h2>
+            <h2 className="text-lg font-semibold text-foreground font-mono text-sm">{history.key}</h2>
             <Table
               head={[t("cp.field.when"), t("cp.field.value"), t("cp.field.operator"), t("cp.field.reason"), ""]}
               rows={history.changes.map((change) => [
-                formatMoment(change.changed_at, locale),
+                formatMoment(change.changed_at),
                 <span key="v" className="font-mono text-xs">
                   {change.previous_value ?? "—"} → {change.new_value}
                 </span>,
@@ -292,7 +292,7 @@ export default function Configuration() {
                       onDone: load,
                     });
                   }}
-                  className="text-xs rounded-lg border border-slate-300 px-2 py-1 hover:bg-slate-50 inline-flex items-center gap-1"
+                  className="text-xs rounded-lg border border-input px-2 py-1 hover:bg-surface-hover inline-flex items-center gap-1"
                 >
                   <RotateCcw className="w-3 h-3" />
                   {t("cp.action.rollback")}
@@ -304,7 +304,7 @@ export default function Configuration() {
               <button
                 type="button"
                 onClick={() => setHistory(null)}
-                className="rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-100"
+                className="rounded-lg px-4 py-2 text-sm text-muted hover:bg-surface-hover"
               >
                 {t("cp.action.cancel")}
               </button>
@@ -374,11 +374,11 @@ function CredentialDialog({
   }
 
   return (
-    <Modal label={credential.name}>
+    <Modal onClose={onClose} label={credential.name}>
       <form onSubmit={submit} className="p-5 space-y-4">
         <div>
-          <h2 className="font-mono text-sm font-semibold text-slate-900">{credential.name}</h2>
-          <p className="mt-1 text-sm text-slate-500">{credential.description}</p>
+          <h2 className="font-mono text-sm font-semibold text-foreground">{credential.name}</h2>
+          <p className="mt-1 text-sm text-muted">{credential.description}</p>
           {credential.docs && (
             <a
               href={credential.docs}
@@ -391,7 +391,7 @@ function CredentialDialog({
           )}
         </div>
 
-        <p className="text-xs text-slate-500">{t("cp.message.credential_write_only")}</p>
+        <p className="text-xs text-muted">{t("cp.message.credential_write_only")}</p>
 
         {failure && (
           <p className="text-sm rounded-lg bg-amber-50 text-amber-900 border border-amber-200 px-3 py-2">
@@ -400,47 +400,47 @@ function CredentialDialog({
         )}
 
         <label className="block text-sm">
-          <span className="text-slate-600">{t("cp.field.value")}</span>
+          <span className="text-muted">{t("cp.field.value")}</span>
           <input
             type="password"
             autoComplete="off"
             value={value}
             onChange={(event) => setValue(event.target.value)}
             required
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono"
+            className="mt-1 w-full rounded-lg border border-input px-3 py-2 font-mono"
           />
         </label>
 
         <label className="block text-sm">
-          <span className="text-slate-600">{t("cp.field.reason")}</span>
+          <span className="text-muted">{t("cp.field.reason")}</span>
           <input
             value={reason}
             onChange={(event) => setReason(event.target.value)}
             required
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+            className="mt-1 w-full rounded-lg border border-input px-3 py-2"
           />
         </label>
 
         {needsCode && (
           <label className="block text-sm">
-            <span className="text-slate-600">{t("cp.field.code")}</span>
+            <span className="text-muted">{t("cp.field.code")}</span>
             <input
               value={code}
               onChange={(event) => setCode(event.target.value)}
               inputMode="numeric"
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono tracking-widest"
+              className="mt-1 w-full rounded-lg border border-input px-3 py-2 font-mono tracking-widest"
             />
           </label>
         )}
 
         <div className="flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-100">
+          <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-muted hover:bg-surface-hover">
             {t("cp.action.cancel")}
           </button>
           <button
             type="submit"
             disabled={busy}
-            className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-medium text-[var(--gerege-on-blue)] hover:brightness-105 disabled:opacity-50"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:brightness-105 disabled:opacity-50"
           >
             {t("cp.action.set_credential")}
           </button>
@@ -488,11 +488,11 @@ function SettingDialog({
   }
 
   return (
-    <Modal label={setting.key}>
+    <Modal onClose={onClose} label={setting.key}>
       <form onSubmit={submit} className="p-5 space-y-4">
         <div>
-          <h2 className="font-mono text-sm font-semibold text-slate-900">{setting.key}</h2>
-          <p className="mt-1 text-sm text-slate-500">{setting.description}</p>
+          <h2 className="font-mono text-sm font-semibold text-foreground">{setting.key}</h2>
+          <p className="mt-1 text-sm text-muted">{setting.description}</p>
         </div>
 
         {failure && (
@@ -502,12 +502,12 @@ function SettingDialog({
         )}
 
         <label className="block text-sm">
-          <span className="text-slate-600">{t("cp.field.value")}</span>
+          <span className="text-muted">{t("cp.field.value")}</span>
           {setting.kind === "enum" ? (
             <select
               value={value}
               onChange={(event) => setValue(event.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+              className="mt-1 w-full rounded-lg border border-input px-3 py-2"
             >
               {(setting.options ?? []).map((option) => (
                 <option key={option} value={option}>
@@ -519,7 +519,7 @@ function SettingDialog({
             <select
               value={value}
               onChange={(event) => setValue(event.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+              className="mt-1 w-full rounded-lg border border-input px-3 py-2"
             >
               <option value="false">false</option>
               <option value="true">true</option>
@@ -528,47 +528,47 @@ function SettingDialog({
             <input
               value={value}
               onChange={(event) => setValue(event.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm"
+              className="mt-1 w-full rounded-lg border border-input px-3 py-2 font-mono text-sm"
             />
           )}
-          <span className="mt-1 block text-xs text-slate-400">
+          <span className="mt-1 block text-xs text-muted">
             {t("cp.field.default")}: <span className="font-mono">{setting.default || "—"}</span>
             {setting.env ? ` · ${setting.env}` : ""}
           </span>
         </label>
 
         <label className="block text-sm">
-          <span className="text-slate-600">{t("cp.field.reason")}</span>
+          <span className="text-muted">{t("cp.field.reason")}</span>
           <input
             required
             value={reason}
             onChange={(event) => setReason(event.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+            className="mt-1 w-full rounded-lg border border-input px-3 py-2"
           />
         </label>
 
         {needsCode && (
           <label className="block text-sm">
-            <span className="text-slate-600">{t("cp.field.code")}</span>
+            <span className="text-muted">{t("cp.field.code")}</span>
             <input
               inputMode="numeric"
               maxLength={6}
               required
               value={code}
               onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono tracking-[0.4em]"
+              className="mt-1 w-full rounded-lg border border-input px-3 py-2 font-mono tracking-[0.4em]"
             />
           </label>
         )}
 
         <div className="flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-100">
+          <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-muted hover:bg-surface-hover">
             {t("cp.action.cancel")}
           </button>
           <button
             type="submit"
             disabled={busy}
-            className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-medium text-[var(--gerege-on-blue)] hover:brightness-105 disabled:opacity-60"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:brightness-105 disabled:opacity-60"
           >
             {t("cp.action.confirm")}
           </button>
@@ -618,12 +618,12 @@ function FlagDialog({ onClose, onSaved }: { onClose: () => void; onSaved: () => 
   }
 
   return (
-    <Modal label={t("cp.action.new_flag")}>
+    <Modal onClose={onClose} label={t("cp.action.new_flag")}>
       <form onSubmit={submit} className="p-5 space-y-3">
-        <h2 className="text-lg font-semibold text-slate-900">{t("cp.action.new_flag")}</h2>
+        <h2 className="text-lg font-semibold text-foreground">{t("cp.action.new_flag")}</h2>
 
         {failure && (
-          <p className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+          <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
         )}
 
         <Line label={t("cp.field.flag")} value={key} onChange={setKey} required mono />
@@ -631,11 +631,11 @@ function FlagDialog({ onClose, onSaved }: { onClose: () => void; onSaved: () => 
         <Line label={t("cp.field.owner")} value={owner} onChange={setOwner} />
 
         <label className="block text-sm">
-          <span className="text-slate-600">{t("cp.field.kind")}</span>
+          <span className="text-muted">{t("cp.field.kind")}</span>
           <select
             value={kind}
             onChange={(event) => setKind(event.target.value as typeof kind)}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+            className="mt-1 w-full rounded-lg border border-input px-3 py-2"
           >
             <option value="release">{t("cp.kind.release")}</option>
             <option value="kill_switch">{t("cp.kind.kill_switch")}</option>
@@ -646,25 +646,25 @@ function FlagDialog({ onClose, onSaved }: { onClose: () => void; onSaved: () => 
         <Line label={t("cp.field.rollout")} value={rollout} onChange={setRollout} />
 
         <label className="block text-sm">
-          <span className="text-slate-600">{t("cp.field.expires")}</span>
+          <span className="text-muted">{t("cp.field.expires")}</span>
           <input
             type="date"
             value={expires}
             onChange={(event) => setExpires(event.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+            className="mt-1 w-full rounded-lg border border-input px-3 py-2"
           />
         </label>
 
         <Line label={t("cp.field.reason")} value={reason} onChange={setReason} required />
 
         <div className="flex justify-end gap-2 pt-1">
-          <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-100">
+          <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-muted hover:bg-surface-hover">
             {t("cp.action.cancel")}
           </button>
           <button
             type="submit"
             disabled={busy}
-            className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-medium text-[var(--gerege-on-blue)] hover:brightness-105 disabled:opacity-60"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:brightness-105 disabled:opacity-60"
           >
             {t("cp.action.create")}
           </button>
@@ -689,12 +689,12 @@ function Line({
 }) {
   return (
     <label className="block text-sm">
-      <span className="text-slate-600">{label}</span>
+      <span className="text-muted">{label}</span>
       <input
         required={required}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className={`mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 ${mono ? "font-mono text-sm" : ""}`}
+        className={`mt-1 w-full rounded-lg border border-input px-3 py-2 ${mono ? "font-mono text-sm" : ""}`}
       />
     </label>
   );

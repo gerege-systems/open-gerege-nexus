@@ -48,13 +48,13 @@ export default function ContractInboxPage() {
             <tr
               key={item.party_id}
               onClick={() => router.push(`/module/documents/inbox/${item.party_id}`)}
-              className="cursor-pointer hover:bg-slate-50"
+              className="cursor-pointer hover:bg-surface-hover"
             >
-              <td className="px-4 py-3 font-semibold text-slate-800">{item.title}</td>
+              <td className="px-4 py-3 font-semibold text-foreground">{item.title}</td>
               <td className="px-4 py-3">{item.issuer_name || "—"}</td>
               <td className="px-4 py-3"><PartyBadge state={item.state} /></td>
-              <td className="px-4 py-3 text-slate-400">{fmtDate(item.invited_at)}</td>
-              <td className="px-4 py-3 text-slate-400">{fmtDate(item.due_at)}</td>
+              <td className="px-4 py-3 text-muted">{fmtDate(item.invited_at)}</td>
+              <td className="px-4 py-3 text-muted">{fmtDate(item.due_at)}</td>
             </tr>
           ))}
         </TableCard>

@@ -136,17 +136,17 @@ export default function UserMenu({
         aria-expanded={open}
         className={`flex items-center gap-2.5 rounded-full border py-1 pl-1 pr-2.5 transition ${
           open
-            ? "gerege-topbar-onlight border-[var(--gerege-blue)] bg-[var(--gerege-blue-soft)]"
-            : "border-slate-200 hover:bg-slate-50"
+            ? "gerege-topbar-onlight border-accent bg-accent-soft"
+            : "border-line hover:bg-surface-hover"
         }`}
       >
-        <span className="w-8 h-8 rounded-full bg-[var(--gerege-blue-soft)] text-[var(--gerege-blue)] grid place-items-center text-xs font-bold">
+        <span className="w-8 h-8 rounded-full bg-accent-soft text-accent grid place-items-center text-xs font-semibold">
           {initials}
         </span>
         {/* The whole name, not the first word of it: "Цэнддорж Эрдэнэбат" is
             one name in two parts and cutting it at 9rem said the wrong one. */}
-        <span className="hidden md:block text-sm font-medium text-slate-800 truncate max-w-60">{user?.name}</span>
-        <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${open ? "rotate-180" : ""}`} />
+        <span className="hidden md:block text-sm font-medium text-foreground truncate max-w-60">{user?.name}</span>
+        <ChevronDown className={`w-3.5 h-3.5 text-muted transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && (
@@ -155,13 +155,13 @@ export default function UserMenu({
           ref={panelRef}
           /* The class is only what the first paint uses; the effect above
              replaces it with the room actually below the button. */
-          className="gerege-topbar-onlight absolute right-0 mt-2 w-[320px] rounded-2xl border border-slate-200 bg-white shadow-xl overflow-y-auto overscroll-contain max-h-[calc(100dvh-5rem)] z-50"
+          className="gerege-topbar-onlight absolute right-0 mt-2 w-[320px] rounded-xl border border-line bg-surface shadow-lg overflow-y-auto overscroll-contain max-h-[calc(100dvh-5rem)] z-dropdown"
         >
-          <div className="px-4 py-3.5 border-b border-slate-100 flex items-start gap-3">
+          <div className="px-4 py-3.5 border-b border-line flex items-start gap-3">
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-slate-900 truncate">{user?.name}</p>
-              <p className="text-xs text-slate-500 truncate">{user?.email}</p>
-              {subtitle && <p className="mt-0.5 text-xs text-[var(--gerege-blue)] truncate">{subtitle}</p>}
+              <p className="text-sm font-semibold text-foreground truncate">{user?.name}</p>
+              <p className="text-xs text-muted truncate">{user?.email}</p>
+              {subtitle && <p className="mt-0.5 text-xs text-accent truncate">{subtitle}</p>}
             </div>
             {/* Signing out is also the last row of this menu, and on a phone
                 with several organisations that row is a whole scroll away.
@@ -173,7 +173,7 @@ export default function UserMenu({
               role="menuitem"
               aria-label={t("web.action.logout")}
               title={t("web.action.logout")}
-              className="shrink-0 grid place-items-center w-8 h-8 rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+              className="shrink-0 grid place-items-center w-8 h-8 rounded-lg text-muted transition hover:bg-red-50 hover:text-red-600"
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -183,8 +183,8 @@ export default function UserMenu({
               third line of chrome in a menu that already carries two, saying
               nothing the header does not already show. */}
           {showTenants && tenants && tenants.length > 1 && (
-            <div className="py-1.5 border-b border-slate-100">
-              <p className="px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+            <div className="py-1.5 border-b border-line">
+              <p className="px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
                 {t("web.view.tenants")}
               </p>
               <TenantChoices
@@ -201,30 +201,30 @@ export default function UserMenu({
           )}
 
           {rows.length > 0 && (
-            <div className="py-1.5 border-b border-slate-100">
+            <div className="py-1.5 border-b border-line">
               {rows.map((row) => (
                 <Link
                   key={row.href}
                   href={row.href}
                   onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-surface-hover"
                   role="menuitem"
                 >
-                  <span className="text-slate-400">{row.icon}</span>
+                  <span className="text-muted">{row.icon}</span>
                   {row.label}
                 </Link>
               ))}
             </div>
           )}
 
-          <div className="px-4 py-3 space-y-3 border-b border-slate-100">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+          <div className="px-4 py-3 space-y-3 border-b border-line">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">
               {t("web.menu.preferences")}
             </p>
 
             <div className="flex items-center justify-between gap-3">
-              <span className="text-sm text-slate-600">{t("base.field.language")}</span>
-              <div className="inline-flex rounded-lg border border-slate-200 p-0.5 bg-slate-50">
+              <span className="text-sm text-muted">{t("base.field.language")}</span>
+              <div className="inline-flex rounded-lg border border-line p-0.5 bg-surface-2">
                 {offeredLocales.map((option) => (
                   <button
                     key={option.code}
@@ -233,7 +233,7 @@ export default function UserMenu({
                     aria-pressed={locale === option.code}
                     title={option.label}
                     className={`px-2.5 py-1 rounded-md text-xs font-semibold uppercase transition ${
-                      locale === option.code ? "bg-white text-[var(--gerege-blue)] shadow-sm" : "text-slate-500 hover:text-slate-700"
+                      locale === option.code ? "bg-surface text-accent shadow-sm" : "text-muted hover:text-foreground"
                     }`}
                   >
                     {option.code}
@@ -243,8 +243,8 @@ export default function UserMenu({
             </div>
 
             <div className="flex items-center justify-between gap-3">
-              <span className="text-sm text-slate-600">{t("web.field.theme")}</span>
-              <div className="inline-flex rounded-lg border border-slate-200 p-0.5 bg-slate-50">
+              <span className="text-sm text-muted">{t("web.field.theme")}</span>
+              <div className="inline-flex rounded-lg border border-line p-0.5 bg-surface-2">
                 {MODES.map(({ value, icon: Icon, labelKey }) => (
                   <button
                     key={value}
@@ -253,7 +253,7 @@ export default function UserMenu({
                     aria-pressed={theme.mode === value}
                     title={t(labelKey)}
                     className={`grid place-items-center w-8 h-7 rounded-md transition ${
-                      theme.mode === value ? "bg-white text-[var(--gerege-blue)] shadow-sm" : "text-slate-500 hover:text-slate-700"
+                      theme.mode === value ? "bg-surface text-accent shadow-sm" : "text-muted hover:text-foreground"
                     }`}
                   >
                     <Icon className="w-4 h-4" />

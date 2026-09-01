@@ -151,23 +151,23 @@ function HeroInbox({items}: {items: InboxItem[]}) {
   const {t} = useI18n();
 
   return (
-    <div className="rounded-2xl bg-white/95 shadow-xl border border-slate-200 p-6 w-full max-w-md">
+    <div className="rounded-xl bg-white/95 shadow-lg border border-line p-6 w-full max-w-md">
       <div className="flex items-center gap-2 mb-4">
         <FileSignature className="w-5 h-5 text-indigo-600" />
-        <h3 className="font-bold text-slate-900">{t("website.view.hero_inbox_title")}</h3>
+        <h3 className="font-semibold text-foreground">{t("website.view.hero_inbox_title")}</h3>
       </div>
       {items.length === 0 ? (
-        <p className="text-sm text-slate-500">{t("website.view.hero_inbox_empty")}</p>
+        <p className="text-sm text-muted">{t("website.view.hero_inbox_empty")}</p>
       ) : (
         <ul className="space-y-2">
           {items.slice(0, 4).map((item) => (
             <li key={item.party_id}>
               <Link
                 href={`/module/documents/inbox/${item.party_id}`}
-                className="block rounded-xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/40 px-4 py-3"
+                className="block rounded-xl border border-line hover:border-indigo-300 hover:bg-indigo-50/40 px-4 py-3"
               >
-                <div className="text-sm font-semibold text-slate-800">{item.title}</div>
-                <div className="text-xs text-slate-500">
+                <div className="text-sm font-semibold text-foreground">{item.title}</div>
+                <div className="text-xs text-muted">
                   {item.issuer_name}
                   {" · "}
                   {item.state === "invited"
@@ -178,7 +178,7 @@ function HeroInbox({items}: {items: InboxItem[]}) {
             </li>
           ))}
           {items.length > 4 ? (
-            <li className="text-xs text-slate-400 pt-1">
+            <li className="text-xs text-muted pt-1">
               <Link href="/module/documents/inbox" className="hover:underline">
                 +{items.length - 4} {t("website.view.hero_inbox_more")}
               </Link>

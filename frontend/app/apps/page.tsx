@@ -196,7 +196,7 @@ export default function AppStorePage() {
           current has one version, and printing it twice would read as a
           pending change. */}
       <span
-        className="text-xs bg-slate-100 text-slate-600 font-semibold px-2 py-0.5 rounded"
+        className="text-xs bg-surface-2 text-muted font-semibold px-2 py-0.5 rounded"
         title={
           app.update_available
             ? `${t("app_store.field.installed_version")}: ${app.installed_version} · ${t("app_store.field.latest_version")}: ${app.latest_version}`
@@ -247,10 +247,10 @@ export default function AppStorePage() {
           ? t("app_store.release_kind.security")
           : "";
     return (
-      <p className="text-xs text-slate-600 mt-1 flex items-start gap-1.5">
+      <p className="text-xs text-muted mt-1 flex items-start gap-1.5">
         <Sparkles className="w-3.5 h-3.5 text-indigo-500 shrink-0 mt-px" />
         <span className="min-w-0">
-          <span className="font-semibold text-slate-700">{t("app_store.field.whats_new")}</span>{" "}
+          <span className="font-semibold text-foreground">{t("app_store.field.whats_new")}</span>{" "}
           {line}
           {tone && kindLabel && (
             <span className={`ml-1.5 border px-1 py-px rounded text-[10px] font-semibold ${tone}`}>
@@ -270,7 +270,7 @@ export default function AppStorePage() {
       <div
         className={
           mode === "grid"
-            ? "pt-3 border-t border-slate-100 flex items-center justify-end gap-2"
+            ? "pt-3 border-t border-line flex items-center justify-end gap-2"
             : "flex items-center justify-end gap-2 shrink-0"
         }
       >
@@ -293,7 +293,7 @@ export default function AppStorePage() {
                 card's release note already shows. */}
             <button
               onClick={() => setHistoryFor(app.slug)}
-              className={`${width} bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-medium text-sm py-2 px-4 rounded-lg flex items-center justify-center space-x-2 transition`}
+              className={`${width} bg-surface hover:bg-surface-hover text-foreground border border-line font-medium text-sm py-2 px-4 rounded-lg flex items-center justify-center space-x-2 transition`}
             >
               <History className="w-4 h-4" />
               <span>{t("app_store.action.history")}</span>
@@ -318,7 +318,7 @@ export default function AppStorePage() {
               disabled={actionLoading === app.slug}
               className={`${width} font-medium text-sm py-2 px-4 rounded-lg flex items-center justify-center space-x-2 transition border ${
                 app.enabled
-                  ? "bg-white hover:bg-red-50 text-red-600 border-red-200"
+                  ? "bg-surface hover:bg-red-50 text-red-600 border-red-200"
                   : "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600"
               }`}
             >
@@ -353,29 +353,29 @@ export default function AppStorePage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-line pb-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">{t("app_store.view.title")}</h1>
-          <p className="text-sm text-slate-500">{t("app_store.view.subtitle")}</p>
+          <h1 className="text-2xl font-semibold text-foreground">{t("app_store.view.title")}</h1>
+          <p className="text-sm text-muted">{t("app_store.view.subtitle")}</p>
         </div>
 
         {/* Search & Category */}
         <div className="flex items-center space-x-3">
           <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+            <Search className="w-4 h-4 absolute left-3 top-2.5 text-muted" />
             <input
               type="text"
               placeholder={t("app_store.view.search_placeholder")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 pr-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 w-64 bg-white"
+              className="pl-9 pr-3 py-1.5 text-sm border border-input rounded-lg w-64 bg-surface"
             />
           </div>
 
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+            className="px-3 py-1.5 text-sm border border-input rounded-lg bg-surface"
           >
             {categories.map((c) => (
               <option key={c} value={c}>
@@ -388,7 +388,7 @@ export default function AppStorePage() {
               with two answers, and the icons say which is which without being
               read. aria-pressed rather than a label change, so a screen reader
               hears the state instead of a button that renames itself. */}
-          <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg border border-slate-200">
+          <div className="flex items-center gap-1 p-1 bg-surface-2 rounded-lg border border-line">
             {([
               { mode: "grid" as const, icon: <LayoutGrid className="w-4 h-4" />, label: t("app_store.action.view_grid") },
               { mode: "list" as const, icon: <Rows3 className="w-4 h-4" />, label: t("app_store.action.view_list") },
@@ -402,8 +402,8 @@ export default function AppStorePage() {
                 title={option.label}
                 className={`p-1.5 rounded-md transition ${
                   view === option.mode
-                    ? "bg-white text-indigo-600 shadow-sm"
-                    : "text-slate-500 hover:text-slate-700"
+                    ? "bg-surface text-indigo-600 shadow-sm"
+                    : "text-muted hover:text-foreground"
                 }`}
               >
                 {option.icon}
@@ -422,21 +422,21 @@ export default function AppStorePage() {
 
       {/* App Cards Grid */}
       {loading ? (
-        <div className="py-12 text-center text-slate-500 text-sm">{t("app_store.message.loading")}</div>
+        <div className="py-12 text-center text-muted text-sm">{t("app_store.message.loading")}</div>
       ) : filteredApps.length === 0 ? (
-        <div className="py-12 text-center text-slate-500 text-sm">{t("app_store.message.no_match")}</div>
+        <div className="py-12 text-center text-muted text-sm">{t("app_store.message.no_match")}</div>
       ) : view === "list" ? (
-        <div className="bg-white border border-slate-200 rounded-xl divide-y divide-slate-100">
+        <div className="bg-surface border border-line rounded-xl divide-y divide-line">
           {filteredApps.map((app) => (
             <div key={app.id} className="p-4 flex flex-wrap items-center gap-4">
-              <div className="p-2 bg-slate-50 rounded-lg border border-slate-100 shrink-0">
+              <div className="p-2 bg-surface-2 rounded-lg border border-line shrink-0">
                 <MenuIcon name={appIcon(app)} className="w-8 h-8 text-indigo-500" />
               </div>
               {/* min-w-0 so the description truncates instead of pushing the
                   buttons off the end of the row. */}
               <div className="flex-1 min-w-56">
                 <div className="flex items-baseline gap-2">
-                  <h2 className="font-bold text-slate-900">{app.name}</h2>
+                  <h2 className="font-semibold text-foreground">{app.name}</h2>
                   <span className="text-xs font-medium text-indigo-600">{app.category}</span>
                   {/* Said out loud, because an app in this list looks exactly
                       like one every platform can get. Whoever is deciding to
@@ -449,11 +449,11 @@ export default function AppStorePage() {
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-slate-600 truncate">{app.description}</p>
+                <p className="text-sm text-muted truncate">{app.description}</p>
                 {renderReleaseNote(app)}
                 {app.manifest.dependencies && app.manifest.dependencies.length > 0 && (
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    <span className="font-semibold text-slate-700">{t("app_store.field.requires")}</span>
+                  <p className="text-xs text-muted mt-0.5">
+                    <span className="font-semibold text-foreground">{t("app_store.field.requires")}</span>
                     {app.manifest.dependencies.map((d) => d.id.replace("io.gerege.nexus.", "")).join(", ")}
                   </p>
                 )}
@@ -468,26 +468,26 @@ export default function AppStorePage() {
           {filteredApps.map((app) => (
             <div
               key={app.id}
-              className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-md transition flex flex-col justify-between"
+              className="bg-surface border border-line rounded-xl p-5 hover:shadow-md transition flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-start justify-between mb-3">
-                  <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100">
+                  <div className="p-2.5 bg-surface-2 rounded-xl border border-line">
                     <MenuIcon name={appIcon(app)} className="w-8 h-8 text-indigo-500" />
                   </div>
                   {renderChips(app)}
                 </div>
 
-                <h2 className="text-lg font-bold text-slate-900">{app.name}</h2>
+                <h2 className="text-lg font-semibold text-foreground">{app.name}</h2>
                 <p className="text-xs font-medium text-indigo-600 mb-2">{app.category}</p>
-                <p className="text-sm text-slate-600 line-clamp-2">{app.description}</p>
+                <p className="text-sm text-muted line-clamp-2">{app.description}</p>
                 {renderReleaseNote(app)}
                 <div className="mb-4" />
 
                 {/* Dependencies info */}
                 {app.manifest.dependencies && app.manifest.dependencies.length > 0 && (
-                  <div className="mb-4 text-xs text-slate-500 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-                    <span className="font-semibold text-slate-700">{t("app_store.field.requires")}</span>
+                  <div className="mb-4 text-xs text-muted bg-surface-2 p-2.5 rounded-lg border border-line">
+                    <span className="font-semibold text-foreground">{t("app_store.field.requires")}</span>
                     {app.manifest.dependencies.map((d) => d.id.replace("io.gerege.nexus.", "")).join(", ")}
                   </div>
                 )}
