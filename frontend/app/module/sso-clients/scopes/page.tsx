@@ -53,8 +53,8 @@ export default function OAuthScopesPage() {
     >
       {error && <ErrorNote>{error}</ErrorNote>}
 
-      <Panel className="p-4 bg-slate-50">
-        <p className="text-xs text-slate-600">{t("sso_clients.scopes.sensitive_note")}</p>
+      <Panel className="p-4 bg-surface-2">
+        <p className="text-xs text-muted">{t("sso_clients.scopes.sensitive_note")}</p>
       </Panel>
 
       {loading ? (
@@ -68,21 +68,21 @@ export default function OAuthScopesPage() {
             return (
               <Panel key={scope.name} className={`p-4 ${scope.sensitive ? "border-amber-200" : ""}`}>
                 <div className="flex items-start justify-between gap-2">
-                  <code className="text-sm font-mono font-bold text-slate-900">{scope.name}</code>
+                  <code className="text-sm font-mono font-semibold text-foreground">{scope.name}</code>
                   {scope.sensitive && <Chip tone="amber">{t("oauth.consent.sensitive")}</Chip>}
                 </div>
 
-                <p className="text-xs text-slate-400 mt-2">{t("sso_clients.scopes.consent_preview")}</p>
-                <p className="text-sm text-slate-700 border-l-2 border-slate-200 pl-3 mt-1">
+                <p className="text-xs text-muted mt-2">{t("sso_clients.scopes.consent_preview")}</p>
+                <p className="text-sm text-foreground border-l-2 border-line pl-3 mt-1">
                   {locale === "mn" ? scope.description_mn : scope.description}
                 </p>
 
-                <div className="mt-3 pt-3 border-t border-slate-100">
-                  <span className="text-[11px] font-semibold text-slate-500">
+                <div className="mt-3 pt-3 border-t border-line">
+                  <span className="text-[11px] font-semibold text-muted">
                     {t("sso_clients.scopes.used_by")}
                   </span>
                   {users.length === 0 ? (
-                    <p className="text-[11px] text-slate-400 italic mt-1">{t("sso_clients.scopes.unused")}</p>
+                    <p className="text-[11px] text-muted italic mt-1">{t("sso_clients.scopes.unused")}</p>
                   ) : (
                     <div className="flex flex-wrap gap-1 mt-1">
                       {users.map((client) => (

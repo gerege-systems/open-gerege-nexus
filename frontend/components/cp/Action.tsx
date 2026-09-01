@@ -82,11 +82,11 @@ function ActionDialog({ request, onClose }: { request: Request; onClose: () => v
   }
 
   return (
-    <Modal label={request.title}>
+    <Modal onClose={onClose} label={request.title}>
       <form onSubmit={submit} className="p-5 space-y-4">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">{request.title}</h2>
-          {request.detail && <p className="mt-1 text-sm text-slate-500">{request.detail}</p>}
+          <h2 className="text-lg font-semibold text-foreground">{request.title}</h2>
+          {request.detail && <p className="mt-1 text-sm text-muted">{request.detail}</p>}
         </div>
 
         {failure && (
@@ -96,20 +96,20 @@ function ActionDialog({ request, onClose }: { request: Request; onClose: () => v
         )}
 
         <label className="block text-sm">
-          <span className="text-slate-600">{t("cp.field.reason")}</span>
+          <span className="text-muted">{t("cp.field.reason")}</span>
           <textarea
             required
             rows={2}
             value={reason}
             onChange={(event) => setReason(event.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+            className="mt-1 w-full rounded-lg border border-input px-3 py-2"
           />
-          <span className="mt-1 block text-xs text-slate-400">{t("cp.hint.reason")}</span>
+          <span className="mt-1 block text-xs text-muted">{t("cp.hint.reason")}</span>
         </label>
 
         {needsCode && (
           <label className="block text-sm">
-            <span className="text-slate-600">{t("cp.field.code")}</span>
+            <span className="text-muted">{t("cp.field.code")}</span>
             <input
               inputMode="numeric"
               autoComplete="one-time-code"
@@ -117,7 +117,7 @@ function ActionDialog({ request, onClose }: { request: Request; onClose: () => v
               required
               value={code}
               onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono tracking-[0.4em] focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+              className="mt-1 w-full rounded-lg border border-input px-3 py-2 font-mono tracking-[0.4em]"
             />
           </label>
         )}
@@ -126,15 +126,15 @@ function ActionDialog({ request, onClose }: { request: Request; onClose: () => v
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-100"
+            className="rounded-lg px-4 py-2 text-sm text-muted hover:bg-surface-hover"
           >
             {t("cp.action.cancel")}
           </button>
           <button
             type="submit"
             disabled={busy}
-            className={`rounded-lg px-4 py-2 text-sm font-medium text-[var(--gerege-on-blue)] disabled:opacity-60 ${
-              request.danger ? "bg-red-600 hover:bg-red-700" : "bg-[var(--gerege-blue)] hover:brightness-105"
+            className={`rounded-lg px-4 py-2 text-sm font-medium text-on-accent disabled:opacity-60 ${
+              request.danger ? "bg-red-600 hover:bg-red-700" : "bg-accent hover:brightness-105"
             }`}
           >
             {t("cp.action.confirm")}

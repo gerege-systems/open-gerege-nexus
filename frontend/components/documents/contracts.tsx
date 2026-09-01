@@ -13,29 +13,30 @@ import React, { useEffect, useRef, useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import { Smartphone } from "lucide-react";
 import type { CeremonyProgress, CeremonySession, ContractState, PartyState } from "@/lib/contracts";
+import { formatDay, formatMoment, formatMoney } from "@/lib/datetime";
 
 // ─────────────────────────────────────────────────────────────────── labels
 
 const CONTRACT_BADGE: Record<ContractState, string> = {
-  NONE: "bg-slate-100 text-slate-500",
-  DRAFT: "bg-slate-100 text-slate-600",
+  NONE: "bg-surface-2 text-muted",
+  DRAFT: "bg-surface-2 text-muted",
   SENT: "bg-amber-50 text-amber-700",
   PARTIALLY_SIGNED: "bg-indigo-50 text-indigo-700",
   EXECUTED: "bg-emerald-50 text-emerald-700",
   DECLINED: "bg-red-50 text-red-700",
-  WITHDRAWN: "bg-slate-100 text-slate-500",
-  EXPIRED: "bg-slate-100 text-slate-500",
-  TERMINATED: "bg-slate-100 text-slate-500",
+  WITHDRAWN: "bg-surface-2 text-muted",
+  EXPIRED: "bg-surface-2 text-muted",
+  TERMINATED: "bg-surface-2 text-muted",
 };
 
 const PARTY_BADGE: Record<PartyState, string> = {
-  draft: "bg-slate-100 text-slate-600",
+  draft: "bg-surface-2 text-muted",
   invited: "bg-amber-50 text-amber-700",
   viewed: "bg-indigo-50 text-indigo-700",
   signed: "bg-emerald-50 text-emerald-700",
   declined: "bg-red-50 text-red-700",
-  withdrawn: "bg-slate-100 text-slate-500",
-  expired: "bg-slate-100 text-slate-500",
+  withdrawn: "bg-surface-2 text-muted",
+  expired: "bg-surface-2 text-muted",
 };
 
 export function useContractLabels() {
@@ -89,7 +90,7 @@ export function useContractLabels() {
 export function ContractBadge({ state }: { state: ContractState }) {
   const { contractState } = useContractLabels();
   return (
-    <span className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold whitespace-nowrap ${CONTRACT_BADGE[state] ?? "bg-slate-100 text-slate-500"}`}>
+    <span className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-semibold whitespace-nowrap ${CONTRACT_BADGE[state] ?? "bg-surface-2 text-muted"}`}>
       {contractState(state)}
     </span>
   );
@@ -98,7 +99,7 @@ export function ContractBadge({ state }: { state: ContractState }) {
 export function PartyBadge({ state }: { state: PartyState }) {
   const { partyState } = useContractLabels();
   return (
-    <span className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold whitespace-nowrap ${PARTY_BADGE[state] ?? "bg-slate-100 text-slate-500"}`}>
+    <span className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-semibold whitespace-nowrap ${PARTY_BADGE[state] ?? "bg-surface-2 text-muted"}`}>
       {partyState(state)}
     </span>
   );
@@ -107,18 +108,18 @@ export function PartyBadge({ state }: { state: PartyState }) {
 export function fmtDate(value?: string | null): string {
   if (!value) return "";
   const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString("mn-MN");
+  return Number.isNaN(d.getTime()) ? value : formatDay(d);
 }
 
 export function fmtWhen(value?: string | null): string {
   if (!value) return "";
   const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleString("mn-MN");
+  return Number.isNaN(d.getTime()) ? value : formatMoment(d);
 }
 
 export function fmtMoney(amount?: number | null, currency?: string): string {
   if (amount === null || amount === undefined) return "";
-  return `${amount.toLocaleString("mn-MN")}${currency ? ` ${currency}` : ""}`;
+  return formatMoney(amount, currency || "MNT");
 }
 
 // ───────────────────────────────────────────────────────────────── ceremony
@@ -179,7 +180,7 @@ export function CeremonyButton({
 
   if (code) {
     return (
-      <span className="bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-bold px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 font-mono">
+      <span className="bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-semibold px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 font-mono">
         <Smartphone className="w-3.5 h-3.5 animate-pulse" />
         {code}
         <span className="font-sans font-medium text-indigo-500">{t("contracts.msg.check_phone")}</span>

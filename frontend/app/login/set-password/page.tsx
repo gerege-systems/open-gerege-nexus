@@ -44,6 +44,10 @@ function SetPassword() {
   const [password, setPassword] = useState("");
   const [again, setAgain] = useState("");
   const [failure, setFailure] = useState("");
+  // Set by Save, not by typing: flagging the repeat field while somebody is
+  // still halfway through typing it says "wrong" about a value they have not
+  // finished giving.
+  const [mismatch, setMismatch] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const check = useCallback(async () => {
@@ -74,10 +78,12 @@ function SetPassword() {
     event.preventDefault();
     if (password !== again) {
       setFailure(t("auth.message.password_mismatch"));
+      setMismatch(true);
       return;
     }
     setBusy(true);
     setFailure("");
+    setMismatch(false);
     try {
       const response = await fetch(`${apiBase()}/auth/credential/redeem`, {
         method: "POST",
@@ -102,19 +108,19 @@ function SetPassword() {
   }
 
   return (
-    <div className="min-h-screen grid place-items-center bg-slate-100 px-4">
-      <div className="w-full max-w-sm bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
-        <div className="flex items-center gap-2 text-slate-900">
+    <div className="min-h-dvh grid place-items-center bg-surface-2 px-4">
+      <div className="w-full max-w-sm bg-surface rounded-xl border border-line p-6 space-y-4">
+        <div className="flex items-center gap-2 text-foreground">
           <KeyRound className="w-5 h-5 text-blue-600" />
           <h1 className="text-lg font-semibold">
             {purpose === "invite" ? t("auth.view.set_password_invite") : t("auth.view.set_password_reset")}
           </h1>
         </div>
 
-        {state === "checking" && <p className="text-sm text-slate-500">…</p>}
+        {state === "checking" && <p className="text-sm text-muted">…</p>}
 
         {state === "dead" && (
-          <p className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">
+          <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">
             {t("auth.message.link_dead")}
           </p>
         )}
@@ -127,41 +133,58 @@ function SetPassword() {
 
         {state === "ready" && (
           <form onSubmit={submit} className="space-y-4">
-            <p className="text-sm text-slate-500">{email}</p>
+            <p className="text-sm text-muted">{email}</p>
 
+            {/* role="alert" because the message is written after the page has
+                loaded, in response to Save. Without it a screen reader user
+                presses the button, hears nothing, and has no way to learn the
+                two passwords did not match. */}
             {failure && (
-              <p className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">
+              <p
+                id="password-failure"
+                role="alert"
+                className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2"
+              >
                 {failure}
               </p>
             )}
 
             <label className="block text-sm">
-              <span className="text-slate-600">{t("auth.field.new_password")}</span>
+              <span className="text-muted">{t("auth.field.new_password")}</span>
               <input
                 type="password"
                 autoComplete="new-password"
                 required
                 minLength={MIN_LENGTH}
                 value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                onChange={(event) => { setPassword(event.target.value); setMismatch(false); }}
+                aria-describedby="password-length-hint"
+                className="mt-1 w-full rounded-lg border border-input px-3 py-2"
               />
             </label>
 
+            {/* The mismatch is a fact about this field, so it is this field
+                that carries the invalid state and points at the message. */}
             <label className="block text-sm">
-              <span className="text-slate-600">{t("auth.field.repeat_password")}</span>
+              <span className="text-muted">{t("auth.field.repeat_password")}</span>
               <input
                 type="password"
                 autoComplete="new-password"
                 required
                 minLength={MIN_LENGTH}
                 value={again}
-                onChange={(event) => setAgain(event.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                onChange={(event) => { setAgain(event.target.value); setMismatch(false); }}
+                aria-invalid={mismatch || undefined}
+                aria-describedby={
+                  mismatch ? "password-failure password-length-hint" : "password-length-hint"
+                }
+                className="mt-1 w-full rounded-lg border border-input px-3 py-2"
               />
             </label>
 
-            <p className="text-xs text-slate-400">{t("auth.hint.password_length")}</p>
+            <p id="password-length-hint" className="text-xs text-muted">
+              {t("auth.hint.password_length")}
+            </p>
 
             <button
               type="submit"

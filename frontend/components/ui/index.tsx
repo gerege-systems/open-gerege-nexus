@@ -32,11 +32,11 @@ export function PageHeader({
   return (
     <header className="flex flex-wrap items-start justify-between gap-4">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+        <h1 className="text-2xl font-semibold text-foreground flex items-center gap-2">
           {icon}
           {title}
         </h1>
-        <p className="text-sm text-slate-500 mt-1">{subtitle}</p>
+        <p className="text-sm text-muted mt-1">{subtitle}</p>
       </div>
       {actions}
     </header>
@@ -108,15 +108,104 @@ export function Banner({
 export function Loading({ label }: { label?: string }) {
   const { t } = useI18n();
   return (
-    <div className="flex items-center gap-2 text-slate-500 text-sm">
-      <Loader2 className="w-4 h-4 animate-spin" />
+    <div className="flex items-center gap-2 text-muted text-sm" role="status">
+      <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
       {label || t("base.message.loading")}
     </div>
   );
 }
 
-export function EmptyState({ message }: { message: string }) {
-  return <p className="p-6 text-sm text-slate-500 text-center italic">{message}</p>;
+/**
+ * Whether a wait has gone on long enough to be worth drawing, and — once it
+ * has been drawn — long enough not to flash.
+ *
+ * Two numbers, both about the same thing: a placeholder that appears and
+ * vanishes inside a fifth of a second is visual noise, not feedback. So
+ * nothing is shown for the first 300ms, and once something *is* shown it stays
+ * for at least 500ms even if the data has already arrived. A fast response
+ * therefore renders straight to content, and a slow one does not blink on its
+ * way there.
+ */
+export function useSettledWait(waiting: boolean): boolean {
+  const [showing, setShowing] = React.useState(false);
+  const shownAt = React.useRef(0);
+
+  React.useEffect(() => {
+    if (waiting) {
+      const timer = setTimeout(() => {
+        shownAt.current = Date.now();
+        setShowing(true);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+    if (!showing) return;
+    const remaining = 500 - (Date.now() - shownAt.current);
+    if (remaining <= 0) {
+      setShowing(false);
+      return;
+    }
+    const timer = setTimeout(() => setShowing(false), remaining);
+    return () => clearTimeout(timer);
+  }, [waiting, showing]);
+
+  return showing;
+}
+
+/**
+ * A grey bar standing in for a line of content that has not arrived.
+ *
+ * It takes the shape of what it replaces rather than being a spinner in the
+ * middle of the page, so nothing moves when the real thing lands.
+ */
+export function Skeleton({ className }: { className?: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`block animate-pulse rounded bg-surface-2${className ? ` ${className}` : ""}`}
+    />
+  );
+}
+
+/**
+ * What a screen has to say when there is nothing to show.
+ *
+ * The two cases are not one case. A list that has never had anything in it is
+ * the first thing a new operator sees, and it has a job: say what would go
+ * here and offer the button that puts something there. A list that is empty
+ * because of a filter has the opposite job — the records exist, the reader
+ * hid them, and what they need is the way back. Showing the first screen's
+ * copy in the second situation tells somebody to create a record they already
+ * have.
+ *
+ * `message` alone still works and reads as it did, so the screens that have
+ * not been given the fuller treatment are unaffected.
+ */
+export function EmptyState({
+  message,
+  title,
+  action,
+  filtered,
+}: {
+  message: string;
+  /** A heading above the sentence. Worth it for a first-run screen. */
+  title?: string;
+  /** The way forward: "New…" when first-run, "Clear filters" when filtered. */
+  action?: React.ReactNode;
+  /** Nothing matched a filter, as opposed to nothing existing at all. */
+  filtered?: boolean;
+}) {
+  if (!title && !action) {
+    // The original shape, minus the italics: italic Cyrillic is harder to read
+    // than upright, and the sentence was already muted and centred.
+    return <p className={`text-sm text-muted text-center ${filtered ? "py-10" : "p-6"}`}>{message}</p>;
+  }
+  return (
+    <div className={`flex flex-col items-center gap-2 text-center ${filtered ? "py-10" : "py-12"}`}>
+      {title && <p className="text-sm font-semibold text-foreground">{title}</p>}
+      <p className="max-w-prose text-sm text-muted">{message}</p>
+      {action && <div className="mt-2">{action}</div>}
+    </div>
+  );
 }
 
 /**
@@ -130,7 +219,7 @@ export function EmptyState({ message }: { message: string }) {
 
 /** Text, number, select and textarea inputs. Repeated 33 times before this. */
 export const fieldClass =
-  "w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500";
+  "w-full px-3 py-2 text-sm border border-input rounded-lg";
 
 /**
  * A <select> wearing fieldClass alone renders SHORTER than the input beside
@@ -139,14 +228,14 @@ export const fieldClass =
  * an input reaches implicitly — text-sm line + py-2 + borders — is stated
  * explicitly here, so a select in a form row sits flush with its neighbours.
  */
-export const selectClass = `${fieldClass} h-[38px] bg-white`;
+export const selectClass = `${fieldClass} h-[38px] bg-surface`;
 
 /** The white panel a section sits on. */
-export const cardClass = "bg-white rounded-xl border border-slate-200 shadow-sm";
+export const cardClass = "bg-surface rounded-xl border border-line";
 
 /** The header row of a listing table. */
 export const tableHeadClass =
-  "bg-slate-50 text-slate-700 font-semibold border-b border-slate-200 uppercase";
+  "bg-surface-2 text-foreground font-semibold border-b border-line uppercase";
 
 /** The small bordered button in a table row: Save, Use template, and friends. */
 export const rowActionClass =
@@ -173,12 +262,19 @@ function focusableWithin(panel: HTMLElement | null): HTMLElement[] {
 /**
  * A centred dialog over a dimmed page.
  *
- * It deliberately does not close on Escape or on a backdrop click, because none
- * of the twelve dialogs it replaced did. Several of them hold typed input, and
- * one is a signing conversation with a citizen's device — losing either to a
- * stray click outside is worse than having to reach for Cancel. Adding
- * dismissal is a change to how these screens behave and belongs in a change
- * that says so.
+ * Escape closes it, and so does a click on the backdrop — but the backdrop only
+ * when nothing has been typed into it. The earlier version dismissed on
+ * neither, on the reasoning that several of these dialogs hold typed input and
+ * one of them is a signing conversation with a citizen's device, so losing
+ * either to a stray click is worse than reaching for Cancel. That reasoning is
+ * right about the click and wrong about the key: Escape is not a stray gesture,
+ * it is the one every dialog on the web answers to, and a keyboard operator who
+ * presses it and stays trapped has no reason to think the dialog is closable at
+ * all. So Escape always closes, and the click is held back exactly in the case
+ * the original was protecting — see `holdsTypedInput`.
+ *
+ * Both need somewhere to go: a dialog without `onClose` keeps the old
+ * behaviour, because there is nothing to call.
  *
  * Holding focus is a different question, and the answer to that one is yes.
  * The twelve originals left focus on the button that opened them, so Tab
@@ -193,6 +289,7 @@ export function Modal({
   scrollable = false,
   className,
   label,
+  onClose,
   children,
 }: {
   size?: "md" | "lg";
@@ -213,6 +310,11 @@ export function Modal({
    * see yet.
    */
   label?: string;
+  /**
+   * Dismiss the dialog. Without it Escape and the backdrop do nothing, which
+   * is what every dialog here did before this prop existed.
+   */
+  onClose?: () => void;
   children: React.ReactNode;
 }) {
   const panelRef = React.useRef<HTMLDivElement>(null);
@@ -237,6 +339,13 @@ export function Modal({
   }, []);
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+    if (event.key === "Escape" && onClose) {
+      // stopPropagation so a dialog opened from inside another overlay does not
+      // close both on one press.
+      event.stopPropagation();
+      onClose();
+      return;
+    }
     if (event.key !== "Tab") return;
     const items = focusableWithin(panelRef.current);
     if (items.length === 0) {
@@ -257,9 +366,48 @@ export function Modal({
     }
   }
 
+  /**
+   * Whether anything inside has been typed into since the dialog opened.
+   *
+   * The comparison is against `defaultValue`, so a field the dialog prefilled
+   * does not count and a field the operator edited does. Checkboxes and radios
+   * are compared the same way through `defaultChecked`. It is what decides
+   * whether a click on the backdrop throws work away or is ignored.
+   */
+  function holdsTypedInput() {
+    const panel = panelRef.current;
+    if (!panel) return false;
+    const fields = panel.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
+      "input, textarea, select",
+    );
+    for (const field of fields) {
+      if (field instanceof HTMLInputElement && (field.type === "checkbox" || field.type === "radio")) {
+        if (field.checked !== field.defaultChecked) return true;
+      } else if (field instanceof HTMLSelectElement) {
+        // A <select> has no defaultValue; the option marked selected in the
+        // markup is the one it opened on.
+        const opened = Array.from(field.options).find((option) => option.defaultSelected);
+        if (field.value !== (opened?.value ?? field.options[0]?.value ?? "")) return true;
+      } else if (field.value !== field.defaultValue) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function handleBackdrop(event: React.MouseEvent<HTMLDivElement>) {
+    if (!onClose) return;
+    // Only the backdrop itself — a click that started inside the panel and
+    // ended on it (a drag out of a text selection) must not close anything.
+    if (event.target !== event.currentTarget) return;
+    if (holdsTypedInput()) return;
+    onClose();
+  }
+
   return (
     <div
-      className={`fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4${
+      onMouseDown={handleBackdrop}
+      className={`fixed inset-0 bg-overlay flex items-center justify-center z-modal p-4${
         scrollable ? " overflow-y-auto" : ""
       }`}
     >
@@ -270,7 +418,7 @@ export function Modal({
         aria-label={label}
         tabIndex={-1}
         onKeyDown={handleKeyDown}
-        className={`bg-white rounded-xl ${size === "lg" ? "max-w-lg" : "max-w-md"} w-full p-6 shadow-xl border border-slate-200 focus:outline-none${
+        className={`bg-surface rounded-xl ${size === "lg" ? "max-w-lg" : "max-w-md"} w-full p-6 shadow-lg border border-line${
           className ? ` ${className}` : ""
         }`}
       >
@@ -280,10 +428,35 @@ export function Modal({
   );
 }
 
-/** What a listing shows while its first load is outstanding. */
-export function LoadingBlock({ label }: { label?: string }) {
+/**
+ * What a listing shows while its first load is outstanding.
+ *
+ * Rows of the right shape rather than the word "Loading…" centred in an empty
+ * box: the height is the height the list will have, so the page does not jump
+ * when the rows arrive. It is held back for 300ms and, once drawn, held for
+ * 500 — see `useSettledWait` — so a fast reply renders straight to content.
+ *
+ * The label is still announced, because a skeleton says nothing to a screen
+ * reader.
+ */
+export function LoadingBlock({ label, rows = 4 }: { label?: string; rows?: number }) {
   const { t } = useI18n();
-  return <div className="py-12 text-center text-slate-400">{label || t("base.message.loading")}</div>;
+  const showing = useSettledWait(true);
+  if (!showing) return null;
+  return (
+    <div className="py-4" role="status" aria-live="polite" aria-busy="true">
+      <span className="sr-only">{label || t("base.message.loading")}</span>
+      <div className="space-y-3">
+        {Array.from({ length: rows }, (_, row) => (
+          <div key={row} className="flex items-center gap-3">
+            <Skeleton className="h-4 w-4 shrink-0 rounded-full" />
+            <Skeleton className="h-4 flex-1" />
+            <Skeleton className="h-4 w-24 shrink-0" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 /** A listing table on its panel, with the header row the caller supplies. */
@@ -303,9 +476,9 @@ export function TableCard({
 }) {
   return (
     <div className={`${cardClass} overflow-hidden`}>
-      <table className="w-full text-left text-xs text-slate-600">
+      <table className="w-full text-left text-xs text-muted">
         <thead className={tableHeadClass}>{head}</thead>
-        <tbody className="divide-y divide-slate-100">{children}</tbody>
+        <tbody className="divide-y divide-line">{children}</tbody>
       </table>
       {footer}
     </div>

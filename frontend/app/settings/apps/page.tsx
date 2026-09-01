@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { api, type StoreOverviewApp } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { Settings, Clock, ArrowUpCircle, ShieldAlert, Pin, GitCompareArrows } from "lucide-react";
+import { formatDay, formatMoment } from "@/lib/datetime";
 
 interface InstalledApp {
   id: string;
@@ -120,27 +121,27 @@ export default function InstalledAppsSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="border-b border-slate-200 pb-4">
-        <h1 className="text-2xl font-bold text-slate-900 flex items-center space-x-2">
-          <Settings className="w-6 h-6 text-slate-600" />
+      <div className="border-b border-line pb-4">
+        <h1 className="text-2xl font-semibold text-foreground flex items-center space-x-2">
+          <Settings className="w-6 h-6 text-muted" />
           <span>{t("app_store.view.installed_title")}</span>
         </h1>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-muted">
           {t("app_store.view.installed_subtitle")}
         </p>
       </div>
 
       {status && (
-        <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm flex flex-wrap items-center gap-x-4 gap-y-1">
-          <span className="font-semibold text-slate-700">
+        <div className="bg-surface border border-line rounded-xl px-4 py-3 text-sm flex flex-wrap items-center gap-x-4 gap-y-1">
+          <span className="font-semibold text-foreground">
             {status.source === "registry"
               ? t("app_store.state.source_registry")
               : t("app_store.state.source_file")}
           </span>
-          <span className="text-slate-500">{t("app_store.field.app_count", { count: status.apps })}</span>
+          <span className="text-muted">{t("app_store.field.app_count", { count: status.apps })}</span>
           {status.last_sync_at && (
-            <span className="text-slate-500">
-              {t("app_store.field.last_sync")}: {new Date(status.last_sync_at).toLocaleString()}
+            <span className="text-muted">
+              {t("app_store.field.last_sync")}: {formatMoment(status.last_sync_at)}
             </span>
           )}
           {/* A failing registry is the thing nobody notices: the store keeps
@@ -172,19 +173,19 @@ export default function InstalledAppsSettingsPage() {
       )}
 
       {loading ? (
-        <div className="py-8 text-slate-500 text-sm">{t("app_store.message.loading_installed")}</div>
+        <div className="py-8 text-muted text-sm">{t("app_store.message.loading_installed")}</div>
       ) : apps.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-xl p-8 text-center text-slate-500 text-sm">
+        <div className="bg-surface border border-line rounded-xl p-8 text-center text-muted text-sm">
           {t("app_store.message.none_installed")}{" "}
           <a href="/apps" className="text-indigo-600 font-semibold underline">
             {t("app_store.action.browse_store")}
           </a>
         </div>
       ) : (
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+        <div className="bg-surface border border-line rounded-xl overflow-hidden">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-xs uppercase tracking-wider">
+              <tr className="bg-surface-2 border-b border-line text-muted font-semibold text-xs uppercase tracking-wider">
                 <th className="py-3 px-4">{t("app_store.field.application_name")}</th>
                 <th className="py-3 px-4">{t("app_store.field.module_id")}</th>
                 <th className="py-3 px-4">{t("app_store.field.installed_version")}</th>
@@ -194,12 +195,12 @@ export default function InstalledAppsSettingsPage() {
                 <th className="py-3 px-4 text-right">{t("base.field.actions")}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-line">
               {apps.map((app) => (
-                <tr key={app.id} className="hover:bg-slate-50">
-                  <td className="py-3.5 px-4 font-bold text-slate-900">{app.name}</td>
-                  <td className="py-3.5 px-4 font-mono text-xs text-slate-500">{app.app_id}</td>
-                  <td className="py-3.5 px-4 font-semibold text-slate-700">
+                <tr key={app.id} className="hover:bg-surface-hover">
+                  <td className="py-3.5 px-4 font-semibold text-foreground">{app.name}</td>
+                  <td className="py-3.5 px-4 font-mono text-xs text-muted">{app.app_id}</td>
+                  <td className="py-3.5 px-4 font-semibold text-foreground">
                     v{app.installed_version}
                     {app.update_available && app.latest_version && (
                       <span className="ml-1.5 text-xs font-normal text-indigo-600">→ v{app.latest_version}</span>
@@ -216,7 +217,7 @@ export default function InstalledAppsSettingsPage() {
                         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition ${
                           app.auto_update
                             ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                            : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
+                            : "border-line bg-surface-2 text-muted hover:bg-surface-hover"
                         }`}
                       >
                         <span className={`w-1.5 h-1.5 rounded-full ${app.auto_update ? "bg-emerald-500" : "bg-slate-400"}`} />
@@ -254,16 +255,16 @@ export default function InstalledAppsSettingsPage() {
                       className={`inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
                         app.enabled
                           ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                          : "bg-slate-100 text-slate-600 border border-slate-200"
+                          : "bg-surface-2 text-muted border border-line"
                       }`}
                     >
                       <span className={`w-1.5 h-1.5 rounded-full ${app.enabled ? "bg-emerald-500" : "bg-slate-400"}`}></span>
                       <span>{app.enabled ? t("base.state.active") : t("app_store.state.disabled")}</span>
                     </span>
                   </td>
-                  <td className="py-3.5 px-4 text-xs text-slate-500 flex items-center space-x-1 pt-4">
+                  <td className="py-3.5 px-4 text-xs text-muted flex items-center space-x-1 pt-4">
                     <Clock className="w-3.5 h-3.5" />
-                    <span>{new Date(app.installed_at).toLocaleDateString()}</span>
+                    <span>{formatDay(app.installed_at)}</span>
                   </td>
                   <td className="py-3.5 px-4 text-right">
                     {app.update_available && (

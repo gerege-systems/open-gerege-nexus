@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import React from "react";
 
 import { cookies } from "next/headers";
+import { Geist } from "next/font/google";
 
 import Providers from "./providers";
 import { brandFromEnv } from "@/lib/brandEnv";
@@ -25,6 +26,31 @@ import { DEFAULT_LOCALE, LOCALE_KEY } from "@/lib/locale";
  * frame around them.
  */
 export const dynamic = "force-dynamic";
+
+/**
+ * The typeface, actually loaded.
+ *
+ * `globals.css` named Inter for a long time and no build ever fetched it: there
+ * is no `@font-face`, no file in `public/`, no stylesheet link. Every reader
+ * without Inter installed locally — which is most of them — got their system
+ * sans instead, so the platform looked different on every machine and the
+ * declared font was fiction.
+ *
+ * Geist is a variable font, so the whole 100–900 axis arrives in one file per
+ * subset and the three weights this design uses (400/500/600) cost nothing
+ * extra. `cyrillic-ext` is not optional: Ө (U+04E8) and Ү (U+04AE) live there,
+ * and a build that ships only `latin` drops both to a fallback face mid-word.
+ * `latin-ext` carries ₮ (U+20AE).
+ *
+ * next/font downloads these at build time and serves them from this origin —
+ * no request to Google from a reader's browser, and the fallback metrics it
+ * generates hold layout still while the file arrives.
+ */
+const geist = Geist({
+  subsets: ["latin", "latin-ext", "cyrillic", "cyrillic-ext"],
+  display: "swap",
+  variable: "--font-geist",
+});
 
 export async function generateMetadata(): Promise<Metadata> {
   // The name in the reader's language, when the deployment wrote one. The
@@ -72,7 +98,28 @@ export function generateViewport(): Viewport {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     // I18nProvider keeps <html lang> in step with the selected locale.
-    <html lang="mn">
+    // suppressHydrationWarning на <html>: public/theme-init.js нь React
+    // ачаалахаас өмнө `dark` ангийг нэмдэг тул сервер илгээсэн className
+    // болон бодит DOM-ынх нэг байхаа болино. Энэ бол яг тэр хүлээгдэж буй
+    // зөрүү — өөр юуг ч нуухгүй: зөвхөн энэ элементийн атрибутад үйлчилнэ.
+    <html lang="mn" className={geist.variable} suppressHydrationWarning>
+      <head>
+        {/*
+          Read before anything is painted, so a reader who chose dark never
+          sees the light page first. It has to be a plain <script> and it has
+          to be here: next/script's beforeInteractive does not block the first
+          paint, and ThemeProvider runs a whole hydration too late. See
+          public/theme-init.js.
+        */}
+        {/*
+          eslint-disable-next-line @next/next/no-sync-scripts --
+          Blocking is the feature. The rule guards against synchronous scripts
+          that delay the first paint; this one has to run before it, and the
+          file is ~700 bytes served from this origin.
+        */}
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        <script src="/theme-init.js" />
+      </head>
       <body>
         <Providers brand={brandFromEnv()} copy={brandCopyFromEnv()}>
           {children}

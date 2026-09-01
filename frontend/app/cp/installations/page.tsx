@@ -19,7 +19,7 @@ import { cp, type Installation } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 
 export default function Installations() {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const [installations, setInstallations] = useState<Installation[]>([]);
   const [app, setApp] = useState("");
   const [failure, setFailure] = useState("");
@@ -59,17 +59,17 @@ export default function Installations() {
     <div className="space-y-6">
       <div className="flex items-start gap-3">
         <div className="flex-1">
-          <h1 className="text-2xl font-semibold text-slate-900 flex items-center gap-2">
-            <PackageCheck className="w-6 h-6 text-[var(--gerege-blue)]" />
+          <h1 className="text-2xl font-semibold text-foreground flex items-center gap-2">
+            <PackageCheck className="w-6 h-6 text-accent" />
             {t("cp.section.installations")}
           </h1>
-          <p className="mt-1 text-sm text-slate-500">{t("cp.hint.installations")}</p>
+          <p className="mt-1 text-sm text-muted">{t("cp.hint.installations")}</p>
         </div>
         <select
           value={app}
           onChange={(event) => setApp(event.target.value)}
           aria-label={t("cp.field.app")}
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          className="rounded-lg border border-input px-3 py-2 text-sm"
         >
           <option value="">{t("cp.state.every_app")}</option>
           {apps.map(([id, name]) => (
@@ -79,7 +79,7 @@ export default function Installations() {
       </div>
 
       {failure && (
-        <p className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+        <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
       )}
 
       {versions.length > 1 && (
@@ -101,20 +101,20 @@ export default function Installations() {
           ]}
           rows={shown.map((item) => [
             <span key="n" className="min-w-0">
-              <Link href={`/cp/tenants/${item.tenant_id}`} className="font-medium text-[var(--gerege-blue)] hover:underline">
+              <Link href={`/cp/tenants/${item.tenant_id}`} className="font-medium text-accent hover:underline">
                 {item.tenant_name}
               </Link>
-              <span className="block text-xs text-slate-500 font-mono">{item.slug}</span>
+              <span className="block text-xs text-muted font-mono">{item.slug}</span>
             </span>,
             <span key="a" className="min-w-0">
-              <strong className="text-slate-900">{item.app_name}</strong>
-              <span className="block text-xs text-slate-500 font-mono">{item.app_id}</span>
+              <strong className="text-foreground">{item.app_name}</strong>
+              <span className="block text-xs text-muted font-mono">{item.app_id}</span>
             </span>,
             <span key="v" className="font-mono text-xs">{item.installed_version}</span>,
             <Badge key="s" tone={!item.enabled ? "slate" : item.status === "installed" ? "emerald" : "amber"}>
               {item.enabled ? item.status : t("cp.state.off")}
             </Badge>,
-            formatMoment(item.updated_at, locale),
+            formatMoment(item.updated_at),
           ])}
           empty={t("cp.message.no_installations")}
         />

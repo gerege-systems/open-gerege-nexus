@@ -30,14 +30,74 @@
     --gerege-chrome-border: var(--gerege-border);
     --gerege-success: #159455;
     --gerege-danger: #d92d20;
-    --gerege-radius-card: 10px;
-    --gerege-radius-control: 8px;
-    --gerege-shadow-menu: 0 8px 24px rgb(16 24 40 / 8%);
-    --background: 220 33% 98%;
-    --foreground: 222 38% 15%;
+    /* Хилийн хоёр төрөл. `--gerege-border` нь чимэглэл — карт, зураас — тул
+       контрастын шаардлага тавигддаггүй. Оролтын талбар, сонгогч зэрэг
+       харилцан үйлчлэх хяналтын хил нь WCAG 1.4.11-ийн дагуу СУУДАГ бүх
+       гадаргуу дээрээ ≥3:1 байх ёстой: цагаан карт 4.21:1, хуудасны дэвсгэр
+       4.03:1, --gerege-surface-2 3.79:1. Tailwind-ийн slate-300 нь цагаан
+       дээр 1.48:1 — тэр нь энэ шаардлагад унана. */
+    --gerege-border-input: #767c85;
+    /* Фокусын цагираг accent-аа дагана: сонгогдсон өнгө бүр өөрийн дэвсгэр
+       дээрээ ≥3:1 (хамгийн нарийн нь teal 3.65:1, харанхуй violet 3.22:1).
+       Тунгалаг бус байх нь чухал — өмнөх 28%-ийн хольц цагаан дэвсгэр дээр
+       1.52:1 болж, гараас ажилладаг хүн фокусаа олдоггүй байв. */
+    --gerege-ring: var(--gerege-blue);
+    /* Дизайны жишгийн шат: товч/оролт 6, карт 8, modal 12, badge 4.
+       Өмнө нь 8/10 байсан ба файлын бусад хэсэгт 5,7,9,11,13,14,16,18,22
+       гэсэн бас 9 утга тарсан байв. Native бүрхүүлийн платформын
+       ялгаварлалт (macOS/Windows) эдгээрийг доор нь хэвээр дардаг. */
+    --gerege-radius-card: 8px;
+    --gerege-radius-control: 6px;
+    --gerege-shadow-menu: var(--gerege-shadow-md);
+
+    /* ─── Токены давхаргыг гүйцээх ──────────────────────────────────────────
+       Доорх нэрс шинэ систем биш — компонентууд өнөөдөр Tailwind-ийн slate,
+       red, emerald, amber, blue шаталбарыг ШУУД бичдэг, тэр нь харанхуй
+       горимд ажиллахгүй тул файлын доод хэсэгт !important-аар нэг бүрчлэн
+       эргүүлж засдаг байв. Утга бүр яг тэр Tailwind өнгө хэвээр — өөрчлөлт нь
+       өнгө биш, ХААНА бичигдэж байгаа нь: одооноос компонент нэрийг л мэднэ,
+       theme-ийг энэ файл мэднэ. */
+
+    /* Гадаргуу ба бичвэрийн шат */
+    --gerege-surface-hover: #f8fafc;   /* slate-50  — мөр, цэсний hover */
+    --gerege-fg-subtle: #6d737c;       /* placeholder, caption — 4.78:1 */
+    --gerege-border-strong: #c0c4cb;
+    --gerege-overlay: rgb(15 23 42 / 50%);
+
+    /* Статусын шат: soft (дэвсгэр) · border · fg (soft дээрх бичвэр).
+       fg×soft хос бүр ≥4.5:1 (danger 5.91, success 5.21, warning 6.84,
+       info 6.16, neutral 9.45). */
+    --gerege-danger-soft: #fef2f2;  --gerege-danger-border: #fecaca;  --gerege-danger-fg: #b91c1c;
+    --gerege-success-soft: #ecfdf5; --gerege-success-border: #a7f3d0; --gerege-success-fg: #047857;
+    --gerege-warning-soft: #fffbeb; --gerege-warning-border: #fde68a; --gerege-warning-fg: #92400e;
+    --gerege-info-soft: #eff6ff;    --gerege-info-border: #bfdbfe;    --gerege-info-fg: #1d4ed8;
+    --gerege-neutral-soft: #f1f5f9; --gerege-neutral-border: #e2e8f0; --gerege-neutral-fg: #334155;
+
+    /* Радиусын шат. Өмнө нь энэ файлд 17 өөр утга байсан; товч/оролт 8,
+       карт 10 гэсэн бүрхүүлийн хоёр утгыг хэвээр үлдээж (тэр нь native
+       shell-д платформоор солигддог), бусдыг эдгээрт нийлүүлнэ. */
+    --gerege-radius-sm: 4px;
+    --gerege-radius-lg: 12px;
+    --gerege-radius-full: 9999px;
+
+    /* Сүүдэр: нейтрал хар, хоёр давхар, зөвхөн хөвөгч гадаргуунд. */
+    --gerege-shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 6%), 0 1px 2px -1px rgb(0 0 0 / 4%);
+    --gerege-shadow-md: 0 4px 8px -2px rgb(0 0 0 / 6%), 0 2px 4px -2px rgb(0 0 0 / 4%);
+    --gerege-shadow-lg: 0 12px 24px -6px rgb(0 0 0 / 8%), 0 4px 8px -4px rgb(0 0 0 / 4%);
+
+    /* Давхаргын дараалал. Файлд өмнө нь 30/40/45/60/64/65/70/80/9998 гэсэн
+       гараар сонгосон утгууд байсан — аль нь алийнхаа дээр гарахыг хэн ч
+       хэлж чадахгүй байв. */
+    --z-dropdown: 1000;
+    --z-sticky: 1100;
+    --z-overlay: 1200;
+    --z-modal: 1300;
+    --z-popover: 1400;
+    --z-toast: 1500;
+    --z-tooltip: 1600;
   }
 
-  html[data-theme="dark"] {
+  html.dark {
     --gerege-bg: #0a0d12;
     --gerege-chrome: #12161c;
     --gerege-surface: #12161c;
@@ -46,8 +106,22 @@
     --gerege-muted: #8e929a;
     --gerege-border: #252930;
     --gerege-blue-soft: #102d55;
-    --background: 218 29% 5%;
-    --foreground: 210 20% 96%;
+    /* Бараан гадаргуун дээрх хяналтын хил: --gerege-surface (#12161c) дээр
+       3.96:1, --gerege-surface-2 (#1b1f27) дээр 3.61:1, хуудсан дээр 4.25:1. */
+    --gerege-border-input: #70767f;
+
+    --gerege-surface-hover: #1b1f27;
+    --gerege-fg-subtle: #7c828b;
+    --gerege-border-strong: #3a3f47;
+    --gerege-overlay: rgb(2 4 8 / 66%);
+
+    /* Бараан горимын статус. fg×soft: danger 8.36, success 9.65,
+       warning 9.97, info 8.46, neutral 9.82 — бүгд ≥4.5:1. */
+    --gerege-danger-soft: #3f1416;  --gerege-danger-border: #7f2326;  --gerege-danger-fg: #fca5a5;
+    --gerege-success-soft: #0b2e21; --gerege-success-border: #186c4d; --gerege-success-fg: #6ee7b7;
+    --gerege-warning-soft: #3a2609; --gerege-warning-border: #7c5410; --gerege-warning-fg: #fcd34d;
+    --gerege-info-soft: #12244a;    --gerege-info-border: #2a4a8c;    --gerege-info-fg: #93c5fd;
+    --gerege-neutral-soft: #1b1f27; --gerege-neutral-border: #333a45; --gerege-neutral-fg: #c3c8d0;
   }
 
   html[data-accent="teal"] {
@@ -66,15 +140,19 @@
     --gerege-blue: #16845b; --gerege-blue-hover: #0f6f4b; --gerege-blue-soft: #e8f6ef;
     --gerege-bg: #f1f8f5; --gerege-chrome: #e9f5ef; --gerege-surface-2: #eef7f2; --gerege-border: #d8e9df;
   }
-  html[data-theme="dark"][data-accent="teal"] { --gerege-blue-soft: #12383d; --gerege-bg: #0f1c20; --gerege-chrome: #14282d; --gerege-surface-2: #193238; --gerege-border: #29454a; }
-  html[data-theme="dark"][data-accent="neutral"] { --gerege-blue: #cbd5e1; --gerege-blue-hover: #e2e8f0; --gerege-on-blue: #0b1220; --gerege-blue-soft: #273244; --gerege-bg: #111827; --gerege-chrome: #18212f; --gerege-surface-2: #222d3d; --gerege-border: #334155; }
-  html[data-theme="dark"][data-accent="violet"] { --gerege-blue-soft: #2b2348; --gerege-bg: #171421; --gerege-chrome: #211b30; --gerege-surface-2: #292239; --gerege-border: #3b3250; }
-  html[data-theme="dark"][data-accent="emerald"] { --gerege-blue-soft: #173a2d; --gerege-bg: #101c18; --gerege-chrome: #162820; --gerege-surface-2: #1c3229; --gerege-border: #2d473d; }
+  html.dark[data-accent="teal"] { --gerege-blue-soft: #12383d; --gerege-bg: #0f1c20; --gerege-chrome: #14282d; --gerege-surface-2: #193238; --gerege-border: #29454a; }
+  html.dark[data-accent="neutral"] { --gerege-blue: #cbd5e1; --gerege-blue-hover: #e2e8f0; --gerege-on-blue: #0b1220; --gerege-blue-soft: #273244; --gerege-bg: #111827; --gerege-chrome: #18212f; --gerege-surface-2: #222d3d; --gerege-border: #334155; }
+  html.dark[data-accent="violet"] { --gerege-blue-soft: #2b2348; --gerege-bg: #171421; --gerege-chrome: #211b30; --gerege-surface-2: #292239; --gerege-border: #3b3250; }
+  html.dark[data-accent="emerald"] { --gerege-blue-soft: #173a2d; --gerege-bg: #101c18; --gerege-chrome: #162820; --gerege-surface-2: #1c3229; --gerege-border: #2d473d; }
 
   body {
     background-color: var(--gerege-bg);
     color: var(--gerege-fg);
-    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    /* Geist-ийг app/layout.tsx ачаалж --font-geist-ээр дамжуулна; араас нь
+       кирилл бүрэн дэмждэг fallback-ууд (Inter энд зөвхөн fallback, default
+       биш). next/font-ийн үүсгэсэн metric-нийцтэй завсрын фонт нь
+       --font-geist дотор аль хэдийн орсон тул CLS үүсэхгүй. */
+    font-family: var(--font-geist), Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     font-size: 15px;
     line-height: 1.55;
     text-rendering: optimizeLegibility;
@@ -86,8 +164,11 @@
     letter-spacing: -0.015em;
   }
 
+  /* 2px тунгалаг бус цагираг + 2px зай. Зай нь accent-аар дүүрсэн товчин
+     дээр цагиргийг товчноос салгаж хуудасны дэвсгэр дээр зурна — жишгийн
+     «давхар ring»-тэй ижил үр дүнг нэг мөрөөр өгнө. */
   :focus-visible {
-    outline: 3px solid color-mix(in srgb, var(--gerege-blue) 28%, transparent);
+    outline: 2px solid var(--gerege-ring);
     outline-offset: 2px;
   }
 }
@@ -103,7 +184,7 @@
     background: var(--gerege-blue-soft);
     box-shadow: inset 3px 0 0 var(--gerege-blue);
   }
-  .gerege-nav-icon { color: #98a2b3; }
+  .gerege-nav-icon { color: #7d838c; }
   .gerege-nav-link-active .gerege-nav-icon { color: var(--gerege-blue); }
   /* The open/closed halves of a menu group.
 
@@ -129,7 +210,7 @@
     left: -13px;
     width: 3px;
     height: 20px;
-    border-radius: 999px;
+    border-radius:var(--gerege-radius-full);
     background: var(--gerege-blue);
   }
   .gerege-session-dot {
@@ -170,7 +251,7 @@ html[data-shell] .gerege-workarea main { padding: 1rem 1.25rem 1.25rem; }
 html[data-shell] .gerege-workarea .gerege-sidebar { padding-top: 0.5rem; }
 
 /* Native толгой хэсгээс ирсэн хайлтын query-г харуулах давхарга. */
-html[data-shell] .gerege-shell-search { position: fixed; inset: 0; z-index: 80; }
+html[data-shell] .gerege-shell-search { position: fixed; inset: 0; z-index: var(--z-modal); }
 html[data-shell] .gerege-shell-search-backdrop { position: absolute; inset: 0; background: rgb(15 23 42 / 25%); }
 html[data-shell] .gerege-shell-search-panel {
   position: relative; margin: 3.5rem auto 0; width: min(34rem, calc(100vw - 2rem));
@@ -180,9 +261,9 @@ html[data-shell] .gerege-shell-search-panel {
 }
 
 /* Платформын нюанс — цөөхөн, зөвхөн танигдахуйц ялгаа. */
-html[data-shell="macos"] { --gerege-radius-card: 12px; --gerege-radius-control: 7px; }
+html[data-shell="macos"] { --gerege-radius-card: 12px; --gerege-radius-control: 8px; }
 html[data-shell="macos"] ::-webkit-scrollbar { width: 9px; height: 9px; }
-html[data-shell="macos"] ::-webkit-scrollbar-thumb { background: var(--gerege-border); border-radius: 999px; }
+html[data-shell="macos"] ::-webkit-scrollbar-thumb { background: var(--gerege-border); border-radius:var(--gerege-radius-full); }
 html[data-shell="macos"] ::-webkit-scrollbar-track { background: transparent; }
 html[data-shell="windows"] { --gerege-radius-card: 4px; --gerege-radius-control: 4px; }
 html[data-shell="windows"] ::-webkit-scrollbar { width: 12px; height: 12px; }
@@ -199,58 +280,50 @@ html[data-design="original"] .gerege-topbar { background: #0064e1; border-color:
    border as the search field, so every separator on the blue bar has one tone. */
 html[data-design="original"] { --gerege-chrome-border: rgb(255 255 255 / 18%); }
 
-/* The bar is saturated here, so its slate utilities are inverted to read against it. */
-html[data-design="original"] .gerege-topbar .text-slate-900,
-html[data-design="original"] .gerege-topbar .text-slate-800 { color: #f8fafc !important; }
-html[data-design="original"] .gerege-topbar .text-slate-500,
-html[data-design="original"] .gerege-topbar .text-slate-600 { color: rgb(255 255 255 / 68%) !important; }
-html[data-design="original"] .gerege-topbar .border-slate-200 { border-color: rgb(255 255 255 / 18%) !important; }
+/* Толгойн зурвас энд ханасан цэнхэр тул дээр нь бичигдэх утилитуудыг
+   эргүүлнэ. Ангийн нэрс token-той болсон ч дүрэм нь өөрчлөгдөөгүй: цэнхэр
+   гадаргуу нь theme биш, тусдаа контекст. */
+html[data-design="original"] .gerege-topbar .text-foreground { color: #f8fafc !important; }
+html[data-design="original"] .gerege-topbar .text-muted { color: rgb(255 255 255 / 68%) !important; }
+html[data-design="original"] .gerege-topbar .border-line { border-color: rgb(255 255 255 / 18%) !important; }
 html[data-design="original"] .gerege-topbar .gerege-header-context > span:first-child { color: white !important; }
 
-/* Light surfaces anchored inside that blue bar: the user menu, the search
-   results, and the account button itself once it opens and fills with
-   --gerege-blue-soft. The inversion above would paint their text near-white on
-   near-white, so undo it for them and reset the `color: white` the bar hands
-   down to anything without a colour utility.
+/* Тэр цэнхэр зурвас дотор байрлах цайвар гадаргуунууд: хэрэглэгчийн цэс,
+   хайлтын үр дүн, нээгдсэн үедээ --gerege-blue-soft-оор дүүрдэг дансны товч.
+   Дээрх эргүүлэлт эдгээрийн бичгийг цагаан дээр цагаан болгох тул тэдгээрт
+   буцаана; мөн зурвасын өвлүүлж буй `color: white`-ыг өнгөний утилитгүй
+   элементүүд дээр тэглэнэ.
 
-   Plain descendant selectors on purpose — one class deeper, so they win on
-   specificity. An earlier attempt scoped the inversion with
-   :not(.x, .x *) instead, whose complex-selector form browsers without
-   Selectors-4 support reject, dropping the whole inversion and taking the
-   bar's own text with it. */
+   Энгийн удам сонгуураар зориуд бичсэн — нэг ангиар гүн тул specificity-гээр
+   хожно. Өмнөх оролдлого нь эргүүлэлтийг :not(.x, .x *)-ээр хүрээлсэн бөгөөд
+   Selectors-4 дэмждэггүй хөтөч түүний нийлмэл хэлбэрийг голж, эргүүлэлт
+   бүхэлдээ хүчингүй болж зурвасын өөрийнх нь бичиг ч алга болдог байв. */
 html[data-design="original"] .gerege-topbar .gerege-topbar-onlight { color: var(--gerege-fg); }
-html[data-design="original"] .gerege-topbar .gerege-topbar-onlight.text-slate-900,
-html[data-design="original"] .gerege-topbar .gerege-topbar-onlight.text-slate-800,
-html[data-design="original"] .gerege-topbar .gerege-topbar-onlight .text-slate-900,
-html[data-design="original"] .gerege-topbar .gerege-topbar-onlight .text-slate-800 {
+html[data-design="original"] .gerege-topbar .gerege-topbar-onlight.text-foreground,
+html[data-design="original"] .gerege-topbar .gerege-topbar-onlight .text-foreground {
   color: var(--gerege-fg) !important;
 }
-html[data-design="original"] .gerege-topbar .gerege-topbar-onlight.text-slate-500,
-html[data-design="original"] .gerege-topbar .gerege-topbar-onlight.text-slate-600,
-html[data-design="original"] .gerege-topbar .gerege-topbar-onlight .text-slate-500,
-html[data-design="original"] .gerege-topbar .gerege-topbar-onlight .text-slate-600 {
+html[data-design="original"] .gerege-topbar .gerege-topbar-onlight.text-muted,
+html[data-design="original"] .gerege-topbar .gerege-topbar-onlight .text-muted {
   color: var(--gerege-muted) !important;
 }
-html[data-design="original"] .gerege-topbar .gerege-topbar-onlight.border-slate-200,
-html[data-design="original"] .gerege-topbar .gerege-topbar-onlight .border-slate-200 {
+html[data-design="original"] .gerege-topbar .gerege-topbar-onlight.border-line,
+html[data-design="original"] .gerege-topbar .gerege-topbar-onlight .border-line {
   border-color: var(--gerege-border) !important;
 }
 
-/* Controls sitting directly on the bar carry Tailwind's near-white slate fills
-   — the hover state of the account button and the menu toggle, and the search
-   field's resting background. The inversion above then writes near-white text
-   onto them, which is how the account name disappeared on hover exactly as it
-   had with the menu open. Translucent light overlays preserve the blue and keep the
-   inverted text legible. */
-html[data-design="original"] .gerege-topbar .hover\:bg-slate-50:hover,
-html[data-design="original"] .gerege-topbar .bg-slate-100\/80 {
+/* Зурвас дээр шууд суусан хяналтууд цайвар дүүргэлттэй — данс болон цэсний
+   товчны hover, хайлтын талбарын тайван дэвсгэр. Дээрх эргүүлэлт тэдгээрийн
+   дээр бараг цагаан бичиг бичих тул тунгалаг цагаан давхаргаар солино:
+   цэнхэр нь хадгалагдаж, эргүүлсэн бичиг уншигдана. */
+html[data-design="original"] .gerege-topbar .hover\:bg-surface-hover:hover,
+html[data-design="original"] .gerege-topbar .bg-surface-2 {
   background-color: rgb(255 255 255 / 10%) !important;
 }
 html[data-design="original"] .gerege-topbar input::placeholder { color: rgb(255 255 255 / 55%); }
 
-/* Inside the light surfaces a light hover fill is the correct one, so put it
-   back — one class deeper, and via the token so it follows the theme. */
-html[data-design="original"] .gerege-topbar .gerege-topbar-onlight .hover\:bg-slate-50:hover {
+/* Цайвар гадаргуу дотор цайвар hover нь зөв — нэг ангиар гүн, token-оор. */
+html[data-design="original"] .gerege-topbar .gerege-topbar-onlight .hover\:bg-surface-hover:hover {
   background-color: var(--gerege-surface-2) !important;
 }
 html[data-design="original"] .original-brand-mark { color: white; background: rgb(255 255 255 / 12%); }
@@ -264,32 +337,16 @@ html[data-design="original"] .gerege-session-dot { background: #10b981; }
 
 html[data-design="gerege"] .original-brand-mark { color: var(--gerege-blue); background: var(--gerege-blue-soft); }
 
-/* Tailwind's neutral utility surfaces inside the authenticated shell should
-   participate in the selected tonal palette instead of staying fixed gray. */
-html[data-theme="light"] .gerege-shell .bg-slate-50,
-html[data-theme="light"] .gerege-shell .bg-slate-100 { background-color: var(--gerege-surface-2) !important; }
+/* Энд өмнө нь 20 гаруй `!important` дүрэм байсан: компонентууд `bg-white`,
+   `text-slate-900`, `border-slate-200` гэж Tailwind-ийн тогтмол өнгийг шууд
+   бичдэг байсан тул харанхуй горимд тэдгээрийг нэг бүрчлэн эргүүлж будах
+   давхарга хэрэгтэй байв. Одоо тэдгээр компонентууд `bg-surface`,
+   `text-foreground`, `border-line` гэсэн token-той утилит бичдэг болсон —
+   өнгө нь энэ файлын дээд хэсэгт горим бүрээр нэг л удаа тодорхойлогддог тул
+   эргүүлэх давхарга шаардлагагүй болов.
 
-html[data-theme="dark"] .bg-white { background-color: var(--gerege-surface) !important; }
-html[data-theme="dark"] .bg-slate-50,
-html[data-theme="dark"] .bg-slate-100 { background-color: var(--gerege-surface-2) !important; }
-/* The hover variants are separate classes and were missed by the rule above,
-   so hovering a menu row in dark mode flashed it near-white under light text. */
-html[data-theme="dark"] .hover\:bg-slate-50:hover,
-html[data-theme="dark"] .hover\:bg-slate-100:hover { background-color: var(--gerege-surface-2) !important; }
-html[data-theme="dark"] .text-slate-900,
-html[data-theme="dark"] .text-slate-800,
-html[data-theme="dark"] .text-slate-700 { color: var(--gerege-fg) !important; }
-html[data-theme="dark"] .text-slate-600,
-html[data-theme="dark"] .text-slate-500,
-html[data-theme="dark"] .text-slate-400 { color: var(--gerege-muted) !important; }
-html[data-theme="dark"] .border-slate-100,
-html[data-theme="dark"] .border-slate-200,
-html[data-theme="dark"] .border-slate-300 { border-color: var(--gerege-border) !important; }
-/* `divide-y divide-slate-100` нь өнгөө хүүхдүүд дээрээ тавьдаг тул дээрх
-   `border-*` дүрэмд баригдахгүй: бараан горимд мөр хоорондын зураас бараг
-   цагаанаараа үлддэг байв. Хүүхэд бүрт өнгө өгөх нь аюулгүй — `divide-y`
-   зузаан өгөөгүй газарт өнгө харагдахгүй. */
-html[data-theme="dark"] .divide-slate-100 > * { border-color: var(--gerege-border) !important; }
+   Үлдсэн `bg-slate-800/900/950` төрлийн ангиуд нь theme-ийн гадаргуу биш —
+   киоск дэлгэц, overlay мэтийн ЗОРИУД бараан хэсгүүд тул хэвээр. */
 
 /* Хэлбэрийн талбарууд.
    Гэрэл горимд хөтчийн анхдагч цагаан дэвсгэр энэ дизайнд тохирдог тул
@@ -301,7 +358,7 @@ html[data-theme="dark"] .divide-slate-100 > * { border-color: var(--gerege-borde
    ангиар үүнийг чөлөөтэй дарна; зөвхөн юу ч заагаагүй талбарууд л энэ өнгийг
    авна. Checkbox, radio, range гурав хасагдсан — тэдгээр нь `accent-color`-оор
    будагддаг тул дэвсгэр өгвөл эсрэгээрээ эвдэрнэ. */
-html[data-theme="dark"] :where(
+html.dark :where(
   input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
   textarea, select
 ) {
@@ -309,15 +366,42 @@ html[data-theme="dark"] :where(
   color: var(--gerege-fg);
   border-color: var(--gerege-border);
 }
-html[data-theme="dark"] :where(input, textarea, select):disabled {
+html.dark :where(input, textarea, select):disabled {
   background-color: var(--gerege-surface);
   color: var(--gerege-muted);
 }
-html[data-theme="dark"] :where(input, textarea)::placeholder { color: var(--gerege-muted); }
+html.dark :where(input, textarea)::placeholder { color: var(--gerege-muted); }
 
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
+}
+
+/* Scrollbar-ийн зай үргэлж нөөцлөгдөнө. Үгүй бол modal нээхэд (body-гийн
+   гүйлгэлт хаагдахад) хуудас 15px хажуу тийш үсэрдэг. */
+html { scrollbar-gutter: stable; }
+
+/* ─── Хэвлэх ────────────────────────────────────────────────────────────────
+   Хэрэглэгч аудитын бүртгэл, тайланг хэвлэдэг. Тусгай дүрэмгүй бол цаасан
+   дээр хажуугийн цэс, толгойн зурвас, товчнууд гарч, харанхуй горимд бүхэл
+   хуудас хар бэхээр хэвлэгддэг. */
+@media print {
+  /* Бүрхүүл нь дэлгэцийн навигаци — цаасан дээр утгагүй. */
+  .gerege-topbar, .gerege-sidebar, .gerege-mobile-tabs, .gerege-ribbon,
+  .gerege-footer, .gerege-mobile-backdrop, .gp-nav, .gp-footer { display: none !important; }
+  .gerege-main { margin: 0 !important; width: 100% !important; padding: 0 !important; }
+
+  /* Харанхуй горимд ч цаас нь цагаан. */
+  html.dark, html.dark body { background: #fff !important; color: #000 !important; }
+  html.dark .bg-surface, html.dark .bg-surface-2, html.dark .bg-chrome { background: #fff !important; }
+  html.dark .text-foreground, html.dark .text-muted { color: #000 !important; }
+
+  /* Урт хүснэгт хуудас дамжихад толгой нь давтагдана. */
+  thead { display: table-header-group; }
+  tr, img, figure { break-inside: avoid; }
+
+  /* Сүүдэр хэвлэгдэхдээ бохир саарал болдог; хил нь мэдээллээ хадгална. */
+  * { box-shadow: none !important; }
 }
 
 /* Gerege Platform landing + eID identity surface. Navy establishes institutional
@@ -328,7 +412,7 @@ html[data-theme="dark"] :where(input, textarea)::placeholder { color: var(--gere
    #7890ad falls from 5.1:1 to 2.3:1. Text on the brand surface therefore comes
    from the on-navy tokens, which are white at an alpha chosen to stay above
    4.5:1 for copy and 3:1 for incidental labels. */
-.gp-landing,.eid-page,.eid-callback{--gp-navy:#0050b0;--gp-on-navy:#f7f8fb;--gp-on-navy-70:rgb(247 248 251 / 78%);--gp-on-navy-45:rgb(247 248 251 / 62%);--gp-gold:#f2bd42;--gp-gold-h:#ffd267;--gp-ink:#15233b;--gp-muted:#66758c;background:#f7f9fc;color:var(--gp-ink);min-height:100vh}
+.gp-landing,.eid-page,.eid-callback{--gp-navy:#0050b0;--gp-on-navy:#f7f8fb;--gp-on-navy-70:rgb(247 248 251 / 78%);--gp-on-navy-45:rgb(247 248 251 / 74%);--gp-gold:#f2bd42;--gp-gold-h:#ffd267;--gp-ink:#15233b;--gp-muted:#66758c;background:#f7f9fc;color:var(--gp-ink);min-height:100dvh}
 /* Консолын хаалганы nav наалддаггүй.
    Нийтийн хуудас дээр наалддаг нь цэсийг хаанаас ч хүрэхийн тулд; консолын
    nav дээр цэс байхгүй — зөвхөн тэмдэг ба хэлний сонголт. Наалдацтай үлдээх
@@ -336,10 +420,10 @@ html[data-theme="dark"] :where(input, textarea)::placeholder { color: var(--gere
    гүйлгэхэд 72px өндөр толгой түүний дээгүүр орж, дарагдахгүй болгож байв.
    Хүн ч мөн адил тулгарна — нарийн дэлгэц дээр илүү олон удаа. */
 .gp-nav--plain{position:static}
-.gp-nav{height:72px;padding:0 max(24px,calc((100vw - 1180px)/2));display:flex;align-items:center;justify-content:space-between;background:var(--gp-navy);color:#fff;position:sticky;top:0;z-index:30;border-bottom:1px solid rgba(255,255,255,.11)}
-.gp-brand{display:flex;align-items:center;gap:10px;color:inherit;text-decoration:none;font-weight:800;letter-spacing:-.02em}.gp-brand img{width:36px;height:36px;border-radius:8px}.gp-nav>nav{display:flex;gap:30px}.gp-nav>nav a{font-size:14px;color:var(--gp-on-navy-70);text-decoration:none}.gp-nav>nav a:hover{color:var(--gp-gold)}.gp-actions{display:flex;align-items:center;gap:12px}.gp-nav__toggle{display:none;align-items:center;justify-content:center;width:40px;height:40px;border-radius:9px;border:1px solid rgba(255,255,255,.22);background:transparent;color:#fff;font-size:18px;line-height:1;cursor:pointer}.gp-nav__toggle:hover{background:rgba(255,255,255,.08)}.gp-nav__menu{display:none}.gp-gold{display:inline-flex;align-items:center;justify-content:center;gap:9px;background:var(--gp-gold);color:#17243a!important;padding:10px 17px;border-radius:9px;font-weight:800;text-decoration:none;box-shadow:0 8px 22px rgba(242,189,66,.18)}.gp-gold:hover{background:var(--gp-gold-h)}.gp-gold--large{padding:14px 22px}.gp-gold svg,.gp-outline svg{width:18px}
-.gp-hero{position:relative;background:var(--gp-navy);color:#fff;overflow:hidden}.gp-pattern,.eid-page__pattern{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.07) 1px,transparent 1px);background-size:44px 44px;mask-image:linear-gradient(110deg,#000,transparent 72%)}.gp-hero__inner{position:relative;max-width:1180px;margin:auto;padding:82px 24px 88px;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(360px,.75fr);gap:70px;align-items:center}.gp-copy{max-width:680px}.gp-eyebrow{display:inline-flex;align-items:center;gap:9px;color:var(--gp-on-navy-70);font-size:12px;font-weight:800;letter-spacing:.12em}.gp-eyebrow i{display:block;width:7px;height:7px;border-radius:50%;background:var(--gp-gold);box-shadow:0 0 0 5px rgba(242,189,66,.16)}.gp-eyebrow--blue{color:#45607f}.gp-eyebrow--blue i{background:#0064e1;box-shadow:0 0 0 5px rgba(0,100,225,.12)}.gp-copy h1,.eid-page__intro h1{font-size:clamp(44px,6vw,76px);line-height:1.02;letter-spacing:-.055em;color:#fff;margin:22px 0 24px;font-weight:850}.gp-copy h1 em,.eid-page__intro h1 em{font-style:normal;color:var(--gp-gold)}.gp-copy>p{font-size:18px;line-height:1.7;color:var(--gp-on-navy-70);max-width:650px}.gp-cta{display:flex;gap:13px;margin:34px 0}.gp-outline{display:inline-flex;align-items:center;padding:13px 20px;border:1px solid rgba(255,255,255,.26);border-radius:9px;color:#fff;text-decoration:none;font-weight:700}.gp-outline:hover{border-color:#fff;background:rgba(255,255,255,.06)}.gp-stats{display:flex;gap:30px;margin-top:42px}.gp-stats span{display:flex;flex-direction:column;color:var(--gp-on-navy-45);font-size:12px}.gp-stats b{font-size:17px;color:#fff;margin-bottom:3px}.gp-hero__inner--solo{grid-template-columns:minmax(0,1fr)}.gp-login-slot{position:relative}.gp-login-slot:before{content:"";position:absolute;inset:-24px;background:radial-gradient(circle,rgba(0,100,225,.27),transparent 68%);filter:blur(20px)}
-.gp-section{max-width:1180px;margin:auto;padding:90px 24px}.gp-heading{text-align:center;max-width:740px;margin:0 auto 48px}.gp-heading span{font-size:11px;font-weight:900;letter-spacing:.14em;color:#0064e1}.gp-heading h2,.gp-trust h2{font-size:clamp(30px,4vw,46px);line-height:1.12;letter-spacing:-.04em;margin:12px 0 16px}.gp-heading p,.gp-trust p{color:var(--gp-muted);font-size:16px;line-height:1.7}.gp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}.gp-feature{min-height:245px;border:1px solid #dfe6ef;background:#fff;border-radius:18px;padding:30px;box-shadow:0 8px 24px rgba(15,35,63,.04);transition:.2s}.gp-feature:hover{transform:translateY(-3px);border-color:#7a9fca}.gp-feature>svg{width:31px;height:31px;color:#0064e1}.gp-feature h3{font-size:22px;margin:45px 0 10px}.gp-feature p{color:var(--gp-muted);line-height:1.65}.gp-feature--dark{background:var(--gp-navy);border-color:var(--gp-navy);color:#fff}.gp-feature--dark h3{color:#fff}.gp-feature--dark>svg{color:var(--gp-gold)}.gp-feature--dark p{color:var(--gp-on-navy-70)}
+.gp-nav{height:72px;padding:0 max(24px,calc((100vw - 1180px)/2));display:flex;align-items:center;justify-content:space-between;background:var(--gp-navy);color:#fff;position:sticky;top:0;z-index:var(--z-sticky);border-bottom:1px solid rgba(255,255,255,.11)}
+.gp-brand{display:flex;align-items:center;gap:10px;color:inherit;text-decoration:none;font-weight:600;letter-spacing:-.02em}.gp-brand img{width:36px;height:36px;border-radius:var(--gerege-radius-card)}.gp-nav>nav{display:flex;gap:30px}.gp-nav>nav a{font-size:14px;color:var(--gp-on-navy-70);text-decoration:none}.gp-nav>nav a:hover{color:var(--gp-gold-h)}.gp-actions{display:flex;align-items:center;gap:12px}.gp-nav__toggle{display:none;align-items:center;justify-content:center;width:40px;height:40px;border-radius:var(--gerege-radius-card);border:1px solid rgba(255,255,255,.22);background:transparent;color:#fff;font-size:18px;line-height:1;cursor:pointer}.gp-nav__toggle:hover{background:rgba(255,255,255,.08)}.gp-nav__menu{display:none}.gp-gold{display:inline-flex;align-items:center;justify-content:center;gap:9px;background:var(--gp-gold);color:#17243a!important;padding:10px 17px;border-radius:var(--gerege-radius-card);font-weight:600;text-decoration:none;}.gp-gold:hover{background:var(--gp-gold-h)}.gp-gold--large{padding:14px 22px}.gp-gold svg,.gp-outline svg{width:18px}
+.gp-hero{position:relative;background:var(--gp-navy);color:#fff;overflow:hidden}.gp-pattern,.eid-page__pattern{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.07) 1px,transparent 1px);background-size:44px 44px;mask-image:linear-gradient(110deg,#000,transparent 72%)}.gp-hero__inner{position:relative;max-width:1180px;margin:auto;padding:82px 24px 88px;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(360px,.75fr);gap:70px;align-items:center}.gp-copy{max-width:680px}.gp-eyebrow{display:inline-flex;align-items:center;gap:9px;color:var(--gp-on-navy-70);font-size:12px;font-weight:600;letter-spacing:.12em}.gp-eyebrow i{display:block;width:7px;height:7px;border-radius:50%;background:var(--gp-gold);box-shadow:0 0 0 5px rgba(242,189,66,.16)}.gp-eyebrow--blue{color:#45607f}.gp-eyebrow--blue i{background:#0064e1;box-shadow:0 0 0 5px rgba(0,100,225,.12)}.gp-copy h1,.eid-page__intro h1{font-size:clamp(44px,6vw,76px);line-height:1.02;letter-spacing:-.055em;color:#fff;margin:22px 0 24px;font-weight:600}.gp-copy h1 em,.eid-page__intro h1 em{font-style:normal;color:var(--gp-gold)}.gp-copy>p{font-size:18px;line-height:1.7;color:var(--gp-on-navy-70);max-width:650px}.gp-cta{display:flex;gap:13px;margin:34px 0}.gp-outline{display:inline-flex;align-items:center;padding:13px 20px;border:1px solid rgba(255,255,255,.26);border-radius:var(--gerege-radius-card);color:#fff;text-decoration:none;font-weight:600}.gp-outline:hover{border-color:#fff;background:rgba(255,255,255,.06)}.gp-stats{display:flex;gap:30px;margin-top:42px}.gp-stats span{display:flex;flex-direction:column;color:var(--gp-on-navy-45);font-size:12px}.gp-stats b{font-size:17px;color:#fff;margin-bottom:3px}.gp-hero__inner--solo{grid-template-columns:minmax(0,1fr)}.gp-login-slot{position:relative}.gp-login-slot:before{content:"";position:absolute;inset:-24px;background:radial-gradient(circle,rgba(0,100,225,.27),transparent 68%);filter:blur(20px)}
+.gp-section{max-width:1180px;margin:auto;padding:90px 24px}.gp-heading{text-align:center;max-width:740px;margin:0 auto 48px}.gp-heading span{font-size:11px;font-weight:600;letter-spacing:.14em;color:#0064e1}.gp-heading h2,.gp-trust h2{font-size:clamp(30px,4vw,46px);line-height:1.12;letter-spacing:-.04em;margin:12px 0 16px}.gp-heading p,.gp-trust p{color:var(--gp-muted);font-size:16px;line-height:1.7}.gp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}.gp-feature{min-height:245px;border:1px solid #dfe6ef;background:#fff;border-radius:var(--gerege-radius-lg);padding:30px;transition:.2s}.gp-feature:hover{transform:translateY(-3px);border-color:#7a9fca}.gp-feature>svg{width:31px;height:31px;color:#0064e1}.gp-feature h3{font-size:22px;margin:45px 0 10px}.gp-feature p{color:var(--gp-muted);line-height:1.65}.gp-feature--dark{background:var(--gp-navy);border-color:var(--gp-navy);color:#fff}.gp-feature--dark h3{color:#fff}.gp-feature--dark>svg{color:var(--gp-gold)}.gp-feature--dark p{color:var(--gp-on-navy-70)}
 /* Энэ суулгацын үйлчилгээнүүд — карт бүр бүхэлдээ холбоос.
    .gp-feature-ийн хэмжээ, радиус, hover-ийг дагана: тэдгээр нь энэ хуудасны
    картны хэл бөгөөд шинэ хэсэг өөр хэлээр ярих шаардлагагүй. Ялгаа нь зөвхөн
@@ -347,11 +431,11 @@ html[data-theme="dark"] :where(input, textarea)::placeholder { color: var(--gere
 /* Консолын нүүрийн хоёр жижиг зүйл: nav дахь ялгах тэмдэг ба картуудын доорх
    нэг мөрийн тэмдэглэл. Аль аль нь өөрийн хэсэг зохион байгуулах хэмжээнд том
    биш тул шинэ бүрэлдэхүүн болгосонгүй. */
-.gp-brand__chip{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;font-weight:800;letter-spacing:.12em;color:var(--gp-on-navy-45);border:1px solid rgba(255,255,255,.22);border-radius:6px;padding:3px 7px;margin-left:2px}
+.gp-brand__chip{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;font-weight:600;letter-spacing:.12em;color:var(--gp-on-navy-45);border:1px solid rgba(255,255,255,.22);border-radius:var(--gerege-radius-control);padding:3px 7px;margin-left:2px}
 .signin-shell__nav .gp-brand__chip{color:var(--sg-muted);border-color:var(--sg-border)}
 .cp-landing__note{max-width:740px;margin:22px auto 0;text-align:center;color:var(--gp-muted);font-size:15px;line-height:1.7}
 .gp-services{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px}
-.gp-service{display:flex;flex-direction:column;border:1px solid #dfe6ef;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 8px 24px rgba(15,35,63,.04);text-decoration:none;color:inherit;transition:.2s}
+.gp-service{display:flex;flex-direction:column;border:1px solid #dfe6ef;background:#fff;border-radius:var(--gerege-radius-lg);overflow:hidden;text-decoration:none;color:inherit;transition:.2s}
 .gp-service:hover{transform:translateY(-3px);border-color:#7a9fca}
 .gp-service__art{display:block;background:#eef4fc;border-bottom:1px solid #dfe6ef}
 .gp-service__art svg{display:block;width:100%;height:auto}
@@ -364,10 +448,10 @@ html[data-theme="dark"] :where(input, textarea)::placeholder { color: var(--gere
 .gp-service h3 svg{width:17px;height:17px;color:#0064e1;flex:none}
 .gp-service:hover h3 svg{color:#f2bd42}
 .gp-service p{margin:0 0 14px;color:var(--gp-muted);font-size:14.5px;line-height:1.65}
-.gp-service__host{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#8494a8}
+.gp-service__host{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--gp-muted)}
 .gp-service:hover .gp-service__host{color:#0064e1}
 @media (prefers-reduced-motion:reduce){.gp-service{transition:none}.gp-service:hover{transform:none}}
-.gp-trust{width:calc(100% - 48px);max-width:1132px;margin:64px auto 80px;padding:54px;display:grid;grid-template-columns:1fr 1fr;gap:70px;align-items:center;border-radius:22px;background:#edf4fc;border:1px solid #dce8f5}.gp-trust ul{list-style:none;padding:0;margin:0;display:grid;gap:13px}.gp-trust li{background:#fff;padding:15px;border:1px solid #dce5ef;border-radius:11px;display:flex;align-items:center;gap:11px;font-weight:650}.gp-trust li svg{width:19px;color:#118759}.gp-tech{width:calc(100% - 48px);max-width:1132px;margin:0 auto 90px;padding:40px;display:flex;align-items:center;justify-content:space-around;gap:20px;background:#fff;border:1px solid #dfe6ef;border-radius:18px}.gp-tech>div{text-align:center;max-width:240px}.gp-tech>div>svg{width:30px;height:30px;color:#0064e1}.gp-tech>svg{color:#a8b5c6}.gp-tech h3{margin:10px 0 4px}.gp-tech p{color:var(--gp-muted);font-size:13px}.gp-footer{max-width:1180px;margin:auto;padding:30px 24px;border-top:1px solid #dfe6ef;display:flex;justify-content:space-between;color:var(--gp-muted);font-size:12px}
+.gp-trust{width:calc(100% - 48px);max-width:1132px;margin:64px auto 80px;padding:54px;display:grid;grid-template-columns:1fr 1fr;gap:70px;align-items:center;border-radius:var(--gerege-radius-lg);background:#edf4fc;border:1px solid #dce8f5}.gp-trust ul{list-style:none;padding:0;margin:0;display:grid;gap:13px}.gp-trust li{background:#fff;padding:15px;border:1px solid #dce5ef;border-radius:var(--gerege-radius-card);display:flex;align-items:center;gap:11px;font-weight:600}.gp-trust li svg{width:19px;color:#118759}.gp-tech{width:calc(100% - 48px);max-width:1132px;margin:0 auto 90px;padding:40px;display:flex;align-items:center;justify-content:space-around;gap:20px;background:#fff;border:1px solid #dfe6ef;border-radius:var(--gerege-radius-lg)}.gp-tech>div{text-align:center;max-width:240px}.gp-tech>div>svg{width:30px;height:30px;color:#0064e1}.gp-tech>svg{color:#a8b5c6}.gp-tech h3{margin:10px 0 4px}.gp-tech p{color:var(--gp-muted);font-size:13px}.gp-footer{max-width:1180px;margin:auto;padding:30px 24px;border-top:1px solid #dfe6ef;display:flex;justify-content:space-between;color:var(--gp-muted);font-size:12px}
 /* Самбарууд ба хэсгүүдийн агуулга нэг өргөнтэй байх ёстой.
    `.gp-section` нь 1180px-ийн дотор 24px хажуугийн зай авдаг тул түүний
    агуулга 1132px. `.gp-trust` ба `.gp-tech` нь картын гадаргуу өөрөө учраас
@@ -382,7 +466,7 @@ html[data-theme="dark"] :where(input, textarea)::placeholder { color: var(--gere
    тэр найдвар нурсан: hero-гийн дараа шууд ирэхэд карт navy блокт наалдаж,
    хоорондоо нэг ч пиксел зайгүй хоёр өөр гадаргуу болж харагдана. Дүрмийг
    нөхцөлгүй болгосон нь тэр хоёр тохиолдлыг нэг утгаар хариулна. */
-.eid-login{position:relative;background:#fff;border:1px solid #dce4ee;border-radius:18px;padding:28px;color:var(--gp-ink,#15233b);box-shadow:0 24px 60px rgba(0,11,30,.24);width:100%;max-width:460px}.eid-login__head{display:flex;gap:13px;align-items:center;margin-bottom:22px}.eid-login__head>span{display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:#eaf3ff;color:#0064e1}.eid-login__head svg{width:23px}.eid-login__head h2{font-size:19px;margin:0;color:#15233b}.eid-login__head p{font-size:12px;color:#6b7b91;margin:2px 0 0}.eid-tabs{display:flex;background:#eef2f7;padding:4px;border-radius:10px;margin-bottom:20px}.eid-tabs button{flex:1;border:0;background:transparent;padding:10px 7px;border-radius:8px;color:#65758b;font-weight:700;font-size:12px}.eid-tabs button.is-active{background:#fff;color:#10213b;box-shadow:0 2px 7px rgba(20,40,70,.1)}.eid-login form{display:grid;gap:9px}.eid-login label{font-size:12px;font-weight:750}.eid-login input{height:47px;border:1px solid #ced8e5;border-radius:9px;padding:0 13px;font:700 16px ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;outline:none}.eid-login input:focus{border-color:#0064e1;box-shadow:0 0 0 3px rgba(0,100,225,.12)}.eid-primary{height:48px;margin-top:5px;border:0;border-radius:9px;background:#0064e1;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px}.eid-primary:hover{background:#0054c2}.eid-primary svg{width:18px}.eid-status{display:flex;justify-content:center;gap:9px;padding:40px 0;color:#607188}.eid-status svg{width:18px}.eid-wait{text-align:center;display:grid;justify-items:center;gap:8px}.eid-qr{background:#fff;padding:11px;border:1px solid #dfe6ef;border-radius:13px}.eid-wait p{font-size:13px;color:#5f7087;margin:4px 0}.eid-wait small{font-size:11px;color:#8996a8}.eid-wait strong{font:800 30px ui-monospace,monospace;letter-spacing:.18em}.eid-wait span{display:flex;gap:7px;align-items:center;font-size:11px;color:#698096}.eid-wait span svg{width:14px}.eid-alert{padding:11px;border-radius:9px;background:#fff6dd;color:#785713;font-size:12px}.eid-alert--error{background:#fff0f0;color:#a22c2c}.eid-alert--success{background:#e9f8ef;color:#18733c}.eid-wait .eid-countdown{font:600 11px/1.4 ui-monospace,monospace;color:#8996a8;letter-spacing:.04em;margin-top:2px}.eid-retry,.eid-cancel{width:100%;border:1px solid #cfd9e5;background:#fff;padding:10px;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:7px}.eid-retry svg,.eid-cancel svg{width:16px}.eid-cancel{margin-top:16px;color:#65758b;font-weight:700;font-size:12px}.eid-cancel:hover{background:#f5f8fc;color:#10213b}.eid-login footer{display:flex;gap:7px;align-items:center;justify-content:center;border-top:1px solid #e8edf3;margin-top:20px;padding-top:15px;color:#8491a2;font-size:10px}.eid-login footer svg{width:13px}.eid-login--compact{padding:24px}
+.eid-login{position:relative;background:#fff;border:1px solid #dce4ee;border-radius:var(--gerege-radius-lg);padding:28px;color:var(--gp-ink,#15233b);box-shadow:var(--gerege-shadow-lg);width:100%;max-width:460px}.eid-login__head{display:flex;gap:13px;align-items:center;margin-bottom:22px}.eid-login__head>span{display:grid;place-items:center;width:44px;height:44px;border-radius:var(--gerege-radius-lg);background:#eaf3ff;color:#0064e1}.eid-login__head svg{width:23px}.eid-login__head h2{font-size:19px;margin:0;color:#15233b}.eid-login__head p{font-size:12px;color:#6b7b91;margin:2px 0 0}.eid-tabs{display:flex;background:#eef2f7;padding:4px;border-radius:var(--gerege-radius-card);margin-bottom:20px}.eid-tabs button{flex:1;border:0;background:transparent;padding:10px 7px;border-radius:var(--gerege-radius-card);color:#65758b;font-weight:600;font-size:12px}.eid-tabs button.is-active{background:#fff;color:#10213b;box-shadow:var(--gerege-shadow-sm)}.eid-login form{display:grid;gap:9px}.eid-login label{font-size:12px;font-weight:600}.eid-login input{height:47px;border:1px solid #ced8e5;border-radius:var(--gerege-radius-card);padding:0 13px;font:600 16px ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase}.eid-login input:focus{border-color:#0064e1;box-shadow:0 0 0 3px rgba(0,100,225,.12)}.eid-primary{height:48px;margin-top:5px;border:0;border-radius:var(--gerege-radius-card);background:#0064e1;color:#fff;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px}.eid-primary:hover{background:#0054c2}.eid-primary svg{width:18px}.eid-status{display:flex;justify-content:center;gap:9px;padding:40px 0;color:#607188}.eid-status svg{width:18px}.eid-wait{text-align:center;display:grid;justify-items:center;gap:8px}.eid-qr{background:#fff;padding:11px;border:1px solid #dfe6ef;border-radius:var(--gerege-radius-lg)}.eid-wait p{font-size:13px;color:#5f7087;margin:4px 0}.eid-wait small{font-size:11px;color:#66758c}.eid-wait strong{font:600 30px ui-monospace,monospace;letter-spacing:.18em}.eid-wait span{display:flex;gap:7px;align-items:center;font-size:11px;color:#698096}.eid-wait span svg{width:14px}.eid-alert{padding:11px;border-radius:var(--gerege-radius-card);background:#fff6dd;color:#785713;font-size:12px}.eid-alert--error{background:#fff0f0;color:#a22c2c}.eid-alert--success{background:#e9f8ef;color:#18733c}.eid-wait .eid-countdown{font:600 11px/1.4 ui-monospace,monospace;color:#66758c;letter-spacing:.04em;margin-top:2px}.eid-retry,.eid-cancel{width:100%;border:1px solid #cfd9e5;background:#fff;padding:10px;border-radius:var(--gerege-radius-card);display:flex;align-items:center;justify-content:center;gap:7px}.eid-retry svg,.eid-cancel svg{width:16px}.eid-cancel{margin-top:16px;color:#65758b;font-weight:600;font-size:12px}.eid-cancel:hover{background:#f5f8fc;color:#10213b}.eid-login footer{display:flex;gap:7px;align-items:center;justify-content:center;border-top:1px solid #e8edf3;margin-top:20px;padding-top:15px;color:#66758c;font-size:10px}.eid-login footer svg{width:13px}.eid-login--compact{padding:24px}
 
 /* Бараан суурин дээрх eID картны хувилбар.
    Зөвхөн `.eid-on-dark` дотор л идэвхжинэ: `.eid-login` дангаараа нийтийн
@@ -391,32 +475,32 @@ html[data-theme="dark"] :where(input, textarea)::placeholder { color: var(--gere
 .eid-on-dark .eid-login{background:transparent;border:none;border-radius:0;padding:0;color:#f8fafc;box-shadow:none;max-width:none}
 .eid-on-dark .eid-login__head{margin-bottom:20px}
 .eid-on-dark .eid-login__head>span{background:rgba(59,130,246,.15);color:#3b82f6;border:1px solid rgba(59,130,246,.3)}
-.eid-on-dark .eid-login__head h2{font-size:18px;font-weight:800;color:#fff}
+.eid-on-dark .eid-login__head h2{font-size:18px;font-weight:600;color:#fff}
 .eid-on-dark .eid-login__head p{color:#94a3b8}
-.eid-on-dark .eid-tabs{background:#020617;border:1px solid #1e293b;border-radius:12px}
+.eid-on-dark .eid-tabs{background:#020617;border:1px solid #1e293b;border-radius:var(--gerege-radius-lg)}
 .eid-on-dark .eid-tabs button{color:#94a3b8;transition:all .2s ease;cursor:pointer}
-.eid-on-dark .eid-tabs button.is-active{background:#2563eb;color:#fff;box-shadow:0 4px 12px rgba(37,99,235,.3)}
+.eid-on-dark .eid-tabs button.is-active{background:#2563eb;color:#fff;}
 .eid-on-dark .eid-login form{gap:12px}
-.eid-on-dark .eid-login label{color:#cbd5e1;font-weight:700}
-.eid-on-dark .eid-login input{height:48px;border:1px solid #1e293b;background:#020617;color:#fff;border-radius:12px;padding:0 16px}
+.eid-on-dark .eid-login label{color:#cbd5e1;font-weight:600}
+.eid-on-dark .eid-login input{height:48px;border:1px solid #1e293b;background:#020617;color:#fff;border-radius:var(--gerege-radius-lg);padding:0 16px}
 .eid-on-dark .eid-login input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.2)}
-.eid-on-dark .eid-primary{height:48px;margin-top:8px;border-radius:12px;background:#2563eb;color:#fff;font-size:13px;cursor:pointer;box-shadow:0 4px 14px rgba(37,99,235,.35);transition:all .2s ease}
+.eid-on-dark .eid-primary{height:48px;margin-top:8px;border-radius:var(--gerege-radius-lg);background:#2563eb;color:#fff;font-size:13px;cursor:pointer;transition:all .2s ease}
 .eid-on-dark .eid-primary:hover{background:#1d4ed8}
 .eid-on-dark .eid-status{padding:30px 0;color:#94a3b8}
 .eid-on-dark .eid-wait{color:#f8fafc}
-.eid-on-dark .eid-qr{background:#fff;padding:12px;border:1px solid #1e293b;border-radius:16px}
+.eid-on-dark .eid-qr{background:#fff;padding:12px;border:1px solid #1e293b;border-radius:var(--gerege-radius-lg)}
 .eid-on-dark .eid-wait p{color:#cbd5e1}
 .eid-on-dark .eid-wait small{color:#94a3b8}
 .eid-on-dark .eid-wait strong{font-size:32px;color:#38bdf8}
 .eid-on-dark .eid-wait span{color:#94a3b8}
-.eid-on-dark .eid-alert{padding:12px;border-radius:10px;background:rgba(234,179,8,.15);border:1px solid rgba(234,179,8,.3);color:#fef08a}
+.eid-on-dark .eid-alert{padding:12px;border-radius:var(--gerege-radius-card);background:rgba(234,179,8,.15);border:1px solid rgba(234,179,8,.3);color:#fef08a}
 .eid-on-dark .eid-alert--error{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.3);color:#fca5a5}
 .eid-on-dark .eid-alert--success{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.3);color:#86efac}
 .eid-on-dark .eid-wait .eid-countdown{color:#94a3b8}
-.eid-on-dark .eid-retry,.eid-on-dark .eid-cancel{border:1px solid #1e293b;background:#090d16;color:#cbd5e1;padding:11px;border-radius:10px;cursor:pointer}
+.eid-on-dark .eid-retry,.eid-on-dark .eid-cancel{border:1px solid #1e293b;background:#090d16;color:#cbd5e1;padding:11px;border-radius:var(--gerege-radius-card);cursor:pointer}
 .eid-on-dark .eid-cancel:hover{background:#1e293b;color:#fff}
 .eid-on-dark .eid-login footer{border-top:1px solid #1e293b;color:#64748b;font-size:11px}
-.eid-page{position:relative;background:var(--gp-navy);color:#fff;overflow:hidden}.eid-page>header{position:relative;z-index:2;height:72px;max-width:1180px;margin:auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between}.eid-page__content{position:relative;z-index:2;max-width:1080px;margin:auto;padding:54px 24px 90px;display:grid;grid-template-columns:1fr 430px;gap:90px;align-items:center}.eid-page__intro h1{font-size:58px}.eid-page__intro>p{color:var(--gp-on-navy-70);line-height:1.7;font-size:17px}.eid-page__intro ul{padding:0;list-style:none;color:var(--gp-on-navy-70);display:grid;gap:10px;margin-top:28px}.eid-page__intro li:before{content:"✓";color:var(--gp-gold);font-weight:900;margin-right:10px}.admin-disclosure{width:100%;margin-top:14px;border:1px solid rgba(255,255,255,.24);background:rgba(255,255,255,.1);color:var(--gp-on-navy);border-radius:10px;padding:11px;display:flex;align-items:center;gap:8px;justify-content:center;font-size:12px}.admin-disclosure svg{width:15px}.admin-disclosure svg:last-child{margin-left:auto;transition:.2s}.admin-login{display:grid;gap:9px;padding:14px;background:#fff;border-radius:10px;margin-top:8px}.admin-login>p{color:#b42318;font-size:12px}.admin-login label{display:flex;align-items:center;gap:8px;border:1px solid #d7e0ea;border-radius:8px;padding:0 10px;color:#8793a4}.admin-login input{border:0;height:40px;flex:1;outline:0}.admin-login button{height:42px;border:0;border-radius:8px;background:#122a50;color:#fff;font-weight:700}/* ─── Нэвтрэх дэлгэц ────────────────────────────────────────────────────────
+.eid-page{position:relative;background:var(--gp-navy);color:#fff;overflow:hidden}.eid-page>header{position:relative;z-index:2;height:72px;max-width:1180px;margin:auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between}.eid-page__content{position:relative;z-index:2;max-width:1080px;margin:auto;padding:54px 24px 90px;display:grid;grid-template-columns:1fr 430px;gap:90px;align-items:center}.eid-page__intro h1{font-size:58px}.eid-page__intro>p{color:var(--gp-on-navy-70);line-height:1.7;font-size:17px}.eid-page__intro ul{padding:0;list-style:none;color:var(--gp-on-navy-70);display:grid;gap:10px;margin-top:28px}.eid-page__intro li:before{content:"✓";color:var(--gp-gold);font-weight:600;margin-right:10px}.admin-disclosure{width:100%;margin-top:14px;border:1px solid rgba(255,255,255,.24);background:rgba(255,255,255,.1);color:var(--gp-on-navy);border-radius:var(--gerege-radius-card);padding:11px;display:flex;align-items:center;gap:8px;justify-content:center;font-size:12px}.admin-disclosure svg{width:15px}.admin-disclosure svg:last-child{margin-left:auto;transition:.2s}.admin-login{display:grid;gap:9px;padding:14px;background:#fff;border-radius:var(--gerege-radius-card);margin-top:8px}.admin-login>p{color:#b42318;font-size:12px}.admin-login label{display:flex;align-items:center;gap:8px;border:1px solid #d7e0ea;border-radius:var(--gerege-radius-card);padding:0 10px;color:#8793a4}.admin-login input{border:0;height:40px;flex:1}.admin-login button{height:42px;border:0;border-radius:var(--gerege-radius-card);background:#122a50;color:#fff;font-weight:600}/* ─── Нэвтрэх дэлгэц ────────────────────────────────────────────────────────
    Дизайныг government-line/sso-dgov-mn төслөөс авсан: токен, хэмжээс, радиус,
    градиент бүгд тэндхийн утга. Ангийн нэрсийг `signin-` угтвартай болгосон нь
    ганц шалтгаантай — `.btn`, `.input`, `.field` гэх нийтлэг нэрс энэ файлын
@@ -430,16 +514,16 @@ html[data-theme="dark"] :where(input, textarea)::placeholder { color: var(--gere
    бичигдэж, «Нэвтрэх» гарчиг цагаан дээр цагаан болдог байв. */
 /* Токенууд ба зохион байгуулалт нь хоёр өөр зүйл.
    Консолын нүүр хуудас нь navy hero дээр яг ижил цагаан картыг суулгадаг тул
-   токенууд хэрэгтэй ч `min-height:100vh` бүхий цайвар дэлгэц хэрэггүй. Хоёрыг
+   токенууд хэрэгтэй ч `min-height:100dvh` бүхий цайвар дэлгэц хэрэггүй. Хоёрыг
    нь салгаснаар карт хоёр газарт нэг тодорхойлолтоор ажиллана. */
 .signin-shell,.cp-signin{
   --sg-bg:#f9fafc;--sg-surface:#fff;--sg-surface-2:#f1f3f7;
-  --sg-fg:#11161e;--sg-muted:#5e646c;--sg-faint:#9b9fa5;
+  --sg-fg:#11161e;--sg-muted:#5e646c;--sg-faint:#6d737c;
   --sg-border:#e2e5e9;--sg-border-strong:#c0c4cb;
   --sg-blue:#0065da;--sg-blue-hover:#0056c6;--sg-blue-soft:#e4f0ff;--sg-blue-text:#005ccd;
   --sg-danger:#cc272e;--sg-danger-soft:#ffecea
 }
-.signin-shell{background:var(--sg-bg);color:var(--sg-fg);min-height:100vh;display:flex;flex-direction:column}
+.signin-shell{background:var(--sg-bg);color:var(--sg-fg);min-height:100dvh;display:flex;flex-direction:column}
 /* Hero дотор карт нь өөрийн дэлгэц биш, багана — нарийхан, багавтар зайтай. */
 .cp-signin{color:var(--sg-fg)}
 /* `position:relative` нь чимэглэл биш, шаардлага. `.gp-login-slot` нь ард нь
@@ -447,42 +531,42 @@ html[data-theme="dark"] :where(input, textarea)::placeholder { color: var(--gere
    хэлбэл картаас том. Байрлуулаагүй карт түүний доогуур үлдэж, товч нь
    харагдсаар атлаа дарагдахгүй болно. Нийтийн хуудасны eID карт яг үүний
    тулд `position:relative` байдаг; e2e тест энэ ялгааг олсон. */
-.cp-signin .signin-card{position:relative;max-width:460px;padding:30px;box-shadow:0 24px 60px rgba(0,11,30,.24)}
+.cp-signin .signin-card{position:relative;max-width:460px;padding:30px;box-shadow:var(--gerege-shadow-lg)}
 .cp-signin .signin-card__title{font-size:23px}
 .signin-shell__nav{border-bottom:1px solid var(--sg-border);display:flex;align-items:center;justify-content:space-between;padding:18px 32px}
 .signin-shell__nav .gp-brand{color:var(--sg-fg)}
-.signin-shell__nav .gp-brand img{width:26px;height:26px;border-radius:6px}
-.signin-shell__nav .gp-brand span{font-size:15px;font-weight:700}
+.signin-shell__nav .gp-brand img{width:26px;height:26px;border-radius:var(--gerege-radius-control)}
+.signin-shell__nav .gp-brand span{font-size:15px;font-weight:600}
 .signin-shell__body{flex:1;display:grid;place-items:center;padding:48px 24px}
-.signin-card{background:var(--sg-surface);border:1px solid var(--sg-border);border-radius:14px;width:100%;max-width:520px;padding:48px;display:flex;flex-direction:column;gap:24px}
+.signin-card{background:var(--sg-surface);border:1px solid var(--sg-border);border-radius:var(--gerege-radius-lg);width:100%;max-width:520px;padding:48px;display:flex;flex-direction:column;gap:24px}
 
 /* Хэн асууж байгаа нь — картын оройд. Энэ мөрийг сервер тодорхойлно
    (/oauth2/client-info), query-гээс биш: query-д бичигдсэн нэр гэдэг нь хэн ч
    бичиж болох нэр. */
 .signin-card__asker{display:flex;flex-direction:column;gap:4px}
-.signin-card__asker strong{font-size:17px;font-weight:700;line-height:1.35}
+.signin-card__asker strong{font-size:17px;font-weight:600;line-height:1.35}
 .signin-card__asker span{color:var(--sg-muted);font-size:13px;line-height:1.5}
 .signin-card__rule{border:0;border-top:1px solid var(--sg-border);margin:0}
-.signin-card__title{font-size:30px;font-weight:800;letter-spacing:-.02em;margin:0;color:var(--sg-fg)}
+.signin-card__title{font-size:30px;font-weight:600;letter-spacing:-.02em;margin:0;color:var(--sg-fg)}
 .signin-card__lede{color:var(--sg-muted);font-size:15px;line-height:1.6;margin:6px 0 0}
 
-.signin-seg{background:var(--sg-surface-2);border:1px solid var(--sg-border);border-radius:7px;padding:2px;gap:2px;display:flex}
-.signin-seg button{flex:1;min-height:44px;border:0;border-radius:5px;background:0 0;color:var(--sg-muted);font-size:14px;font-weight:500;cursor:pointer;transition:background .12s,color .12s,box-shadow .12s}
+.signin-seg{background:var(--sg-surface-2);border:1px solid var(--sg-border);border-radius:var(--gerege-radius-control);padding:2px;gap:2px;display:flex}
+.signin-seg button{flex:1;min-height:44px;border:0;border-radius:var(--gerege-radius-control);background:0 0;color:var(--sg-muted);font-size:14px;font-weight:500;cursor:pointer;transition:background .12s,color .12s,box-shadow .12s}
 .signin-seg button:hover{color:var(--sg-fg)}
-.signin-seg button.is-active{background:var(--sg-surface);color:var(--sg-fg);box-shadow:0 1px 2px #11161f14}
+.signin-seg button.is-active{background:var(--sg-surface);color:var(--sg-fg);box-shadow:var(--gerege-shadow-sm)}
 .signin-seg button:focus-visible{outline:2px solid var(--sg-blue);outline-offset:1px}
 
 .signin-instruction{text-align:center;color:var(--sg-blue-text);font-size:13.5px;line-height:1.55;margin:0}
 .signin-field{display:flex;flex-direction:column;gap:6px}
 .signin-field label{color:var(--sg-fg);font-size:13px;font-weight:500}
-.signin-field input{width:100%;background:var(--sg-surface);border:1px solid var(--sg-border);border-radius:8px;color:var(--sg-fg);font-size:17px;text-align:center;letter-spacing:2px;padding:14px 12px;transition:border-color .12s,box-shadow .12s}
+.signin-field input{width:100%;background:var(--sg-surface);border:1px solid var(--sg-border);border-radius:var(--gerege-radius-card);color:var(--sg-fg);font-size:17px;text-align:center;letter-spacing:2px;padding:14px 12px;transition:border-color .12s,box-shadow .12s}
 .signin-field input::placeholder{color:var(--sg-faint)}
 .signin-field input:hover{border-color:var(--sg-border-strong)}
-.signin-field input:focus{border-color:var(--sg-blue);box-shadow:0 0 0 3px var(--sg-blue-soft);outline:none}
+.signin-field input:focus{border-color:var(--sg-blue);box-shadow:0 0 0 3px var(--sg-blue-soft)}
 
-.signin-btn{width:100%;min-height:44px;border-radius:8px;border:1px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 22px;font-size:15px;font-weight:600;cursor:pointer;transition:background .12s,border-color .12s,color .12s,filter .12s}
+.signin-btn{width:100%;min-height:44px;border-radius:var(--gerege-radius-card);border:1px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 22px;font-size:15px;font-weight:600;cursor:pointer;transition:background .12s,border-color .12s,color .12s,filter .12s}
 .signin-btn:disabled{opacity:.55;cursor:not-allowed}
-.signin-btn--eid{background:linear-gradient(135deg,var(--sg-blue),#8b7ff0);color:#fff}
+.signin-btn--eid{background:var(--sg-blue);color:#fff}
 .signin-btn--eid:hover:not(:disabled){filter:brightness(1.05)}
 .signin-btn--eid:active:not(:disabled){filter:brightness(.97)}
 .signin-btn--google{background:var(--sg-surface);color:var(--sg-fg);border-color:var(--sg-border)}
@@ -496,7 +580,7 @@ html[data-theme="dark"] :where(input, textarea)::placeholder { color: var(--gere
 
 .signin-footer{text-align:center;margin-top:4px}
 .signin-footer hr{border:0;border-top:1px solid var(--sg-border);margin:4px 0 16px}
-.signin-footer__register{display:block;color:var(--sg-fg);font-size:14.5px;font-weight:700;text-decoration:none}
+.signin-footer__register{display:block;color:var(--sg-fg);font-size:14.5px;font-weight:600;text-decoration:none}
 .signin-footer__register:hover{color:var(--sg-blue-text)}
 .signin-footer__help{display:inline-flex;align-items:center;gap:6px;margin-top:12px;color:var(--sg-muted);font-size:13px;text-decoration:none}
 .signin-footer__help:hover{color:var(--sg-fg)}
@@ -517,52 +601,52 @@ html[data-theme="dark"] :where(input, textarea)::placeholder { color: var(--gere
   --pf-soft:#eef4ff;--pf-soft-fg:#1d4ed8;
   display:grid;gap:28px
 }
-html[data-theme="dark"] .profile{
+html.dark .profile{
   --pf-fg:var(--gerege-fg);--pf-muted:var(--gerege-muted);--pf-surface:var(--gerege-surface);
   --pf-border:var(--gerege-border);--pf-soft:var(--gerege-blue-soft);--pf-soft-fg:var(--gerege-fg)
 }
 .profile__head{display:flex;align-items:center;gap:16px}
-.profile__avatar{width:56px;height:56px;border-radius:14px;background:#1d4ed8;color:#fff;display:grid;place-items:center;font-size:24px;font-weight:700}
-.profile__head h1{font-size:22px;font-weight:700;margin:0;color:var(--pf-fg)}
+.profile__avatar{width:56px;height:56px;border-radius:var(--gerege-radius-lg);background:#1d4ed8;color:#fff;display:grid;place-items:center;font-size:24px;font-weight:600}
+.profile__head h1{font-size:22px;font-weight:600;margin:0;color:var(--pf-fg)}
 .profile__head p{margin:2px 0 0;color:var(--pf-muted);font-size:14px}
 .profile__stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
-.profile__stats>div{background:var(--pf-surface);border:1px solid var(--pf-border);border-radius:12px;padding:14px 16px;display:grid;gap:2px}
+.profile__stats>div{background:var(--pf-surface);border:1px solid var(--pf-border);border-radius:var(--gerege-radius-lg);padding:14px 16px;display:grid;gap:2px}
 .profile__stats svg{width:18px;height:18px;color:var(--pf-muted)}
-.profile__stats b{font-size:20px;font-weight:700;color:var(--pf-fg)}
+.profile__stats b{font-size:20px;font-weight:600;color:var(--pf-fg)}
 .profile__stats span{font-size:12px;color:var(--pf-muted)}
-.profile__section h2{font-size:16px;font-weight:700;color:var(--pf-fg);margin:0 0 4px}
+.profile__section h2{font-size:16px;font-weight:600;color:var(--pf-fg);margin:0 0 4px}
 .profile__muted{color:var(--pf-muted);font-size:13px;margin:0 0 12px}
 .profile__error{color:#b42318;font-size:14px}
 .profile__list{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:10px}
-.profile__list>li{background:var(--pf-surface);border:1px solid var(--pf-border);border-radius:12px;padding:14px 16px}
+.profile__list>li{background:var(--pf-surface);border:1px solid var(--pf-border);border-radius:var(--gerege-radius-lg);padding:14px 16px}
 .profile__row{display:flex;align-items:center;gap:12px}
 /* Таних тэмдгийн карт. Хоёр мөр: провайдер, дараа нь тэнд байгаа хүн. */
 .profile__id-head{display:flex;align-items:center;gap:10px}
 .profile__mark{display:grid;place-items:center;width:22px;height:22px;flex:none}
 .profile__mark svg{width:20px;height:20px}
-.profile__id-head b{font-size:14px;font-weight:700;color:var(--pf-fg)}
+.profile__id-head b{font-size:14px;font-weight:600;color:var(--pf-fg)}
 .profile__id-head span{font-size:12px;color:var(--pf-muted);word-break:break-all}
 .profile__id-person{display:flex;align-items:center;gap:12px;margin-top:12px}
-.profile__photo{width:44px;height:44px;border-radius:10px;object-fit:cover;flex:none;background:var(--pf-soft)}
-.profile__photo--letter{display:grid;place-items:center;color:var(--pf-soft-fg);font-weight:700;font-size:17px}
+.profile__photo{width:44px;height:44px;border-radius:var(--gerege-radius-card);object-fit:cover;flex:none;background:var(--pf-soft)}
+.profile__photo--letter{display:grid;place-items:center;color:var(--pf-soft-fg);font-weight:600;font-size:17px}
 .profile__id-person b{font-size:14px;color:var(--pf-fg);display:flex;align-items:center;gap:8px}
 .profile__id-person span{font-size:13px;color:var(--pf-muted)}
 .profile__id-person code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;color:var(--pf-muted)}
-.profile__badge{font-style:normal;font-size:11px;font-weight:600;color:#047857;background:#d1fae5;border-radius:999px;padding:2px 9px}
+.profile__badge{font-style:normal;font-size:11px;font-weight:600;color:#047857;background:#d1fae5;border-radius:var(--gerege-radius-full);padding:2px 9px}
 /* Салгах товч нь сүйрлийн үйлдэл — улаанаар зарлана, гэхдээ дарагдтал
    тайван: анхаарлыг татах ёстой нь товч өөрөө биш, дарсны үр дүн. */
-.profile__unlink{display:inline-flex;align-items:center;gap:6px;flex:none;border:1px solid #fecdca;background:var(--pf-surface);color:#b42318;border-radius:9px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer}
+.profile__unlink{display:inline-flex;align-items:center;gap:6px;flex:none;border:1px solid #fecdca;background:var(--pf-surface);color:#b42318;border-radius:var(--gerege-radius-card);padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer}
 .profile__unlink:hover:not(:disabled){background:#fef3f2}
 .profile__unlink:disabled{opacity:.55;cursor:default}
 .profile__unlink svg{width:15px;height:15px}
 /* Холбох товч. Салгахын эсрэг тал тул хэлбэрээр нь хосолно, гэхдээ саармаг
    өнгөөр: холбох нь сүйрлийн үйлдэл биш. */
-.profile__link-provider{display:inline-flex;align-items:center;gap:9px;margin-top:12px;border:1px solid var(--pf-border);background:var(--pf-surface);color:var(--pf-fg);border-radius:10px;padding:10px 16px;font-size:14px;font-weight:600;text-decoration:none}
+.profile__link-provider{display:inline-flex;align-items:center;gap:9px;margin-top:12px;border:1px solid var(--pf-border);background:var(--pf-surface);color:var(--pf-fg);border-radius:var(--gerege-radius-card);padding:10px 16px;font-size:14px;font-weight:600;text-decoration:none}
 .profile__link-provider:hover{background:#f8fafc;border-color:#cbd5e1}
 .profile__link-provider svg{width:18px;height:18px}
 .profile__link-note{margin:8px 0 0;max-width:62ch}
-.profile__link-error{margin:12px 0 0;padding:11px 14px;border:1px solid #fecdca;background:#fef3f2;border-radius:10px;max-width:62ch}
-.profile__icon{display:grid;place-items:center;width:34px;height:34px;border-radius:9px;background:var(--pf-soft);color:var(--pf-soft-fg);flex:none}
+.profile__link-error{margin:12px 0 0;padding:11px 14px;border:1px solid #fecdca;background:#fef3f2;border-radius:var(--gerege-radius-card);max-width:62ch}
+.profile__icon{display:grid;place-items:center;width:34px;height:34px;border-radius:var(--gerege-radius-card);background:var(--pf-soft);color:var(--pf-soft-fg);flex:none}
 .profile__icon svg{width:18px;height:18px}
 .profile__grow{flex:1;display:grid}
 .profile__grow b{font-size:14px;color:var(--pf-fg)}
@@ -576,13 +660,13 @@ html[data-theme="dark"] .profile{
 @media(max-width:640px){.profile__meta{display:none}}
 
 /* Холболтын дэлгэц дээрх "юу дамжих вэ" хоёр блок. */
-.bind-block{background:var(--sg-surface-2);border:1px solid var(--sg-border);border-radius:10px;padding:14px 16px}
-.bind-block h3{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--sg-muted);margin:0 0 8px}
+.bind-block{background:var(--sg-surface-2);border:1px solid var(--sg-border);border-radius:var(--gerege-radius-card);padding:14px 16px}
+.bind-block h3{font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--sg-muted);margin:0 0 8px}
 .bind-block ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .bind-block li{display:flex;justify-content:space-between;gap:12px;font-size:13.5px;color:var(--sg-fg)}
 .bind-block li span{color:var(--sg-muted)}
 .bind-block li b{font-weight:600}
-.signin-alert{border-radius:8px;padding:10px 12px;font-size:13px;background:var(--sg-danger-soft);color:var(--sg-danger)}
+.signin-alert{border-radius:var(--gerege-radius-card);padding:10px 12px;font-size:13px;background:var(--sg-danger-soft);color:var(--sg-danger)}
 .signin-note{color:var(--sg-muted);font-size:12.5px;text-align:center;margin:0}
 
 /* Анхны тохиргооны шидтэн. Нэвтрэх картын дотор амьдардаг тул хүрээ, товчны
@@ -598,45 +682,45 @@ html[data-theme="dark"] .profile{
    Дөрвүүлээ шошготой байхад «Байгууллага», «Administrator» зэрэг орчуулга
    картын өргөнөөс халж хүрээгээ давдаг байв. */
 .setup-steps{display:flex;gap:8px;list-style:none;margin:0;padding:0}
-.setup-steps li{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:6px;min-height:36px;min-width:36px;padding:0 10px;white-space:nowrap;border:1px solid var(--sg-border);border-radius:8px;color:var(--sg-muted);font-size:13px;font-weight:500}
+.setup-steps li{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:6px;min-height:36px;min-width:36px;padding:0 10px;white-space:nowrap;border:1px solid var(--sg-border);border-radius:var(--gerege-radius-card);color:var(--sg-muted);font-size:13px;font-weight:500}
 .setup-steps li svg{flex:none}
 .setup-steps li.is-current{flex:1 1 auto;border-color:var(--sg-blue);color:var(--sg-blue-text);background:var(--sg-blue-soft)}
 .setup-steps li.is-done{color:var(--sg-fg)}
 
 .setup-form{display:flex;flex-direction:column;gap:16px}
 .setup-form label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:500}
-.setup-form input{width:100%;background:var(--sg-surface);border:1px solid var(--sg-border);border-radius:8px;color:var(--sg-fg);font-size:15px;font-weight:400;padding:11px 12px;transition:border-color .12s,box-shadow .12s}
-.setup-form input:focus{border-color:var(--sg-blue);box-shadow:0 0 0 3px var(--sg-blue-soft);outline:none}
+.setup-form input{width:100%;background:var(--sg-surface);border:1px solid var(--sg-border);border-radius:var(--gerege-radius-card);color:var(--sg-fg);font-size:15px;font-weight:400;padding:11px 12px;transition:border-color .12s,box-shadow .12s}
+.setup-form input:focus{border-color:var(--sg-blue);box-shadow:0 0 0 3px var(--sg-blue-soft)}
 .setup-form small{color:var(--sg-muted);font-size:12px;font-weight:400}
 
 .setup-lookup{display:flex;gap:8px}
 .setup-lookup input{flex:1}
-.setup-lookup button{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;background:var(--sg-surface-2);border:1px solid var(--sg-border);border-radius:8px;color:var(--sg-fg);font-size:13px;font-weight:500;padding:0 14px;cursor:pointer}
+.setup-lookup button{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;background:var(--sg-surface-2);border:1px solid var(--sg-border);border-radius:var(--gerege-radius-card);color:var(--sg-fg);font-size:13px;font-weight:500;padding:0 14px;cursor:pointer}
 .setup-lookup button:hover:not(:disabled){background:var(--sg-surface)}
 .setup-lookup button:disabled{opacity:.5;cursor:not-allowed}
 
 .setup-actions{display:flex;gap:10px}
-.setup-enrolment{display:flex;flex-direction:column;align-items:center;gap:12px;padding:16px;background:var(--sg-surface);border:1px solid var(--sg-border);border-radius:8px}
-.setup-enrolment svg{background:#fff;padding:8px;border-radius:6px}
+.setup-enrolment{display:flex;flex-direction:column;align-items:center;gap:12px;padding:16px;background:var(--sg-surface);border:1px solid var(--sg-border);border-radius:var(--gerege-radius-card)}
+.setup-enrolment svg{background:#fff;padding:8px;border-radius:var(--gerege-radius-control)}
 .setup-enrolment code{font-size:12px;letter-spacing:.04em;color:var(--sg-muted);word-break:break-all;text-align:center}
 
 /* eID картыг энэ дизайны дотор буулгах. EIDLogin өөрөө навигацийн логикоо
    барина — энд зөвхөн харагдац солигдоно. */
 .signin-card .eid-login{background:0 0;border:0;padding:0;box-shadow:none;gap:16px;display:flex;flex-direction:column}
 .signin-card .eid-login__head,.signin-card .eid-login>footer{display:none}
-.signin-card .eid-tabs{background:var(--sg-surface-2);border:1px solid var(--sg-border);border-radius:7px;padding:2px;gap:2px;display:flex}
-.signin-card .eid-tabs button{flex:1;min-height:44px;border:0;border-radius:5px;background:0 0;color:var(--sg-muted);font-size:14px;font-weight:500}
-.signin-card .eid-tabs button.is-active{background:var(--sg-surface);color:var(--sg-fg);box-shadow:0 1px 2px #11161f14}
+.signin-card .eid-tabs{background:var(--sg-surface-2);border:1px solid var(--sg-border);border-radius:var(--gerege-radius-control);padding:2px;gap:2px;display:flex}
+.signin-card .eid-tabs button{flex:1;min-height:44px;border:0;border-radius:var(--gerege-radius-control);background:0 0;color:var(--sg-muted);font-size:14px;font-weight:500}
+.signin-card .eid-tabs button.is-active{background:var(--sg-surface);color:var(--sg-fg);box-shadow:var(--gerege-shadow-sm)}
 .signin-card .eid-login form{display:flex;flex-direction:column;gap:6px}
 .signin-card .eid-login form label{color:var(--sg-fg);font-size:13px;font-weight:500}
-.signin-card .eid-login form input{width:100%;background:var(--sg-surface);border:1px solid var(--sg-border);border-radius:8px;color:var(--sg-fg);font-size:17px;text-align:center;letter-spacing:2px;padding:14px 12px}
+.signin-card .eid-login form input{width:100%;background:var(--sg-surface);border:1px solid var(--sg-border);border-radius:var(--gerege-radius-card);color:var(--sg-fg);font-size:17px;text-align:center;letter-spacing:2px;padding:14px 12px}
 .signin-card .eid-login form input::placeholder{color:var(--sg-faint)}
-.signin-card .eid-login form input:focus{border-color:var(--sg-blue);box-shadow:0 0 0 3px var(--sg-blue-soft);outline:none}
-.signin-card .eid-primary{margin-top:10px;width:100%;min-height:44px;border:0;border-radius:8px;background:linear-gradient(135deg,var(--sg-blue),#8b7ff0);color:#fff;font-size:15px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.signin-card .eid-login form input:focus{border-color:var(--sg-blue);box-shadow:0 0 0 3px var(--sg-blue-soft)}
+.signin-card .eid-primary{margin-top:10px;width:100%;min-height:44px;border:0;border-radius:var(--gerege-radius-card);background:var(--sg-blue);color:#fff;font-size:15px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:8px}
 .signin-card .eid-primary:hover{filter:brightness(1.05)}
 .signin-card .eid-wait,.signin-card .eid-status{color:var(--sg-fg)}
 .signin-card .eid-wait small{color:var(--sg-muted)}
-.signin-card .eid-qr{background:#fff;border:1px solid var(--sg-border);border-radius:10px}
+.signin-card .eid-qr{background:#fff;border:1px solid var(--sg-border);border-radius:var(--gerege-radius-card)}
 
 @media(max-width:640px){
   .signin-card{padding:32px 24px}
@@ -647,25 +731,25 @@ html[data-theme="dark"] .profile{
 .admin-login__pending{color:var(--sg-muted,#5e646c);font-size:13px;text-align:center;padding:22px 0}
 /* Провайдераар нэвтрэх карт: eID картын байрыг эзэлдэг тул түүнтэй ижил
    өргөн, ижил өнцөгтэй — нэг дэлгэц дээр хоёул гарч ирж болно. */
-.sso-card{background:#fff;color:#0f1b2d;border-radius:12px;padding:26px;display:grid;justify-items:center;text-align:center;gap:10px}
+.sso-card{background:#fff;color:#0f1b2d;border-radius:var(--gerege-radius-lg);padding:26px;display:grid;justify-items:center;text-align:center;gap:10px}
 .sso-card>svg{width:38px;height:38px;color:#122a50}
 .sso-card strong{font-size:18px}
 .sso-card p{color:#5b6779;font-size:13px;line-height:1.6}
 .sso-card__error{color:#b42318}
-.sso-card button{width:100%;height:44px;margin-top:6px;border:0;border-radius:8px;background:#122a50;color:#fff;font-weight:700}
-.eid-callback{min-height:100vh;background:var(--gp-navy);color:#fff;display:grid;place-content:center;justify-items:center;text-align:center;gap:8px}.eid-callback>svg{width:50px;height:50px;color:#f2bd42}.eid-callback h1{color:#fff}.eid-callback p{color:var(--gp-on-navy-70)}.eid-callback a{color:#f2bd42}
+.sso-card button{width:100%;height:44px;margin-top:6px;border:0;border-radius:var(--gerege-radius-card);background:#122a50;color:#fff;font-weight:600}
+.eid-callback{min-height:100dvh;background:var(--gp-navy);color:#fff;display:grid;place-content:center;justify-items:center;text-align:center;gap:8px}.eid-callback>svg{width:50px;height:50px;color:#f2bd42}.eid-callback h1{color:#fff}.eid-callback p{color:var(--gp-on-navy-70)}.eid-callback a{color:#f2bd42}
 @media(max-width:900px){.gp-nav>nav{display:none}.gp-nav__toggle{display:inline-flex}.gp-nav__menu{display:block;position:absolute;top:72px;left:0;right:0;background:var(--gp-navy);border-bottom:1px solid rgba(255,255,255,.14);box-shadow:0 18px 32px rgba(0,0,0,.22);padding:14px 24px 18px}.gp-nav__menu nav{display:flex;flex-direction:column;gap:2px}.gp-nav__menu nav a{display:block;padding:11px 2px;font-size:15px;color:var(--gp-on-navy-70);text-decoration:none;border-bottom:1px solid rgba(255,255,255,.08)}.gp-nav__menu nav a:hover{color:var(--gp-gold)}.gp-nav__menu-actions{padding-top:12px}.gp-hero__inner,.eid-page__content{grid-template-columns:1fr;gap:42px}.gp-hero__inner{padding-top:60px}.gp-copy{text-align:center;margin:auto}.gp-cta,.gp-stats{justify-content:center}.gp-login-slot,.eid-login{margin:auto}.gp-trust{grid-template-columns:1fr;gap:30px}.eid-page__intro{text-align:center}.eid-page__intro ul{justify-content:center}.eid-page__content{padding-top:30px}.eid-page__intro h1{font-size:44px}}
 /* The store's catalogue. It reuses gp-feature for the card so a store and the
    platform page cannot drift into two visual languages; what is added is only
    what a catalogue entry needs and a capability card does not — a version, a
    publisher, and the id somebody types to install it. */
 .gp-store-group{margin-bottom:44px}
-.gp-store-group__name{font-size:13px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#0064e1;margin:0 0 16px}
+.gp-store-group__name{font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#0064e1;margin:0 0 16px}
 .gp-store-card{min-height:0;display:flex;flex-direction:column}
 .gp-store-card>svg{width:26px;height:26px}
 .gp-store-card__head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:22px 0 8px}
 .gp-store-card__head h3{margin:0;font-size:20px}
-.gp-store-card__version{font-size:12px;font-weight:700;color:var(--gp-muted);white-space:nowrap}
+.gp-store-card__version{font-size:12px;font-weight:600;color:var(--gp-muted);white-space:nowrap}
 .gp-store-card p{flex:1}
 .gp-store-card__foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;padding-top:14px;border-top:1px solid #eef2f7;font-size:12px;color:var(--gp-muted)}
 .gp-store-card__foot code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#5b6b80;overflow:hidden;text-overflow:ellipsis}
@@ -702,9 +786,9 @@ html[data-theme="dark"] .profile{
   .gerege-sidebar:not(.gerege-workarea .gerege-sidebar),
   .gerege-sidebar.is-desktop-open:not(.gerege-workarea .gerege-sidebar) {
     position: fixed; top: 4rem; left: 0; bottom: var(--gerege-mobile-tabs-h);
-    width: min(82vw, 18rem); height: auto; z-index: 40;
+    width: min(82vw, 18rem); height: auto; z-index: var(--z-modal);
     background: var(--gerege-chrome); border-right: 1px solid var(--gerege-border);
-    box-shadow: 8px 0 28px rgb(15 23 42 / 16%);
+    box-shadow: 8px 0 28px rgb(0 0 0 / 16%);
     transform: translateX(-100%); transition: transform 0.24s ease;
   }
   /* Open, and it has to say so twice.
@@ -744,11 +828,11 @@ html[data-theme="dark"] .profile{
     padding-bottom: calc(var(--gerege-mobile-tabs-h) + env(safe-area-inset-bottom, 0px) + 1.5rem);
   }
   .gerege-mobile-tabs {
-    display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+    display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: var(--z-sticky);
     height: calc(var(--gerege-mobile-tabs-h) + env(safe-area-inset-bottom, 0px));
     padding-bottom: env(safe-area-inset-bottom, 0px);
     background: var(--gerege-chrome); border-top: 1px solid var(--gerege-border);
-    box-shadow: 0 -2px 12px rgb(15 23 42 / 6%);
+    box-shadow: 0 -2px 12px rgb(0 0 0 / 6%);
   }
   .gerege-mobile-tab {
     flex: 1 1 20%; min-width: 0; max-width: none; border: 0; background: transparent;
@@ -763,25 +847,25 @@ html[data-theme="dark"] .profile{
   }
   .gerege-mobile-tab.is-active { color: var(--gerege-blue); }
   .gerege-mobile-more-backdrop {
-    position: fixed; inset: 0; z-index: 64; border: 0;
-    background: rgb(15 23 42 / 42%); backdrop-filter: blur(2px);
+    position: fixed; inset: 0; z-index: var(--z-overlay); border: 0;
+    background: var(--gerege-overlay);
   }
   .gerege-mobile-more-sheet {
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: 65;
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: var(--z-modal);
     max-height: min(68dvh, 34rem); overflow-y: auto;
     padding: 0.5rem 1rem calc(var(--gerege-mobile-tabs-h) + env(safe-area-inset-bottom, 0px) + 1rem);
-    background: var(--gerege-chrome); border-radius: 1.25rem 1.25rem 0 0;
-    box-shadow: 0 -12px 40px rgb(15 23 42 / 20%);
+    background: var(--gerege-chrome); border-radius:var(--gerege-radius-lg) var(--gerege-radius-lg) 0 0;
+    box-shadow: 0 -12px 40px rgb(0 0 0 / 20%);
   }
   .gerege-mobile-more-handle {
     width: 2.5rem; height: 0.25rem; margin: 0 auto 0.75rem;
-    border-radius: 999px; background: var(--gerege-border);
+    border-radius:var(--gerege-radius-full); background: var(--gerege-border);
   }
-  .gerege-mobile-more-sheet h2 { margin: 0 0 0.75rem; font-size: 1rem; font-weight: 700; color: var(--gerege-fg); }
+  .gerege-mobile-more-sheet h2 { margin: 0 0 0.75rem; font-size: 1rem; font-weight:600; color: var(--gerege-fg); }
   .gerege-mobile-more-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
   .gerege-mobile-more-app {
     display: flex; align-items: center; gap: 0.75rem; min-width: 0;
-    padding: 0.8rem; border: 1px solid var(--gerege-border); border-radius: 0.75rem;
+    padding: 0.8rem; border: 1px solid var(--gerege-border); border-radius:var(--gerege-radius-lg);
     background: var(--gerege-surface); color: var(--gerege-fg); text-decoration: none;
   }
   .gerege-mobile-more-app > span { flex: 0 0 auto; color: var(--gerege-muted); }
@@ -815,7 +899,7 @@ html[data-theme="dark"] .profile{
   inset-inline-end: 0;
   width: 420px;
   max-width: 100vw;
-  z-index: 45;
+  z-index: var(--z-modal);
   overflow: hidden;
   transform: translateX(100%);
   visibility: hidden;
@@ -842,13 +926,13 @@ html[data-shell] .gerege-sidebar.is-desktop-open {
   left: auto !important;
   transform: none !important;
   width: 18rem !important;
-  /* Өндөр нь эцгийн эгнээнээс ирнэ. `min-height: 100vh` тавибал ribbon ба
+  /* Өндөр нь эцгийн эгнээнээс ирнэ. `min-height: 100dvh` тавибал ribbon ба
      footer-ийн эзэлсэн ~4.25rem-ээр доод тал нь тасарч, олон цэстэй tenant-д
      сүүлийн бичлэгүүд хүрэхгүй болно. */
   height: auto !important;
   box-shadow: none !important;
   background: var(--gerege-chrome) !important;
-  z-index: 40 !important;
+  z-index: var(--z-modal) !important;
 }
 
 .gerege-workarea .gerege-sidebar > nav,
@@ -885,7 +969,7 @@ html[data-shell] .gerege-main {
   min-height: 2.5rem !important;
   background: var(--gerege-chrome) !important;
   border-bottom: 1px solid var(--gerege-border) !important;
-  z-index: 30 !important;
+  z-index: var(--z-sticky) !important;
 }
 
 .gerege-footer {
@@ -894,7 +978,7 @@ html[data-shell] .gerege-main {
   min-height: 1.75rem !important;
   background: var(--gerege-chrome) !important;
   border-top: 1px solid var(--gerege-border) !important;
-  z-index: 30 !important;
+  z-index: var(--z-sticky) !important;
 }
 
 /* ── Шугамын нүүр дэлгэц ─────────────────────────────────────────────────
@@ -915,7 +999,7 @@ html[data-shell] .gerege-main {
 .line-eyebrow {
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   font-size: 0.6875rem;
-  font-weight: 700;
+  font-weight:600;
   letter-spacing: 0.22em;
   color: var(--line-alloy);
   margin: 0;
@@ -923,7 +1007,7 @@ html[data-shell] .gerege-main {
 
 .line-title {
   font-size: clamp(2rem, 4.2vw, 3rem);
-  font-weight: 800;
+  font-weight:600;
   letter-spacing: -0.03em;
   line-height: 1.03;
   color: var(--gerege-fg);
@@ -975,7 +1059,7 @@ html[data-shell] .gerege-main {
   margin: 0 auto -1px;
   border: 1px solid rgb(var(--line-alloy-rgb) / 40%);
   border-bottom: none;
-  border-radius: 9px 9px 0 0;
+  border-radius:var(--gerege-radius-card) var(--gerege-radius-card) 0 0;
   background: linear-gradient(180deg, #202839, #171d29);
   z-index: 1;
 }
@@ -988,7 +1072,7 @@ html[data-shell] .gerege-main {
   transform: translateX(-50%);
   width: 0.6rem;
   height: 0.6rem;
-  border-radius: 999px;
+  border-radius:var(--gerege-radius-full);
   background: var(--gerege-bg);
   box-shadow: inset 0 1px 2px rgb(0 0 0 / 65%);
 }
@@ -996,7 +1080,7 @@ html[data-shell] .gerege-main {
 .paiza-face {
   position: relative;
   border: 1px solid rgb(var(--line-alloy-rgb) / 40%);
-  border-radius: 12px;
+  border-radius:var(--gerege-radius-lg);
   background:
     radial-gradient(115% 70% at 50% 0%, rgb(var(--line-alloy-rgb) / 26%), rgb(var(--line-alloy-rgb) / 0%) 62%),
     linear-gradient(180deg, #1d2431 0%, #141a24 55%, #10151e 100%);
@@ -1007,7 +1091,7 @@ html[data-shell] .gerege-main {
 .paiza-mark {
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   font-size: 0.9375rem;
-  font-weight: 700;
+  font-weight:600;
   letter-spacing: 0.44em;
   text-indent: 0.44em;
   text-align: center;
@@ -1065,7 +1149,7 @@ html[data-shell] .gerege-main {
 .line-actions-head {
   margin: 0 0 0.25rem;
   font-size: 0.6875rem;
-  font-weight: 700;
+  font-weight:600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--gerege-muted);
@@ -1092,7 +1176,7 @@ html[data-shell] .gerege-main {
   place-items: center;
   width: 2rem;
   height: 2rem;
-  border-radius: 8px;
+  border-radius:var(--gerege-radius-card);
   background: rgb(var(--line-alloy-rgb) / 12%);
   color: var(--line-alloy);
 }
@@ -1119,7 +1203,7 @@ html[data-shell] .gerege-main {
   height: 100%;
 }
 .line-home--public .line-action:hover { border-color: var(--line-alloy); background: var(--gerege-surface); padding-left: 1.75rem; }
-.line-home--public .line-action-icon { width: 3.5rem; height: 3.5rem; border-radius: 14px; }
+.line-home--public .line-action-icon { width: 3.5rem; height: 3.5rem; border-radius:var(--gerege-radius-lg); }
 .line-home--public .line-action-icon svg { width: 1.75rem; height: 1.75rem; }
 .line-home--public .line-action-text strong { font-size: 1.375rem; }
 .line-home--public .line-action-text small { font-size: 0.9375rem; margin-top: 0.25rem; }

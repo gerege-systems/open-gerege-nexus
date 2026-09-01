@@ -70,15 +70,15 @@ function Impersonate() {
   }, [token, t, router]);
 
   return (
-    <div className="min-h-screen grid place-items-center bg-slate-100 px-4">
-      <div className="w-full max-w-sm bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-3 text-center">
+    <div className="min-h-dvh grid place-items-center bg-surface-2 px-4">
+      <div className="w-full max-w-sm bg-surface rounded-xl border border-line p-6 space-y-3 text-center">
         <ShieldCheck className="w-6 h-6 text-amber-500 mx-auto" />
         {failure ? (
-          <p className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">
+          <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">
             {failure}
           </p>
         ) : (
-          <p className="text-sm text-slate-500">{t("auth.message.impersonation_starting")}</p>
+          <p className="text-sm text-muted">{t("auth.message.impersonation_starting")}</p>
         )}
       </div>
     </div>

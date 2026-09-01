@@ -121,18 +121,18 @@ export default function OrganisationPage() {
   };
 
   if (!organisation) {
-    return <div className="py-12 text-center text-slate-500 text-sm">{t("base.message.loading")}</div>;
+    return <div className="py-12 text-center text-muted text-sm">{t("base.message.loading")}</div>;
   }
 
   const value = (key: keyof Organisation) => draft[key] ?? (organisation[key] as string) ?? "";
 
   return (
     <div className="space-y-6">
-      <div className="border-b border-slate-200 pb-4 flex items-center gap-3">
-        <Building2 className="w-6 h-6 text-slate-600" />
+      <div className="border-b border-line pb-4 flex items-center gap-3">
+        <Building2 className="w-6 h-6 text-muted" />
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">{t("core.view.organisation_title")}</h1>
-          <p className="text-sm text-slate-500">{t("core.view.organisation_subtitle")}</p>
+          <h1 className="text-2xl font-semibold text-foreground">{t("core.view.organisation_title")}</h1>
+          <p className="text-sm text-muted">{t("core.view.organisation_subtitle")}</p>
         </div>
         {canManage && (
           <button
@@ -140,7 +140,7 @@ export default function OrganisationPage() {
             onClick={() => void syncFromCore()}
             disabled={syncing || !value("registration_number")}
             title={t("core.hint.core_sync")}
-            className="ml-auto inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-50"
+            className="ml-auto inline-flex items-center gap-2 rounded-lg border border-input px-3 py-2 text-sm hover:bg-surface-hover disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`} />
             {t("core.action.core_sync")}
@@ -153,17 +153,17 @@ export default function OrganisationPage() {
 
       <div className="grid gap-6 md:grid-cols-2">
         {GROUPS.map((group) => (
-          <section key={group.title} className="bg-white border border-slate-200 rounded-xl p-5 space-y-3">
-            <h2 className="font-semibold text-slate-800">{t(group.title as any)}</h2>
+          <section key={group.title} className="bg-surface border border-line rounded-xl p-5 space-y-3">
+            <h2 className="font-semibold text-foreground">{t(group.title as any)}</h2>
             {group.fields.map((field) => (
               <label key={field.key} className="block">
-                <span className="block text-xs font-medium text-slate-500 mb-1">{t(field.label as any)}</span>
+                <span className="block text-xs font-medium text-muted mb-1">{t(field.label as any)}</span>
                 <input
                   value={value(field.key)}
                   placeholder={field.placeholder}
                   disabled={!canManage}
                   onChange={(e) => setDraft((d) => ({ ...d, [field.key]: e.target.value }))}
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-slate-50 disabled:text-slate-500"
+                  className="w-full px-3 py-2 text-sm border border-input rounded-lg disabled:bg-surface-2 disabled:text-muted"
                 />
               </label>
             ))}
@@ -175,16 +175,16 @@ export default function OrganisationPage() {
           this screen that names somebody else, and it is a statement about the
           world rather than a setting — recording it grants nothing and changes
           nothing about what this organisation can see. */}
-      <section className="bg-white border border-slate-200 rounded-xl p-5 space-y-2">
-        <h2 className="font-semibold text-slate-800">{t("core.group.affiliation")}</h2>
-        <p className="text-xs text-slate-500">{t("core.message.parent_hint")}</p>
+      <section className="bg-surface border border-line rounded-xl p-5 space-y-2">
+        <h2 className="font-semibold text-foreground">{t("core.group.affiliation")}</h2>
+        <p className="text-xs text-muted">{t("core.message.parent_hint")}</p>
         <label className="block max-w-md">
-          <span className="block text-xs font-medium text-slate-500 mb-1">{t("core.field.parent_organisation")}</span>
+          <span className="block text-xs font-medium text-muted mb-1">{t("core.field.parent_organisation")}</span>
           <select
             value={draft.parent_tenant_id ?? organisation.parent_tenant_id ?? ""}
             disabled={!canManage}
             onChange={(e) => setDraft((d) => ({ ...d, parent_tenant_id: e.target.value }))}
-            className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white disabled:bg-slate-50"
+            className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-surface disabled:bg-surface-2"
           >
             <option value="">{t("core.state.independent")}</option>
             {/* The organisation currently recorded stays on offer even if the
@@ -209,16 +209,16 @@ export default function OrganisationPage() {
           Хоёр сонголт, гурав биш. «Урилгаар л авна» гэдэг нь гурав дахь төлөв
           мэт харагддаг ч үнэндээ хүсэлт хүлээж авдаг байгууллагын өдөр тутмын
           хариулт — татгалзах — тул түүнд тусдаа тохиргоо хэрэггүй. */}
-      <section className="bg-white border border-slate-200 rounded-xl p-5 space-y-2">
-        <h2 className="font-semibold text-slate-800">{t("core.group.joining")}</h2>
-        <p className="text-xs text-slate-500">{t("core.message.join_policy_hint")}</p>
+      <section className="bg-surface border border-line rounded-xl p-5 space-y-2">
+        <h2 className="font-semibold text-foreground">{t("core.group.joining")}</h2>
+        <p className="text-xs text-muted">{t("core.message.join_policy_hint")}</p>
         <label className="block max-w-md">
-          <span className="block text-xs font-medium text-slate-500 mb-1">{t("core.field.join_policy")}</span>
+          <span className="block text-xs font-medium text-muted mb-1">{t("core.field.join_policy")}</span>
           <select
             value={draft.join_policy ?? organisation.join_policy ?? "on_request"}
             disabled={!canManage}
             onChange={(e) => setDraft((d) => ({ ...d, join_policy: e.target.value }))}
-            className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white disabled:bg-slate-50"
+            className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-surface disabled:bg-surface-2"
           >
             <option value="on_request">{t("core.state.join_on_request")}</option>
             <option value="open">{t("core.state.join_open")}</option>
@@ -230,7 +230,7 @@ export default function OrganisationPage() {
             агуулна. «Хаалга нээх» ба «мэдээллээ харуулах» хоёрыг андуурах нь
             энэ дэлгэц дээр гарч болох хамгийн үнэтэй алдаа. */}
         {(draft.join_policy ?? organisation.join_policy) === "open" && (
-          <p className="text-xs text-[var(--gerege-blue-text)]">{t("core.message.join_open_note")}</p>
+          <p className="text-xs text-accent">{t("core.message.join_open_note")}</p>
         )}
       </section>
 
@@ -244,7 +244,7 @@ export default function OrganisationPage() {
             {saving ? t("base.message.saving") : t("base.action.save")}
           </button>
           {Object.keys(draft).length > 0 && (
-            <button onClick={() => setDraft({})} className="text-sm text-slate-500 hover:text-slate-700">
+            <button onClick={() => setDraft({})} className="text-sm text-muted hover:text-foreground">
               {t("base.action.cancel")}
             </button>
           )}

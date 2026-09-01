@@ -45,7 +45,7 @@ export default async function ControlPlaneLayout({
   }
 
   return (
-    <div className="cp-root min-h-screen">
+    <div className="cp-root min-h-dvh">
       <Console>{children}</Console>
     </div>
   );

@@ -18,7 +18,7 @@ import { cp, type Overview } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 
 export default function Jobs() {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const [health, setHealth] = useState<Overview | null>(null);
   const [failure, setFailure] = useState("");
   const [busy, setBusy] = useState(false);
@@ -43,17 +43,17 @@ export default function Jobs() {
     <div className="space-y-6">
       <div className="flex items-start gap-3">
         <div className="flex-1">
-          <h1 className="text-2xl font-semibold text-slate-900 flex items-center gap-2">
-            <Timer className="w-6 h-6 text-[var(--gerege-blue)]" />
+          <h1 className="text-2xl font-semibold text-foreground flex items-center gap-2">
+            <Timer className="w-6 h-6 text-accent" />
             {t("cp.section.jobs")}
           </h1>
-          <p className="mt-1 text-sm text-slate-500">{t("cp.hint.jobs")}</p>
+          <p className="mt-1 text-sm text-muted">{t("cp.hint.jobs")}</p>
         </div>
         <button
           type="button"
           onClick={() => void load()}
           disabled={busy}
-          className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-lg border border-input px-3 py-2 text-sm text-foreground hover:bg-surface-hover disabled:opacity-50"
         >
           <RefreshCw className={`w-4 h-4 ${busy ? "animate-spin" : ""}`} />
           {t("cp.action.refresh")}
@@ -61,7 +61,7 @@ export default function Jobs() {
       </div>
 
       {failure && (
-        <p className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+        <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
       )}
 
       <Card title={t("cp.section.background")}>
@@ -69,10 +69,10 @@ export default function Jobs() {
           head={[t("cp.field.job"), t("cp.field.last_run"), t("cp.field.status"), t("cp.field.pending")]}
           rows={(health?.background ?? []).map((job) => [
             <span key="n" className="min-w-0">
-              <strong className="text-slate-900">{job.name}</strong>
-              {job.detail && <span className="block text-xs text-slate-500">{job.detail}</span>}
+              <strong className="text-foreground">{job.name}</strong>
+              {job.detail && <span className="block text-xs text-muted">{job.detail}</span>}
             </span>,
-            formatMoment(job.last_run, locale) || "—",
+            formatMoment(job.last_run) || "—",
             <Badge key="s" tone={job.ok ? "emerald" : "red"}>
               {job.ok ? t("cp.state.normal") : t("cp.state.failing")}
             </Badge>,
@@ -86,9 +86,9 @@ export default function Jobs() {
         <Table
           head={[t("cp.field.organisation"), t("cp.field.failures"), t("cp.field.sample")]}
           rows={(health?.tenant_trouble ?? []).map((trouble) => [
-            <span key="n" className="font-medium text-slate-800">{trouble.name}</span>,
+            <span key="n" className="font-medium text-foreground">{trouble.name}</span>,
             String(trouble.failures),
-            <span key="s" className="text-xs text-slate-500 font-mono break-all">{trouble.sample}</span>,
+            <span key="s" className="text-xs text-muted font-mono break-all">{trouble.sample}</span>,
           ])}
           empty={t("cp.message.no_trouble")}
         />

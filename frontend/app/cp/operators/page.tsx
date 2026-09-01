@@ -27,7 +27,7 @@ import { Modal } from "@/components/ui";
 const ROLES = ["superadmin", "operator", "support", "auditor"] as const;
 
 export default function Operators() {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const { operator: me } = useConsole();
   const action = useAction();
   const [operators, setOperators] = useState<OperatorSummary[]>([]);
@@ -55,16 +55,16 @@ export default function Operators() {
     <div className="space-y-6">
       <div className="flex items-start gap-3">
         <div className="flex-1">
-          <h1 className="text-2xl font-semibold text-slate-900 flex items-center gap-2">
-            <ShieldCheck className="w-6 h-6 text-[var(--gerege-blue)]" />
+          <h1 className="text-2xl font-semibold text-foreground flex items-center gap-2">
+            <ShieldCheck className="w-6 h-6 text-accent" />
             {t("cp.section.operators")}
           </h1>
-          <p className="mt-1 text-sm text-slate-500">{t("cp.hint.operators")}</p>
+          <p className="mt-1 text-sm text-muted">{t("cp.hint.operators")}</p>
         </div>
         <button
           type="button"
           onClick={() => setChanging(true)}
-          className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+          className="inline-flex items-center gap-2 rounded-lg border border-input px-3 py-2 text-sm text-foreground hover:bg-surface-hover"
         >
           <KeyRound className="w-4 h-4" />
           {t("cp.action.change_password")}
@@ -73,7 +73,7 @@ export default function Operators() {
           <button
             type="button"
             onClick={() => setAdding(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-[var(--gerege-blue)] px-3 py-2 text-sm font-medium text-[var(--gerege-on-blue)] hover:brightness-105"
+            className="inline-flex items-center gap-2 rounded-lg bg-accent px-3 py-2 text-sm font-medium text-on-accent hover:brightness-105"
           >
             <UserPlus className="w-4 h-4" />
             {t("cp.action.add_operator")}
@@ -82,7 +82,7 @@ export default function Operators() {
       </div>
 
       {failure && (
-        <p className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+        <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
       )}
 
       <Card title={t("cp.section.operators")}>
@@ -96,8 +96,8 @@ export default function Operators() {
           ]}
           rows={operators.map((row) => [
             <span key="n" className="min-w-0">
-              <strong className="text-slate-900">{row.name}</strong>
-              <span className="block text-xs text-slate-500 font-mono">{row.email}</span>
+              <strong className="text-foreground">{row.name}</strong>
+              <span className="block text-xs text-muted font-mono">{row.email}</span>
             </span>,
             <Badge key="r" tone={row.role === "superadmin" ? "amber" : "slate"}>
               {t(`cp.role.${row.role}` as "cp.role.operator")}
@@ -109,7 +109,7 @@ export default function Operators() {
                   ? t("cp.state.normal")
                   : t("cp.state.enrolment_pending")}
             </Badge>,
-            formatMoment(row.last_login_at, locale) || <span key="l" className="text-xs text-slate-400">{t("cp.state.never")}</span>,
+            formatMoment(row.last_login_at) || <span key="l" className="text-xs text-muted">{t("cp.state.never")}</span>,
             superadmin && row.id !== me.id ? (
               <span key="a" className="flex items-center gap-2">
                 <select
@@ -124,7 +124,7 @@ export default function Operators() {
                       onDone: load,
                     });
                   }}
-                  className="rounded-lg border border-slate-300 px-2 py-1 text-xs"
+                  className="rounded-lg border border-input px-2 py-1 text-xs"
                 >
                   {ROLES.map((role) => (
                     <option key={role} value={role}>
@@ -143,13 +143,13 @@ export default function Operators() {
                       onDone: load,
                     })
                   }
-                  className="text-xs rounded-lg border border-slate-300 px-2 py-1 hover:bg-slate-50"
+                  className="text-xs rounded-lg border border-input px-2 py-1 hover:bg-surface-hover"
                 >
                   {row.disabled_at ? t("cp.action.enable") : t("cp.action.disable")}
                 </button>
               </span>
             ) : (
-              <span key="a" className="text-xs text-slate-400">{row.id === me.id ? t("cp.state.you") : "—"}</span>
+              <span key="a" className="text-xs text-muted">{row.id === me.id ? t("cp.state.you") : "—"}</span>
             ),
           ])}
           empty={t("cp.message.no_activity")}
@@ -231,64 +231,64 @@ function AddDialog({ onClose, onAdded }: { onClose: () => void; onAdded: (create
   }
 
   return (
-    <Modal label={t("cp.action.add_operator")}>
+    <Modal onClose={onClose} label={t("cp.action.add_operator")}>
       <form onSubmit={submit} className="p-5 space-y-4">
-        <h2 className="text-lg font-semibold text-slate-900">{t("cp.action.add_operator")}</h2>
+        <h2 className="text-lg font-semibold text-foreground">{t("cp.action.add_operator")}</h2>
         {failure && (
-          <p className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+          <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
         )}
         {/* The register first: the two fields below are filled from its
             answer, and typed over only when it is wrong or silent. */}
         <div className="flex items-end gap-2">
           <label className="block text-sm flex-1">
-            <span className="text-slate-600">{t("cp.field.registration")}</span>
+            <span className="text-muted">{t("cp.field.registration")}</span>
             <input
               value={registration}
               onChange={(event) => setRegistration(event.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+              className="mt-1 w-full rounded-lg border border-input px-3 py-2"
             />
           </label>
           <button
             type="button"
             onClick={() => void lookUp()}
             disabled={looking || !registration.trim()}
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-lg border border-input px-3 py-2 text-sm text-foreground hover:bg-surface-hover disabled:opacity-50"
           >
             <Search className={`w-4 h-4 ${looking ? "animate-pulse" : ""}`} />
             {t("cp.action.look_up")}
           </button>
         </div>
         {found && (
-          <p className="text-xs rounded-lg bg-[var(--gerege-blue-soft)] text-[var(--gerege-blue)] px-3 py-2">
+          <p className="text-xs rounded-lg bg-accent-soft text-accent px-3 py-2">
             {t("cp.message.from_the_register", { name })}
           </p>
         )}
 
         <label className="block text-sm">
-          <span className="text-slate-600">{t("cp.field.email")}</span>
+          <span className="text-muted">{t("cp.field.email")}</span>
           <input
             type="email"
             required
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+            className="mt-1 w-full rounded-lg border border-input px-3 py-2"
           />
         </label>
         <label className="block text-sm">
-          <span className="text-slate-600">{t("cp.field.name")}</span>
+          <span className="text-muted">{t("cp.field.name")}</span>
           <input
             required
             value={name}
             onChange={(event) => setName(event.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+            className="mt-1 w-full rounded-lg border border-input px-3 py-2"
           />
         </label>
         <label className="block text-sm">
-          <span className="text-slate-600">{t("cp.field.role")}</span>
+          <span className="text-muted">{t("cp.field.role")}</span>
           <select
             value={role}
             onChange={(event) => setRole(event.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+            className="mt-1 w-full rounded-lg border border-input px-3 py-2"
           >
             {ROLES.map((option) => (
               <option key={option} value={option}>
@@ -298,19 +298,19 @@ function AddDialog({ onClose, onAdded }: { onClose: () => void; onAdded: (create
           </select>
         </label>
         <label className="block text-sm">
-          <span className="text-slate-600">{t("cp.field.reason")}</span>
+          <span className="text-muted">{t("cp.field.reason")}</span>
           <input
             required
             value={reason}
             onChange={(event) => setReason(event.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+            className="mt-1 w-full rounded-lg border border-input px-3 py-2"
           />
         </label>
         {/* The console asks for the second factor before it mints an account;
             the API refuses without it. Kept in the same dialog so the step-up
             does not throw away what has been typed. */}
         <label className="block text-sm">
-          <span className="text-slate-600">{t("cp.field.code")}</span>
+          <span className="text-muted">{t("cp.field.code")}</span>
           <input
             inputMode="numeric"
             pattern="[0-9]*"
@@ -328,18 +328,18 @@ function AddDialog({ onClose, onAdded }: { onClose: () => void; onAdded: (create
                 }
               }
             }}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono tracking-[0.4em]"
+            className="mt-1 w-full rounded-lg border border-input px-3 py-2 font-mono tracking-[0.4em]"
           />
-          <small className="text-xs text-slate-500">{t("cp.hint.step_up")}</small>
+          <small className="text-xs text-muted">{t("cp.hint.step_up")}</small>
         </label>
         <div className="flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="rounded-lg border border-slate-300 px-4 py-2 text-sm">
+          <button type="button" onClick={onClose} className="rounded-lg border border-input px-4 py-2 text-sm">
             {t("cp.action.cancel")}
           </button>
           <button
             type="submit"
             disabled={busy}
-            className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-medium text-[var(--gerege-on-blue)] hover:brightness-105 disabled:opacity-60"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:brightness-105 disabled:opacity-60"
           >
             {t("cp.action.add_operator")}
           </button>
@@ -378,15 +378,15 @@ function HandoverDialog({ created, onClose }: { created: CreatedOperator; onClos
   }
 
   return (
-    <Modal label={t("cp.view.handover")}>
+    <Modal onClose={onClose} label={t("cp.view.handover")}>
       <div className="p-5 space-y-4">
-        <h2 className="text-lg font-semibold text-slate-900">{t("cp.view.handover")}</h2>
+        <h2 className="text-lg font-semibold text-foreground">{t("cp.view.handover")}</h2>
         <p className="text-sm rounded-lg bg-amber-50 border border-amber-200 text-amber-900 px-3 py-2">
           {t("cp.message.handover_once")}
         </p>
 
         <div className="grid gap-3 sm:grid-cols-[auto_minmax(0,1fr)] items-start">
-          <div className="rounded-xl border border-slate-200 p-3 bg-white">
+          <div className="rounded-xl border border-line p-3 bg-surface">
             <QRCodeSVG value={created.uri} size={148} />
           </div>
           <div className="space-y-2 min-w-0">
@@ -402,9 +402,9 @@ function HandoverDialog({ created, onClose }: { created: CreatedOperator; onClos
           </p>
         ) : (
           <form onSubmit={confirm} className="space-y-3">
-            <p className="text-sm text-slate-600">{t("cp.hint.confirm_enrolment")}</p>
+            <p className="text-sm text-muted">{t("cp.hint.confirm_enrolment")}</p>
             {failure && (
-              <p className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+              <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
             )}
             <div className="flex items-center gap-2">
               <input
@@ -414,12 +414,12 @@ function HandoverDialog({ created, onClose }: { created: CreatedOperator; onClos
                 required
                 value={code}
                 onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))}
-                className="w-40 rounded-lg border border-slate-300 px-3 py-2 font-mono tracking-[0.4em]"
+                className="w-40 rounded-lg border border-input px-3 py-2 font-mono tracking-[0.4em]"
               />
               <button
                 type="submit"
                 disabled={busy}
-                className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-medium text-[var(--gerege-on-blue)] hover:brightness-105 disabled:opacity-60"
+                className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:brightness-105 disabled:opacity-60"
               >
                 {t("cp.action.confirm")}
               </button>
@@ -428,7 +428,7 @@ function HandoverDialog({ created, onClose }: { created: CreatedOperator; onClos
         )}
 
         <div className="flex justify-end">
-          <button type="button" onClick={onClose} className="rounded-lg border border-slate-300 px-4 py-2 text-sm">
+          <button type="button" onClick={onClose} className="rounded-lg border border-input px-4 py-2 text-sm">
             {t("base.action.close")}
           </button>
         </div>
@@ -464,11 +464,11 @@ function PasswordDialog({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <Modal label={t("cp.action.change_password")}>
+    <Modal onClose={onClose} label={t("cp.action.change_password")}>
       <form onSubmit={submit} className="p-5 space-y-4">
-        <h2 className="text-lg font-semibold text-slate-900">{t("cp.action.change_password")}</h2>
+        <h2 className="text-lg font-semibold text-foreground">{t("cp.action.change_password")}</h2>
         {failure && (
-          <p className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+          <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
         )}
         {[
           { label: t("cp.field.current_password"), value: current, set: setCurrent, autoComplete: "current-password" },
@@ -476,25 +476,25 @@ function PasswordDialog({ onClose }: { onClose: () => void }) {
           { label: t("cp.field.repeat_password"), value: again, set: setAgain, autoComplete: "new-password" },
         ].map((field) => (
           <label key={field.label} className="block text-sm">
-            <span className="text-slate-600">{field.label}</span>
+            <span className="text-muted">{field.label}</span>
             <input
               type="password"
               required
               autoComplete={field.autoComplete}
               value={field.value}
               onChange={(event) => field.set(event.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+              className="mt-1 w-full rounded-lg border border-input px-3 py-2"
             />
           </label>
         ))}
         <div className="flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="rounded-lg border border-slate-300 px-4 py-2 text-sm">
+          <button type="button" onClick={onClose} className="rounded-lg border border-input px-4 py-2 text-sm">
             {t("cp.action.cancel")}
           </button>
           <button
             type="submit"
             disabled={busy}
-            className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-medium text-[var(--gerege-on-blue)] hover:brightness-105 disabled:opacity-60"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:brightness-105 disabled:opacity-60"
           >
             {t("base.action.save")}
           </button>
@@ -507,8 +507,8 @@ function PasswordDialog({ onClose }: { onClose: () => void }) {
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
-      <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{label}</p>
-      <p className="font-mono text-sm text-slate-900 break-all select-all">{value}</p>
+      <p className="text-xs font-semibold uppercase tracking-wider text-muted">{label}</p>
+      <p className="font-mono text-sm text-foreground break-all select-all">{value}</p>
     </div>
   );
 }

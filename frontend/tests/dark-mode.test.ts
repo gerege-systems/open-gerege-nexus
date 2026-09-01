@@ -25,7 +25,7 @@ const files = [...sources(join(root, "app")), ...sources(join(root, "components"
 /**
  * Үндсэн товч өөрийн бичгийн өнгийг accent-аас авна.
  *
- * `--gerege-blue` бол accent бөгөөд харанхуй горимын `neutral` — АНХДАГЧ accent —
+ * `--gerege-blue` бол accent (утилит нь `bg-accent`) бөгөөд харанхуй горимын `neutral` — АНХДАГЧ accent —
  * түүнийг цайвар саарал болгодог. `text-white`-ыг шууд бичсэн товч тэнд цагаан
  * дээр цагаан болж уншигдахаа больдог: «Хадгалах», «Шинэ flag», «Зарлал
  * нийтлэх» гурав нэг өдөр ийм байдлаар мэдээлэгдсэн.
@@ -39,13 +39,16 @@ test("үндсэн товч бичгийнхээ өнгийг accent-аас ав
     const source = readFileSync(file, "utf8");
     for (const match of source.matchAll(/className=[{"`]([^"`]+)/g)) {
       const classes = match[1];
-      if (!classes.includes("bg-[var(--gerege-blue)]")) continue;
+      // Утилитын нэр `bg-[var(--gerege-blue)]`-ээс `bg-accent` болов
+      // (tailwind.config.ts). Хуучин хэлбэрийг ч хэвээр шалгана — хаа нэгтээ
+      // буцаж орж ирвэл энэ тест түүнийг ч барих ёстой.
+      if (!classes.includes("bg-accent") && !classes.includes("bg-[var(--gerege-blue)]")) continue;
       if (/(?<![\w:-])text-white(?![\w-])/.test(classes)) {
         offenders.push(`${relative(root, file)}: ${classes.trim().slice(0, 70)}`);
       }
     }
   }
-  expect(offenders, "text-white-ийн оронд text-[var(--gerege-on-blue)]").toEqual([]);
+  expect(offenders, "text-white-ийн оронд text-on-accent").toEqual([]);
 });
 
 /**
@@ -69,7 +72,7 @@ test("text-white авч яваа хэсгийн гарчиг өнгөө өөрө
   //
   // Эцэг нь өнгөө зарласан газраас 400 тэмдэгтийн дотор — энэ кодын сангийн
   // толгойнууд нэг мөрөнд бичигддэг — өнгөгүй гарчиг байвал тэмдэглэнэ.
-  const statesColour = /text-(white|slate-[1-3]00|cyan-[1-3]00|indigo-[1-3]00|gray-[1-3]00|\[var\()/;
+  const statesColour = /text-(white|on-accent|foreground|muted|subtle|slate-[1-3]00|cyan-[1-3]00|indigo-[1-3]00|gray-[1-3]00|\[var\()/;
   const offenders: string[] = [];
 
   for (const file of files) {

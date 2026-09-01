@@ -18,7 +18,7 @@ import { cp, type ReportSchedule } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 
 export default function Schedules() {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const [schedules, setSchedules] = useState<ReportSchedule[]>([]);
   const [failure, setFailure] = useState("");
   const [busy, setBusy] = useState(false);
@@ -46,17 +46,17 @@ export default function Schedules() {
     <div className="space-y-6">
       <div className="flex items-start gap-3">
         <div className="flex-1">
-          <h1 className="text-2xl font-semibold text-slate-900 flex items-center gap-2">
-            <CalendarClock className="w-6 h-6 text-[var(--gerege-blue)]" />
+          <h1 className="text-2xl font-semibold text-foreground flex items-center gap-2">
+            <CalendarClock className="w-6 h-6 text-accent" />
             {t("cp.section.schedules")}
           </h1>
-          <p className="mt-1 text-sm text-slate-500">{t("cp.hint.schedules")}</p>
+          <p className="mt-1 text-sm text-muted">{t("cp.hint.schedules")}</p>
         </div>
         <button
           type="button"
           onClick={() => void load()}
           disabled={busy}
-          className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-lg border border-input px-3 py-2 text-sm text-foreground hover:bg-surface-hover disabled:opacity-50"
         >
           <RefreshCw className={`w-4 h-4 ${busy ? "animate-spin" : ""}`} />
           {t("cp.action.refresh")}
@@ -64,7 +64,7 @@ export default function Schedules() {
       </div>
 
       {failure && (
-        <p className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+        <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
       )}
 
       {(failing > 0 || never > 0) && (
@@ -87,17 +87,17 @@ export default function Schedules() {
             <Link
               key="t"
               href={`/cp/tenants/${schedule.tenant_id}`}
-              className="font-medium text-[var(--gerege-blue)] hover:underline"
+              className="font-medium text-accent hover:underline"
             >
               {schedule.tenant_name || t("cp.state.deleted")}
             </Link>,
             <span key="r" className="min-w-0">
-              <strong className="text-slate-900">{schedule.name || schedule.report_key}</strong>
-              <span className="block text-xs text-slate-500 font-mono">{schedule.report_key} · {schedule.format}</span>
+              <strong className="text-foreground">{schedule.name || schedule.report_key}</strong>
+              <span className="block text-xs text-muted font-mono">{schedule.report_key} · {schedule.format}</span>
             </span>,
             <span key="c" className="font-mono text-xs">{schedule.cron}</span>,
-            <span key="p" className="text-xs text-slate-500">{schedule.recipients.join(", ") || "—"}</span>,
-            formatMoment(schedule.last_run_at, locale) || <span key="n" className="text-xs text-slate-400">{t("cp.state.never")}</span>,
+            <span key="p" className="text-xs text-muted">{schedule.recipients.join(", ") || "—"}</span>,
+            formatMoment(schedule.last_run_at) || <span key="n" className="text-xs text-muted">{t("cp.state.never")}</span>,
             <Badge
               key="s"
               tone={!schedule.active ? "slate" : !schedule.last_run_at ? "amber" : schedule.last_status === "" || schedule.last_status === "ok" ? "emerald" : "red"}

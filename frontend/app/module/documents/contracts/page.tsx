@@ -88,42 +88,42 @@ export default function ContractsPage() {
             <tr
               key={row.id}
               onClick={() => router.push(`/module/documents/contracts/${row.id}`)}
-              className="cursor-pointer hover:bg-slate-50"
+              className="cursor-pointer hover:bg-surface-hover"
             >
               <td className="px-4 py-3">
-                <div className="font-semibold text-slate-800">{row.title}</div>
-                {row.contract_number && <div className="text-[11px] text-slate-400">№ {row.contract_number}</div>}
+                <div className="font-semibold text-foreground">{row.title}</div>
+                {row.contract_number && <div className="text-[11px] text-muted">№ {row.contract_number}</div>}
               </td>
               <td className="px-4 py-3">{row.counterparties || "—"}</td>
               <td className="px-4 py-3"><ContractBadge state={row.contract_state} /></td>
               <td className="px-4 py-3 font-mono">{row.signed_count} / {row.required_count}</td>
               <td className="px-4 py-3">{fmtMoney(row.amount, row.currency)}</td>
-              <td className="px-4 py-3 text-slate-400">{fmtDate(row.sent_at || row.created_at)}</td>
+              <td className="px-4 py-3 text-muted">{fmtDate(row.sent_at || row.created_at)}</td>
             </tr>
           ))}
         </TableCard>
       )}
 
       {creating && (
-        <Modal label={t("contracts.view.new")}>
+        <Modal onClose={() => setCreating(false)} label={t("contracts.view.new")}>
           <form onSubmit={create} className="space-y-4">
-            <h2 className="text-lg font-bold text-slate-900">{t("contracts.view.new")}</h2>
+            <h2 className="text-lg font-semibold text-foreground">{t("contracts.view.new")}</h2>
             <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1">{t("contracts.field.title")}</label>
+              <label className="block text-xs font-medium text-muted mb-1">{t("contracts.field.title")}</label>
               <input
                 autoFocus
                 className={fieldClass}
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
               />
-              <p className="text-[11px] text-slate-400 mt-1">{t("contracts.field.title_hint")}</p>
+              <p className="text-[11px] text-muted mt-1">{t("contracts.field.title_hint")}</p>
             </div>
             {error && <Banner tone="error" message={error} />}
             <div className="flex justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setCreating(false)}
-                className="text-sm font-medium text-slate-500 px-4 py-2 rounded-lg hover:bg-slate-100"
+                className="text-sm font-medium text-muted px-4 py-2 rounded-lg hover:bg-surface-hover"
               >
                 {t("contracts.action.cancel")}
               </button>

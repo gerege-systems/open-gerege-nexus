@@ -14,6 +14,7 @@ import { KeySquare } from "lucide-react";
 import { api, type SigningKey } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { Chip, CopyButton, Empty, ErrorNote, Loading, Panel, Screen, useCopy } from "../shared";
+import { formatMoment } from "@/lib/datetime";
 
 export default function SigningKeysPage() {
   const { t } = useI18n();
@@ -45,12 +46,12 @@ export default function SigningKeysPage() {
     >
       {error && <ErrorNote>{error}</ErrorNote>}
 
-      <Panel className="p-4 bg-slate-50">
-        <p className="text-xs text-slate-600 leading-relaxed">{t("sso_clients.signing.explainer")}</p>
+      <Panel className="p-4 bg-surface-2">
+        <p className="text-xs text-muted leading-relaxed">{t("sso_clients.signing.explainer")}</p>
         {jwksURI && (
-          <div className="flex items-center gap-2 mt-3 bg-white border border-slate-200 rounded-lg px-3 py-2">
-            <span className="text-[11px] font-semibold text-slate-500 shrink-0">jwks_uri</span>
-            <code className="text-xs font-mono text-slate-700 break-all flex-1">{jwksURI}</code>
+          <div className="flex items-center gap-2 mt-3 bg-surface border border-line rounded-lg px-3 py-2">
+            <span className="text-[11px] font-semibold text-muted shrink-0">jwks_uri</span>
+            <code className="text-xs font-mono text-foreground break-all flex-1">{jwksURI}</code>
             <CopyButton value={jwksURI} id="jwks" copied={copied} onCopy={copy} />
           </div>
         )}
@@ -66,7 +67,7 @@ export default function SigningKeysPage() {
             <Panel key={key.kid} className={`p-4 ${key.active ? "border-emerald-200" : ""}`}>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">
-                  <code className="text-sm font-mono font-bold text-slate-900 break-all">{key.kid}</code>
+                  <code className="text-sm font-mono font-semibold text-foreground break-all">{key.kid}</code>
                   <CopyButton value={key.kid} id={key.kid} copied={copied} onCopy={copy} />
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -76,13 +77,13 @@ export default function SigningKeysPage() {
                     : <Chip tone="slate">{t("sso_clients.signing.retired")}</Chip>}
                 </div>
               </div>
-              <p className="text-[11px] text-slate-400 mt-2">
-                {t("sso_clients.field.created")}: {new Date(key.created_at).toLocaleString()}
-                {key.retired_at && ` · ${new Date(key.retired_at).toLocaleString()}`}
+              <p className="text-[11px] text-muted mt-2">
+                {t("sso_clients.field.created")}: {formatMoment(key.created_at)}
+                {key.retired_at && ` · ${formatMoment(key.retired_at)}`}
               </p>
             </Panel>
           ))}
-          <p className="text-[11px] text-slate-400">{t("sso_clients.signing.retired_note")}</p>
+          <p className="text-[11px] text-muted">{t("sso_clients.signing.retired_note")}</p>
         </div>
       )}
     </Screen>

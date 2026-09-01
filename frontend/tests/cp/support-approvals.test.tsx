@@ -24,6 +24,8 @@ const api = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/i18n", () => import("../helpers/i18n"));
+// Эдгээр дэлгэц хайлт, шүүлтүүрээ хаягтаа хадгалдаг тул router хэрэгтэй.
+vi.mock("next/navigation", () => import("../helpers/navigation"));
 vi.mock("@/lib/cp", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/cp")>()),
   cp: api,

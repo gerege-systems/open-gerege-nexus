@@ -29,8 +29,8 @@ export default function KioskResourcePage() {
       <div className="w-full min-h-[calc(100vh-12rem)] grid place-items-center">
         <div className="text-center">
           <FileQuestion className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-          <p className="text-slate-600 font-medium">{t("kiosk.message.unknown_screen")}</p>
-          <p className="text-sm text-slate-400 mt-1">{params.resource}</p>
+          <p className="text-muted font-medium">{t("kiosk.message.unknown_screen")}</p>
+          <p className="text-sm text-muted mt-1">{params.resource}</p>
         </div>
       </div>
     );

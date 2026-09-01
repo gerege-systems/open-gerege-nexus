@@ -17,15 +17,21 @@ import Link from "next/link";
 import { Badge, Card, formatMoment, Table } from "@/components/cp/ui";
 import { cp, type Roster } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
+import { useUrlState } from "@/lib/urlState";
 
 const FILTERS = ["", "verified", "locked", "homeless"] as const;
 
 export default function People() {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const [roster, setRoster] = useState<Roster | null>(null);
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<string>("");
-  const [offset, setOffset] = useState(0);
+  // Хайлт, шүүлтүүр, байрлал гурвуулаа хаягт: refresh хийхэд алдагдахгүй,
+  // back нь шүүлтүүрийг буцаана, линк нь ижил жагсаалт нээнэ.
+  const [urlState, setUrlState] = useUrlState({ q: "", filter: "", offset: "0" });
+  const [search, setSearch] = useState(urlState.q);
+  const filter = urlState.filter;
+  const setFilter = (which: string) => setUrlState({ filter: which, offset: "0" });
+  const offset = Number(urlState.offset) || 0;
+  const setOffset = (from: number) => setUrlState({ offset: String(from) });
   const [failure, setFailure] = useState("");
 
   const load = useCallback(async (query: string, which: string, from: number) => {
@@ -38,23 +44,28 @@ export default function People() {
   }, []);
 
   useEffect(() => {
-    void load(search, filter, offset);
-  }, [load, search, filter, offset]);
+    // Бичихэд хайлт нь 250ms хүлээнэ — үсэг бүрт нэг хүсэлт биш.
+    const timer = setTimeout(() => {
+      setUrlState({ q: search });
+      void load(search, filter, offset);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [load, search, filter, offset, setUrlState]);
 
   const people = roster?.people ?? [];
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-slate-900 flex items-center gap-2">
-          <Users className="w-6 h-6 text-[var(--gerege-blue)]" />
+        <h1 className="text-2xl font-semibold text-foreground flex items-center gap-2">
+          <Users className="w-6 h-6 text-accent" />
           {t("cp.section.people")}
         </h1>
-        <p className="mt-1 text-sm text-slate-500">{t("cp.hint.people")}</p>
+        <p className="mt-1 text-sm text-muted">{t("cp.hint.people")}</p>
       </div>
 
       {failure && (
-        <p className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+        <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -72,7 +83,7 @@ export default function People() {
             setSearch(event.target.value);
           }}
           placeholder={t("cp.field.search_people")}
-          className="flex-1 min-w-56 rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          className="flex-1 min-w-56 rounded-lg border border-input px-3 py-2 text-sm"
         />
         {FILTERS.map((option) => (
           <button
@@ -84,8 +95,8 @@ export default function People() {
             }}
             className={`rounded-lg border px-3 py-2 text-sm ${
               filter === option
-                ? "border-[var(--gerege-blue)] bg-[var(--gerege-blue-soft)] text-[var(--gerege-blue)]"
-                : "border-slate-300 text-slate-600 hover:bg-slate-50"
+                ? "border-accent bg-accent-soft text-accent"
+                : "border-input text-muted hover:bg-surface-hover"
             }`}
           >
             {t(`cp.filter.${option || "everybody"}` as "cp.filter.everybody")}
@@ -104,10 +115,10 @@ export default function People() {
           ]}
           rows={people.map((person) => [
             <span key="n" className="min-w-0">
-              <Link href={`/cp/people/${person.id}`} className="font-medium text-[var(--gerege-blue)] hover:underline">
+              <Link href={`/cp/people/${person.id}`} className="font-medium text-accent hover:underline">
                 {person.name || person.email}
               </Link>
-              <span className="block text-xs text-slate-500 font-mono truncate">{person.email}</span>
+              <span className="block text-xs text-muted font-mono truncate">{person.email}</span>
               {!person.active && <Badge tone="slate">{t("cp.state.disabled")}</Badge>}
               {person.locked_until && <Badge tone="red">{t("cp.state.locked")}</Badge>}
             </span>,
@@ -115,28 +126,28 @@ export default function People() {
               {person.verified && <Badge tone="emerald">eID</Badge>}
               {person.providers > 0 && <Badge tone="slate">SSO × {person.providers}</Badge>}
               {!person.verified && person.providers === 0 && (
-                <span className="text-xs text-slate-400">{t("cp.state.password_only")}</span>
+                <span className="text-xs text-muted">{t("cp.state.password_only")}</span>
               )}
             </span>,
             <span key="o" className="tabular-nums">
               {person.organisations || <span className="text-amber-700">0</span>}
             </span>,
             <span key="s" className="tabular-nums">{person.sessions}</span>,
-            formatMoment(person.last_seen_at, locale) || <span key="l" className="text-xs text-slate-400">{t("cp.state.never")}</span>,
+            formatMoment(person.last_seen_at) || <span key="l" className="text-xs text-muted">{t("cp.state.never")}</span>,
           ])}
           empty={t("cp.message.no_people")}
         />
       </Card>
 
       {roster && roster.total > people.length && (
-        <div className="flex items-center justify-between text-sm text-slate-500">
+        <div className="flex items-center justify-between text-sm text-muted">
           <span>{t("cp.message.showing", { shown: String(people.length), total: String(roster.total) })}</span>
           <span className="flex gap-2">
             <button
               type="button"
               disabled={offset === 0}
               onClick={() => setOffset(Math.max(0, offset - 100))}
-              className="rounded-lg border border-slate-300 px-3 py-1.5 disabled:opacity-40"
+              className="rounded-lg border border-input px-3 py-1.5 disabled:opacity-40"
             >
               {t("cp.action.previous")}
             </button>
@@ -144,7 +155,7 @@ export default function People() {
               type="button"
               disabled={people.length < 100}
               onClick={() => setOffset(offset + 100)}
-              className="rounded-lg border border-slate-300 px-3 py-1.5 disabled:opacity-40"
+              className="rounded-lg border border-input px-3 py-1.5 disabled:opacity-40"
             >
               {t("cp.action.next")}
             </button>
@@ -157,10 +168,10 @@ export default function People() {
 
 function Stat({ label, value, hint }: { label: string; value?: number; hint?: string }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
-      <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{label}</p>
-      <p className="mt-1 text-2xl font-semibold text-slate-900">{value ?? "—"}</p>
-      {hint && <p className="text-xs text-slate-500">{hint}</p>}
+    <div className="rounded-xl border border-line bg-surface p-4">
+      <p className="text-xs font-semibold uppercase tracking-wider text-muted">{label}</p>
+      <p className="mt-1 text-2xl font-semibold text-foreground">{value ?? "—"}</p>
+      {hint && <p className="text-xs text-muted">{hint}</p>}
     </div>
   );
 }

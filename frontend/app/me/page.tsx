@@ -6,6 +6,7 @@ import { Inbox, Search, Send } from "lucide-react";
 import { api } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { Banner, EmptyState, fieldClass, Loading, PageHeader, TableCard, tableHeadClass } from "@/components/ui";
+import { formatDay } from "@/lib/datetime";
 
 /**
  * Юу гуйсан, хаана явна.
@@ -41,7 +42,7 @@ type Item = {
 
 function when(iso: string) {
   const at = new Date(iso);
-  return Number.isNaN(at.getTime()) ? "—" : at.toLocaleDateString();
+  return Number.isNaN(at.getTime()) ? "—" : formatDay(at);
 }
 
 export default function MyRequestsPage() {
@@ -66,7 +67,7 @@ export default function MyRequestsPage() {
   return (
     <main className="p-6 space-y-6">
       <PageHeader
-        icon={<Inbox className="w-6 h-6 text-[var(--gerege-blue)]" />}
+        icon={<Inbox className="w-6 h-6 text-accent" />}
         title={t("me.view.requests_title")}
         subtitle={t("me.view.requests_subtitle")}
       />
@@ -81,7 +82,7 @@ export default function MyRequestsPage() {
         // гаргаагүй хүн хоосон жагсаалттай байх ёстой бөгөөд суулгац
         // нийтэлдэг модульгүй бол бас хоосон. Хоёрын аль нь ч гэдгийг энэ
         // дэлгэц ялгаж мэдэхгүй тул амласан зүйлээ болиулж хэлэхгүй.
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
+        <div className="bg-surface rounded-xl border border-line">
           <EmptyState message={t("me.message.no_requests")} />
         </div>
       )}
@@ -99,8 +100,8 @@ export default function MyRequestsPage() {
           }
         >
           {items.map((item) => (
-            <tr key={item.id} className="hover:bg-[var(--gerege-surface-2)]">
-              <td className="px-4 py-2 font-medium text-slate-900">{item.code}</td>
+            <tr key={item.id} className="hover:bg-surface-2">
+              <td className="px-4 py-2 font-medium text-foreground">{item.code}</td>
               {/* Хоосон байж болно: хэн ч аваагүй хүсэлт хаана ч заахгүй. */}
               <td className="px-4 py-2">{item.provider || "—"}</td>
               <td className="px-4 py-2">{item.status}</td>
@@ -172,10 +173,10 @@ function AskToJoin({ onAsked }: { onAsked: () => void }) {
   }
 
   return (
-    <form onSubmit={submit} className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-3">
+    <form onSubmit={submit} className="bg-surface rounded-xl border border-line p-4 space-y-3">
       <div>
-        <h2 className="text-sm font-bold text-slate-900">{t("me.view.ask_title")}</h2>
-        <p className="text-xs text-slate-500 mt-0.5">{t("me.view.ask_subtitle")}</p>
+        <h2 className="text-sm font-semibold text-foreground">{t("me.view.ask_title")}</h2>
+        <p className="text-xs text-muted mt-0.5">{t("me.view.ask_subtitle")}</p>
       </div>
 
       {/* Шилжих товч нь чимэглэл биш: хүн энэ агшинд гишүүн болсон бөгөөд
@@ -183,13 +184,13 @@ function AskToJoin({ onAsked }: { onAsked: () => void }) {
           мужийн жагсаалтыг ачаалах үедээ уншсан тул хуудсыг дахин ачаалж
           байж шинэ бичлэг харагдана. */}
       {joined && (
-        <div className="rounded-lg border border-[var(--gerege-blue)] bg-[var(--gerege-blue-soft)] px-3 py-2.5 flex items-center gap-3">
-          <p className="flex-1 text-sm text-[var(--gerege-blue-text)]">
+        <div className="rounded-lg border border-accent bg-accent-soft px-3 py-2.5 flex items-center gap-3">
+          <p className="flex-1 text-sm text-accent">
             {t("me.message.joined", { name: joined.name })}
           </p>
           <button
             type="button"
-            className="rounded-lg bg-[var(--gerege-blue)] px-3 py-1.5 text-xs font-semibold text-[var(--gerege-on-blue)]"
+            className="rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-on-accent"
             onClick={() => {
               void api.switchTenant(joined.id).then(() => window.location.assign("/"));
             }}
@@ -215,7 +216,7 @@ function AskToJoin({ onAsked }: { onAsked: () => void }) {
         />
         <button
           disabled={busy || slug.trim() === ""}
-          className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-semibold text-[var(--gerege-on-blue)] disabled:opacity-50"
+          className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-on-accent disabled:opacity-50"
         >
           <Send className="inline w-4 h-4 mr-1" />
           {t("me.action.ask")}
@@ -225,8 +226,8 @@ function AskToJoin({ onAsked }: { onAsked: () => void }) {
 
       {/* Хэнд хандахаа мэдэхгүй хүнд зориулсан хайлт. Тусдаа form: Enter
           дарахад хайх ёстой болохоос хүсэлт илгээх ёсгүй. */}
-      <div className="border-t border-slate-100 pt-3">
-        <p className="text-xs text-slate-500 mb-2">{t("me.view.lookup_hint")}</p>
+      <div className="border-t border-line pt-3">
+        <p className="text-xs text-muted mb-2">{t("me.view.lookup_hint")}</p>
         <div className="flex gap-2">
           <input
             value={lookingFor}
@@ -235,24 +236,24 @@ function AskToJoin({ onAsked }: { onAsked: () => void }) {
             placeholder={t("me.field.lookup_placeholder")}
             className={`${fieldClass} flex-1`}
           />
-          <button type="button" onClick={(e) => void search(e)} className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-600">
+          <button type="button" onClick={(e) => void search(e)} className="rounded-lg border border-line px-3 py-2 text-sm font-semibold text-muted">
             <Search className="inline w-4 h-4 mr-1" />
             {t("me.action.lookup")}
           </button>
         </div>
-        {found?.length === 0 && <p className="mt-2 text-xs text-slate-500 italic">{t("me.message.no_providers")}</p>}
+        {found?.length === 0 && <p className="mt-2 text-xs text-muted italic">{t("me.message.no_providers")}</p>}
         {found && found.length > 0 && (
-          <ul className="mt-2 divide-y divide-slate-100 rounded-lg border border-slate-200">
+          <ul className="mt-2 divide-y divide-line rounded-lg border border-line">
             {found.map((one) => (
               <li key={one.slug + one.code} className="flex items-center justify-between gap-3 px-3 py-2">
                 <span className="min-w-0">
                   <strong className="block text-sm truncate">{one.name}</strong>
-                  <small className="text-xs text-slate-500">{one.title || one.code}</small>
+                  <small className="text-xs text-muted">{one.title || one.code}</small>
                 </span>
                 <button
                   type="button"
                   onClick={() => { setSlug(one.slug); setFound(null); }}
-                  className="shrink-0 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-[var(--gerege-blue)]"
+                  className="shrink-0 rounded-lg border border-line px-3 py-1.5 text-xs font-semibold text-accent"
                 >
                   {t("me.action.choose")}
                 </button>

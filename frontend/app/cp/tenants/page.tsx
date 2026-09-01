@@ -18,12 +18,17 @@ import { formatMoment } from "@/components/cp/ui";
 import { cp, type DirectoryOrganisation, type TenantSummary, type VerifiedPerson } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 import { Modal } from "@/components/ui";
+import { useUrlState } from "@/lib/urlState";
 
 export default function Tenants() {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const { operator } = useConsole();
   const [creating, setCreating] = useState(false);
-  const [search, setSearch] = useState("");
+  // Хайлт нь хаягт үлдэнэ: refresh, back, линк хуваалцах гурвуулаа ажиллана.
+  // Бичихэд шууд хариу өгөхийн тулд талбар нь локал төлөвтэй, хаяг руу нь
+  // ачаалалттай хамт debounce-оор бичигдэнэ.
+  const [urlState, setUrlState] = useUrlState({ q: "" });
+  const [search, setSearch] = useState(urlState.q);
   const [tenants, setTenants] = useState<TenantSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [failure, setFailure] = useState("");
@@ -44,22 +49,25 @@ export default function Tenants() {
   useEffect(() => {
     // Debounced, so typing a registration number is one query rather than
     // eleven.
-    const timer = setTimeout(() => void load(search), 250);
+    const timer = setTimeout(() => {
+      setUrlState({ q: search });
+      void load(search);
+    }, 250);
     return () => clearTimeout(timer);
-  }, [search, load]);
+  }, [search, load, setUrlState]);
 
   return (
     <div className="space-y-6">
       <div className="flex items-start gap-3">
         <div className="flex-1">
-          <h1 className="text-2xl font-semibold text-slate-900">{t("cp.section.tenants")}</h1>
-          <p className="mt-1 text-sm text-slate-500">{t("cp.view.subtitle")}</p>
+          <h1 className="text-2xl font-semibold text-foreground">{t("cp.section.tenants")}</h1>
+          <p className="mt-1 text-sm text-muted">{t("cp.view.subtitle")}</p>
         </div>
         {(operator.role === "superadmin" || operator.role === "operator") && (
           <button
             type="button"
             onClick={() => setCreating(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-[var(--gerege-blue)] px-3 py-2 text-sm font-medium text-[var(--gerege-on-blue)] hover:brightness-105"
+            className="inline-flex items-center gap-2 rounded-lg bg-accent px-3 py-2 text-sm font-medium text-on-accent hover:brightness-105"
           >
             <Plus className="w-4 h-4" />
             {t("cp.action.new_tenant")}
@@ -72,25 +80,25 @@ export default function Tenants() {
       </p>
 
       <div className="relative">
-        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
         <input
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder={t("cp.field.search")}
-          className="w-full rounded-xl border border-slate-300 bg-white pl-9 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+          className="w-full rounded-xl border border-input bg-surface pl-9 pr-3 py-2.5"
         />
       </div>
 
       {failure && (
-        <p className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">
+        <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">
           {t("cp.message.load_failed")}
         </p>
       )}
 
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-surface rounded-xl border border-line overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-slate-600">
+            <thead className="bg-surface-2 text-muted">
               <tr>
                 <th className="text-left font-medium px-4 py-3">{t("cp.field.organisation")}</th>
                 <th className="text-left font-medium px-4 py-3">{t("cp.field.registration")}</th>
@@ -100,24 +108,24 @@ export default function Tenants() {
                 <th className="text-left font-medium px-4 py-3">{t("cp.field.state")}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-line">
               {tenants.map((tenant) => (
-                <tr key={tenant.id} className="hover:bg-slate-50">
+                <tr key={tenant.id} className="hover:bg-surface-hover">
                   <td className="px-4 py-3">
                     <Link
                       href={`/cp/tenants/${tenant.id}`}
-                      className="flex items-center gap-2 font-medium text-slate-900 hover:underline"
+                      className="flex items-center gap-2 font-medium text-foreground hover:underline"
                     >
-                      <Building2 className="w-4 h-4 text-slate-400" />
+                      <Building2 className="w-4 h-4 text-muted" />
                       {tenant.name}
                     </Link>
-                    <span className="text-xs text-slate-400">{tenant.slug}</span>
+                    <span className="text-xs text-muted">{tenant.slug}</span>
                   </td>
-                  <td className="px-4 py-3 text-slate-600">{tenant.registration_number || "—"}</td>
+                  <td className="px-4 py-3 text-muted">{tenant.registration_number || "—"}</td>
                   <td className="px-4 py-3 text-right tabular-nums">{tenant.user_count}</td>
                   <td className="px-4 py-3 text-right tabular-nums">{tenant.app_count}</td>
-                  <td className="px-4 py-3 text-slate-600">
-                    {formatMoment(tenant.last_activity_at, locale) || t("cp.message.never")}
+                  <td className="px-4 py-3 text-muted">
+                    {formatMoment(tenant.last_activity_at) || t("cp.message.never")}
                   </td>
                   <td className="px-4 py-3">
                     {tenant.deletion_scheduled_at ? (
@@ -138,7 +146,7 @@ export default function Tenants() {
               ))}
               {!loading && tenants.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-slate-500">
+                  <td colSpan={6} className="px-4 py-10 text-center text-muted">
                     {t("cp.message.no_tenants")}
                   </td>
                 </tr>
@@ -181,7 +189,7 @@ export default function Tenants() {
  * somebody typed.
  */
 function NewTenantDialog({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [registration, setRegistration] = useState("");
@@ -275,12 +283,12 @@ function NewTenantDialog({ onClose, onCreated }: { onClose: () => void; onCreate
   }
 
   return (
-    <Modal label={t("cp.action.new_tenant")}>
+    <Modal onClose={onClose} label={t("cp.action.new_tenant")}>
       <form onSubmit={submit} className="p-5 space-y-4">
-        <h2 className="text-lg font-semibold text-slate-900">{t("cp.action.new_tenant")}</h2>
+        <h2 className="text-lg font-semibold text-foreground">{t("cp.action.new_tenant")}</h2>
 
         {failure && (
-          <p className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+          <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
         )}
         {notice && (
           <div className="space-y-2">
@@ -290,7 +298,7 @@ function NewTenantDialog({ onClose, onCreated }: { onClose: () => void; onCreate
             <button
               type="button"
               onClick={onCreated}
-              className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-medium text-[var(--gerege-on-blue)] hover:brightness-105"
+              className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:brightness-105"
             >
               {t("cp.action.back")}
             </button>
@@ -309,14 +317,14 @@ function NewTenantDialog({ onClose, onCreated }: { onClose: () => void; onCreate
                 type="button"
                 onClick={() => void lookUp()}
                 disabled={looking || !registration.trim()}
-                className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-lg border border-input px-3 py-2 text-sm text-foreground hover:bg-surface-hover disabled:opacity-50"
               >
                 <Search className={`w-4 h-4 ${looking ? "animate-pulse" : ""}`} />
                 {t("cp.action.look_up")}
               </button>
             </div>
             {found && (
-              <p className="text-xs rounded-lg bg-[var(--gerege-blue-soft)] text-[var(--gerege-blue)] px-3 py-2">
+              <p className="text-xs rounded-lg bg-accent-soft text-accent px-3 py-2">
                 {t("cp.message.from_the_register", { name: found.legal_name || found.name })}
                 {found.address ? ` · ${found.address}` : ""}
               </p>
@@ -329,13 +337,13 @@ function NewTenantDialog({ onClose, onCreated }: { onClose: () => void; onCreate
 
             {/* The first administrator, chosen rather than typed. */}
             <div className="space-y-2">
-              <p className="text-sm font-medium text-slate-700">{t("cp.field.admin")}</p>
-              <p className="text-xs text-slate-500">{t("cp.hint.admin_is_chosen")}</p>
+              <p className="text-sm font-medium text-foreground">{t("cp.field.admin")}</p>
+              <p className="text-xs text-muted">{t("cp.hint.admin_is_chosen")}</p>
               {admin ? (
-                <div className="flex items-center gap-3 rounded-lg border border-[var(--gerege-blue)] bg-[var(--gerege-blue-soft)] px-3 py-2">
+                <div className="flex items-center gap-3 rounded-lg border border-accent bg-accent-soft px-3 py-2">
                   <span className="min-w-0 flex-1">
-                    <strong className="block text-sm text-slate-900 truncate">{admin.name}</strong>
-                    <span className="block text-xs text-slate-600 truncate">
+                    <strong className="block text-sm text-foreground truncate">{admin.name}</strong>
+                    <span className="block text-xs text-muted truncate">
                       {admin.email}
                       {admin.reg_number ? ` · ${admin.reg_number}` : ""}
                     </span>
@@ -343,7 +351,7 @@ function NewTenantDialog({ onClose, onCreated }: { onClose: () => void; onCreate
                   <button
                     type="button"
                     onClick={() => setAdmin(null)}
-                    className="text-xs rounded-lg border border-slate-300 bg-white px-2 py-1 hover:bg-slate-50"
+                    className="text-xs rounded-lg border border-input bg-surface px-2 py-1 hover:bg-surface-hover"
                   >
                     {t("cp.action.change")}
                   </button>
@@ -357,29 +365,29 @@ function NewTenantDialog({ onClose, onCreated }: { onClose: () => void; onCreate
                       void loadPeople(event.target.value);
                     }}
                     placeholder={t("cp.field.search_people")}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-input px-3 py-2 text-sm"
                   />
-                  <div className="max-h-48 overflow-y-auto divide-y divide-slate-100 rounded-lg border border-slate-200">
+                  <div className="max-h-48 overflow-y-auto divide-y divide-line rounded-lg border border-line">
                     {people.map((person) => (
                       <button
                         key={person.user_id}
                         type="button"
                         onClick={() => setAdmin(person)}
-                        className="w-full text-left px-3 py-2 hover:bg-slate-50"
+                        className="w-full text-left px-3 py-2 hover:bg-surface-hover"
                       >
-                        <strong className="block text-sm text-slate-900 truncate">{person.name}</strong>
-                        <span className="block text-xs text-slate-500 truncate">
+                        <strong className="block text-sm text-foreground truncate">{person.name}</strong>
+                        <span className="block text-xs text-muted truncate">
                           {person.email}
                           {person.reg_number ? ` · ${person.reg_number}` : ""}
                           {" · "}
                           {t("cp.message.already_in", { count: String(person.organisations) })}
                           {" · "}
-                          {formatMoment(person.last_seen_at, locale)}
+                          {formatMoment(person.last_seen_at)}
                         </span>
                       </button>
                     ))}
                     {people.length === 0 && (
-                      <p className="px-3 py-3 text-sm text-slate-500">{t("cp.message.no_verified_people")}</p>
+                      <p className="px-3 py-3 text-sm text-muted">{t("cp.message.no_verified_people")}</p>
                     )}
                   </div>
                 </div>
@@ -389,14 +397,14 @@ function NewTenantDialog({ onClose, onCreated }: { onClose: () => void; onCreate
             <TextField label={t("cp.field.reason")} value={reason} onChange={setReason} required />
 
             <div className="flex justify-end gap-2">
-              <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-100">
+              <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-muted hover:bg-surface-hover">
                 {t("cp.action.cancel")}
               </button>
               <button
                 type="submit"
                 disabled={busy || !admin}
                 title={admin ? undefined : t("cp.hint.admin_is_chosen")}
-                className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-medium text-[var(--gerege-on-blue)] hover:brightness-105 disabled:opacity-60"
+                className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:brightness-105 disabled:opacity-60"
               >
                 {t("cp.action.create")}
               </button>
@@ -423,13 +431,13 @@ function TextField({
 }) {
   return (
     <label className="block text-sm">
-      <span className="text-slate-600">{label}</span>
+      <span className="text-muted">{label}</span>
       <input
         type={type}
         required={required}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+        className="mt-1 w-full rounded-lg border border-input px-3 py-2"
       />
     </label>
   );

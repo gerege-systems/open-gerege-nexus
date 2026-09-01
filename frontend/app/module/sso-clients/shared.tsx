@@ -25,18 +25,18 @@ export function SecretDialog({ clientID, secret, onClose }: {
   return (
     <Modal onClose={onClose}>
       <div className="space-y-4">
-        <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+        <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
           <KeyRound className="w-5 h-5 text-amber-600" />
           {t("sso_clients.message.secret_once_title")}
         </h2>
-        <p className="text-sm text-slate-600">{t("sso_clients.message.secret_once_body")}</p>
+        <p className="text-sm text-muted">{t("sso_clients.message.secret_once_body")}</p>
         {[["client_id", clientID], ["client_secret", secret]].map(([label, value], index) => (
           <div
             key={label}
-            className={`flex items-center gap-2 p-3 rounded-lg border ${index === 1 ? "bg-amber-50 border-amber-200" : "bg-slate-50 border-slate-200"}`}
+            className={`flex items-center gap-2 p-3 rounded-lg border ${index === 1 ? "bg-amber-50 border-amber-200" : "bg-surface-2 border-line"}`}
           >
-            <span className="text-[11px] font-semibold text-slate-500 w-24 shrink-0">{label}</span>
-            <code className="text-xs font-mono text-slate-900 break-all flex-1">{value}</code>
+            <span className="text-[11px] font-semibold text-muted w-24 shrink-0">{label}</span>
+            <code className="text-xs font-mono text-foreground break-all flex-1">{value}</code>
             <CopyButton value={value} id={label} copied={copied} onCopy={copy} />
           </div>
         ))}

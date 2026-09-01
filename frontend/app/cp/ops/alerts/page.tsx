@@ -17,7 +17,7 @@ import { cp, type Overview } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 
 export default function Alerts() {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const [health, setHealth] = useState<Overview | null>(null);
   const [failure, setFailure] = useState("");
   const [busy, setBusy] = useState(false);
@@ -45,17 +45,17 @@ export default function Alerts() {
     <div className="space-y-6">
       <div className="flex items-start gap-3">
         <div className="flex-1">
-          <h1 className="text-2xl font-semibold text-slate-900 flex items-center gap-2">
-            <BellRing className="w-6 h-6 text-[var(--gerege-blue)]" />
+          <h1 className="text-2xl font-semibold text-foreground flex items-center gap-2">
+            <BellRing className="w-6 h-6 text-accent" />
             {t("cp.section.alerts")}
           </h1>
-          <p className="mt-1 text-sm text-slate-500">{t("cp.hint.alerts")}</p>
+          <p className="mt-1 text-sm text-muted">{t("cp.hint.alerts")}</p>
         </div>
         <button
           type="button"
           onClick={() => void load()}
           disabled={busy}
-          className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-lg border border-input px-3 py-2 text-sm text-foreground hover:bg-surface-hover disabled:opacity-50"
         >
           <RefreshCw className={`w-4 h-4 ${busy ? "animate-spin" : ""}`} />
           {t("cp.action.refresh")}
@@ -63,7 +63,7 @@ export default function Alerts() {
       </div>
 
       {failure && (
-        <p className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+        <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
       )}
 
       <Card title={t("cp.section.firing")}>
@@ -71,29 +71,29 @@ export default function Alerts() {
           head={[t("cp.field.alert"), t("cp.field.severity"), t("cp.field.since"), ""]}
           rows={alerts.map((alert) => [
             <span key="n" className="min-w-0">
-              <strong className="text-slate-900 flex items-center gap-1.5">
+              <strong className="text-foreground flex items-center gap-1.5">
                 {alert.name}
-                {alert.silenced && <VolumeX className="w-3.5 h-3.5 text-slate-400" aria-label={t("cp.state.silenced")} />}
+                {alert.silenced && <VolumeX className="w-3.5 h-3.5 text-muted" aria-label={t("cp.state.silenced")} />}
               </strong>
-              {alert.summary && <span className="block text-xs text-slate-500">{alert.summary}</span>}
+              {alert.summary && <span className="block text-xs text-muted">{alert.summary}</span>}
             </span>,
             <Badge key="s" tone={alert.severity === "critical" ? "red" : alert.severity === "warning" ? "amber" : "slate"}>
               {alert.severity || "—"}
             </Badge>,
-            formatMoment(alert.starts_at, locale),
+            formatMoment(alert.starts_at),
             alert.runbook ? (
               <a
                 key="r"
                 href={alert.runbook}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-xs text-[var(--gerege-blue)] hover:underline"
+                className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
               >
                 {t("cp.action.runbook")}
                 <ExternalLink className="w-3 h-3" />
               </a>
             ) : (
-              <span key="r" className="text-xs text-slate-400">—</span>
+              <span key="r" className="text-xs text-muted">—</span>
             ),
           ])}
           empty={t("cp.message.nothing_firing")}
@@ -102,7 +102,7 @@ export default function Alerts() {
 
       <Card title={t("cp.section.warnings")}>
         <div className="p-4 space-y-2">
-          {warnings.length === 0 && <p className="text-sm text-slate-500">{t("cp.message.no_warnings")}</p>}
+          {warnings.length === 0 && <p className="text-sm text-muted">{t("cp.message.no_warnings")}</p>}
           {warnings.map((warning) => (
             <p key={warning} className="flex items-start gap-2 text-sm rounded-lg bg-amber-50 border border-amber-200 text-amber-900 px-3 py-2">
               <ShieldAlert className="w-4 h-4 mt-0.5 shrink-0" />

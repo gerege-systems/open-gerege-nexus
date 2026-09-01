@@ -5,6 +5,7 @@ import {useI18n} from "@/lib/i18n";
 import {Building2,House,KeyRound,MonitorSmartphone,ShieldCheck,Unlink} from "lucide-react";
 import {ProviderMark,GoogleMark} from "@/components/ProviderMark";
 import EIDLogin from "@/components/EIDLogin";
+import { formatDay } from "@/lib/datetime";
 
 /**
  * Хүний өөрийнх нь тухай бичлэг.
@@ -32,7 +33,7 @@ type Profile = {
 
 function when(iso: string) {
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString();
+  return Number.isNaN(d.getTime()) ? "—" : formatDay(d);
 }
 
 /**

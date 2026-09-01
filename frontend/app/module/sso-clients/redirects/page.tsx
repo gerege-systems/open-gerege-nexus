@@ -71,10 +71,10 @@ export default function RedirectPoliciesPage() {
       {error && <ErrorNote>{error}</ErrorNote>}
 
       <Panel className="p-5">
-        <h2 className="text-sm font-bold text-slate-900 mb-3">{t("sso_clients.redirects.rules_title")}</h2>
+        <h2 className="text-sm font-semibold text-foreground mb-3">{t("sso_clients.redirects.rules_title")}</h2>
         <ul className="space-y-2.5">
           {rules.map((rule, index) => (
-            <li key={index} className="flex items-start gap-2.5 text-xs text-slate-600">
+            <li key={index} className="flex items-start gap-2.5 text-xs text-muted">
               <span className="text-indigo-600 shrink-0 mt-0.5">{rule.icon}</span>
               {rule.text}
             </li>
@@ -90,27 +90,27 @@ export default function RedirectPoliciesPage() {
         <Panel className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50 border-b border-slate-200 text-left">
-                <tr className="text-[11px] uppercase tracking-wide text-slate-500">
+              <thead className="bg-surface-2 border-b border-line text-left">
+                <tr className="text-[11px] uppercase tracking-wide text-muted">
                   <th className="px-4 py-2.5 font-semibold">{t("sso_clients.field.name")}</th>
                   <th className="px-4 py-2.5 font-semibold">redirect_uri</th>
                   <th className="px-4 py-2.5 font-semibold">{t("base.field.type")}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-line">
                 {entries.map(({ client, uri, kind }) => (
                   <tr key={`${client.client_id}:${uri}`} className="hover:bg-slate-50/60">
                     <td className="px-4 py-3">
-                      <div className="font-semibold text-slate-900 flex items-center gap-1.5">
+                      <div className="font-semibold text-foreground flex items-center gap-1.5">
                         {client.client_type === "public"
-                          ? <Smartphone className="w-3.5 h-3.5 text-slate-400" />
-                          : <Server className="w-3.5 h-3.5 text-slate-400" />}
+                          ? <Smartphone className="w-3.5 h-3.5 text-muted" />
+                          : <Server className="w-3.5 h-3.5 text-muted" />}
                         {client.client_name}
                       </div>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <code className="text-xs font-mono text-slate-700 break-all">{uri}</code>
+                        <code className="text-xs font-mono text-foreground break-all">{uri}</code>
                         <CopyButton value={uri} id={`${client.client_id}:${uri}`} copied={copied} onCopy={copy} />
                       </div>
                     </td>
@@ -134,7 +134,7 @@ export default function RedirectPoliciesPage() {
 
       {machineOnly.length > 0 && (
         <Panel className="p-4">
-          <p className="text-[11px] font-semibold text-slate-500 mb-2">
+          <p className="text-[11px] font-semibold text-muted mb-2">
             {t("sso_clients.redirects.no_redirect_needed")}
           </p>
           <div className="flex flex-wrap gap-1">

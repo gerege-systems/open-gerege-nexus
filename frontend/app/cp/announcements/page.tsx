@@ -20,7 +20,7 @@ import { useI18n } from "@/lib/i18n";
 import { Modal } from "@/components/ui";
 
 export default function Announcements() {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const action = useAction();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [writing, setWriting] = useState(false);
@@ -43,12 +43,12 @@ export default function Announcements() {
     <div className="space-y-6">
       <div className="flex items-start gap-3">
         <div className="flex-1">
-          <h1 className="text-2xl font-semibold text-slate-900">{t("cp.section.announcements")}</h1>
+          <h1 className="text-2xl font-semibold text-foreground">{t("cp.section.announcements")}</h1>
         </div>
         <button
           type="button"
           onClick={() => setWriting(true)}
-          className="inline-flex items-center gap-2 rounded-lg bg-[var(--gerege-blue)] px-3 py-2 text-sm font-medium text-[var(--gerege-on-blue)] hover:brightness-105"
+          className="inline-flex items-center gap-2 rounded-lg bg-accent px-3 py-2 text-sm font-medium text-on-accent hover:brightness-105"
         >
           <Megaphone className="w-4 h-4" />
           {t("cp.action.announce")}
@@ -56,7 +56,7 @@ export default function Announcements() {
       </div>
 
       {failure && (
-        <p className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+        <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
       )}
 
       <Card title={t("cp.section.announcements")}>
@@ -64,14 +64,14 @@ export default function Announcements() {
           head={[t("cp.field.title"), t("cp.field.kind"), t("cp.field.organisation"), t("cp.field.until"), ""]}
           rows={announcements.map((announcement) => [
             <span key="t">
-              <strong className="text-slate-900">{announcement.title}</strong>
-              {announcement.body && <span className="block text-xs text-slate-500">{announcement.body}</span>}
+              <strong className="text-foreground">{announcement.title}</strong>
+              {announcement.body && <span className="block text-xs text-muted">{announcement.body}</span>}
             </span>,
             <Badge key="k" tone={announcement.kind === "maintenance" ? "red" : announcement.kind === "warning" ? "amber" : "slate"}>
               {t(`cp.kind.${announcement.kind}`)}
             </Badge>,
             announcement.tenant_id ?? t("cp.state.everyone"),
-            formatMoment(announcement.ends_at, locale) || "—",
+            formatMoment(announcement.ends_at) || "—",
             <button
               key="w"
               type="button"
@@ -83,7 +83,7 @@ export default function Announcements() {
                   onDone: load,
                 })
               }
-              className="text-xs rounded-lg border border-slate-300 px-2 py-1 hover:bg-slate-50"
+              className="text-xs rounded-lg border border-input px-2 py-1 hover:bg-surface-hover"
             >
               {t("cp.action.withdraw")}
             </button>,
@@ -142,40 +142,40 @@ function WriteDialog({ onClose, onPublished }: { onClose: () => void; onPublishe
   }
 
   return (
-    <Modal label={t("cp.action.announce")}>
+    <Modal onClose={onClose} label={t("cp.action.announce")}>
       <form onSubmit={submit} className="p-5 space-y-3">
-        <h2 className="text-lg font-semibold text-slate-900">{t("cp.action.announce")}</h2>
+        <h2 className="text-lg font-semibold text-foreground">{t("cp.action.announce")}</h2>
 
         {failure && (
-          <p className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+          <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
         )}
 
         <label className="block text-sm">
-          <span className="text-slate-600">{t("cp.field.title")}</span>
+          <span className="text-muted">{t("cp.field.title")}</span>
           <input
             required
             value={title}
             onChange={(event) => setTitle(event.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+            className="mt-1 w-full rounded-lg border border-input px-3 py-2"
           />
         </label>
 
         <label className="block text-sm">
-          <span className="text-slate-600">{t("cp.field.body")}</span>
+          <span className="text-muted">{t("cp.field.body")}</span>
           <textarea
             rows={3}
             value={body}
             onChange={(event) => setBody(event.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+            className="mt-1 w-full rounded-lg border border-input px-3 py-2"
           />
         </label>
 
         <label className="block text-sm">
-          <span className="text-slate-600">{t("cp.field.kind")}</span>
+          <span className="text-muted">{t("cp.field.kind")}</span>
           <select
             value={kind}
             onChange={(event) => setKind(event.target.value as typeof kind)}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+            className="mt-1 w-full rounded-lg border border-input px-3 py-2"
           >
             <option value="info">{t("cp.kind.info")}</option>
             <option value="warning">{t("cp.kind.warning")}</option>
@@ -184,43 +184,43 @@ function WriteDialog({ onClose, onPublished }: { onClose: () => void; onPublishe
         </label>
 
         <label className="block text-sm">
-          <span className="text-slate-600">{t("cp.field.organisation")}</span>
+          <span className="text-muted">{t("cp.field.organisation")}</span>
           <input
             value={tenantID}
             onChange={(event) => setTenantID(event.target.value)}
             placeholder={t("cp.state.everyone")}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-xs"
+            className="mt-1 w-full rounded-lg border border-input px-3 py-2 font-mono text-xs"
           />
         </label>
 
         <label className="block text-sm">
-          <span className="text-slate-600">{t("cp.field.until")}</span>
+          <span className="text-muted">{t("cp.field.until")}</span>
           <input
             type="datetime-local"
             value={endsAt}
             onChange={(event) => setEndsAt(event.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+            className="mt-1 w-full rounded-lg border border-input px-3 py-2"
           />
         </label>
 
         <label className="block text-sm">
-          <span className="text-slate-600">{t("cp.field.reason")}</span>
+          <span className="text-muted">{t("cp.field.reason")}</span>
           <input
             required
             value={reason}
             onChange={(event) => setReason(event.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+            className="mt-1 w-full rounded-lg border border-input px-3 py-2"
           />
         </label>
 
         <div className="flex justify-end gap-2 pt-1">
-          <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-100">
+          <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-muted hover:bg-surface-hover">
             {t("cp.action.cancel")}
           </button>
           <button
             type="submit"
             disabled={busy}
-            className="rounded-lg bg-[var(--gerege-blue)] px-4 py-2 text-sm font-medium text-[var(--gerege-on-blue)] hover:brightness-105 disabled:opacity-60"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:brightness-105 disabled:opacity-60"
           >
             {t("cp.action.announce")}
           </button>
