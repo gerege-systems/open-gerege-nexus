@@ -140,7 +140,7 @@ export const cp = {
     mn: "Энэ бичиг audit-д үлдэж, зарим тохиолдолд тухайн байгууллагад ч харагдана.",
     en: "This is recorded in the audit trail, and for some actions the organisation sees it too.",
   },
-  "cp.hint.search_people": { mn: "И-мэйл эсвэл нэрээр (3-аас дээш тэмдэгт)", en: "By e-mail or name (three characters or more)" },
+  "cp.hint.search_people": { mn: "Хэрэглэгчийг и-мэйл эсвэл нэрээр нь олоод түгжээг тайлах, нэвтэрсэн бүх төхөөрөмжийг гаргах, нууц үг сэргээх холбоос илгээнэ. 3-аас дээш тэмдэгт бичнэ үү.", en: "Find somebody by e-mail or name, then unlock them, sign them out everywhere, or send a password reset link. Type three characters or more." },
   "cp.hint.not_enforced": {
     mn: "Бүртгэгдэнэ, гэхдээ хараахан хэрэгжихгүй — CP-5-ын хэрэглээний хэмжилт ирэхэд ажиллана.",
     en: "Recorded but not yet enforced — it starts working when CP-5's usage metering lands.",
