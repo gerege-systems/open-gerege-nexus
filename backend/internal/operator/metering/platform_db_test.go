@@ -22,17 +22,32 @@ func TestThePlatformReportRollsUpEveryOrganisation(t *testing.T) {
 	second, _ := optest.Tenant(t, pool)
 	ctx := context.Background()
 
-	today := time.Now()
-	yesterday := today.AddDate(0, 0, -1)
+	// The first two days of the month the report covers.
+	//
+	// It used to be today and yesterday, which are the same month on 30 or 31
+	// days out of every 31 and two different months on the other one. On the
+	// first of a month "yesterday" belongs to the previous month's report, so
+	// half the rows below fell outside the window being asserted on and the
+	// test failed — not because the rollup was wrong, but because the calendar
+	// had turned over. It failed for the first time on 2026-09-01 and would
+	// have failed again on the first of every month after that.
+	//
+	// What the test is actually about is two *different days inside the
+	// reported month*; which two is immaterial, and the query selects on month
+	// membership alone. Naming them outright removes the wall clock from the
+	// assertion — every month has a first and a second.
+	now := time.Now()
+	firstDay := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
+	secondDay := firstDay.AddDate(0, 0, 1)
 	// Two days of the same three metrics, so the difference between summing
 	// and taking the peak or the latest is visible in the answer.
-	count(t, pool, first, usagemetric.Actions, yesterday, 4)
-	count(t, pool, first, usagemetric.Actions, today, 6)
-	count(t, pool, first, usagemetric.ActiveUsers, yesterday, 9)
-	count(t, pool, first, usagemetric.ActiveUsers, today, 3)
-	count(t, pool, first, usagemetric.StorageMB, yesterday, 100)
-	count(t, pool, first, usagemetric.StorageMB, today, 120)
-	count(t, pool, second, usagemetric.Actions, today, 5)
+	count(t, pool, first, usagemetric.Actions, firstDay, 4)
+	count(t, pool, first, usagemetric.Actions, secondDay, 6)
+	count(t, pool, first, usagemetric.ActiveUsers, firstDay, 9)
+	count(t, pool, first, usagemetric.ActiveUsers, secondDay, 3)
+	count(t, pool, first, usagemetric.StorageMB, firstDay, 100)
+	count(t, pool, first, usagemetric.StorageMB, secondDay, 120)
+	count(t, pool, second, usagemetric.Actions, secondDay, 5)
 
 	report, err := service.PlatformUsageReport(ctx)
 	if err != nil {
