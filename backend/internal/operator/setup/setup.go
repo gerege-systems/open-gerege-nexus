@@ -418,10 +418,20 @@ func (s *Service) handleFindOrganisation(w http.ResponseWriter, r *http.Request)
 // standing in front of the wizard does something different about each: a
 // misspelled number is retyped, a missing token is configured, and a directory
 // that cannot be reached is waited for.
+//
+// A miss is 422 rather than the 404 it reads like, and that is not a taste in
+// status codes. requireToken already owns 404 on every route here — it hides
+// the wizard from a stranger rather than telling them there is a token to
+// guess — so the browser cannot tell the two apart, and it does not try:
+// app/setup/page.tsx treats any 404 as a dead token, clears it, and sends the
+// person back to the token screen. The effect was that mistyping a
+// registration number said "this link has expired", and the operator went
+// looking for a new token that was never the problem. The gate's 404 has to
+// stay ambiguous; this one does not have to collide with it.
 func (s *Service) failLookup(w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, geregecore.ErrNotFound):
-		httpx.Error(w, http.StatusNotFound, "the Gerege Core directory has no record with that number")
+		httpx.Error(w, http.StatusUnprocessableEntity, "the Gerege Core directory has no record with that number")
 	case errors.Is(err, geregecore.ErrNotConfigured):
 		httpx.Error(w, http.StatusServiceUnavailable, err.Error())
 	default:
