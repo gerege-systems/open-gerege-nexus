@@ -18,7 +18,7 @@ object DeviceLine {
     val origin: String = when (BuildConfig.FORM_FACTOR) {
         "kiosk" -> "https://kiosk.nexus.gerege.mn"
         "pos" -> "https://pos.nexus.gerege.mn"
-        else -> "https://android.nexus.gerege.mn"
+        else -> "https://mobile.nexus.gerege.mn"
     }
 
     /**
@@ -28,7 +28,7 @@ object DeviceLine {
      * руу очдог тул ажилласаар байгаа бөгөөд түүнийг хүчээр зөөвөл хөтчийн
      * шугамыг санаатай сонгосон суулгацыг булааж авна.
      */
-    private val superseded = setOf("http://10.0.2.2:3000", "http://10.0.2.2:8080")
+    private val superseded = setOf("http://10.0.2.2:3000", "http://10.0.2.2:8080", "https://android.nexus.gerege.mn")
 
     fun migrate(stored: String?): String =
         if (stored.isNullOrEmpty() || stored in superseded) origin else stored

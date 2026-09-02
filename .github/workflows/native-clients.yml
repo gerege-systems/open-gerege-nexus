@@ -26,11 +26,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - run: ./build.sh
-        working-directory: native-apps/macos
+        working-directory: native-apps/desktop/macos
       - run: swift test
-        working-directory: native-apps/ios
+        working-directory: native-apps/mobile/ios
       - run: xcodebuild -quiet -project GeregeNexusIOS.xcodeproj -scheme GeregeNexusIOS -destination 'generic/platform=iOS Simulator' build CODE_SIGNING_ALLOWED=NO
-        working-directory: native-apps/ios
+        working-directory: native-apps/mobile/ios
   windows:
     strategy:
       matrix:
@@ -42,7 +42,7 @@ jobs:
         with:
           dotnet-version: 8.0.x
       - run: dotnet build GeregeNexusWin.csproj --configuration Release -p:FormFactor=${{ matrix.form_factor }}
-        working-directory: native-apps/windows
+        working-directory: native-apps/desktop/windows
   android:
     runs-on: ubuntu-latest
     steps:
@@ -55,4 +55,4 @@ jobs:
       - uses: android-actions/setup-android@v4
       - run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
       - run: ./gradlew :core:test :app:compileMobileDebugKotlin :app:compileTabletDebugKotlin :app:compileKioskDebugKotlin :app:compilePosDebugKotlin
-        working-directory: native-apps/android
+        working-directory: native-apps/mobile/android

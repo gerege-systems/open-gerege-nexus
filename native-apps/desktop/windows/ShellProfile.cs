@@ -28,7 +28,7 @@ public static class ShellProfile
 #else
     public const string FormFactor = "desktop";
     public const string StartRoute = "/";
-    public const string LineOrigin = "https://win.nexus.gerege.mn";
+    public const string LineOrigin = "https://desktop.nexus.gerege.mn";
     public static readonly string[] Capabilities = ["external.open", "print.system", "secure-store", "device.identity", "telemetry", "biometric", "shell.pane"];
 #endif
 }

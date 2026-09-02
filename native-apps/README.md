@@ -29,15 +29,18 @@ and no CORS preflight is ever issued.
 | Client | Line | Status |
 | --- | --- | --- |
 | Browser / PWA | `nexus.gerege.mn` | ✅ live |
-| macOS | `mac.nexus.gerege.mn` | ✅ live |
-| Windows Desktop | `win.nexus.gerege.mn` | ✅ live |
-| iOS / iPadOS | `ios.nexus.gerege.mn` | ✅ live |
-| Android mobile / tablet | `android.nexus.gerege.mn` | ✅ live |
-| Kiosk | `kiosk.nexus.gerege.mn` | ✅ live |
-| POS | `pos.nexus.gerege.mn` | ✅ live |
+| macOS, Windows Desktop | `desktop.nexus.gerege.mn` | ✅ live |
+| iOS / iPadOS, Android mobile / tablet | `mobile.nexus.gerege.mn` | ✅ live |
+| Kiosk (Windows, Android) | `kiosk.nexus.gerege.mn` | ✅ live |
+| POS (Windows, Android) | `pos.nexus.gerege.mn` | ✅ live |
 
-All six are covered by a `*.nexus.gerege.mn` wildcard A record and share one
-Let's Encrypt certificate.
+The line names the **form factor**, not the platform: a Mac and a Windows box
+on the same desk are one line, because a person uses them the same way. Which
+client is running is a separate question, answered by `window.GeregeShell`.
+
+All four are covered by a `*.nexus.gerege.mn` wildcard A record and share one
+Let's Encrypt certificate. The per-platform names `mac.` / `win.` / `ios.` /
+`android.` were retired on 2026-09-02.
 
 **When adding a NEW line, do not point a client at it before it resolves.** The
 app fails with `A server with the specified hostname could not be found` and
@@ -59,36 +62,45 @@ Both rules are specified in [`../docs/SHELL_CONTRACT.md`](../docs/SHELL_CONTRACT
 
 ```
 native-apps/
-├── macos/                   # macOS Native Shell (Swift 5.10 + AppKit + WKWebView)
-│   ├── main.swift           # NSApplication Entry Point
-│   ├── AppDelegate.swift    # App Lifecycle & Native Menu Bar (Gerege Nexus, Удирдах, Харах)
-│   ├── MainWindowController.swift    # The single window: ribbon, rail, pane host, footer
-│   ├── SettingsPaneViewController.swift # Settings as an in-frame NSView, not a window
-│   ├── NativeIPC.swift      # WKScriptMessageHandler Native IPC Bridge
-│   └── build.sh             # Swiftc Compilation Script
+├── desktop/                     # Ширээний шугам — desktop.nexus.gerege.mn
+│   ├── macos/                   # macOS Native Shell (Swift 5.10 + AppKit + WKWebView)
+│   │   ├── main.swift           # NSApplication Entry Point
+│   │   ├── AppDelegate.swift    # App Lifecycle & Native Menu Bar
+│   │   ├── MainWindowController.swift    # The single window: ribbon, rail, pane host, footer
+│   │   ├── SettingsPaneViewController.swift # Settings as an in-frame NSView, not a window
+│   │   ├── NativeIPC.swift      # WKScriptMessageHandler Native IPC Bridge
+│   │   └── build.sh             # Swiftc Compilation Script
+│   └── windows/                 # Windows Native Shell (C# .NET 8 + WPF + WebView2)
+│       ├── GeregeNexusWin.csproj # .NET 8 Project File
+│       ├── App.xaml / App.xaml.cs # WPF Application Lifecycle
+│       ├── MainWindow.xaml / MainWindow.xaml.cs # The single window: menu, rail, pane host, footer
+│       ├── SettingsPane.xaml / SettingsPane.xaml.cs # Settings as an in-frame UserControl
+│       ├── ShellProfile.cs      # Desktop / Kiosk / POS profiles — each names its own line
+│       └── NativeIPCBridge.cs   # CoreWebView2.WebMessageReceived IPC Bridge
 │
-├── ios/                     # iOS/iPadOS app + shared Swift package
-│   ├── GeregeNexusIOS.xcodeproj # Xcode app project
-│   ├── Package.swift        # GeregeShellKit, GeregeShellUI, GeregeNexusApp
-│   ├── Sources/             # Native login/settings and WKWebView shell
-│   └── Tests/               # Swift auth state-machine tests
+├── mobile/                      # Гарын шугам — mobile.nexus.gerege.mn
+│   ├── ios/                     # iOS/iPadOS app + shared Swift package
+│   │   ├── GeregeNexusIOS.xcodeproj # Xcode app project
+│   │   ├── Package.swift        # GeregeShellKit, GeregeShellUI, GeregeNexusApp
+│   │   ├── Sources/             # Native login/settings and WKWebView shell
+│   │   └── Tests/               # Swift auth state-machine tests
+│   └── android/                 # Android mobile/tablet/kiosk/POS clients
+│       ├── core/                # Shared auth/device behavior
+│       └── app/                 # Four form-factor flavors
 │
-├── windows/                 # Windows Native Shell (C# .NET 8 + WPF + WebView2)
-│   ├── GeregeNexusWin.csproj # .NET 8 Project File
-│   ├── App.xaml / App.xaml.cs # WPF Application Lifecycle
-│   ├── MainWindow.xaml / MainWindow.xaml.cs # The single window: menu, rail, pane host, footer
-│   ├── SettingsPane.xaml / SettingsPane.xaml.cs # Settings as an in-frame UserControl
-│   └── NativeIPCBridge.cs   # CoreWebView2.WebMessageReceived IPC Bridge
+├── generated-i18n/              # `npm run i18n:export-native`-ийн гаралт
 │
-├── android/                 # Android mobile/tablet/kiosk/POS clients
-│   ├── core/                # Shared auth/device behavior
-│   └── app/                 # Four form-factor flavors
-│
-└── shared/                  # Shared Specifications & Configurations
-    ├── app_config.json      # Window sizing & platform notes
-    ├── device_lines.json    # Canonical platform → origin map (one backend behind all)
-    └── IPC_CONTRACT.md      # Bi-directional JSON IPC Message Contract Specification
+└── shared/                      # Shared Specifications & Configurations
+    ├── app_config.json          # Window sizing & platform notes
+    ├── device_lines.json        # Canonical line → origin map (one backend behind all)
+    └── IPC_CONTRACT.md          # Bi-directional JSON IPC Message Contract Specification
 ```
+
+**Хавтас нь кодын сан, шугам нь хаяг — хоёр нь нэг зүйл биш.** `kiosk` ба
+`pos` шугам өөрийн кодгүй: тэдгээр нь Windows-ийн `FormFactor` build ба
+Android-ийн flavor. Тиймээс `desktop/windows` доторх киоск build нь `kiosk.`
+шугамд үйлчилнэ — код нь Windows, шугам нь киоск. Шугамын бүрэн бүртгэл
+`shared/device_lines.json` дотор.
 
 ---
 
@@ -110,7 +122,7 @@ native-apps/
 
 ```bash
 # Build the native macOS executable
-cd native-apps/macos
+cd native-apps/desktop/macos
 ./build.sh
 
 # Run the native macOS application
@@ -120,7 +132,7 @@ cd native-apps/macos
 ### 2. iOS/iPadOS app (SwiftUI + WKWebView)
 
 ```bash
-cd native-apps/ios
+cd native-apps/mobile/ios
 xcodebuild -project GeregeNexusIOS.xcodeproj -scheme GeregeNexusIOS \
   -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
 ```
@@ -131,7 +143,7 @@ xcodebuild -project GeregeNexusIOS.xcodeproj -scheme GeregeNexusIOS \
 
 ```powershell
 # Build and run on Windows
-cd native-apps/windows
+cd native-apps/desktop/windows
 dotnet build -p:FormFactor=Desktop
 dotnet build -p:FormFactor=Kiosk
 dotnet build -p:FormFactor=POS
@@ -139,7 +151,7 @@ dotnet build -p:FormFactor=POS
 
 ### 4. Android native clients (Kotlin + Compose)
 
-Android Studio-д `native-apps/android`-ыг нээнэ. Нэг app module дөрвөн
+Android Studio-д `native-apps/mobile/android`-ыг нээнэ. Нэг app module дөрвөн
 form-factor flavor-тай: `mobile`, `tablet`, `kiosk`, `pos`; auth state machine
 нь `:core` модульд байна.
 

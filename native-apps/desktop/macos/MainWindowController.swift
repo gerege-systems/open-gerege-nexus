@@ -17,7 +17,7 @@ import WebKit
 /// нээх эрхтэй зүйл бол зөвхөн `NSAlert`, `NSMenu`, `NSSavePanel` гэх мэт
 /// богино насалдаг, эцэг цонхондоо холбогддог popup-ууд.
 ///
-/// Ажлын муж нь `mac.nexus.gerege.mn` — macOS-ийн domain шугам. Тэр host нь
+/// Ажлын муж нь `desktop.nexus.gerege.mn` — ширээний domain шугам. Тэр host нь
 /// өөрийн `/api/v1`-ээ мөн үйлчилдэг тул webview доторх дуудлага same-origin
 /// болж, session cookie нь `SameSite=Strict` хэвээр ажиллана.
 public class MainWindowController: NSWindowController, WKNavigationDelegate, WKUIDelegate, NativeLoginDelegate {
