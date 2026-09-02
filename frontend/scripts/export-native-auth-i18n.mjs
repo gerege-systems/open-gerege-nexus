@@ -9,7 +9,7 @@ const out = path.resolve(root, "../native-apps/generated-i18n");
 await mkdir(out, { recursive: true });
 const androidRoot = path.resolve(root, "../native-apps/android/app/src/main/res");
 const windowsRoot = path.resolve(root, "../native-apps/windows/Resources");
-const iosCatalog = path.resolve(root, "../native-apps/iOS/Sources/GeregeShellUI/Resources/Login.xcstrings");
+const iosCatalog = path.resolve(root, "../native-apps/ios/Sources/GeregeShellUI/Resources/Login.xcstrings");
 const xml = value => String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "\\'");
 const resourceKey = key => key.replaceAll(".", "_").replace(/[^a-zA-Z0-9_]/g, "_");
 const catalog = { sourceLanguage: "mn", strings: {}, version: "1.0" };

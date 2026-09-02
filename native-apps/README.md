@@ -59,7 +59,7 @@ Both rules are specified in [`../docs/SHELL_CONTRACT.md`](../docs/SHELL_CONTRACT
 
 ```
 native-apps/
-├── macOS/                   # macOS Native Shell (Swift 5.10 + AppKit + WKWebView)
+├── macos/                   # macOS Native Shell (Swift 5.10 + AppKit + WKWebView)
 │   ├── main.swift           # NSApplication Entry Point
 │   ├── AppDelegate.swift    # App Lifecycle & Native Menu Bar (Gerege Nexus, Удирдах, Харах)
 │   ├── MainWindowController.swift    # The single window: ribbon, rail, pane host, footer
@@ -67,7 +67,7 @@ native-apps/
 │   ├── NativeIPC.swift      # WKScriptMessageHandler Native IPC Bridge
 │   └── build.sh             # Swiftc Compilation Script
 │
-├── iOS/                     # iOS/iPadOS app + shared Swift package
+├── ios/                     # iOS/iPadOS app + shared Swift package
 │   ├── GeregeNexusIOS.xcodeproj # Xcode app project
 │   ├── Package.swift        # GeregeShellKit, GeregeShellUI, GeregeNexusApp
 │   ├── Sources/             # Native login/settings and WKWebView shell
@@ -96,8 +96,8 @@ native-apps/
 
 ### IDE-ээр шууд нээх
 
-- iOS/iPadOS — Xcode-д `iOS/GeregeNexusIOS.xcodeproj`-ийг нээгээд `GeregeNexusIOS` scheme-ийг ажиллуулна. `project.yml` нь XcodeGen-ээр төслийг дахин үүсгэх эх файл.
-- macOS — Xcode-д `macOS/GeregeNexusNativeMac.xcodeproj`-ийг нээгээд `GeregeNexusNativeMac` scheme-ийг ажиллуулна.
+- iOS/iPadOS — Xcode-д `ios/GeregeNexusIOS.xcodeproj`-ийг нээгээд `GeregeNexusIOS` scheme-ийг ажиллуулна. `project.yml` нь XcodeGen-ээр төслийг дахин үүсгэх эх файл.
+- macOS — Xcode-д `macos/GeregeNexusNativeMac.xcodeproj`-ийг нээгээд `GeregeNexusNativeMac` scheme-ийг ажиллуулна.
 - Android — Android Studio-д `android/` хавтсыг нээнэ. Энд `.xcodeproj` эсвэл
   `.sln` шиг тусдаа project файл БАЙХГҮЙ нь зөв: Gradle төслийн хувьд
   `settings.gradle.kts` бүхий хавтас нь өөрөө төсөл. Wrapper нь repository-д
@@ -110,7 +110,7 @@ native-apps/
 
 ```bash
 # Build the native macOS executable
-cd native-apps/macOS
+cd native-apps/macos
 ./build.sh
 
 # Run the native macOS application
@@ -120,7 +120,7 @@ cd native-apps/macOS
 ### 2. iOS/iPadOS app (SwiftUI + WKWebView)
 
 ```bash
-cd native-apps/iOS
+cd native-apps/ios
 xcodebuild -project GeregeNexusIOS.xcodeproj -scheme GeregeNexusIOS \
   -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
 ```

@@ -26,11 +26,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - run: ./build.sh
-        working-directory: native-apps/macOS
+        working-directory: native-apps/macos
       - run: swift test
-        working-directory: native-apps/iOS
+        working-directory: native-apps/ios
       - run: xcodebuild -quiet -project GeregeNexusIOS.xcodeproj -scheme GeregeNexusIOS -destination 'generic/platform=iOS Simulator' build CODE_SIGNING_ALLOWED=NO
-        working-directory: native-apps/iOS
+        working-directory: native-apps/ios
   windows:
     strategy:
       matrix:
