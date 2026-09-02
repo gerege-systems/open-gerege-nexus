@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AssignedAccessConfiguration xmlns="http://schemas.microsoft.com/AssignedAccess/2017/config" xmlns:v4="http://schemas.microsoft.com/AssignedAccess/2021/config">
-  <Profiles><Profile Id="{1D1F7A41-3F06-4D95-92E8-A64F76F1A501}"><AllAppsList><AllowedApps><App DesktopAppPath="%ProgramFiles%\Gerege Nexus\GeregeNexusNativeWin.Kiosk.exe"/></AllowedApps></AllAppsList><v4:BreakoutSequence Key="Ctrl+A"/><StartLayout><![CDATA[<LayoutModificationTemplate xmlns="http://schemas.microsoft.com/Start/2014/LayoutModification" Version="1"><LayoutOptions StartTileGroupCellWidth="6"/></LayoutModificationTemplate>]]></StartLayout></Profile></Profiles>
+  <Profiles><Profile Id="{1D1F7A41-3F06-4D95-92E8-A64F76F1A501}"><AllAppsList><AllowedApps><App DesktopAppPath="%ProgramFiles%\Gerege Nexus\GeregeNexus.Kiosk.exe"/></AllowedApps></AllAppsList><v4:BreakoutSequence Key="Ctrl+A"/><StartLayout><![CDATA[<LayoutModificationTemplate xmlns="http://schemas.microsoft.com/Start/2014/LayoutModification" Version="1"><LayoutOptions StartTileGroupCellWidth="6"/></LayoutModificationTemplate>]]></StartLayout></Profile></Profiles>
   <Configs><Config><AutoLogonAccount v4:DisplayName="Gerege Kiosk"/><DefaultProfile Id="{1D1F7A41-3F06-4D95-92E8-A64F76F1A501}"/></Config></Configs>
 </AssignedAccessConfiguration>

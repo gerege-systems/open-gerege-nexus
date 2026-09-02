@@ -217,8 +217,9 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
-				PRODUCT_BUNDLE_IDENTIFIER = mn.gerege.nexus.desktop.native;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				INFOPLIST_KEY_CFBundleDisplayName = "Gerege Nexus";
+				PRODUCT_BUNDLE_IDENTIFIER = mn.gerege.nexus.desktop;
+				PRODUCT_NAME = "Gerege Nexus";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
@@ -230,8 +231,9 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
-				PRODUCT_BUNDLE_IDENTIFIER = mn.gerege.nexus.desktop.native;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				INFOPLIST_KEY_CFBundleDisplayName = "Gerege Nexus";
+				PRODUCT_BUNDLE_IDENTIFIER = mn.gerege.nexus.desktop;
+				PRODUCT_NAME = "Gerege Nexus";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
