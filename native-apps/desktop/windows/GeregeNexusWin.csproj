@@ -8,11 +8,17 @@
     <UseWPF>true</UseWPF>
     <ApplicationIcon>Resources\app.ico</ApplicationIcon>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
-    <AssemblyName>GeregeNexusNativeWin</AssemblyName>
+    <!-- Хүн юу уншихыг брэнд шийднэ, build нэрээ биш. Product ба
+         AssemblyTitle нь exe-ийн шинж чанарын хуудас, Task Manager, Start
+         цэс гурав дээр гардаг нэр. -->
+    <Product>Gerege Nexus</Product>
+    <AssemblyTitle>Gerege Nexus</AssemblyTitle>
     <RootNamespace>GeregeNexusNativeWin</RootNamespace>
     <FormFactor Condition="'$(FormFactor)' == ''">Desktop</FormFactor>
     <OutputPath>bin\$(Configuration)\$(FormFactor)\</OutputPath>
-    <AssemblyName>GeregeNexusNativeWin.$(FormFactor)</AssemblyName>
+    <!-- Файлын нэр нь build-ийн таних тэмдэг: form factor бүр өөрийн exe.
+         `Native` дэд үг нь юуг ч ялгадаггүй байсан тул хасав. -->
+    <AssemblyName>GeregeNexus.$(FormFactor)</AssemblyName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(FormFactor)' == 'Kiosk'"><DefineConstants>$(DefineConstants);KIOSK</DefineConstants></PropertyGroup>
   <PropertyGroup Condition="'$(FormFactor)' == 'POS'"><DefineConstants>$(DefineConstants);POS</DefineConstants></PropertyGroup>
