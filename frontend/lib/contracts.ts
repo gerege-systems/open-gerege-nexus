@@ -31,6 +31,9 @@ export type PartyKind = "member" | "tenant" | "peer" | "person" | "organisation"
 
 export interface ContractRow {
   id: string;
+  parent_document_id?: string | null;
+  issued_count?: number;
+  issued_executed?: number;
   contract_number?: string;
   title: string;
   doc_type: string;
@@ -201,10 +204,13 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 export const contracts = {
   // ── the issuer's side, addressed by document id
   list: () => request<{ contracts: ContractRow[] }>("/documents/contracts"),
+  // POST /documents/contracts, ЭНГИЙН /documents биш: гэрээ төрөхдөө
+  // contract_state='DRAFT' авч, Гэрээний жагсаалтад ШУУД гарна. Ердийн
+  // create-ээр үүсгэвэл NONE төрж, жагсаалтаас алга болдог байсан.
   create: (title: string) =>
-    request<{ id: string }>("/documents", {
+    request<{ id: string }>("/documents/contracts", {
       method: "POST",
-      body: JSON.stringify({ title, doc_type: "CONTRACT" }),
+      body: JSON.stringify({ title }),
     }),
   parties: (id: string) => request<ContractShape>(`/documents/${id}/parties`),
   saveFacts: (
@@ -313,6 +319,90 @@ export const contracts = {
     return res.json() as Promise<{ added: number; skipped: Array<{ row: number; name?: string; reason: string }> }>;
   },
   importTemplateUrl: () => `${apiBase()}/documents/parties/import-template.xlsx`,
+  wordTemplateUrl: () => `${apiBase()}/documents/contract-template.docx`,
+
+  // ── issue preview: parse the file server-side, create NOTHING.
+  // Excel goes up once; what comes back is JSON the UI can chunk — so a
+  // 500-row list never has to fit one request, and the admin sees who is
+  // already issued BEFORE pressing the button.
+  issuePreview: async (id: string, file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    const res = await fetch(`${apiBase()}/documents/${id}/issue/preview`, {
+      method: "POST", body: form, credentials: "include",
+    });
+    if (!res.ok) {
+      let message = `HTTP ${res.status}`;
+      try {
+        const body = (await res.json()) as { error?: string };
+        if (body?.error) message = body.error;
+      } catch { /* keep the status message */ }
+      throw new Error(message);
+    }
+    return res.json() as Promise<{
+      recipients: Array<{
+        name: string; org_reg?: string; signer_name?: string; signer_reg: string;
+        position?: string; line?: number; already_issued?: boolean; problem?: string;
+      }>;
+    }>;
+  },
+
+  // ── issue chunked: sequential requests of ≤10, so a Word master (each
+  // recipient costs a LibreOffice conversion) stays inside the server's
+  // per-request cap and the admin watches real progress instead of a spinner.
+  issueChunked: async (
+    id: string,
+    recipients: Array<{ name: string; org_reg?: string; signer_name?: string; signer_reg: string; position?: string }>,
+    onProgress?: (done: number, total: number) => void,
+  ) => {
+    const total = recipients.length;
+    const out = {
+      issued: 0,
+      children: [] as Array<{ document_id: string; name: string }>,
+      skipped: [] as Array<{ row?: number; name?: string; reason: string }>,
+    };
+    for (let at = 0; at < total; at += 10) {
+      const part = await contracts.issue(id, recipients.slice(at, at + 10));
+      out.issued += part.issued;
+      out.children.push(...part.children);
+      out.skipped.push(...part.skipped);
+      onProgress?.(Math.min(at + 10, total), total);
+    }
+    return out;
+  },
+
+  // ── issue: one template, a SEPARATE bilateral contract per recipient.
+  // A borrower must never become a co-party of the other borrowers' loans.
+  issue: async (id: string, payload: File | Array<{ name: string; org_reg?: string; signer_name?: string; signer_reg: string; position?: string }>) => {
+    let res: Response;
+    if (payload instanceof File) {
+      const form = new FormData();
+      form.append("file", payload);
+      res = await fetch(`${apiBase()}/documents/${id}/issue`, {
+        method: "POST", body: form, credentials: "include",
+      });
+    } else {
+      res = await fetch(`${apiBase()}/documents/${id}/issue`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipients: payload }),
+        credentials: "include",
+      });
+    }
+    if (!res.ok) {
+      let message = `HTTP ${res.status}`;
+      try {
+        const body = (await res.json()) as { error?: string };
+        if (body?.error) message = body.error;
+      } catch { /* keep the status message */ }
+      throw new Error(message);
+    }
+    return res.json() as Promise<{
+      issued: number;
+      children: Array<{ document_id: string; name: string }>;
+      skipped: Array<{ row?: number; name?: string; reason: string }>;
+    }>;
+  },
 
   // Frozen and signed copies are links, not fetches: the PDF opens in a tab
   // and the cookie rides along on its own.

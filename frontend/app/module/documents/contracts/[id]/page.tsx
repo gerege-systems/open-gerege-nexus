@@ -3,8 +3,9 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
-  contracts, CeremonySession, ContractShape, Invitation, Party,
+  contracts, CeremonySession, ContractRow, ContractShape, Invitation, Party,
 } from "@/lib/contracts";
 import { useResource, useLoadOnMount } from "@/lib/useResource";
 import { useAccess } from "@/lib/access";
@@ -76,7 +77,7 @@ export default function ContractPage() {
 
       {message && <Banner tone={message.tone} message={message.text} />}
 
-      <FactsCard id={id} contract={contract} editable={mayManage} onSaved={reload} onError={fail} />
+      <FactsCard id={id} contract={contract} editable={mayManage && editable} onSaved={reload} onError={fail} />
       <MasterPdfCard
         id={id}
         contract={contract}
@@ -105,6 +106,9 @@ export default function ContractPage() {
         onError={fail}
         onInfo={(value) => say("success", value)}
       />
+      {maySend && (
+        <IssueCard id={id} onChanged={reload} onError={fail} onInfo={(value) => say("success", value)} />
+      )}
       {maySend && contract.parties.some((party) => party.party_role !== "issuer") && (
         <SendCard id={id} state={state} mode={contract.mode} onChanged={reload} onError={fail} onInfo={(value) => say("success", value)} />
       )}
@@ -239,9 +243,11 @@ function BodyCard({
         onChange={(event) => setText(event.target.value)}
         readOnly={frozen || !editable}
       />
-      <p className="text-[11px] text-muted">
-        {t("contracts.body.hint", { tokens: "{{тал}} {{регистр}} {{төлөөлөгч}} {{хаяг}} {{гэрээ}} {{дугаар}} {{огноо}}" })}
-      </p>
+      <p className="text-[11px] text-muted">{t("contracts.body.hint")}</p>
+      <details className="text-[11px] text-muted">
+        <summary className="cursor-pointer hover:text-foreground">…</summary>
+        {t("contracts.body.advanced", { tokens: "{{тал}} {{регистр}} {{төлөөлөгч}} {{хаяг}} {{гэрээ}} {{дугаар}} {{огноо}}" })}
+      </details>
     </section>
   );
 }
@@ -268,6 +274,7 @@ function PartiesCard({
   return (
     <section className={`${cardClass} p-5 space-y-4`}>
       <h2 className="text-sm font-semibold text-foreground">{t("contracts.section.parties")}</h2>
+      <p className="text-xs text-muted">{t("contracts.parties.note")}</p>
       {contract.parties.length === 0 && <p className="text-sm text-muted">{t("contracts.msg.no_parties")}</p>}
 
       {contract.parties.map((party) => (
@@ -296,7 +303,6 @@ function PartiesCard({
         />
       ))}
 
-      {mayParties && <ImportPartiesForm id={id} onImported={onChanged} onError={onError} />}
       {mayParties && <AddPartyForm id={id} onAdded={onChanged} onError={onError} />}
 
       {signatoryFor && (
@@ -726,7 +732,7 @@ function MasterPdfCard({ id, contract, mayManage, maySign, onChanged, onError, o
             <input
               ref={fileInput}
               type="file"
-              accept="application/pdf"
+              accept=".pdf,.docx"
               className="hidden"
               onChange={(event) => {
                 const file = event.target.files?.[0];
@@ -745,6 +751,9 @@ function MasterPdfCard({ id, contract, mayManage, maySign, onChanged, onError, o
         )}
       </div>
       <p className="text-xs text-muted">{t("contracts.pdf.note")}</p>
+      <a href={contracts.wordTemplateUrl()} className="text-xs text-indigo-700 hover:underline">
+        {t("contracts.action.word_template")}
+      </a>
       {attachment ? (
         <div className="flex flex-wrap items-center gap-3 rounded-xl border border-line bg-slate-50/60 px-4 py-3">
           <FileUp className="w-4 h-4 text-muted" />
@@ -753,7 +762,11 @@ function MasterPdfCard({ id, contract, mayManage, maySign, onChanged, onError, o
             {attachment.file_name}
           </a>
           <span className="text-xs text-muted">{(attachment.size_bytes / (1024 * 1024)).toFixed(1)} MB</span>
-          {attachment.master_signed ? (
+          {attachment.file_name.toLowerCase().endsWith(".docx") ? (
+            <span className="text-xs font-semibold text-indigo-700 bg-indigo-50 rounded-full px-2.5 py-0.5">
+              {t("contracts.pdf.word_badge")}
+            </span>
+          ) : attachment.master_signed ? (
             <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 rounded-full px-2.5 py-0.5">
               {t("contracts.pdf.master_signed")}
             </span>
@@ -785,25 +798,66 @@ function MasterPdfCard({ id, contract, mayManage, maySign, onChanged, onError, o
   );
 }
 
-// ─────────────────────────────────────────────── Excel-ээс талууд
+// ─────────────────────────────────────────────── тараалт
 
-function ImportPartiesForm({ id, onImported, onError }: {
+/**
+ * Нэг загвар — хүн бүрд ТУСДАА гэрээ.
+ *
+ * Зээлийн гэрээг 500 хүнтэй байгуулахад 500 хүн НЭГ гэрээний хамтрагч тал
+ * болдоггүй: хүн бүртэй тус тусдаа гэрээ байгуулагдана. Хүлээн авагчид
+ * бие биеэ огт харахгүй, хүн бүрийн гэрээ өөрийнхөө гарын үсгээр хүчин
+ * төгөлдөр болно. Жагсаалтыг Excel-ээс эсвэл энд нэг нэгээр нь нэмнэ.
+ */
+function IssueCard({ id, onChanged, onError, onInfo }: {
   id: string;
-  onImported: () => Promise<void>;
+  onChanged: () => Promise<void>;
   onError: (err: unknown) => void;
+  onInfo: (value: string) => void;
 }) {
   const { t } = useI18n();
+  const router = useRouter();
   const fileInput = React.useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<{ added: number; skipped: Array<{ row: number; name?: string; reason: string }> } | null>(null);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const [pending, setPending] = useState<Array<{ name: string; signer_reg: string }>>([]);
+  const [name, setName] = useState("");
+  const [reg, setReg] = useState("");
+  const [outcome, setOutcome] = useState<{
+    issued: number;
+    skipped: Array<{ row?: number; name?: string; reason: string }>;
+  } | null>(null);
 
-  const run = async (file: File) => {
-    setBusy(true);
-    setResult(null);
+  const finish = async (result: { issued: number; children: unknown[]; skipped: Array<{ row?: number; name?: string; reason: string }> }) => {
+    setOutcome({ issued: result.issued, skipped: result.skipped });
+    setPending([]);
+    if (result.issued > 0) onInfo(t("contracts.issue.done", { count: result.issued }));
+    await onChanged();
+    router.refresh();
+  };
+
+  // Жагсаалт хэдий ч урт байг — 10-аар хэсэглэн ДАРААЛАН явуулна.
+  // Word мастертай тараалтад хүн бүр LibreOffice хөрвүүлэлт «үнэтэй» тул
+  // серверийн нэг хүсэлтийн дээд хязгаарт багтаж, явц нь чухам харагдана.
+  const runChunked = async (rows: Array<{ name: string; org_reg?: string; signer_name?: string; signer_reg: string; position?: string }>) => {
+    setProgress({ done: 0, total: rows.length });
     try {
-      const res = await contracts.importParties(id, file);
-      setResult(res);
-      await onImported();
+      await finish(await contracts.issueChunked(id, rows, (done, total) => setProgress({ done, total })));
+    } finally {
+      setProgress(null);
+    }
+  };
+
+  const runFile = async (file: File) => {
+    setBusy(true);
+    setOutcome(null);
+    try {
+      // Excel нэг удаа урьдчилан уншигдана — юу ч үүсгэхгүй. Ирсэн JSON-ыг
+      // хэсэглэж явуулна: 500 мөр нэг хүсэлтэд багтах албагүй болно.
+      const preview = await contracts.issuePreview(id, file);
+      await runChunked(preview.recipients.map((row) => ({
+        name: row.name, org_reg: row.org_reg, signer_name: row.signer_name,
+        signer_reg: row.signer_reg, position: row.position,
+      })));
     } catch (err) {
       onError(err);
     } finally {
@@ -812,12 +866,22 @@ function ImportPartiesForm({ id, onImported, onError }: {
     }
   };
 
+  const runManual = async () => {
+    setBusy(true);
+    setOutcome(null);
+    try {
+      await runChunked(pending.map((row) => ({ name: row.name, signer_reg: row.signer_reg })));
+    } catch (err) {
+      onError(err);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
-    <div className="border-t border-line pt-4 space-y-2">
+    <section className={`${cardClass} p-5 space-y-3`}>
       <div className="flex flex-wrap items-center gap-2">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-muted grow">
-          {t("contracts.section.import")}
-        </h3>
+        <h2 className="text-sm font-semibold text-foreground grow">{t("contracts.section.issue")}</h2>
         <a href={contracts.importTemplateUrl()} className="text-xs text-indigo-700 hover:underline">
           {t("contracts.action.import_template")}
         </a>
@@ -828,7 +892,7 @@ function ImportPartiesForm({ id, onImported, onError }: {
           className="hidden"
           onChange={(event) => {
             const file = event.target.files?.[0];
-            if (file) void run(file);
+            if (file) void runFile(file);
           }}
         />
         <button
@@ -840,17 +904,109 @@ function ImportPartiesForm({ id, onImported, onError }: {
           {t("contracts.action.import_excel")}
         </button>
       </div>
-      <p className="text-[11px] text-muted">{t("contracts.import.hint")}</p>
-      {result && (
+      <p className="text-xs text-muted">{t("contracts.issue.note")}</p>
+
+      {/* Гараар: нэр + регистр, хэдийг ч. */}
+      <div className="flex flex-wrap items-end gap-2">
+        <div className="grow min-w-[12rem]">
+          <label className="block text-xs font-medium text-muted mb-1">{t("contracts.field.recipient_name")}</label>
+          <input className={fieldClass} value={name} onChange={(event) => setName(event.target.value)} />
+        </div>
+        <div className="min-w-[11rem]">
+          <label className="block text-xs font-medium text-muted mb-1">{t("contracts.field.recipient_reg")}</label>
+          <input className={fieldClass} value={reg} onChange={(event) => setReg(event.target.value)} />
+        </div>
+        <button
+          onClick={() => {
+            if (!name.trim() || !reg.trim()) return;
+            setPending((current) => [...current, { name: name.trim(), signer_reg: reg.trim() }]);
+            setName("");
+            setReg("");
+          }}
+          disabled={!name.trim() || !reg.trim()}
+          className="h-[38px] text-xs font-semibold text-foreground bg-surface border border-line hover:bg-surface-hover px-3 rounded-lg disabled:opacity-50 inline-flex items-center gap-1"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          {t("contracts.action.add")}
+        </button>
+      </div>
+      {pending.length > 0 && (
+        <div className="space-y-1">
+          {pending.map((row, index) => (
+            <div key={index} className="flex items-center gap-2 text-sm text-foreground">
+              <span className="grow">{row.name} · {row.signer_reg}</span>
+              <button
+                onClick={() => setPending((current) => current.filter((_, i) => i !== index))}
+                className="text-xs text-red-600 hover:underline"
+              >
+                {t("contracts.action.remove")}
+              </button>
+            </div>
+          ))}
+          <button
+            onClick={() => void runManual()}
+            disabled={busy}
+            className="mt-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-semibold px-4 py-2 rounded-lg inline-flex items-center gap-1.5"
+          >
+            <Send className="w-4 h-4" />
+            {t("contracts.action.issue", { count: pending.length })}
+          </button>
+        </div>
+      )}
+
+      {progress && progress.total > 10 && (
+        <p className="text-xs font-medium text-indigo-700">
+          {t("contracts.issue.progress", { done: progress.done, total: progress.total })}
+        </p>
+      )}
+      {outcome && (
         <Banner
-          tone={result.skipped.length ? "warning" : "success"}
-          message={t("contracts.import.result", { added: result.added, skipped: result.skipped.length })}
+          tone={outcome.skipped.length ? "warning" : "success"}
+          message={t("contracts.import.result", { added: outcome.issued, skipped: outcome.skipped.length })}
         />
       )}
-      {result?.skipped.slice(0, 6).map((skip) => (
-        <p key={skip.row} className="text-[11px] text-amber-700">
-          {t("contracts.import.row", { row: skip.row })}: {skip.name ? `${skip.name} — ` : ""}{skip.reason}
+      {outcome?.skipped.slice(0, 6).map((skip, index) => (
+        <p key={index} className="text-[11px] text-amber-700">
+          {skip.name ? `${skip.name} — ` : ""}{skip.reason}
         </p>
+      ))}
+      <IssuedChildren id={id} refreshKey={outcome?.issued ?? 0} />
+    </section>
+  );
+}
+
+/** Энэ мастераас тараагдсан гэрээнүүд, тус бүрийн төлөвтэйгөө. */
+function IssuedChildren({ id, refreshKey }: { id: string; refreshKey: number }) {
+  const { t } = useI18n();
+  const router = useRouter();
+  const [children, setChildren] = useState<ContractRow[]>([]);
+
+  React.useEffect(() => {
+    let alive = true;
+    contracts.list()
+      .then((res) => {
+        if (alive) setChildren(res.contracts.filter((row) => row.parent_document_id === id));
+      })
+      .catch(() => undefined);
+    return () => { alive = false; };
+  }, [id, refreshKey]);
+
+  if (children.length === 0) return null;
+  return (
+    <div className="border-t border-line pt-3 space-y-1">
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">
+        {t("contracts.issue.children", { count: children.length })}
+      </h3>
+      {children.map((child) => (
+        <button
+          key={child.id}
+          onClick={() => router.push(`/module/documents/contracts/${child.id}`)}
+          className="w-full flex items-center gap-2 text-left text-sm rounded-lg px-2 py-1.5 hover:bg-surface-hover"
+        >
+          <span className="grow text-foreground">{child.counterparties || child.title}</span>
+          <span className="font-mono text-xs text-muted">{child.signed_count}/{child.required_count}</span>
+          <ContractBadge state={child.contract_state} />
+        </button>
       ))}
     </div>
   );

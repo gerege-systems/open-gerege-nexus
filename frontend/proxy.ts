@@ -45,7 +45,11 @@ import { DEVICE_LINE_HEADER, deviceLineFromHost, lineHomePath } from "@/lib/devi
  * The old page files stay as a backstop for anything that reaches rendering
  * anyway; this is what actually answers.
  */
-const MOVED: Record<string, string> = {};
+const MOVED: Record<string, string> = {
+  // PDF signing moved inside Documents. See documents.RegisterRoutes — the API
+  // kept its own prefix, and only the screen has a forwarding note.
+  "/esign": "/module/documents/pdf",
+};
 
 export function proxy(request: NextRequest) {
   const controlPlane = controlPlaneHostDecision(

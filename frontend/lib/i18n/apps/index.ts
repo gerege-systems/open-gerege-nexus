@@ -49,6 +49,8 @@
 import "./sso_clients";
 import "./integrations";
 import "./documents";
+import "./esign";
+import "./reports";
 import "./storefront";
 import "./urtuu";
 import "./kiosk";

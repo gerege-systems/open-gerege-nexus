@@ -382,7 +382,7 @@ export const documents = {
   "contracts.mode.joint": { mn: "Дараалалтай", en: "In order" },
 
   "contracts.section.facts": { mn: "Гэрээний мэдээлэл", en: "Contract details" },
-  "contracts.section.body": { mn: "Гэрээний бичвэр", en: "Contract text" },
+  "contracts.section.body": { mn: "Гэрээний текст (PDF байхгүй үед)", en: "Contract text (when there is no PDF)" },
   "contracts.section.parties": { mn: "Талууд", en: "Parties" },
   "contracts.section.add_party": { mn: "Тал нэмэх", en: "Add a party" },
   "contracts.section.send": { mn: "Илгээх", en: "Send" },
@@ -391,8 +391,12 @@ export const documents = {
 
   "contracts.body.placeholder": { mn: "Гэрээний бичвэрээ энд бичнэ.", en: "Write the contract text here." },
   "contracts.body.hint": {
-    mn: "Орлуулга (жижиг үсгээр): {tokens} — тал бүрийн хувь дээр тэдний өөрсдийнх нь мэдээллээр бөглөгдөнө.",
-    en: "Placeholders (lower-case): {tokens} — filled with each party's own details on their copy.",
+    mn: "Хүлээн авагч бүрийн хувь дээр нэр, регистр нь автоматаар орно.",
+    en: "Each recipient's copy carries their own name and registration automatically.",
+  },
+  "contracts.body.advanced": {
+    mn: "Нарийн тохиргоо: бичвэрт {tokens} гэж бичсэн газарт тухайн талын мэдээлэл орлуулагдана.",
+    en: "Advanced: where the text says {tokens}, that party's own details are substituted.",
   },
   "contracts.body.frozen_note": {
     mn: "Гэрээ илгээгдсэн. Бичвэрийг засах нь дахин илгээсэн хувьд л нөлөөлнө — аль хэдийн хүргэгдсэн хувь ХӨЛДӨӨТЭЙ.",
@@ -428,6 +432,11 @@ export const documents = {
   "contracts.action.view_pdf": { mn: "PDF харах", en: "View PDF" },
 
   "contracts.msg.check_phone": { mn: "Утсаа шалгана уу", en: "Check your phone" },
+  "contracts.msg.poll_lost": {
+    mn: "Сервертэй холбоо тасарлаа — утсан дээрх ёслол нээлттэй хэвээр. Дахин оролдоно уу.",
+    en: "Lost contact with the server — the ceremony on your phone is still open. Try again.",
+  },
+  "contracts.issue.progress": { mn: "Тараалт: {done} / {total}", en: "Issuing: {done} / {total}" },
   "contracts.msg.refused": { mn: "Иргэн татгалзлаа.", en: "The citizen refused." },
   "contracts.msg.ceremony_ended": { mn: "Ёслол дуусав: {state}", en: "The ceremony ended: {state}" },
   "contracts.msg.saved": { mn: "Хадгаллаа.", en: "Saved." },
@@ -465,15 +474,17 @@ export const documents = {
   "contracts.msg.signs_at": { mn: "{n}-рт зурна", en: "signs {n}." },
 
   // Мастер PDF ба Excel импорт.
-  "contracts.section.pdf": { mn: "Гэрээний PDF", en: "Contract PDF" },
+  "contracts.section.pdf": { mn: "Гэрээний файл", en: "Contract file" },
   "contracts.pdf.note": {
-    mn: "Өөрийн бэлтгэсэн PDF-ээ хавсаргаад, доор нь өөрөө PIN2-оор зурна. Илгээхэд тал бүр яг энэ файлыг — таны гарын үсэгтэйгээр нь — авч зурна. PDF байхгүй бол доорх бичвэрээс тал бүрд PDF үүсгэнэ.",
-    en: "Attach your own PDF and sign it below with PIN2. At send time every party receives exactly this file — carrying your signature — and signs it. Without a PDF, a per-party PDF is rendered from the text below.",
+    mn: "Word (.docx) хавсаргавал тараах үед хүн бүрийн хувь дээр ӨӨРИЙНХ нь нэр, регистр орж, PDF болж очно — гарын үсэг тэр PDF дээр зурагдана. PDF хавсаргавал бүгд яг ижил файл авна (доор өөрөө PIN2 зурж болно). Аль нь ч байхгүй бол доорх текстээс PDF үүсгэнэ.",
+    en: "Attach a Word file (.docx) and at issue time each recipient's copy carries their own name and registration, converted to PDF — signatures land on that PDF. Attach a PDF and everyone receives the identical file (you can PIN2-sign it below). With neither, the PDF is rendered from the text below.",
   },
-  "contracts.pdf.none": { mn: "PDF хавсаргаагүй — гэрээ доорх бичвэрээс үүснэ.", en: "No PDF attached — the contract is rendered from the text below." },
+  "contracts.pdf.none": { mn: "Файл хавсаргаагүй — гэрээ доорх текстээс үүснэ.", en: "No file attached — the contract is rendered from the text below." },
+  "contracts.pdf.word_badge": { mn: "Word загвар — тараахад хүн бүрд PDF болно", en: "Word template — becomes a per-recipient PDF at issue" },
+  "contracts.action.word_template": { mn: "Word загвар татах (бөглөөд буцааж хавсаргана)", en: "Download the Word template (fill it in and attach it back)" },
   "contracts.pdf.master_signed": { mn: "Гаргагч зурсан ✓", en: "Signed by issuer ✓" },
-  "contracts.action.attach_pdf": { mn: "PDF хавсаргах", en: "Attach a PDF" },
-  "contracts.action.replace_pdf": { mn: "PDF солих", en: "Replace the PDF" },
+  "contracts.action.attach_pdf": { mn: "Word / PDF хавсаргах", en: "Attach Word / PDF" },
+  "contracts.action.replace_pdf": { mn: "Файл солих", en: "Replace the file" },
   "contracts.action.master_sign": { mn: "Өөрөө зурах (PIN2)", en: "Sign it yourself (PIN2)" },
   "contracts.msg.pdf_attached": { mn: "PDF хавсаргагдлаа.", en: "The PDF is attached." },
   "contracts.msg.master_signed": { mn: "Таны гарын үсэг PDF дээр суулаа.", en: "Your signature is on the PDF." },
@@ -487,4 +498,21 @@ export const documents = {
   },
   "contracts.import.result": { mn: "{added} тал нэмэгдэв, {skipped} мөр алгасав.", en: "{added} parties added, {skipped} rows skipped." },
   "contracts.import.row": { mn: "{row}-р мөр", en: "Row {row}" },
+
+  // Тараалт: нэг загвар, хүн бүрд тусдаа гэрээ.
+  "contracts.section.issue": { mn: "Олон хүнтэй байгуулах (тараалт)", en: "Conclude with many people (issue)" },
+  "contracts.issue.note": {
+    mn: "Ижил гэрээг олон хүнтэй байгуулах бол энд. Хүн бүртэй ТУС ТУСДАА гэрээ үүснэ: хэн ч бусдыгаа харахгүй, хүн бүрийн гэрээ өөрийнхөө гарын үсгээр хүчинтэй болно. Дээрх «Талууд» хэсэг бол өөр зүйл — НЭГ гэрээнд хамт зурах хүмүүс (худалдагч, худалдан авагч, гэрч).",
+    en: "To conclude the same contract with many people, use this. Each person gets their OWN contract: nobody sees the others, and each contract is executed by its own signature. The Parties section above is different — the people who co-sign ONE contract (buyer, seller, witness).",
+  },
+  "contracts.issue.done": { mn: "{count} хүнд тус тусын гэрээ илгээгдлээ.", en: "{count} people received their own contract." },
+  "contracts.issue.children": { mn: "Тараагдсан гэрээ ({count})", en: "Issued contracts ({count})" },
+  "contracts.action.issue": { mn: "{count} хүнд тараах", en: "Issue to {count} people" },
+  "contracts.field.recipient_name": { mn: "Хүний / байгууллагын нэр", en: "Person or organisation" },
+  "contracts.field.recipient_reg": { mn: "Регистрийн дугаар", en: "Registration number" },
+  "contracts.parties.note": {
+    mn: "НЭГ гэрээнд хамт гарын үсэг зурах талууд. Олон хүнтэй тус тусад нь байгуулах бол доорх «Тараалт»-ыг ашиглана.",
+    en: "The parties who co-sign THIS one contract. To conclude it separately with many people, use Issue below.",
+  },
+  "contracts.list.issued": { mn: "Тараасан: {total} · хүчин төгөлдөр: {executed}", en: "Issued: {total} · executed: {executed}" },
 } as const;
