@@ -12,11 +12,11 @@ jobs:
       - uses: actions/setup-dotnet@v6
         with: { dotnet-version: 8.0.x }
       - run: dotnet publish GeregeNexusWin.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:FormFactor=${{ matrix.form_factor }}
-        working-directory: native-apps/windows
+        working-directory: native-apps/desktop/windows
       - uses: actions/upload-artifact@v7
         with:
           name: windows-${{ matrix.form_factor }}-win-x64
-          path: "native-apps/windows/bin/Release/${{ matrix.form_factor }}/net8.0-windows*/win-x64/publish"
+          path: "native-apps/desktop/windows/bin/Release/${{ matrix.form_factor }}/net8.0-windows*/win-x64/publish"
   android:
     runs-on: ubuntu-latest
     steps:
@@ -27,16 +27,16 @@ jobs:
       - uses: android-actions/setup-android@v4
       - run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
       - run: ./gradlew :app:assembleMobileRelease :app:assembleTabletRelease :app:assembleKioskRelease :app:assemblePosRelease
-        working-directory: native-apps/android
+        working-directory: native-apps/mobile/android
       - uses: actions/upload-artifact@v7
-        with: { name: android-all-form-factors-unsigned, path: native-apps/android/app/build/outputs/apk/*/release/*.apk }
+        with: { name: android-all-form-factors-unsigned, path: native-apps/mobile/android/app/build/outputs/apk/*/release/*.apk }
   ios:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v7
       - run: ./build.sh
-        working-directory: native-apps/macos
+        working-directory: native-apps/desktop/macos
       - run: xcodebuild -quiet -project GeregeNexusIOS.xcodeproj -scheme GeregeNexusIOS -destination 'generic/platform=iOS' build CODE_SIGNING_ALLOWED=NO
-        working-directory: native-apps/ios
+        working-directory: native-apps/mobile/ios
       - uses: actions/upload-artifact@v7
-        with: { name: macos-arm64-unsigned, path: native-apps/macos/GeregeNexusNativeMac }
+        with: { name: macos-arm64-unsigned, path: native-apps/desktop/macos/GeregeNexusNativeMac }

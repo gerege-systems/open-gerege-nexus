@@ -14,11 +14,11 @@
 
 set -euo pipefail
 
+# Шугам бүр нэг form factor. Платформ биш: ширээн дээрх Mac ба Windows хоёр
+# `desktop`-ыг хуваалцана.
 LINES=(
-  mac.nexus.gerege.mn
-  win.nexus.gerege.mn
-  ios.nexus.gerege.mn
-  android.nexus.gerege.mn
+  desktop.nexus.gerege.mn
+  mobile.nexus.gerege.mn
   kiosk.nexus.gerege.mn
   pos.nexus.gerege.mn
 )
@@ -101,8 +101,8 @@ cat <<EOF
 
 2. Клиентүүдийг шугам руу нь чиглүүлнэ — ЗӨВХӨН одоо, өмнө нь биш.
    native-apps/shared/device_lines.json-ы \$provisioning заасан мөрүүд:
-     macOS    native-apps/macos/NativeSettings.swift        → activeOrigin
-     Windows  native-apps/windows/ShellProfile.cs           → ActiveOrigin
+     macOS    native-apps/desktop/macos/NativeSettings.swift        → activeOrigin
+     Windows  native-apps/desktop/windows/ShellProfile.cs           → ActiveOrigin
      iOS      .../GeregeShellKit/DeviceLine.swift           → origin
      Android  .../mn/gerege/nexus/DeviceLine.kt             → origin
    мөн device_lines.json дотор provisioned: true болгоно.

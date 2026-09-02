@@ -15,7 +15,7 @@ namespace GeregeNexusNativeWin
     /// Window нээх эрхтэй зүйл бол зөвхөн MessageBox болон файл сонгох диалог
     /// гэх мэт богино насалдаг popup-ууд.
     ///
-    /// Ажлын муж нь <c>win.nexus.gerege.mn</c> — Windows-ийн domain шугам. Тэр
+    /// Ажлын муж нь <c>desktop.nexus.gerege.mn</c> — ширээний domain шугам. Тэр
     /// host нь өөрийн <c>/api/v1</c>-ээ мөн үйлчилдэг тул webview доторх
     /// дуудлага same-origin болж, session cookie нь SameSite=Strict хэвээр
     /// ажиллана.

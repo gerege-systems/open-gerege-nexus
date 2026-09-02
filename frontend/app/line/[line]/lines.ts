@@ -1,4 +1,4 @@
-import type { ShellPlatform } from "@/lib/shell";
+import type { ShellLine } from "@/lib/shell";
 
 /**
  * Шугам бүрийн нүүр дэлгэцийн агуулга.
@@ -7,6 +7,13 @@ import type { ShellPlatform } from "@/lib/shell";
  * төхөөрөмжтэй бие махбодоор хэрхэн харьцдаг вэ гэдэг нь дэлгэцийн нягтрал,
  * товчны хэмжээ, юуг эхэнд тавихыг шийднэ. Ширээн дээрх Mac ба зогсож байгаа
  * хүний хүрдэг kiosk хоёр ижил дэлгэц байх ёсгүй.
+ *
+ * Яг тэр шалтгаанаар Mac ба Windows хоёр НЭГ дэлгэц: хүн тэр хоёрын аль
+ * дээр нь ч сандал дээр суугаад, гар талдаа байлгаж ажилладаг. Тэдгээрийг
+ * тусад нь бичих гэсэн оролдлого нь ижил дэлгэцийг өөр үгээр хоёр удаа
+ * бичихэд хүргэсэн. Платформ ялгах шаардлага үнэхээр гарвал бүрхүүл
+ * `window.GeregeShell.platform`-оор өөрийгөө хэлдэг — дэлгэц дотроос
+ * салаалж болно.
  */
 export type LinePosture = "desk" | "hand" | "public";
 
@@ -36,13 +43,13 @@ export interface LineContent {
   actions: LineAction[];
 }
 
-export const LINE_ORDER: ShellPlatform[] = ["macos", "windows", "ios", "android", "kiosk", "pos"];
+export const LINE_ORDER: ShellLine[] = ["desktop", "mobile", "kiosk", "pos"];
 
-export const LINES: Record<ShellPlatform, LineContent> = {
-  macos: {
-    eyebrow: "ГЭРЭГЭ · MAC ШУГАМ",
+export const LINES: Record<ShellLine, LineContent> = {
+  desktop: {
+    eyebrow: "ГЭРЭГЭ · DESKTOP ШУГАМ",
     title: "Ажлын ширээ",
-    lede: "Урт ээлж, гар талдаа. Модуль бүр энэ хүрээн дотор нээгдэж, цонх нэмэгдэхгүй.",
+    lede: "Урт ээлж, гар талдаа. Байгууллагын өдөр тутмын ажил — модуль, тохиргоо, нөөц нэг хүрээн дотор, цонх нэмэгдэхгүй.",
     posture: "desk",
     alloy: "#6B7A99",
     alloyRGB: "107 122 153",
@@ -50,46 +57,21 @@ export const LINES: Record<ShellPlatform, LineContent> = {
       { label: "Апп дэлгүүр", hint: "Модуль асаах, унтраах", href: "/apps", icon: "grid" },
       { label: "SSO клиентүүд", hint: "OAuth2 клиент бүртгэл", href: "/sso-clients", icon: "key" },
       { label: "Холбогч", hint: "Интеграц тохиргоо", href: "/module/integrations/connectors", icon: "link" },
-      { label: "Төхөөрөмжийн парк", hint: "Бүртгэсэн төхөөрөмжүүд", href: "/settings/devices", icon: "monitor" },
-    ],
-  },
-  windows: {
-    eyebrow: "ГЭРЭГЭ · WIN ШУГАМ",
-    title: "Албаны ширээ",
-    lede: "Байгууллагын өдөр тутмын ажил — модуль, тохиргоо, нөөц нэг дороос.",
-    posture: "desk",
-    alloy: "#2F6FED",
-    alloyRGB: "47 111 237",
-    actions: [
-      { label: "Апп дэлгүүр", hint: "Модуль асаах, унтраах", href: "/apps", icon: "grid" },
-      { label: "SSO клиентүүд", hint: "OAuth2 клиент бүртгэл", href: "/sso-clients", icon: "key" },
       { label: "Хандах эрх", hint: "Хэрэглэгч, үүрэг", href: "/settings/access", icon: "shield" },
       { label: "Төхөөрөмжийн парк", hint: "Бүртгэсэн төхөөрөмжүүд", href: "/settings/devices", icon: "monitor" },
     ],
   },
-  ios: {
-    eyebrow: "ГЭРЭГЭ · IOS ШУГАМ",
+  mobile: {
+    eyebrow: "ГЭРЭГЭ · MOBILE ШУГАМ",
     title: "Гарын алганд",
-    lede: "Хөдөлгөөнд байхад хэрэгтэй нь: зөвшөөрөх, хянах, тохируулах.",
+    lede: "Хөдөлгөөнд байхад хэрэгтэй нь: зөвшөөрөх, хянах, уншуулаад бүртгэх. Гар оролт багатай.",
     posture: "hand",
     alloy: "#0E9AA7",
     alloyRGB: "14 154 167",
     actions: [
       { label: "Апп дэлгүүр", hint: "Модуль асаах, унтраах", href: "/apps", icon: "grid" },
-      { label: "Профайл", hint: "Хэл, нэвтрэлт", href: "/profile", icon: "settings" },
-      { label: "Хандах эрх", hint: "Хэрэглэгч, үүрэг", href: "/settings/access", icon: "shield" },
-    ],
-  },
-  android: {
-    eyebrow: "ГЭРЭГЭ · ANDROID ШУГАМ",
-    title: "Талбарт",
-    lede: "Талбар, хяналт, үзлэг. Уншуулаад бүртгэнэ — гар оролт багатай.",
-    posture: "hand",
-    alloy: "#2E9E5B",
-    alloyRGB: "46 158 91",
-    actions: [
-      { label: "Аппууд", hint: "Суулгасан, суулгаж болох", href: "/apps", icon: "grid" },
       { label: "Профайл", hint: "Хэл, төхөөрөмж, нэвтрэлт", href: "/profile", icon: "settings" },
+      { label: "Хандах эрх", hint: "Хэрэглэгч, үүрэг", href: "/settings/access", icon: "shield" },
       { label: "Төхөөрөмж", hint: "Бүртгэсэн төхөөрөмжүүд", href: "/settings/devices", icon: "monitor" },
     ],
   },
@@ -118,6 +100,6 @@ export const LINES: Record<ShellPlatform, LineContent> = {
   },
 };
 
-export function isLine(value: string): value is ShellPlatform {
+export function isLine(value: string): value is ShellLine {
   return value in LINES;
 }
