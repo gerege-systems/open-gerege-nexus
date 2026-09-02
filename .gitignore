@@ -51,13 +51,13 @@ coverage.html
 # Xcode-ийн хэрэглэгчийн төлөв — машин бүрт өөр, түүхэнд хэрэггүй.
 xcuserdata/
 *.xcuserstate
-native-apps/macOS/build/
-native-apps/macOS/GeregeNexusNativeMac
+native-apps/macos/build/
+native-apps/macos/GeregeNexusNativeMac
 native-apps/android/**/build/
 native-apps/android/.gradle/
 native-apps/android/local.properties
-native-apps/iOS/.build/
-native-apps/iOS/.swiftpm/
+native-apps/ios/.build/
+native-apps/ios/.swiftpm/
 native-apps/windows/**/bin/
 native-apps/windows/**/obj/
 

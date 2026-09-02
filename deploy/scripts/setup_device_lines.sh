@@ -101,7 +101,7 @@ cat <<EOF
 
 2. Клиентүүдийг шугам руу нь чиглүүлнэ — ЗӨВХӨН одоо, өмнө нь биш.
    native-apps/shared/device_lines.json-ы \$provisioning заасан мөрүүд:
-     macOS    native-apps/macOS/NativeSettings.swift        → activeOrigin
+     macOS    native-apps/macos/NativeSettings.swift        → activeOrigin
      Windows  native-apps/windows/ShellProfile.cs           → ActiveOrigin
      iOS      .../GeregeShellKit/DeviceLine.swift           → origin
      Android  .../mn/gerege/nexus/DeviceLine.kt             → origin

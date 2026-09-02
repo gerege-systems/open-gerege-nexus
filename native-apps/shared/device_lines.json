@@ -41,7 +41,7 @@
       "provisioned": true,
       "devOrigin": "http://localhost:3000",
       "startRoute": "/",
-      "client": "native-apps/macOS/NativeSettings.swift → lineOrigin",
+      "client": "native-apps/macos/NativeSettings.swift → lineOrigin",
       "home": "/line/macos"
     },
     "windows": {
@@ -59,7 +59,7 @@
       "provisioned": true,
       "devOrigin": "http://localhost:3000",
       "startRoute": "/",
-      "client": "native-apps/iOS/Sources/GeregeShellKit/DeviceLine.swift → origin",
+      "client": "native-apps/ios/Sources/GeregeShellKit/DeviceLine.swift → origin",
       "home": "/line/ios"
     },
     "android": {
