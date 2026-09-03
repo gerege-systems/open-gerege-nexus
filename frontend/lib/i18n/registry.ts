@@ -67,6 +67,27 @@ export function registerDictionary(
 }
 
 /**
+ * Adds one language to an app that is already registered.
+ *
+ * The optional languages arrive later than the app does — they are a chunk of
+ * their own now (lib/i18n/locales/index.ts), fetched when a reader picks one —
+ * so they cannot be handed over in the same call as the app's mn/en source.
+ * Merging rather than replacing is the whole point: registerDictionary sets,
+ * and calling it a second time with only Arabic would take the app's English
+ * away.
+ *
+ * Idempotent, because a locale can be arrived at twice (switch away, switch
+ * back) and the chunk is cached by then.
+ */
+export function addLocale(
+  appId: string,
+  locale: Locale,
+  entries: Record<string, string>,
+): void {
+  registry.set(appId, { ...registry.get(appId), [locale]: entries });
+}
+
+/**
  * What the registered apps say for this key in this language, if any.
  *
  * Last registration wins on a collision, matching how the spread that this

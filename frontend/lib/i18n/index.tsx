@@ -5,8 +5,8 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from "
 import { DEFAULT_BRAND } from "../brand";
 import type { BrandCopy } from "../brandCopy";
 import { coreDictionary, type TranslationKey } from "./core";
-import { lookup } from "./registry";
-import { overlays } from "./locales";
+import { addLocale, lookup } from "./registry";
+import { loadLocaleBundle } from "./locales";
 
 // Imported for its side effects: every app in this build registers its own
 // translations at import time. See apps/index.ts for why that happens here
@@ -130,6 +130,10 @@ export function I18nProvider({
   // applied in an effect rather than during initial state.
   const [locale, setLocaleState] = useState<Locale>(DEFAULT_LOCALE);
   const [extraLocales, setExtraLocales] = useState<Locale[]>([]);
+  // The optional languages are fetched, not bundled — see lib/i18n/locales.
+  // Empty for mn and en, which are authored in the dictionary itself, and empty
+  // for the moment between choosing a language and its chunk arriving.
+  const [overlay, setOverlay] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const stored = window.localStorage.getItem(STORAGE_KEY);
@@ -153,6 +157,30 @@ export function I18nProvider({
       setLocaleState(stored);
     }
   }, []);
+
+  useEffect(() => {
+    const pending = loadLocaleBundle(locale);
+    if (!pending) {
+      setOverlay({});
+      return;
+    }
+    // A reader who switches languages twice while the network is slow must not
+    // end up reading the first choice: a late arrival is dropped rather than
+    // applied over the language now being read.
+    let current = true;
+    void pending.then((bundle) => {
+      if (!current) return;
+      // The apps' words go into the registry t() already reads; the platform's
+      // go into state, because that is what re-renders the screen holding them.
+      for (const [appId, entries] of Object.entries(bundle.apps)) {
+        addLocale(appId, locale, entries);
+      }
+      setOverlay(bundle.core);
+    });
+    return () => {
+      current = false;
+    };
+  }, [locale]);
 
   useEffect(() => {
     document.documentElement.lang = locale;
@@ -212,7 +240,7 @@ export function I18nProvider({
       // app and no core entry renders as itself, which is what it always did.
       let text: string =
         copy[key]?.[locale] ||
-        overlays[locale]?.[key] ||
+        overlay[key] ||
         (entry ? entry[locale] || entry.en : undefined) ||
         lookup(locale, key) ||
         lookup("en", key) ||
@@ -235,7 +263,7 @@ export function I18nProvider({
     };
 
     return { locale, setLocale, availableLocales, setLocaleEnabled, t };
-  }, [locale, extraLocales, brand, copy]);
+  }, [locale, overlay, extraLocales, brand, copy]);
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }
