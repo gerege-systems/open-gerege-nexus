@@ -16,6 +16,8 @@ export * from "./api/ai";
 export * from "./api/sso-clients";
 export * from "./api/urtuu";
 export * from "./api/kiosk";
+export * from "./api/documents";
+export * from "./api/reports";
 
 import { coreApi } from "./api/client";
 import { integrationsApi } from "./api/integrations";
@@ -23,6 +25,8 @@ import { storeApi } from "./api/store";
 import { aiApi } from "./api/ai";
 import { ssoClientsApi } from "./api/sso-clients";
 import { urtuuApi } from "./api/urtuu";
+import { documentsApi } from "./api/documents";
+import { reportsApi } from "./api/reports";
 
 export const api = {
   ...coreApi,
@@ -31,4 +35,6 @@ export const api = {
   ...aiApi,
   ...ssoClientsApi,
   ...urtuuApi,
+  ...documentsApi,
+  ...reportsApi,
 };

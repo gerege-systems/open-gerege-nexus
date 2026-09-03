@@ -149,6 +149,7 @@ export function CeremonyButton({
     try {
       const session = await start();
       setCode(session.verification_code || "····");
+      let failures = 0;
       while (!cancelled.current) {
         await new Promise((resolve) => setTimeout(resolve, 3000));
         let progress: CeremonyProgress;
@@ -162,8 +163,17 @@ export function CeremonyButton({
             onError(err instanceof Error ? err.message : String(err));
             break;
           }
+          // Сервер огт хариулахаа больсон бол мөнхөд эргэлдэхгүй: 10 удаа
+          // дараалан унавал (~30 сек) зогсоож хэлнэ — утсан дээрх ёслол
+          // нээлттэй хэвээр, дахин дарахад асуулт үргэлжилнэ.
+          failures += 1;
+          if (failures >= 10) {
+            onError(t("contracts.msg.poll_lost"));
+            break;
+          }
           continue;
         }
+        failures = 0;
         if (progress.state === "COMPLETE") { await onDone(); break; }
         // Хоёр рельс хоёр өөр үгээр «хүлээж байна» гэдэг: талын зам PENDING,
         // мастерын зам RUNNING. Аль аль нь — асуусаар байх.

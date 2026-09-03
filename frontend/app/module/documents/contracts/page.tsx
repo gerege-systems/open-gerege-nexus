@@ -16,6 +16,32 @@ import { FileSignature, Plus } from "lucide-react";
  * starts a new one with nothing but a title — everything else (facts, text,
  * parties) belongs to the contract page, because that is where it is edited.
  */
+/**
+ * Тараагдсан гэрээнүүд эцгийнхээ АРД жагсана — 800 хүүхэд гэрээ жагсаалтыг
+ * живүүлэлгүй, аль тараалтынх нь тодорхой харагдана. Эцэггүй мөрүүд өөрийн
+ * дарааллаараа (шинэ нь эхэндээ) үлдэнэ.
+ */
+function orderByFamily(rows: ContractRow[]): ContractRow[] {
+  const children = new Map<string, ContractRow[]>();
+  for (const row of rows) {
+    if (row.parent_document_id) {
+      children.set(row.parent_document_id, [...(children.get(row.parent_document_id) ?? []), row]);
+    }
+  }
+  const ordered: ContractRow[] = [];
+  for (const row of rows) {
+    if (row.parent_document_id && children.has(row.parent_document_id)) continue;
+    ordered.push(row, ...(children.get(row.id) ?? []));
+  }
+  // Эцэг нь жагсаалтад байхгүй (хуучин өгөгдөл) хүүхэд орхигдох ёсгүй.
+  for (const row of rows) {
+    if (row.parent_document_id && !rows.some((candidate) => candidate.id === row.parent_document_id)) {
+      ordered.push(row);
+    }
+  }
+  return ordered;
+}
+
 export default function ContractsPage() {
   const { t } = useI18n();
   const { can } = useAccess();
@@ -84,17 +110,27 @@ export default function ContractsPage() {
             </tr>
           }
         >
-          {list.data.map((row) => (
+          {orderByFamily(list.data).map((row) => (
             <tr
               key={row.id}
               onClick={() => router.push(`/module/documents/contracts/${row.id}`)}
               className="cursor-pointer hover:bg-surface-hover"
             >
               <td className="px-4 py-3">
-                <div className="font-semibold text-foreground">{row.title}</div>
-                {row.contract_number && <div className="text-[11px] text-muted">№ {row.contract_number}</div>}
+                <div className={`font-semibold text-foreground ${row.parent_document_id ? "pl-5 relative" : ""}`}>
+                  {row.parent_document_id && <span className="absolute left-0 text-subtle">↳</span>}
+                  {row.parent_document_id ? row.counterparties || row.title : row.title}
+                </div>
+                {!row.parent_document_id && row.contract_number && (
+                  <div className="text-[11px] text-muted">№ {row.contract_number}</div>
+                )}
+                {!row.parent_document_id && (row.issued_count ?? 0) > 0 && (
+                  <div className="text-[11px] text-indigo-600 font-semibold">
+                    {t("contracts.list.issued", { total: row.issued_count ?? 0, executed: row.issued_executed ?? 0 })}
+                  </div>
+                )}
               </td>
-              <td className="px-4 py-3">{row.counterparties || "—"}</td>
+              <td className="px-4 py-3">{row.parent_document_id ? "" : row.counterparties || "—"}</td>
               <td className="px-4 py-3"><ContractBadge state={row.contract_state} /></td>
               <td className="px-4 py-3 font-mono">{row.signed_count} / {row.required_count}</td>
               <td className="px-4 py-3">{fmtMoney(row.amount, row.currency)}</td>
