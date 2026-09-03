@@ -69,11 +69,10 @@ export const LINES: Record<ShellLine, LineContent> = {
     posture: "hand",
     alloy: "#0E9AA7",
     alloyRGB: "14 154 167",
+    // Ширээнийхтэй ижил шалтгаанаар платформын дэлгэц рүү хөтлөхгүй: тэдгээр
+    // нь бүрхүүлийн хүрээн дотор хоёр дахь бүрхүүл болж давхарладаг.
     actions: [
-      { label: "Апп дэлгүүр", hint: "Модуль асаах, унтраах", href: "/apps", icon: "grid" },
-      { label: "Профайл", hint: "Хэл, төхөөрөмж, нэвтрэлт", href: "/profile", icon: "settings" },
-      { label: "Хандах эрх", hint: "Хэрэглэгч, үүрэг", href: "/settings/access", icon: "shield" },
-      { label: "Төхөөрөмж", hint: "Бүртгэсэн төхөөрөмжүүд", href: "/settings/devices", icon: "monitor" },
+      { label: "2 дахь дэлгэц", hint: "Шугамын өөрийн дэлгэц", href: "/line/mobile/second", icon: "grid" },
     ],
   },
   kiosk: {

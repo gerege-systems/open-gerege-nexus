@@ -1,6 +1,6 @@
 import LineSecondScreen from "@/components/LineSecondScreen";
 import { LINES } from "../../[line]/lines";
 
-export default function DesktopSecondScreen() {
-  return <LineSecondScreen content={LINES.desktop} />;
+export default function MobileSecondScreen() {
+  return <LineSecondScreen content={LINES.mobile} />;
 }
