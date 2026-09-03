@@ -8,10 +8,16 @@
 # It runs on nexus.gerege.mn, and that has one honest limitation worth writing
 # down rather than discovering: for nexus's *own* dump this is a second copy on
 # the same machine. It defends against somebody dropping a table, a bad
-# migration, or a volume being recreated — not against losing the host. For
-# every other deployment (fuelnet, dgov, appstore, pos, eduge, and the products
-# that live on their own machines) it is a genuine off-site copy, which is the
-# case that was completely unprotected before.
+# migration, or a volume being recreated — not against losing the host.
+#
+# For every other deployment it is *meant* to be a genuine off-site copy. As of
+# 2026-09-03 none of them uses it, and the eight hosts were checked one by one
+# to establish that rather than assumed: only petronet has a backup cron at all
+# and it runs backup.sh with no BACKUP_AGE_RECIPIENT and no BACKUP_S3_*, so its
+# dump is written to its own disk in the clear and never leaves. The remaining
+# six reachable hosts have no backup job of any kind. An earlier version of this
+# comment named those deployments as though they were already pushing here,
+# which is exactly the sort of sentence that stops anybody checking.
 #
 # Replicating this store outward is the step that closes the last gap; MinIO
 # does it with `mc mirror` on a timer, and it needs somewhere to mirror to.
