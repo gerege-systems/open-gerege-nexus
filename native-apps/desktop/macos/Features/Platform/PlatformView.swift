@@ -13,6 +13,35 @@ import LocalAuthentication
 /// Ингэснээр webview доторх `/api/v1` дуудлага same-origin хэвээр үлдэж,
 /// session cookie нь `SameSite=Strict` байхад ажиллана. Хоёр өөр гарал
 /// ашигласан бол тэр cookie хэзээ ч илгээгдэхгүй байх байв.
+/// Ажлын мужийн навигаци — бүрхүүлийн толгой хэсэг руу.
+///
+/// Гэрээний §1: бүрхүүл толгой хэсэг, цэс, навигацийг ЭЗЭМШИНЭ. Тиймээс
+/// «буцах» нь вэб хуудасны дотор зурагдах ёсгүй — тэр нь бүрхүүлийн товч.
+/// Webview нь `NSViewRepresentable`-ийн дотор амьдардаг тул толгой хэсэг
+/// түүн рүү хүрэх зам хэрэгтэй: энэ нь тэр зам, өөр юу ч биш.
+///
+/// `canGoBack`-ыг KVO-оор дагана — товч нь буцах түүхгүй үед ОГТ гарахгүй.
+/// Идэвхгүй саарал товч нь хүнд «энд ямар нэг зүйл байх ёстой» гэж хэлдэг
+/// бөгөөд ажлын мужийн эхний хуудсан дээр тэр нь худал.
+@MainActor
+final class WorkAreaNavigation: ObservableObject {
+    static let shared = WorkAreaNavigation()
+
+    @Published private(set) var canGoBack = false
+
+    private weak var webView: WKWebView?
+    private var observation: NSKeyValueObservation?
+
+    func attach(_ webView: WKWebView) {
+        self.webView = webView
+        observation = webView.observe(\.canGoBack, options: [.initial, .new]) { [weak self] view, _ in
+            Task { @MainActor in self?.canGoBack = view.canGoBack }
+        }
+    }
+
+    func goBack() { webView?.goBack() }
+}
+
 struct PlatformView: View {
     @EnvironmentObject private var appState: AppState
     @ObservedObject private var loc = LocalizationService.shared
@@ -68,6 +97,7 @@ private struct PlatformWebView: NSViewRepresentable {
         webView.uiDelegate = context.coordinator
         context.coordinator.webView = webView
         context.coordinator.appState = appState
+        WorkAreaNavigation.shared.attach(webView)
         webView.load(URLRequest(url: url))
         return webView
     }

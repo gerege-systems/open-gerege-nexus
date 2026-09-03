@@ -53,12 +53,13 @@ export const LINES: Record<ShellLine, LineContent> = {
     posture: "desk",
     alloy: "#6B7A99",
     alloyRGB: "107 122 153",
+    // Платформын дэлгэцүүд рүү хөтөлдөггүй БОЛОВ. Тэдгээр нь өөрийн толгой
+    // хэсэг, хажуугийн цэс, хэрэглэгчийн цэстэйгээ бүтнээрээ ирдэг тул
+    // бүрхүүлийн хүрээн дотор хоёр дахь бүрхүүл болж давхарладаг — гэрээний
+    // §1 яг үүнээс сэргийлэхийн тулд байдаг. Ширээний шугам өөрийн
+    // дэлгэцүүдээ `/line/desktop/…` дор тусад нь хөгжүүлнэ.
     actions: [
-      { label: "Апп дэлгүүр", hint: "Модуль асаах, унтраах", href: "/apps", icon: "grid" },
-      { label: "SSO клиентүүд", hint: "OAuth2 клиент бүртгэл", href: "/sso-clients", icon: "key" },
-      { label: "Холбогч", hint: "Интеграц тохиргоо", href: "/module/integrations/connectors", icon: "link" },
-      { label: "Хандах эрх", hint: "Хэрэглэгч, үүрэг", href: "/settings/access", icon: "shield" },
-      { label: "Төхөөрөмжийн парк", hint: "Бүртгэсэн төхөөрөмжүүд", href: "/settings/devices", icon: "monitor" },
+      { label: "2 дахь дэлгэц", hint: "Шугамын өөрийн дэлгэц", href: "/line/desktop/second", icon: "grid" },
     ],
   },
   mobile: {
