@@ -19,11 +19,6 @@ struct MainTabView: View {
                 .tabItem { Label(loc.t("Nav_Logs"), systemImage: "clock.arrow.circlepath") }
             MobileSettingsPage()
                 .tabItem { Label(loc.t("Nav_Settings"), systemImage: "gearshape") }
-            // Платформын ажлын муж нь ЭНЭ аппын өөрийн дэлгэц биш тул native
-            // дэлгэцүүдийн ДАРАА — ширээний sidebar-т ч мөн адил сүүлд байдаг
-            // (`DashboardTab.mainNav`). Байрлал нь хүнд аль нь аль болохыг хэлнэ.
-            MobilePlatformPage()
-                .tabItem { Label(loc.t("Nav_Platform"), systemImage: "square.grid.2x2") }
         }
         // Сонгогдсон таб нь БРЭНДИЙН цэнхэр биш, дулаан улбар шар. Дотор
         // талын карт, товч, холбоос бүр брэндийн цэнхэр тул табыг мөн цэнхэр

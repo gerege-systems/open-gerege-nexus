@@ -13,7 +13,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import mn.gerege.nexus.AppConfig
 
 /**
- * Платформын ажлын муж — iOS-ийн `MobilePlatformPage`-ийн дүйцэл.
+ * Платформын ажлын муж — ширээний `PlatformView`-ийн дүйцэл.
  *
  * Хаяг нь `AppConfig.baseUrl` — Android дээр `https://mobile.nexus.gerege.mn`,
  * native дуудлагууд явдаг ЯГ ТЭР гарал. Ингэснээр WebView доторх `/api/v1`
