@@ -47,8 +47,8 @@ Grafana дээр аль хэсэг эвдэрсэнийг харах. Restart н
 ```bash
 docker ps --filter name=gerege_nexus_backend
 docker logs --tail 200 gerege_nexus_backend
-curl -s localhost:8082/health
-curl -s localhost:8082/ready
+curl -s localhost:8080/health
+curl -s localhost:8080/ready
 ```
 
 - Контейнер огт байхгүй эсвэл `Restarting` бол → логоос яагаад гарсныг унш.
@@ -407,7 +407,7 @@ dmesg | grep -i -E 'oom|killed process' | tail -20
 
 ```bash
 # Платформ өөрөө өгөгдлийн санд хүрч байна уу
-curl -s localhost:8082/ready
+curl -s localhost:8080/ready
 
 docker ps --filter name=gerege_nexus_postgres
 docker logs --tail 100 gerege_nexus_postgres
