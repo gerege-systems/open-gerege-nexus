@@ -164,6 +164,8 @@ final class AppState: ObservableObject {
     @Published var civilID: String = ""
     @Published var kycLevel: String = ""
     @Published var sessionID: String = ""
+    /// eID app-to-app-аас буцаж ирэх deep link URL (жишээ нь `gerege-nexus://auth?sessionId=...`).
+    @Published var authCallbackURL: URL?
     /// v3 identity handle — гарын үсэг зурахад ашиглана.
     @Published var documentNumber: String = ""
     /// ESIGN-ийн гэрчилгээний кэш (base64 DER) — signing давуу, эс бөгөөс auth.
@@ -259,6 +261,7 @@ final class AppState: ObservableObject {
         civilID = ""
         kycLevel = ""
         sessionID = ""
+        authCallbackURL = nil
         documentNumber = ""
         esignSigningCertB64 = ""
         esignAuthCertB64 = ""

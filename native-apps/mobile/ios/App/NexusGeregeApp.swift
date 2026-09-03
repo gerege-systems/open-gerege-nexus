@@ -25,12 +25,12 @@ struct EIDGeregeApp: App {
                 // хуучин модод үлддэг — ширээний аппад ч ижил дүрэм).
                 .id(LocalizationService.shared.language)
                 // eID апп зөвшөөрсний дараа `gerege-nexus://auth?sessionId=…`-ээр
-                // буцаж ирнэ. Энд ХИЙХ ажил байхгүй нь санаатай: нэвтрэлтийг
-                // ажиллаж буй poll дуусгана (`waitForAuth`), deep link нь зөвхөн
-                // энэ scene-ийг дахин идэвхжүүлэх үүрэгтэй. Session-ий үр дүнг
-                // link-ийн query-гээс уншвал сервер шалгасан төлөвийг тойрч
-                // гарна — гараас ирсэн утгад итгэх зам нээхгүй.
-                .onOpenURL { _ in }
+                // буцаж ирнэ. Callback ирэхэд `authCallbackURL`-ээр дамжуулан
+                // login дэлгэцэнд мэдэгдэж, түр тасарсан эсвэл хүлээгдэж буй poll-ыг
+                // шуурхай дуусгана (нэвтрэлтийн үр дүнг link-ээс биш, серверээс баталгаажуулна).
+                .onOpenURL { url in
+                    appState.authCallbackURL = url
+                }
         }
     }
 }
