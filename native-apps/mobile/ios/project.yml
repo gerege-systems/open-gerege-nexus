@@ -23,7 +23,15 @@ settings:
     SWIFT_VERSION: "5.10"
     MARKETING_VERSION: "1.0.0"
     CURRENT_PROJECT_VERSION: "1"
+    # `$(inherited)` ГАНЦААРАА байсан нь xcodegen-ий Debug-ийн анхдагчийг
+    # дарж, `DEBUG` хаана ч тодорхойлогдохгүй болгож байв. Үр дүнд нь
+    # `AppState`-ийн `#if DEBUG` хоолой (`EID_DEBUG_TAB` — нэвтрэлтийг тойрч
+    # дэлгэц шалгах) iOS дээр ХЭЗЭЭ Ч ажиллаагүй: тугийг өгсөн ч апп нэвтрэх
+    # дэлгэц дээр зогсдог байсан.
     SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited)"
+  configs:
+    Debug:
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: "DEBUG $(inherited)"
 
 targets:
   NexusGeregeMobile:

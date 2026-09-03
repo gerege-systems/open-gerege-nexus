@@ -991,9 +991,15 @@ html[data-shell] .gerege-main {
 .line-home {
   --line-alloy: var(--gerege-blue);
   --line-alloy-rgb: 0 100 225;
-  max-width: 74rem;
+  max-width: 76.5rem;
   margin: 0 auto;
-  padding: 0.25rem 0 2rem;
+  /* Хажуугийн зай нь ЭНД байх ёстой, эцгээсээ хамаарч болохгүй: native
+     webview-д тэр эцэг байхгүй тул гар утасны бүрхүүл дотор текст ирмэг рүү
+     наалдаж, баруун талаараа тайрагдаж байв (2026-09-04, симулятор дээр
+     илэрсэн). `env(safe-area-inset-*)` нь хэвтээ эргүүлсэн үед нүхтэй
+     дэлгэцийн хажуугийн тайралтыг мөн нэмнэ. */
+  padding: 0.25rem max(1.25rem, env(safe-area-inset-right)) 2rem
+           max(1.25rem, env(safe-area-inset-left));
 }
 
 .line-eyebrow {
