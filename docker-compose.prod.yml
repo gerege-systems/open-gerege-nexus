@@ -44,7 +44,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
     ports:
-      - "127.0.0.1:${POSTGRES_HOST_PORT:-5434}:5432"
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -64,7 +64,7 @@ services:
     # No persistence: this is a coordination point, not a store.
     command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
     ports:
-      - "127.0.0.1:${REDIS_HOST_PORT:-6381}:6379"
+      - "127.0.0.1:${REDIS_HOST_PORT:-6379}:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -302,7 +302,7 @@ services:
       DEVELOPER_CONSOLE_ORIGIN: ${CONSOLE_ORIGIN:-}
       DEVELOPER_CONSOLE_CLIENT_ID: ${CONSOLE_CLIENT_ID:-gerege-developer-console}
     ports:
-      - "127.0.0.1:${BACKEND_HOST_PORT:-8082}:8080"
+      - "127.0.0.1:${BACKEND_HOST_PORT:-8080}:8080"
     volumes:
       # The last catalogue accepted from the registry. It survives a restart so
       # an instance whose registry is down comes back on what it was serving
@@ -401,7 +401,7 @@ services:
       # override sets no BRAND_COPY_FILE and nothing here is ever opened.
       - ./brand:/brand:ro
     ports:
-      - "127.0.0.1:${FRONTEND_HOST_PORT:-3008}:3000"
+      - "127.0.0.1:${FRONTEND_HOST_PORT:-3000}:3000"
     depends_on:
       backend:
         condition: service_healthy

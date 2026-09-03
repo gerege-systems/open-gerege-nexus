@@ -17,7 +17,7 @@
 | `kiosk.nexus.gerege.mn` | kiosk | kiosk |
 | `pos.nexus.gerege.mn` | pos | pos |
 
-Backend цор ганц: зургуулаа ижил upstream руу (3008 frontend, 8082 API) очдог.
+Backend цор ганц: зургуулаа ижил upstream руу (3000 frontend, 8080 API) очдог.
 Тусдаа хост байгаагийн шалтгаан нь webview доторх дуудлагыг same-origin
 болгох, session cookie-г host-only байлгах хоёр.
 

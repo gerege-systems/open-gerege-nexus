@@ -494,9 +494,9 @@ jobs:
             set -euo pipefail
             # The API is published on loopback only; nginx fronts it publicly.
             for i in $(seq 1 30); do
-              if curl -fsS http://127.0.0.1:8082/health > /dev/null; then
+              if curl -fsS http://127.0.0.1:8080/health > /dev/null; then
                 echo "backend healthy"
-                curl -fsS http://127.0.0.1:8082/ready > /dev/null && echo "database reachable"
+                curl -fsS http://127.0.0.1:8080/ready > /dev/null && echo "database reachable"
                 exit 0
               fi
               sleep 5
@@ -757,14 +757,14 @@ jobs:
             fi
 
             STATUS=$(curl -sS -o /dev/null -w '%{http_code}' \
-              -H "Host: $CONTROL_PLANE_HOST" http://127.0.0.1:8082/api/platform/v1/health)
+              -H "Host: $CONTROL_PLANE_HOST" http://127.0.0.1:8080/api/platform/v1/health)
             case "$STATUS" in
               200|401|403) echo "versioned control-plane API reached the backend ($STATUS)" ;;
               *) echo "::error::versioned control-plane API answered $STATUS through the backend"; exit 1 ;;
             esac
 
             LEGACY_HEADERS=$(curl -sS -D - -o /dev/null \
-              -H "Host: $CONTROL_PLANE_HOST" http://127.0.0.1:8082/cp/api/health)
+              -H "Host: $CONTROL_PLANE_HOST" http://127.0.0.1:8080/cp/api/health)
             LEGACY_STATUS=$(printf '%s\n' "$LEGACY_HEADERS" | awk 'NR == 1 { print $2 }')
             LEGACY_LOCATION=$(printf '%s\n' "$LEGACY_HEADERS" | \
               awk 'tolower($1) == "location:" { gsub("\\r", "", $2); print $2; exit }')
