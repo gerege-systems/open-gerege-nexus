@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="NexusGeregeDesktop.Client.Views.Pages.ChildrenPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:NexusGeregeDesktop.Client.Controls"
+    xmlns:vm="using:NexusGeregeDesktop.Presentation.ViewModels.Pages"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <ScrollViewer HorizontalScrollMode="Disabled"
+                  HorizontalScrollBarVisibility="Disabled"
+                  HorizontalContentAlignment="Center">
+        <StackPanel Padding="{StaticResource PagePadding}" Spacing="20" HorizontalAlignment="Stretch">
+
+            <!-- Hero -->
+            <StackPanel Spacing="8">
+                <TextBlock Text="{x:Bind ViewModel.Title, Mode=OneWay}" Style="{StaticResource HeroTitleTextBlock}" />
+                <TextBlock Text="{x:Bind ViewModel.Subtitle, Mode=OneWay}" Style="{StaticResource SubtleSubtitleTextBlock}" />
+            </StackPanel>
+
+            <!-- Error banner -->
+            <InfoBar IsOpen="{x:Bind ViewModel.ErrorMessage, Mode=OneWay, Converter={StaticResource StringToBoolConverter}}"
+                     Severity="Error"
+                     Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}"
+                     IsClosable="False" />
+
+            <!-- LIST view -->
+            <StackPanel Spacing="16"
+                        Visibility="{x:Bind ViewModel.IsList, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Grid ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{x:Bind ViewModel.ListHeader, Mode=OneWay}"
+                               Style="{StaticResource SectionTitleTextBlock}" VerticalAlignment="Center" />
+                    <Button Grid.Column="1" Command="{x:Bind ViewModel.ShowAddCommand}"
+                            Style="{ThemeResource AccentButtonStyle}">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE710;" FontSize="13" />
+                            <TextBlock Text="{x:Bind ViewModel.AddButtonLabel, Mode=OneWay}" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <controls:AppCard>
+                    <controls:AppCard.Body>
+                        <StackPanel Spacing="8">
+                            <ProgressRing IsActive="{x:Bind ViewModel.IsLoadingList, Mode=OneWay}"
+                                          HorizontalAlignment="Center" Width="20" Height="20"
+                                          Visibility="{x:Bind ViewModel.IsLoadingList, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            <TextBlock Text="{x:Bind ViewModel.EmptyListLabel, Mode=OneWay}"
+                                       Style="{StaticResource SubtleSubtitleTextBlock}"
+                                       Visibility="{x:Bind ViewModel.Items.Count, Mode=OneWay, Converter={StaticResource IntZeroToVisibilityConverter}}" />
+                            <ItemsRepeater ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}">
+                                <ItemsRepeater.Layout>
+                                    <StackLayout Spacing="8" />
+                                </ItemsRepeater.Layout>
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:ChildRow">
+                                        <Border BorderThickness="1" CornerRadius="8" Padding="14"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                                            <Grid ColumnSpacing="12">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0" Spacing="4">
+                                                    <TextBlock Text="{x:Bind Name}" FontWeight="SemiBold" />
+                                                    <TextBlock Text="{x:Bind RegNo}" Opacity="0.75" FontSize="12" />
+                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                        <TextBlock Text="{x:Bind BirthDate}" FontSize="12" Opacity="0.6" />
+                                                        <TextBlock Text="·" FontSize="12" Opacity="0.6" />
+                                                        <TextBlock Text="{x:Bind CertUntil}" FontSize="12" Opacity="0.6" />
+                                                    </StackPanel>
+                                                </StackPanel>
+                                                <Border Grid.Column="1" VerticalAlignment="Center"
+                                                        CornerRadius="10" Padding="10,3"
+                                                        Background="{x:Bind StatusVariant, Converter={StaticResource StatusVariantBrushConverter}}">
+                                                    <TextBlock Text="{x:Bind StatusLabel}" FontSize="12" Foreground="White" />
+                                                </Border>
+                                                <Button Grid.Column="2" VerticalAlignment="Center"
+                                                        Tag="{x:Bind}" Click="OnRevokeClick">
+                                                    <FontIcon Glyph="&#xE74D;" FontSize="14" />
+                                                </Button>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                            </ItemsRepeater>
+                        </StackPanel>
+                    </controls:AppCard.Body>
+                </controls:AppCard>
+            </StackPanel>
+
+            <!-- ADD view -->
+            <StackPanel Spacing="16"
+                        Visibility="{x:Bind ViewModel.IsAdd, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Button Command="{x:Bind ViewModel.BackToListCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE72B;" FontSize="13" />
+                        <TextBlock Text="{x:Bind ViewModel.BackLabel, Mode=OneWay}" />
+                    </StackPanel>
+                </Button>
+
+                <!-- Idle: enter child reg no -->
+                <controls:AppCard Visibility="{x:Bind ViewModel.AddIsIdle, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <controls:AppCard.Body>
+                        <StackPanel Spacing="12">
+                            <TextBox Header="{x:Bind ViewModel.ChildRegNoLabel, Mode=OneWay}"
+                                     Text="{x:Bind ViewModel.ChildRegNoInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <Button Command="{x:Bind ViewModel.AddInitCommand}"
+                                    Style="{ThemeResource AccentButtonStyle}"
+                                    Content="{x:Bind ViewModel.AddInitLabel, Mode=OneWay}" />
+                        </StackPanel>
+                    </controls:AppCard.Body>
+                </controls:AppCard>
+
+                <!-- Waiting: guardian approves on phone (VC) -->
+                <controls:AppCard Visibility="{x:Bind ViewModel.AddIsWaiting, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <controls:AppCard.Body>
+                        <StackPanel Spacing="12" HorizontalAlignment="Center">
+                            <TextBlock Text="{x:Bind ViewModel.PendingChildName, Mode=OneWay}"
+                                       FontWeight="SemiBold" HorizontalAlignment="Center" />
+                            <TextBlock Text="{x:Bind ViewModel.WaitingLabel, Mode=OneWay}"
+                                       Style="{StaticResource SubtleSubtitleTextBlock}"
+                                       TextWrapping="Wrap" TextAlignment="Center" />
+                            <TextBlock Text="{x:Bind ViewModel.VerificationLabel, Mode=OneWay}"
+                                       Opacity="0.7" HorizontalAlignment="Center" FontSize="12" />
+                            <TextBlock Text="{x:Bind ViewModel.VerificationCode, Mode=OneWay}"
+                                       FontSize="30" FontWeight="Bold" HorizontalAlignment="Center" />
+                            <ProgressRing IsActive="True" Width="28" Height="28" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </controls:AppCard.Body>
+                </controls:AppCard>
+
+                <!-- Success: enroll code for the child's phone -->
+                <controls:AppCard Visibility="{x:Bind ViewModel.AddIsSuccess, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <controls:AppCard.Body>
+                        <StackPanel Spacing="12" HorizontalAlignment="Center">
+                            <TextBlock Text="{x:Bind ViewModel.EnrollHeaderLabel, Mode=OneWay}"
+                                       Style="{StaticResource SectionTitleTextBlock}" HorizontalAlignment="Center" />
+                            <TextBlock Text="{x:Bind ViewModel.EnrollHintLabel, Mode=OneWay}"
+                                       Style="{StaticResource SubtleSubtitleTextBlock}"
+                                       TextWrapping="Wrap" TextAlignment="Center" />
+                            <Border BorderThickness="2" CornerRadius="12" Padding="18,12"
+                                    BorderBrush="{ThemeResource EidAccentBrush}"
+                                    Background="{ThemeResource EidAccentSubtleBrush}"
+                                    HorizontalAlignment="Center">
+                                <TextBlock Text="{x:Bind ViewModel.EnrollCode, Mode=OneWay}"
+                                           FontSize="26" FontWeight="Bold" IsTextSelectionEnabled="True" />
+                            </Border>
+                            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                <Button Command="{x:Bind ViewModel.CopyEnrollCodeCommand}">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <FontIcon Glyph="&#xE8C8;" FontSize="13" />
+                                        <TextBlock Text="{x:Bind ViewModel.CopyLabel, Mode=OneWay}" />
+                                    </StackPanel>
+                                </Button>
+                                <TextBlock Text="{x:Bind ViewModel.CopiedLabel, Mode=OneWay}"
+                                           Foreground="{ThemeResource EidAccentBrush}"
+                                           FontSize="12" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <TextBlock Text="{x:Bind ViewModel.EnrollCountdown, Mode=OneWay}"
+                                       Opacity="0.6" FontSize="12" HorizontalAlignment="Center" />
+                            <Button Command="{x:Bind ViewModel.BackToListCommand}"
+                                    Style="{ThemeResource AccentButtonStyle}"
+                                    Content="{x:Bind ViewModel.DoneLabel, Mode=OneWay}"
+                                    HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </controls:AppCard.Body>
+                </controls:AppCard>
+            </StackPanel>
+
+        </StackPanel>
+    </ScrollViewer>
+</Page>

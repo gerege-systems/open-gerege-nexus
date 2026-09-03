@@ -67,8 +67,23 @@ func (h *Handlers) HandleEIDStartByNationalID(w http.ResponseWriter, r *http.Req
 }
 
 func validEIDCallback(raw string) (string, error) {
-	if strings.TrimSpace(raw) == "" {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
 		return "", nil
+	}
+	// A native client comes back through its own URL scheme, not over https, so
+	// it can never satisfy the origin check below. Those are allowed by exact
+	// match from EID_APP_CALLBACKS (comma-separated) and nothing else: no
+	// parsing, no normalisation, no prefix rules — the whole string or nothing.
+	//
+	// Listing one here is half the job. Its scheme (for this callback,
+	// `gerege-nexus://`) has to be registered on the eID Mongolia side against
+	// this deployment's RP callback_hosts, or eID drops it silently and the
+	// citizen simply stays in that app.
+	for _, allowed := range strings.Split(os.Getenv("EID_APP_CALLBACKS"), ",") {
+		if allowed = strings.TrimSpace(allowed); allowed != "" && allowed == raw {
+			return raw, nil
+		}
 	}
 	callback, err := url.Parse(raw)
 	if err != nil || callback.User != nil || (callback.Scheme != "https" && (config.IsProduction() || callback.Scheme != "http")) {

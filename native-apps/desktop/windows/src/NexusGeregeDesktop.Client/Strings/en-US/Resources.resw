@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+
+  <data name="App_Title"><value>Gerege Nexus</value></data>
+  <data name="App_Tagline"><value>Digital Sovereignty</value></data>
+  <data name="App_Wordmark_Top"><value>National ID</value></data>
+
+  <data name="Nav_Home"><value>Home</value></data>
+  <data name="Nav_Platform"><value>Platform</value></data>
+  <data name="Dashboard_Wordmark"><value>GEREGE NEXUS</value></data>
+  <data name="Nav_Verify"><value>Verify Certificate</value></data>
+  <data name="Nav_Login"><value>Sign In</value></data>
+  <data name="Nav_Dashboard"><value>Dashboard</value></data>
+  <data name="Nav_Settings"><value>Settings</value></data>
+  <data name="Nav_Logout"><value>Sign out</value></data>
+  <data name="Nav_Tokens"><value>Tokens</value></data>
+  <data name="Tokens_Title"><value>USB token management</value></data>
+  <data name="Tokens_Subtitle"><value>Browse connected smart cards / USB tokens, configure them, and enroll certificates.</value></data>
+  <data name="Nav_Organizations"><value>Organizations</value></data>
+
+  <data name="Org_Title"><value>Organizations</value></data>
+  <data name="Org_Subtitle"><value>Manage organization digital signatures</value></data>
+  <data name="Org_List_Header"><value>Registered organizations</value></data>
+  <data name="Org_List_Empty"><value>You are not registered with any organization yet.</value></data>
+  <data name="Org_Register_Button"><value>Register Organization</value></data>
+  <data name="Org_Back"><value>Back</value></data>
+  <data name="Org_RegNumber"><value>Org registry number</value></data>
+  <data name="Org_Search"><value>Search</value></data>
+  <data name="Org_Expiry_Section"><value>Signing window</value></data>
+  <data name="Org_Expiry_Now"><value>Now (5 min)</value></data>
+  <data name="Org_Expiry_3Days"><value>Within 3 days</value></data>
+  <data name="Org_Expiry_7Days"><value>Within 7 days</value></data>
+  <data name="Org_Expiry_30Days"><value>Within 30 days</value></data>
+  <data name="Org_Verification"><value>VERIFICATION CODE</value></data>
+  <data name="Org_Waiting"><value>Waiting...</value></data>
+  <data name="Org_Cancel"><value>Cancel</value></data>
+  <data name="Org_Continue"><value>Continue</value></data>
+  <data name="Org_Members_Section"><value>Members</value></data>
+  <data name="Org_AddMember"><value>Add member</value></data>
+  <data name="Org_AddMember_Submit"><value>Add</value></data>
+  <data name="Org_RemoveMember"><value>Remove</value></data>
+  <data name="Org_RemoveMember_Confirm"><value>Remove member?</value></data>
+  <data name="Org_Role_Signer"><value>Signer</value></data>
+  <data name="Org_Role_Admin"><value>Admin</value></data>
+  <data name="Org_Member_Active"><value>Active</value></data>
+  <data name="Org_Member_Pending"><value>Pending</value></data>
+  <data name="Org_Status_Active"><value>Active</value></data>
+  <data name="Org_Status_Pending"><value>Pending</value></data>
+  <data name="Org_Status_Suspended"><value>Suspended</value></data>
+  <data name="Org_Status_Removed"><value>Removed</value></data>
+  <data name="Org_Status_Unknown"><value>Unknown</value></data>
+  <data name="Org_EnglishName"><value>English name</value></data>
+  <data name="Org_EnglishName_Unset"><value>Not set</value></data>
+  <data name="Org_Edit"><value>Edit</value></data>
+  <data name="Org_Save"><value>Save</value></data>
+  <data name="Org_LookupCard_Type"><value>Type</value></data>
+  <data name="Org_LookupCard_Ceo"><value>CEO</value></data>
+  <data name="Org_LookupCard_Phone"><value>Phone</value></data>
+  <data name="Org_Error_Generic"><value>An error occurred.</value></data>
+  <data name="Org_Error_RegNumberTooShort"><value>Registry number is too short.</value></data>
+  <data name="Org_Error_NotFound"><value>No organization found with this registry number.</value></data>
+  <data name="Org_Error_NotCeo"><value>You are not the CEO of this organization.</value></data>
+  <data name="Org_Error_AlreadyRegistered"><value>This organization is already registered.</value></data>
+  <data name="Org_Error_ExpiryCap"><value>The selected window exceeds the allowed cap.</value></data>
+  <data name="Org_Error_XypUnavailable"><value>State registry gateway is temporarily unavailable.</value></data>
+  <data name="Org_Error_NotImplemented"><value>This feature is not implemented yet.</value></data>
+  <data name="Org_Error_SelectExpiry"><value>Select an expiry window.</value></data>
+  <data name="Org_Error_SignTimeout"><value>Session timed out.</value></data>
+
+  <data name="Home_Title"><value>Gerege Nexus — Mongolian Electronic ID</value></data>
+  <data name="Home_Subtitle"><value>Remote digital signing, sign-in, and certificate verification.</value></data>
+  <data name="Home_Backend_Title"><value>Backend status</value></data>
+  <data name="Home_Backend_Version"><value>Version</value></data>
+  <data name="Home_Backend_LastChecked"><value>Last checked</value></data>
+  <data name="Home_Backend_Refresh"><value>Refresh</value></data>
+  <data name="Home_Status_Unknown"><value>Unknown</value></data>
+  <data name="Home_Status_Checking"><value>Checking…</value></data>
+  <data name="Home_Status_Healthy"><value>Connected</value></data>
+  <data name="Home_Status_Degraded"><value>Some services unhealthy</value></data>
+  <data name="Home_Status_Unreachable"><value>Backend unreachable</value></data>
+
+  <data name="Verify_Title"><value>Verify Certificate</value></data>
+  <data name="Verify_Subtitle"><value>Drop a PEM or DER X.509 certificate, or paste it as text to inspect.</value></data>
+  <data name="Verify_DropZone_Hint"><value>Drop a PEM/CER/CRT file here — or click the button to choose one.</value></data>
+  <data name="Verify_Paste_Hint"><value>…or paste the PEM:</value></data>
+  <data name="Verify_PickFile"><value>Choose file</value></data>
+  <data name="Verify_Parse"><value>Parse text</value></data>
+  <data name="Verify_Clear"><value>Clear</value></data>
+  <data name="Verify_Section_Identity"><value>Subject &amp; issuer</value></data>
+  <data name="Verify_Section_Validity"><value>Validity period</value></data>
+  <data name="Verify_Section_Crypto"><value>Cryptography</value></data>
+  <data name="Verify_Section_Fingerprints"><value>Fingerprints</value></data>
+  <data name="Verify_Section_KeyUsage"><value>Key usage</value></data>
+  <data name="Verify_Section_San"><value>SAN — Subject Alternative Names</value></data>
+  <data name="Verify_Field_Subject"><value>Subject</value></data>
+  <data name="Verify_Field_Issuer"><value>Issuer</value></data>
+  <data name="Verify_Field_Serial"><value>Serial number</value></data>
+  <data name="Verify_Field_NotBefore"><value>Not before</value></data>
+  <data name="Verify_Field_NotAfter"><value>Not after</value></data>
+  <data name="Verify_Field_SignatureAlgorithm"><value>Signature algorithm</value></data>
+  <data name="Verify_Field_PublicKey"><value>Public key</value></data>
+  <data name="Verify_Field_SpkiSha256"><value>SPKI SHA-256</value></data>
+  <data name="Verify_Field_Sha1"><value>SHA-1</value></data>
+  <data name="Verify_Field_Sha256"><value>SHA-256</value></data>
+  <data name="Verify_Validity_Valid"><value>Valid</value></data>
+  <data name="Verify_Validity_Expired"><value>Expired</value></data>
+  <data name="Verify_Validity_NotYetValid"><value>Not yet valid</value></data>
+  <data name="Verify_Error_EmptyInput"><value>Input is empty.</value></data>
+
+  <data name="Login_Title"><value>Sign in</value></data>
+  <data name="Login_Subtitle"><value>Sign in with the e-ID Mongolia app</value></data>
+  <data name="Login_NationalId"><value>National ID</value></data>
+  <data name="Login_NationalId_Placeholder"><value>AA00000000</value></data>
+  <data name="Login_NationalId_Hint"><value>Example: AA00000000 (Cyrillic letters + 8 digits)</value></data>
+  <data name="Login_VerificationCode"><value>VERIFICATION CODE</value></data>
+  <data name="Login_Waiting_Title"><value>Open the e-ID Mongolia app</value></data>
+  <data name="Login_Waiting_Subtitle"><value>A sign-in request has arrived in the e-ID Mongolia app on your phone</value></data>
+  <data name="Login_Waiting_Countdown"><value>Waiting...</value></data>
+  <data name="Login_Initiate"><value>Sign in</value></data>
+  <data name="Login_Initiate_Loading"><value>Reading...</value></data>
+  <data name="Login_Cancel"><value>Cancel</value></data>
+  <data name="Login_TryAgain"><value>Try again</value></data>
+  <data name="Login_SignOut"><value>Sign out</value></data>
+  <data name="Login_Success_Title"><value>Success!</value></data>
+  <data name="Login_Success_Subtitle"><value>Redirecting...</value></data>
+  <data name="Login_Footer_NewAccount"><value>Create new account</value></data>
+  <data name="Login_Footer_Help"><value>Need help?</value></data>
+  <data name="Login_Error_NationalIdRequired"><value>National ID is required.</value></data>
+  <data name="Login_Error_UserNotFound"><value>No account registered with this national ID.</value></data>
+  <data name="Login_Error_Generic"><value>An error occurred</value></data>
+  <data name="Login_Error_Timeout"><value>Session timed out</value></data>
+  <data name="Login_Error_Declined"><value>User declined on phone</value></data>
+  <data name="Login_Error_VerifyFailed"><value>Verification failed</value></data>
+  <data name="Login_Error_Backend"><value>Backend unreachable. Start the server and try again.</value></data>
+  <data name="Login_Error_EndpointMissing"><value>This server endpoint is not yet active. Try the "QR code" tab instead.</value></data>
+  <data name="Login_Tab_NationalId"><value>National ID</value></data>
+  <data name="Login_Tab_Qr"><value>QR code</value></data>
+  <data name="Login_Tab_Token"><value>USB Token</value></data>
+  <data name="Login_Qr_Hint"><value>Scan this QR code with the e-ID Mongolia app.</value></data>
+  <data name="Login_Qr_Start"><value>Generate QR</value></data>
+  <data name="Login_Result_NationalId"><value>National ID</value></data>
+  <data name="Login_Result_KycLevel"><value>KYC level</value></data>
+  <data name="Login_Token_Section"><value>Detected tokens</value></data>
+  <data name="Login_Token_Empty"><value>No USB token found. Plug in your token and refresh.</value></data>
+  <data name="Login_Token_Scan"><value>Refresh</value></data>
+  <data name="Login_Token_Pin"><value>Token PIN</value></data>
+  <data name="Login_Token_PinPlaceholder"><value>Enter your PIN</value></data>
+  <data name="Login_Token_SignIn"><value>Sign in with token</value></data>
+  <data name="Login_Token_Status_Opening"><value>Opening session with the token...</value></data>
+  <data name="Login_Token_Status_Reading"><value>Reading certificate from the token...</value></data>
+  <data name="Login_Token_Status_Challenge"><value>Requesting challenge from the server...</value></data>
+  <data name="Login_Token_Status_Signing"><value>Signing... (Windows may show a PIN dialog)</value></data>
+  <data name="Login_Token_Status_Verifying"><value>Server is verifying the signature...</value></data>
+  <data name="Login_Token_Error_NoKeyOrCert"><value>This token has no signing key or certificate available.</value></data>
+
+  <data name="Dashboard_Title"><value>Dashboard</value></data>
+  <data name="Dashboard_Subtitle"><value>Your e-ID information dashboard.</value></data>
+  <data name="Dashboard_Greeting"><value>Welcome,</value></data>
+  <data name="Dashboard_StatusBadge"><value>System Operational</value></data>
+  <data name="Dashboard_Stats_SecurityScore"><value>Security Score</value></data>
+  <data name="Dashboard_Stats_Certificates"><value>Verified Assets</value></data>
+  <data name="Dashboard_Stats_Logins"><value>Total Logins</value></data>
+  <data name="Dashboard_Stats_LastLogin"><value>Last Login</value></data>
+  <data name="Dashboard_Devices_Section"><value>Trusted Devices</value></data>
+  <data name="Dashboard_Devices_Empty"><value>No registered devices yet.</value></data>
+  <data name="Dashboard_Device_Active"><value>Active</value></data>
+  <data name="Dashboard_Device_Inactive"><value>Inactive</value></data>
+  <data name="Dashboard_Activity_Section"><value>Audit Log</value></data>
+  <data name="Dashboard_Activity_Empty"><value>Activity history is empty.</value></data>
+  <data name="Dashboard_Activity_Auth"><value>Login</value></data>
+  <data name="Dashboard_Activity_Sign"><value>Sign</value></data>
+  <data name="Dashboard_Activity_Success"><value>Success</value></data>
+  <data name="Dashboard_Activity_Failure"><value>Denied</value></data>
+  <data name="Dashboard_Refresh"><value>Refresh</value></data>
+  <data name="Dashboard_Loading"><value>Loading...</value></data>
+  <data name="Dashboard_Error_Generic"><value>Failed to load dashboard.</value></data>
+
+  <data name="Settings_Title"><value>Settings</value></data>
+  <data name="Settings_Theme"><value>Theme</value></data>
+  <data name="Settings_Theme_System"><value>System</value></data>
+  <data name="Settings_Theme_Light"><value>Light</value></data>
+  <data name="Settings_Theme_Dark"><value>Dark</value></data>
+  <data name="Settings_Language"><value>Language</value></data>
+  <data name="Settings_Version"><value>Version</value></data>
+
+  <data name="Common_Back"><value>Back</value></data>
+  <data name="Common_Loading"><value>Loading…</value></data>
+  <data name="Common_Cancel"><value>Cancel</value></data>
+  <data name="Common_Save"><value>Save</value></data>
+  <data name="Common_OK"><value>OK</value></data>
+  <data name="Settings_Tokens_Title"><value>Crypto token (USB / Smart Card)</value></data>
+  <data name="Settings_Tokens_Refresh"><value>Scan</value></data>
+  <data name="Settings_Tokens_Empty"><value>No connected tokens found.</value></data>
+  <data name="Settings_Tokens_Scanning"><value>Scanning...</value></data>
+  <data name="Settings_Tokens_Provider"><value>Backend</value></data>
+  <data name="Settings_Token_NoProvider"><value>No token backend active on this machine</value></data>
+  <data name="Token_Detail_Title"><value>Token details</value></data>
+  <data name="Token_Back"><value>Back to Settings</value></data>
+  <data name="Token_Field_Backend"><value>Backend</value></data>
+  <data name="Token_Field_Serial"><value>Serial</value></data>
+  <data name="Token_Section_Pin"><value>PIN unlock</value></data>
+  <data name="Token_Pin_Placeholder"><value>User PIN</value></data>
+  <data name="Token_Unlock"><value>Unlock</value></data>
+  <data name="Token_Section_Objects"><value>Token objects</value></data>
+  <data name="Token_Loading_Objects"><value>Loading objects...</value></data>
+  <data name="Token_Empty_Objects"><value>No objects found on this token.</value></data>
+  <data name="Token_Section_SignTest"><value>Sign test</value></data>
+  <data name="Token_SignTest_Data"><value>Data to sign</value></data>
+  <data name="Token_SignTest_Run"><value>Sign</value></data>
+  <data name="Token_SignTest_Result"><value>Signature (hex)</value></data>
+  <data name="Token_ReadCert"><value>Read certificate</value></data>
+  <data name="Token_Hint_Cng"><value>Windows shows the PIN dialog automatically. Click Sign below to test the key.</value></data>
+  <data name="Token_Section_Enroll"><value>Setup for login (issue cert via CA)</value></data>
+  <data name="Token_Enroll_Hint"><value>Use this token's key to build a CSR and request a citizen-bound cert from the e-ID Mongolia Issuing CA. After enrollment, this token can be used to sign in directly. REQUIREMENT: You must already be signed in via QR or national ID before enrolling.</value></data>
+  <data name="Token_Enroll_Run"><value>Enroll this token with the CA</value></data>
+  <data name="Token_Enroll_Status_BuildingCsr"><value>Building CSR... (PIN dialog may appear)</value></data>
+  <data name="Token_Enroll_Status_Submitting"><value>Submitting CSR to server...</value></data>
+  <data name="Token_Enroll_Status_Installing"><value>Installing cert into the Windows store...</value></data>
+  <data name="Token_Enroll_Status_Done"><value>✅ Token enrolled. You can now use the USB Token tab to sign in.</value></data>
+  <data name="Token_Enroll_Error_NotLoggedIn"><value>You must be signed in (QR or National ID) before enrolling a token.</value></data>
+  <data name="Token_Enroll_Error_NoKey"><value>No signing key found on this token.</value></data>
+  <data name="Token_Enroll_Error_BadPem"><value>Server returned an unparseable cert PEM.</value></data>
+  <data name="Token_Status_Enrolled"><value>Token fully enrolled</value></data>
+  <data name="Token_State_Blank"><value>Blank — first-time setup required</value></data>
+  <data name="Token_State_Initialized"><value>SO PIN set — set the user PIN next</value></data>
+  <data name="Token_State_Provisioned"><value>Provisioned — enroll with the CA</value></data>
+  <data name="Token_State_Enrolled"><value>Enrolled — ready to sign in</value></data>
+  <data name="Token_State_Unknown"><value>Unknown state</value></data>
+  <data name="Token_Cap_SoPinSet"><value>SO PIN ✓</value></data>
+  <data name="Token_Cap_SoPinUnset"><value>SO PIN ✗</value></data>
+  <data name="Token_Cap_UserPinSet"><value>User PIN ✓</value></data>
+  <data name="Token_Cap_UserPinUnset"><value>User PIN ✗</value></data>
+  <data name="Token_Cap_Biometric"><value>Fingerprint sensor</value></data>
+  <data name="Token_Cap_ProtectedAuth"><value>Protected PIN entry</value></data>
+  <data name="Token_Pin_StatusLow"><value>⚠ PIN — few tries left</value></data>
+  <data name="Token_Pin_StatusFinalTry"><value>⚠ PIN — final try remaining</value></data>
+  <data name="Token_Pin_StatusLocked"><value>🔒 PIN locked</value></data>
+  <data name="Token_Memory_Prefix"><value>Memory</value></data>
+  <data name="Token_Import_Button"><value>Import certificate…</value></data>
+  <data name="Token_Import_Installing"><value>Installing certificate and binding to the on-card key…</value></data>
+  <data name="Token_Import_Done"><value>✅ Certificate installed. Object list refreshed.</value></data>
+  <data name="Token_Section_Diagnostics"><value>Token status</value></data>
+  <data name="Token_Status_Opening"><value>Opening token...</value></data>
+  <data name="Token_Status_Ready_Cng"><value>Ready (Windows handles PIN at signing time)</value></data>
+  <data name="Token_Status_Ready_Pkcs11"><value>Ready - enter PIN to unlock</value></data>
+  <data name="Token_Status_Unlocked"><value>Unlocked</value></data>
+  <data name="Token_Status_Failed"><value>Failed to open</value></data>
+  <data name="Token_Status_SignOk"><value>Sign succeeded</value></data>
+  <data name="Token_Error_PinRequired"><value>PIN is required.</value></data>
+  <data name="Token_Error_PinIncorrect"><value>Incorrect PIN.</value></data>
+  <data name="Token_Error_PinLocked"><value>PIN is locked. Unlock the card first.</value></data>
+  <data name="Token_Error_NoKeySelected"><value>Select a key first.</value></data>
+  <data name="Token_Error_SignDataEmpty"><value>Enter some data to sign.</value></data>
+  <data name="Token_Error_NotLoggedIn"><value>Enter your PIN first.</value></data>
+  <data name="Token_Error_KeyNotFound"><value>Key not found.</value></data>
+  <data name="Token_Error_NotImplemented"><value>Not implemented yet.</value></data>
+  <data name="Token_Error_Generic"><value>An error occurred.</value></data>
+  <data name="Token_View"><value>View</value></data>
+  <!-- Sign (PDF) flow -->
+  <data name="Nav_Sign"><value>Sign PDF</value></data>
+  <data name="Sign_Title"><value>Sign a PDF</value></data>
+  <data name="Sign_Subtitle"><value>Pick a PDF and approve with PIN2 in the e-ID Mongolia app on your phone for a qualified signature.</value></data>
+  <data name="Sign_Pick_Title"><value>Choose a PDF</value></data>
+  <data name="Sign_Pick_Hint"><value>Up to 25 MB, PDF only</value></data>
+  <data name="Sign_Pick_Button"><value>Select file</value></data>
+  <data name="Sign_NotSignedIn"><value>You must be signed in before signing.</value></data>
+  <data name="Sign_Uploading"><value>Uploading…</value></data>
+  <data name="Sign_VerificationLabel"><value>VERIFICATION CODE</value></data>
+  <data name="Sign_Waiting_Instruction"><value>Check the same code shows in the e-ID Mongolia app, then approve with PIN2.</value></data>
+  <data name="Sign_Waiting_Status"><value>Waiting…</value></data>
+  <data name="Sign_File_Label"><value>File</value></data>
+  <data name="Sign_Cancel"><value>Cancel</value></data>
+  <data name="Sign_Completed_Title"><value>Signed successfully</value></data>
+  <data name="Sign_Completed_Hint"><value>Save your signed PDF.</value></data>
+  <data name="Sign_Save_Button"><value>Save</value></data>
+  <data name="Sign_Saved_Notice"><value>Saved.</value></data>
+  <data name="Sign_NewFile"><value>New file</value></data>
+  <data name="Sign_TryAgain"><value>Try again</value></data>
+  <data name="Sign_Error_TooLarge"><value>File is larger than 25 MB.</value></data>
+  <data name="Sign_Error_Declined"><value>Signing was declined.</value></data>
+  <data name="Sign_Error_Timeout"><value>Session expired. Please try again.</value></data>
+  <data name="Sign_Error_Network"><value>Network error. Please try again.</value></data>
+  <data name="Sign_Error_Generic"><value>Signing failed.</value></data>
+  <data name="Nav_Children"><value>Children</value></data>
+  <data name="Children_Title"><value>My children</value></data>
+  <data name="Children_Subtitle"><value>Children enrolled under your guardianship and their digital IDs.</value></data>
+  <data name="Children_List_Header"><value>Children</value></data>
+  <data name="Children_List_Empty"><value>No children enrolled yet.</value></data>
+  <data name="Children_Add_Button"><value>Add child</value></data>
+  <data name="Children_Back"><value>Back</value></data>
+  <data name="Children_ChildRegNo"><value>Child registration number</value></data>
+  <data name="Children_Add_Init"><value>Continue</value></data>
+  <data name="Children_Waiting"><value>Approve with PIN2 in the eID Mongolia app on your phone.</value></data>
+  <data name="Children_Verification"><value>Verification code</value></data>
+  <data name="Children_EnrollCode_Header"><value>Enrollment code</value></data>
+  <data name="Children_EnrollCode_Hint"><value>Enter this code in the eID Mongolia app on the child's phone to enroll.</value></data>
+  <data name="Children_Cancel"><value>Cancel</value></data>
+  <data name="Children_Done"><value>Done</value></data>
+  <data name="Children_Revoke"><value>Revoke</value></data>
+  <data name="Children_Registered"><value>Registered</value></data>
+  <data name="Children_NotRegistered"><value>Not registered</value></data>
+  <data name="Children_Error_Generic"><value>Something went wrong. Please try again.</value></data>
+  <data name="Children_Error_NotAvailable"><value>The children service is not enabled on the server yet.</value></data>
+  <data name="Children_Error_RegNoTooShort"><value>Invalid registration number.</value></data>
+  <data name="Children_Error_Timeout"><value>Approval did not arrive in time. Please try again.</value></data>
+  <data name="Children_Error_NotGuardian"><value>You are not registered as this child's guardian.</value></data>
+  <data name="Children_Error_XypUnavailable"><value>The state registry (XYP) is temporarily unavailable.</value></data>
+
+  <data name="Children_Copy"><value>Copy</value></data>
+  <data name="Children_Copied"><value>Copied — cleared from the clipboard automatically after 30 seconds.</value></data>
+
+  <data name="Consent_Reason_SignPdf"><value>Approve signing this document</value></data>
+  <data name="Consent_Error_Declined"><value>Windows Hello verification was not provided, so signing was cancelled.</value></data>
+
+  <data name="Settings_Esign_Title"><value>Digital signature (ESIGN)</value></data>
+  <data name="Settings_Esign_PreferSoftware"><value>Use the software token</value></data>
+  <data name="Settings_Esign_PreferSoftware_Hint"><value>When on, signing always uses the signed-in citizen's identity with a PIN2 approval pushed to their phone, even if a USB token is plugged in. When off, a connected token takes precedence.</value></data>
+  <data name="Settings_Esign_Bridge"><value>Local bridge</value></data>
+  <data name="Settings_Esign_Bridge_Running"><value>Running — ws:{0} / wss:{1}</value></data>
+  <data name="Settings_Esign_Bridge_Stopped"><value>Stopped. If another program holds the port, stop and start it again.</value></data>
+  <data name="Settings_Esign_Bridge_Start"><value>Start</value></data>
+  <data name="Settings_Esign_Bridge_Stop"><value>Stop</value></data>
+
+  <data name="Org_Error_NotAvailable"><value>This action is not available in the desktop app yet. Register organizations and manage members on the web.</value></data>
+
+  <data name="Nav_Certificates"><value>My certificates</value></data>
+  <data name="Certificates_Title"><value>My certificates</value></data>
+  <data name="Certificates_Subtitle"><value>Digital-signature certificates issued to you. Use the view button on a row to inspect the full X.509 detail and export it to a file.</value></data>
+  <data name="Certificates_Refresh"><value>Refresh</value></data>
+  <data name="Certificates_Empty"><value>No certificates found.</value></data>
+  <data name="Certificates_Counts_Valid"><value>Valid</value></data>
+  <data name="Certificates_Counts_Expired"><value>Expired</value></data>
+  <data name="Certificates_Counts_Revoked"><value>Revoked</value></data>
+  <data name="Certificates_Counts_Total"><value>Total</value></data>
+  <data name="Certificates_Type_Sign"><value>Signature (PIN2)</value></data>
+  <data name="Certificates_Type_Auth"><value>Authentication (PIN1)</value></data>
+  <data name="Certificates_Status_Valid"><value>Valid</value></data>
+  <data name="Certificates_Status_Revoked"><value>Revoked</value></data>
+  <data name="Certificates_Status_Expired"><value>Expired</value></data>
+  <data name="Certificates_Status_Suspended"><value>Suspended</value></data>
+  <data name="Certificates_Error_NotAvailable"><value>The certificate service is not enabled on the server yet.</value></data>
+  <data name="Certificates_Error_RateLimited"><value>Too many requests. Please wait a moment and try again.</value></data>
+  <data name="Certificates_Error_Unauthenticated"><value>Your session has expired. Please sign in again.</value></data>
+  <data name="Certificates_Error_Generic"><value>Could not load certificates. Please try again.</value></data>
+</root>

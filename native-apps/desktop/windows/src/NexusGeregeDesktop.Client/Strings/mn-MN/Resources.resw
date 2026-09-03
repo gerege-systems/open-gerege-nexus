@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+
+  <data name="App_Title"><value>Gerege Nexus</value></data>
+  <data name="App_Tagline"><value>Digital Sovereignty</value></data>
+  <data name="App_Wordmark_Top"><value>National ID</value></data>
+
+  <data name="Nav_Home"><value>Эхлэл</value></data>
+  <data name="Nav_Platform"><value>Платформ</value></data>
+  <data name="Dashboard_Wordmark"><value>GEREGE NEXUS</value></data>
+  <data name="Nav_Verify"><value>Гэрчилгээ шалгах</value></data>
+  <data name="Nav_Login"><value>Нэвтрэх</value></data>
+  <data name="Nav_Dashboard"><value>Хяналтын самбар</value></data>
+  <data name="Nav_Settings"><value>Тохиргоо</value></data>
+  <data name="Nav_Logout"><value>Гарах</value></data>
+  <data name="Nav_Tokens"><value>Токенууд</value></data>
+  <data name="Tokens_Title"><value>USB токен удирдлага</value></data>
+  <data name="Tokens_Subtitle"><value>Холбогдсон smart card / USB токенуудыг харах, тохируулах, сертификатаар бүртгүүлэх</value></data>
+  <data name="Nav_Organizations"><value>Байгууллага</value></data>
+
+  <data name="Org_Title"><value>Байгууллага</value></data>
+  <data name="Org_Subtitle"><value>Байгууллагын тоон гарын үсэг удирдах</value></data>
+  <data name="Org_List_Header"><value>Бүртгэгдсэн байгууллагууд</value></data>
+  <data name="Org_List_Empty"><value>Та одоогоор ямар ч байгууллагад бүртгэлгүй байна.</value></data>
+  <data name="Org_Register_Button"><value>Байгууллага бүртгэх</value></data>
+  <data name="Org_Back"><value>Буцах</value></data>
+  <data name="Org_RegNumber"><value>ААН-ийн регистр</value></data>
+  <data name="Org_Search"><value>Хайх</value></data>
+  <data name="Org_Expiry_Section"><value>Гарын үсэг зурах хугацаа</value></data>
+  <data name="Org_Expiry_Now"><value>Одоо (5 минут)</value></data>
+  <data name="Org_Expiry_3Days"><value>3 хоногийн дотор</value></data>
+  <data name="Org_Expiry_7Days"><value>7 хоногийн дотор</value></data>
+  <data name="Org_Expiry_30Days"><value>30 хоногийн дотор</value></data>
+  <data name="Org_Verification"><value>БАТАЛГААЖУУЛАХ КОД</value></data>
+  <data name="Org_Waiting"><value>Хүлээж байна...</value></data>
+  <data name="Org_Cancel"><value>Цуцлах</value></data>
+  <data name="Org_Continue"><value>Үргэлжлүүлэх</value></data>
+  <data name="Org_Members_Section"><value>Гишүүд</value></data>
+  <data name="Org_AddMember"><value>Гишүүн нэмэх</value></data>
+  <data name="Org_AddMember_Submit"><value>Нэмэх</value></data>
+  <data name="Org_RemoveMember"><value>Хасах</value></data>
+  <data name="Org_RemoveMember_Confirm"><value>Гишүүнийг хасах уу?</value></data>
+  <data name="Org_Role_Signer"><value>Гарын үсэг зурагч</value></data>
+  <data name="Org_Role_Admin"><value>Админ</value></data>
+  <data name="Org_Member_Active"><value>Идэвхтэй</value></data>
+  <data name="Org_Member_Pending"><value>Хүлээгдэж буй</value></data>
+  <data name="Org_Status_Active"><value>Идэвхтэй</value></data>
+  <data name="Org_Status_Pending"><value>Хүлээгдэж буй</value></data>
+  <data name="Org_Status_Suspended"><value>Түр зогссон</value></data>
+  <data name="Org_Status_Removed"><value>Хасагдсан</value></data>
+  <data name="Org_Status_Unknown"><value>Тодорхойгүй</value></data>
+  <data name="Org_EnglishName"><value>Англи нэр</value></data>
+  <data name="Org_EnglishName_Unset"><value>Тогтоогүй</value></data>
+  <data name="Org_Edit"><value>Засах</value></data>
+  <data name="Org_Save"><value>Хадгалах</value></data>
+  <data name="Org_LookupCard_Type"><value>Төрөл</value></data>
+  <data name="Org_LookupCard_Ceo"><value>Захирал</value></data>
+  <data name="Org_LookupCard_Phone"><value>Утас</value></data>
+  <data name="Org_Error_Generic"><value>Алдаа гарлаа.</value></data>
+  <data name="Org_Error_RegNumberTooShort"><value>Регистр хэт богино байна.</value></data>
+  <data name="Org_Error_NotFound"><value>Энэ регистраар байгууллага олдсонгүй.</value></data>
+  <data name="Org_Error_NotCeo"><value>Та энэ байгууллагын захирал биш байна.</value></data>
+  <data name="Org_Error_AlreadyRegistered"><value>Энэ байгууллага аль хэдийн бүртгэлтэй.</value></data>
+  <data name="Org_Error_ExpiryCap"><value>Сонгосон хугацаа хязгаараас давсан байна.</value></data>
+  <data name="Org_Error_XypUnavailable"><value>Улсын бүртгэлийн сүлжээ түр ажиллахгүй байна.</value></data>
+  <data name="Org_Error_NotImplemented"><value>Энэ функц хараахан хэрэгжээгүй байна.</value></data>
+  <data name="Org_Error_SelectExpiry"><value>Хугацаагаа сонгоно уу.</value></data>
+  <data name="Org_Error_SignTimeout"><value>Хугацаа дууссан.</value></data>
+
+  <data name="Home_Title"><value>Gerege Nexus — Монголын цахим иргэний үнэмлэх</value></data>
+  <data name="Home_Subtitle"><value>Алсын дижитал гарын үсэг, нэвтрэлт, гэрчилгээ баталгаажуулалт.</value></data>
+  <data name="Home_Backend_Title"><value>Серверийн төлөв</value></data>
+  <data name="Home_Backend_Version"><value>Хувилбар</value></data>
+  <data name="Home_Backend_LastChecked"><value>Сүүлд шалгасан</value></data>
+  <data name="Home_Backend_Refresh"><value>Шинэчлэх</value></data>
+  <data name="Home_Status_Unknown"><value>Тодорхойгүй</value></data>
+  <data name="Home_Status_Checking"><value>Шалгаж байна…</value></data>
+  <data name="Home_Status_Healthy"><value>Холбогдсон</value></data>
+  <data name="Home_Status_Degraded"><value>Зарим үйлчилгээ хариулахгүй</value></data>
+  <data name="Home_Status_Unreachable"><value>Сервер хариулахгүй</value></data>
+
+  <data name="Verify_Title"><value>Гэрчилгээ шалгах</value></data>
+  <data name="Verify_Subtitle"><value>PEM эсвэл DER хэлбэрийн X.509 гэрчилгээг чирж тавих, эсвэл текстээ буулгаж шалгана.</value></data>
+  <data name="Verify_DropZone_Hint"><value>PEM/CER/CRT файлыг энд чирж тавь — эсвэл сонгох товчийг дар.</value></data>
+  <data name="Verify_Paste_Hint"><value>Эсвэл PEM-ийг буулга:</value></data>
+  <data name="Verify_PickFile"><value>Файл сонгох</value></data>
+  <data name="Verify_Parse"><value>Текст-ээс уншуулах</value></data>
+  <data name="Verify_Clear"><value>Цэвэрлэх</value></data>
+  <data name="Verify_Section_Identity"><value>Эзэмшигч ба бүртгэгч</value></data>
+  <data name="Verify_Section_Validity"><value>Хүчинтэй хугацаа</value></data>
+  <data name="Verify_Section_Crypto"><value>Криптограф</value></data>
+  <data name="Verify_Section_Fingerprints"><value>Хурууны хээ</value></data>
+  <data name="Verify_Section_KeyUsage"><value>Түлхүүрийн хэрэглээ</value></data>
+  <data name="Verify_Section_San"><value>SAN — Альтернатив нэр</value></data>
+  <data name="Verify_Field_Subject"><value>Subject</value></data>
+  <data name="Verify_Field_Issuer"><value>Issuer</value></data>
+  <data name="Verify_Field_Serial"><value>Сериал дугаар</value></data>
+  <data name="Verify_Field_NotBefore"><value>Эхэлсэн</value></data>
+  <data name="Verify_Field_NotAfter"><value>Дуусах</value></data>
+  <data name="Verify_Field_SignatureAlgorithm"><value>Гарын үсгийн алгоритм</value></data>
+  <data name="Verify_Field_PublicKey"><value>Нийтийн түлхүүр</value></data>
+  <data name="Verify_Field_SpkiSha256"><value>SPKI SHA-256</value></data>
+  <data name="Verify_Field_Sha1"><value>SHA-1</value></data>
+  <data name="Verify_Field_Sha256"><value>SHA-256</value></data>
+  <data name="Verify_Validity_Valid"><value>Хүчинтэй</value></data>
+  <data name="Verify_Validity_Expired"><value>Хугацаа дууссан</value></data>
+  <data name="Verify_Validity_NotYetValid"><value>Хараахан хүчинтэй болоогүй</value></data>
+  <data name="Verify_Error_EmptyInput"><value>Текст хоосон байна.</value></data>
+
+  <data name="Login_Title"><value>Нэвтрэх</value></data>
+  <data name="Login_Subtitle"><value>e-ID Mongolia аппаар нэвтрэх</value></data>
+  <data name="Login_NationalId"><value>Регистрийн дугаар (National ID)</value></data>
+  <data name="Login_NationalId_Placeholder"><value>AA00000000</value></data>
+  <data name="Login_NationalId_Hint"><value>Жишээ: AA00000000 (Кирилл үсэг + 8 цифр)</value></data>
+  <data name="Login_VerificationCode"><value>БАТАЛГААЖУУЛАХ КОД</value></data>
+  <data name="Login_Waiting_Title"><value>e-ID Mongolia аппаа нээнэ үү</value></data>
+  <data name="Login_Waiting_Subtitle"><value>Утсан дээрх e-ID Mongolia апп-д нэвтрэлтийн хүсэлт ирсэн байна</value></data>
+  <data name="Login_Waiting_Countdown"><value>Хүлээж байна...</value></data>
+  <data name="Login_Initiate"><value>Нэвтрэх</value></data>
+  <data name="Login_Initiate_Loading"><value>Уншиж байна...</value></data>
+  <data name="Login_Cancel"><value>Цуцлах</value></data>
+  <data name="Login_TryAgain"><value>Дахин оролдох</value></data>
+  <data name="Login_SignOut"><value>Гарах</value></data>
+  <data name="Login_Success_Title"><value>Амжилттай!</value></data>
+  <data name="Login_Success_Subtitle"><value>Шилжүүлж байна...</value></data>
+  <data name="Login_Footer_NewAccount"><value>Шинэ бүртгэл үүсгэх</value></data>
+  <data name="Login_Footer_Help"><value>Тусламж хэрэгтэй юу?</value></data>
+  <data name="Login_Error_NationalIdRequired"><value>Регистрийн дугаараа оруулна уу.</value></data>
+  <data name="Login_Error_UserNotFound"><value>Энэ регистрийн дугаараар бүртгэлгүй байна.</value></data>
+  <data name="Login_Error_Generic"><value>Алдаа гарлаа</value></data>
+  <data name="Login_Error_Timeout"><value>Хугацаа дууслаа</value></data>
+  <data name="Login_Error_Declined"><value>Хэрэглэгч татгалзлаа</value></data>
+  <data name="Login_Error_VerifyFailed"><value>Баталгаажуулалт амжилтгүй боллоо</value></data>
+  <data name="Login_Error_Backend"><value>Backend холболтгүй байна. Серверийг асаагаад дахин оролдоно уу.</value></data>
+  <data name="Login_Error_EndpointMissing"><value>Серверийн энэ endpoint хараахан идэвхгүй байна. "QR код"-аар нэвтрэхийг оролдоно уу.</value></data>
+  <data name="Login_Tab_NationalId"><value>Регистрийн дугаар</value></data>
+  <data name="Login_Tab_Qr"><value>QR код</value></data>
+  <data name="Login_Tab_Token"><value>USB Токен</value></data>
+  <data name="Login_Qr_Hint"><value>e-ID Mongolia апп-аар уг QR кодыг уншуулна уу.</value></data>
+  <data name="Login_Qr_Start"><value>QR үүсгэх</value></data>
+  <data name="Login_Result_NationalId"><value>Регистрийн дугаар</value></data>
+  <data name="Login_Result_KycLevel"><value>KYC түвшин</value></data>
+  <data name="Login_Token_Section"><value>Холбогдсон токенууд</value></data>
+  <data name="Login_Token_Empty"><value>Токен олдсонгүй. USB токеноо залгаад дахин шалгана уу.</value></data>
+  <data name="Login_Token_Scan"><value>Шинэчлэх</value></data>
+  <data name="Login_Token_Pin"><value>Токений PIN</value></data>
+  <data name="Login_Token_PinPlaceholder"><value>PIN-ээ оруулна уу</value></data>
+  <data name="Login_Token_SignIn"><value>Токеноор нэвтрэх</value></data>
+  <data name="Login_Token_Status_Opening"><value>Токентэй холбогдож байна...</value></data>
+  <data name="Login_Token_Status_Reading"><value>Токений сертификатыг уншиж байна...</value></data>
+  <data name="Login_Token_Status_Challenge"><value>Серверээс баталгаажуулалт авч байна...</value></data>
+  <data name="Login_Token_Status_Signing"><value>Гарын үсэг зурж байна... (Windows PIN цонх гарч ирж магадгүй)</value></data>
+  <data name="Login_Token_Status_Verifying"><value>Сервер баталгаажуулж байна...</value></data>
+  <data name="Login_Token_Error_NoKeyOrCert"><value>Энэ токен дээр гарын үсэг зурах түлхүүр болон сертификат олдсонгүй.</value></data>
+
+  <data name="Dashboard_Title"><value>Хяналтын самбар</value></data>
+  <data name="Dashboard_Subtitle"><value>Таны цахим иргэний мэдээллийн хяналтын самбар.</value></data>
+  <data name="Dashboard_Greeting"><value>Сайн байна уу,</value></data>
+  <data name="Dashboard_StatusBadge"><value>Систем хэвийн ажиллаж байна</value></data>
+  <data name="Dashboard_Stats_SecurityScore"><value>Аюулгүй байдлын оноо</value></data>
+  <data name="Dashboard_Stats_Certificates"><value>Баталгаажсан хөрөнгө</value></data>
+  <data name="Dashboard_Stats_Logins"><value>Нийт нэвтрэлт</value></data>
+  <data name="Dashboard_Stats_LastLogin"><value>Сүүлийн нэвтрэлт</value></data>
+  <data name="Dashboard_Devices_Section"><value>Итгэмжлэгдсэн төхөөрөмж</value></data>
+  <data name="Dashboard_Devices_Empty"><value>Бүртгэлтэй төхөөрөмж байхгүй байна.</value></data>
+  <data name="Dashboard_Device_Active"><value>Идэвхтэй</value></data>
+  <data name="Dashboard_Device_Inactive"><value>Идэвхгүй</value></data>
+  <data name="Dashboard_Activity_Section"><value>Үйл явцын түүх</value></data>
+  <data name="Dashboard_Activity_Empty"><value>Үйл ажиллагааны түүх хоосон.</value></data>
+  <data name="Dashboard_Activity_Auth"><value>Нэвтрэлт</value></data>
+  <data name="Dashboard_Activity_Sign"><value>Гарын үсэг</value></data>
+  <data name="Dashboard_Activity_Success"><value>Амжилттай</value></data>
+  <data name="Dashboard_Activity_Failure"><value>Татгалзсан</value></data>
+  <data name="Dashboard_Refresh"><value>Шинэчлэх</value></data>
+  <data name="Dashboard_Loading"><value>Уншиж байна...</value></data>
+  <data name="Dashboard_Error_Generic"><value>Хяналтын самбар ачаалахад алдаа гарлаа.</value></data>
+
+  <data name="Settings_Title"><value>Тохиргоо</value></data>
+  <data name="Settings_Theme"><value>Дизайны өнгө</value></data>
+  <data name="Settings_Theme_System"><value>Системийн</value></data>
+  <data name="Settings_Theme_Light"><value>Цайвар</value></data>
+  <data name="Settings_Theme_Dark"><value>Бараан</value></data>
+  <data name="Settings_Language"><value>Хэл</value></data>
+  <data name="Settings_Version"><value>Хувилбар</value></data>
+
+  <data name="Common_Back"><value>Буцах</value></data>
+  <data name="Common_Loading"><value>Уншиж байна…</value></data>
+  <data name="Common_Cancel"><value>Цуцлах</value></data>
+  <data name="Common_Save"><value>Хадгалах</value></data>
+  <data name="Common_OK"><value>За</value></data>
+  <data name="Settings_Tokens_Title"><value>Крипто токен (USB / Smart Card)</value></data>
+  <data name="Settings_Tokens_Refresh"><value>Сканнердах</value></data>
+  <data name="Settings_Tokens_Empty"><value>Холбогдсон токен олдсонгүй.</value></data>
+  <data name="Settings_Tokens_Scanning"><value>Сканнердаж байна...</value></data>
+  <data name="Settings_Tokens_Provider"><value>Бэкенд</value></data>
+  <data name="Settings_Token_NoProvider"><value>Энэ компьютер дээр идэвхтэй токены бэкэнд алга</value></data>
+  <data name="Token_Detail_Title"><value>Токены дэлгэрэнгүй</value></data>
+  <data name="Token_Back"><value>Settings руу буцах</value></data>
+  <data name="Token_Field_Backend"><value>Бэкенд</value></data>
+  <data name="Token_Field_Serial"><value>Серийн дугаар</value></data>
+  <data name="Token_Section_Pin"><value>PIN баталгаажуулалт</value></data>
+  <data name="Token_Pin_Placeholder"><value>User PIN</value></data>
+  <data name="Token_Unlock"><value>Нээх</value></data>
+  <data name="Token_Section_Objects"><value>Токены доторх объектууд</value></data>
+  <data name="Token_Loading_Objects"><value>Объект уншиж байна...</value></data>
+  <data name="Token_Empty_Objects"><value>Токен дотор объект олдсонгүй.</value></data>
+  <data name="Token_Section_SignTest"><value>Гарын үсэг туршилт</value></data>
+  <data name="Token_SignTest_Data"><value>Гарын үсэг зурах текст</value></data>
+  <data name="Token_SignTest_Run"><value>Гарын үсэг зурах</value></data>
+  <data name="Token_SignTest_Result"><value>Гарын үсэг (hex)</value></data>
+  <data name="Token_ReadCert"><value>Гэрчилгээ татах</value></data>
+  <data name="Token_Hint_Cng"><value>Windows өөрөө PIN дэлгэц гаргана. Доорх Sign товчийг даран түлхүүрт хандаж туршина уу.</value></data>
+  <data name="Token_Section_Enroll"><value>Нэвтрэлтийн setup (CA-аар гэрчилгээ авах)</value></data>
+  <data name="Token_Enroll_Hint"><value>Энэ токений түлхүүрээр CSR үүсгээд, e-ID Mongolia Issuing CA-аар иргэний нэртэй холбосон гэрчилгээ авна. Үүний дараа уг токеноор шууд нэвтэрч болно. ШААРДЛАГАТАЙ: Эхлээд QR/Регистрийн дугаар-аар нэвтэрсэн байх ёстой.</value></data>
+  <data name="Token_Enroll_Run"><value>Токеноо CA-аар бүртгүүлэх</value></data>
+  <data name="Token_Enroll_Status_BuildingCsr"><value>CSR үүсгэж байна... (PIN dialog гарч магадгүй)</value></data>
+  <data name="Token_Enroll_Status_Submitting"><value>CSR-ийг сервер рүү илгээж байна...</value></data>
+  <data name="Token_Enroll_Status_Installing"><value>Гэрчилгээг Windows store-д суулгаж байна...</value></data>
+  <data name="Token_Enroll_Status_Done"><value>✅ Токен амжилттай бүртгэгдсэн. USB Token tab-аар нэвтэрч болно.</value></data>
+  <data name="Token_Enroll_Error_NotLoggedIn"><value>Setup хийхийн өмнө QR эсвэл регистрийн дугаараар нэвтэрсэн байх шаардлагатай.</value></data>
+  <data name="Token_Enroll_Error_NoKey"><value>Энэ токен дээр гарын үсэг зурах түлхүүр олдсонгүй.</value></data>
+  <data name="Token_Enroll_Error_BadPem"><value>Сервер буцаасан PEM unbroken/буруу.</value></data>
+  <data name="Token_Status_Enrolled"><value>Токен бүрэн setup хийгдсэн</value></data>
+  <data name="Token_State_Blank"><value>Хоосон — анхны тохиргоо хэрэгтэй</value></data>
+  <data name="Token_State_Initialized"><value>SO PIN тохируулсан — хэрэглэгчийн PIN тохируулна уу</value></data>
+  <data name="Token_State_Provisioned"><value>Бэлэн — CA-аар бүртгүүлэх ёстой</value></data>
+  <data name="Token_State_Enrolled"><value>Бүртгэгдсэн — нэвтрэх боломжтой</value></data>
+  <data name="Token_State_Unknown"><value>Танигдаагүй төлөв</value></data>
+  <data name="Token_Cap_SoPinSet"><value>SO PIN ✓</value></data>
+  <data name="Token_Cap_SoPinUnset"><value>SO PIN ✗</value></data>
+  <data name="Token_Cap_UserPinSet"><value>Хэрэглэгчийн PIN ✓</value></data>
+  <data name="Token_Cap_UserPinUnset"><value>Хэрэглэгчийн PIN ✗</value></data>
+  <data name="Token_Cap_Biometric"><value>Хурууны хээ уншигчтай</value></data>
+  <data name="Token_Cap_ProtectedAuth"><value>Хамгаалагдсан PIN оролт</value></data>
+  <data name="Token_Pin_StatusLow"><value>⚠ PIN — оролдлого цөөн үлдсэн</value></data>
+  <data name="Token_Pin_StatusFinalTry"><value>⚠ PIN — сүүлийн нэг оролдлого үлдсэн</value></data>
+  <data name="Token_Pin_StatusLocked"><value>🔒 PIN түгжигдсэн</value></data>
+  <data name="Token_Memory_Prefix"><value>Санах ой</value></data>
+  <data name="Token_Import_Button"><value>Сертификат импортлох…</value></data>
+  <data name="Token_Import_Installing"><value>Сертификатыг токенд холбож суулгаж байна…</value></data>
+  <data name="Token_Import_Done"><value>✅ Сертификат суулгагдсан. Object жагсаалт шинэчлэгдэв.</value></data>
+  <data name="Token_Section_Diagnostics"><value>Токений төлөв</value></data>
+  <data name="Token_Status_Opening"><value>Токен нээж байна...</value></data>
+  <data name="Token_Status_Ready_Cng"><value>Бэлэн (Windows PIN dialog signing-ийн үед гарна)</value></data>
+  <data name="Token_Status_Ready_Pkcs11"><value>Бэлэн — PIN оруулаад нээнэ үү</value></data>
+  <data name="Token_Status_Unlocked"><value>Нээгдсэн</value></data>
+  <data name="Token_Status_Failed"><value>Нээж чадсангүй</value></data>
+  <data name="Token_Status_SignOk"><value>Гарын үсэг амжилттай</value></data>
+  <data name="Token_Error_PinRequired"><value>PIN шаардлагатай.</value></data>
+  <data name="Token_Error_PinIncorrect"><value>PIN буруу байна.</value></data>
+  <data name="Token_Error_PinLocked"><value>PIN түгжигдсэн. Картыг unlock хийх ёстой.</value></data>
+  <data name="Token_Error_NoKeySelected"><value>Гарын үсэг зурах түлхүүр сонгоогүй байна.</value></data>
+  <data name="Token_Error_SignDataEmpty"><value>Хэлбэр оруулна уу.</value></data>
+  <data name="Token_Error_NotLoggedIn"><value>Эхлээд PIN-ээ оруулна уу.</value></data>
+  <data name="Token_Error_KeyNotFound"><value>Түлхүүр олдсонгүй.</value></data>
+  <data name="Token_Error_NotImplemented"><value>Хараахан хэрэгжээгүй.</value></data>
+  <data name="Token_Error_Generic"><value>Алдаа гарлаа.</value></data>
+  <data name="Token_View"><value>Дэлгэрэнгүй</value></data>
+  <!-- Sign (PDF) flow -->
+  <data name="Nav_Sign"><value>Гарын үсэг зурах</value></data>
+  <data name="Sign_Title"><value>PDF-д гарын үсэг зурах</value></data>
+  <data name="Sign_Subtitle"><value>PDF файл сонгож, утсан дээрх e-ID Mongolia апп-аас PIN2-оор баталгаат гарын үсэг зурна.</value></data>
+  <data name="Sign_Pick_Title"><value>PDF файл сонгох</value></data>
+  <data name="Sign_Pick_Hint"><value>25 MB хүртэл, зөвхөн PDF</value></data>
+  <data name="Sign_Pick_Button"><value>Файл сонгох</value></data>
+  <data name="Sign_NotSignedIn"><value>Гарын үсэг зурахын өмнө нэвтэрсэн байх шаардлагатай.</value></data>
+  <data name="Sign_Uploading"><value>Илгээж байна…</value></data>
+  <data name="Sign_VerificationLabel"><value>БАТАЛГААЖУУЛАХ КОД</value></data>
+  <data name="Sign_Waiting_Instruction"><value>Утсан дээрх e-ID Mongolia апп-д ижил кодтой эсэхийг шалгаад PIN2-оор баталгаажуулна уу.</value></data>
+  <data name="Sign_Waiting_Status"><value>Хүлээж байна…</value></data>
+  <data name="Sign_File_Label"><value>Файл</value></data>
+  <data name="Sign_Cancel"><value>Цуцлах</value></data>
+  <data name="Sign_Completed_Title"><value>Гарын үсэг амжилттай</value></data>
+  <data name="Sign_Completed_Hint"><value>Тамгалагдсан PDF-ээ хадгална уу.</value></data>
+  <data name="Sign_Save_Button"><value>Хадгалах</value></data>
+  <data name="Sign_Saved_Notice"><value>Хадгаллаа.</value></data>
+  <data name="Sign_NewFile"><value>Шинэ файл</value></data>
+  <data name="Sign_TryAgain"><value>Дахин оролдох</value></data>
+  <data name="Sign_Error_TooLarge"><value>Файл 25 MB-аас том байна.</value></data>
+  <data name="Sign_Error_Declined"><value>Гарын үсэг зурахаас татгалзлаа.</value></data>
+  <data name="Sign_Error_Timeout"><value>Хугацаа дууссан. Дахин оролдоно уу.</value></data>
+  <data name="Sign_Error_Network"><value>Сүлжээний алдаа. Дахин оролдоно уу.</value></data>
+  <data name="Sign_Error_Generic"><value>Гарын үсэг амжилтгүй боллоо.</value></data>
+  <data name="Nav_Children"><value>Хүүхдүүд</value></data>
+  <data name="Children_Title"><value>Миний хүүхдүүд</value></data>
+  <data name="Children_Subtitle"><value>Таны зөвшөөрлөөр бүртгэгдсэн хүүхдүүд болон тэдний цахим үнэмлэх.</value></data>
+  <data name="Children_List_Header"><value>Хүүхдүүд</value></data>
+  <data name="Children_List_Empty"><value>Одоогоор бүртгэлтэй хүүхэд алга.</value></data>
+  <data name="Children_Add_Button"><value>Хүүхэд нэмэх</value></data>
+  <data name="Children_Back"><value>Буцах</value></data>
+  <data name="Children_ChildRegNo"><value>Хүүхдийн регистрийн дугаар</value></data>
+  <data name="Children_Add_Init"><value>Үргэлжлүүлэх</value></data>
+  <data name="Children_Waiting"><value>Гар утсан дээрээ eID Mongolia аппаараа PIN2 кодоор зөвшөөрнө үү.</value></data>
+  <data name="Children_Verification"><value>Баталгаажих код</value></data>
+  <data name="Children_EnrollCode_Header"><value>Бүртгэлийн код</value></data>
+  <data name="Children_EnrollCode_Hint"><value>Хүүхдийн гар утасны eID Mongolia аппад энэ кодыг оруулж бүртгүүлнэ.</value></data>
+  <data name="Children_Cancel"><value>Болих</value></data>
+  <data name="Children_Done"><value>Дуусгах</value></data>
+  <data name="Children_Revoke"><value>Цуцлах</value></data>
+  <data name="Children_Registered"><value>Бүртгэлтэй</value></data>
+  <data name="Children_NotRegistered"><value>Бүртгээгүй</value></data>
+  <data name="Children_Error_Generic"><value>Алдаа гарлаа. Дахин оролдоно уу.</value></data>
+  <data name="Children_Error_NotAvailable"><value>Хүүхдийн үйлчилгээ серверт хараахан идэвхжээгүй байна.</value></data>
+  <data name="Children_Error_RegNoTooShort"><value>Регистрийн дугаар буруу байна.</value></data>
+  <data name="Children_Error_Timeout"><value>Зөвшөөрөл хугацаандаа ирсэнгүй. Дахин оролдоно уу.</value></data>
+  <data name="Children_Error_NotGuardian"><value>Та тухайн хүүхдийн асран хамгаалагчаар бүртгэлгүй байна.</value></data>
+  <data name="Children_Error_XypUnavailable"><value>ХУР систем түр боломжгүй байна.</value></data>
+
+  <data name="Children_Copy"><value>Хуулах</value></data>
+  <data name="Children_Copied"><value>Хуулагдлаа — 30 секундын дараа clipboard-оос автоматаар устана.</value></data>
+
+  <data name="Consent_Reason_SignPdf"><value>Баримтад цахим гарын үсэг зурахыг зөвшөөрөх</value></data>
+  <data name="Consent_Error_Declined"><value>Windows Hello баталгаа өгөгдсөнгүй тул гарын үсэг зурах үйлдэл цуцлагдлаа.</value></data>
+
+  <data name="Settings_Esign_Title"><value>Цахим гарын үсэг (ESIGN)</value></data>
+  <data name="Settings_Esign_PreferSoftware"><value>Программ токен ашиглах</value></data>
+  <data name="Settings_Esign_PreferSoftware_Hint"><value>Асаавал USB токен залгаастай байсан ч апп-д нэвтэрсэн иргэний нэрээр, гар утас руу PIN2 зөвшөөрөл илгээж гарын үсэг зурна. Унтраалттай үед залгаастай токен давуу эрхтэй.</value></data>
+  <data name="Settings_Esign_Bridge"><value>Локал гүүр</value></data>
+  <data name="Settings_Esign_Bridge_Running"><value>Ажиллаж байна — ws:{0} / wss:{1}</value></data>
+  <data name="Settings_Esign_Bridge_Stopped"><value>Зогссон. Порт өөр программд эзлэгдсэн бол зогсоогоод дахин асаана уу.</value></data>
+  <data name="Settings_Esign_Bridge_Start"><value>Асаах</value></data>
+  <data name="Settings_Esign_Bridge_Stop"><value>Зогсоох</value></data>
+
+  <data name="Org_Error_NotAvailable"><value>Энэ үйлдэл десктоп апп-д хараахан боломжгүй байна. Байгууллагын бүртгэл, гишүүдийн удирдлагыг вэб дээрээс хийнэ үү.</value></data>
+
+  <data name="Nav_Certificates"><value>Миний гэрчилгээ</value></data>
+  <data name="Certificates_Title"><value>Миний гэрчилгээ</value></data>
+  <data name="Certificates_Subtitle"><value>Танд олгогдсон цахим гарын үсгийн гэрчилгээнүүд. Мөрийн харах товчоор бүрэн X.509 мэдээллийг үзэж, файлаар хадгална.</value></data>
+  <data name="Certificates_Refresh"><value>Шинэчлэх</value></data>
+  <data name="Certificates_Empty"><value>Гэрчилгээ олдсонгүй.</value></data>
+  <data name="Certificates_Counts_Valid"><value>Хүчинтэй</value></data>
+  <data name="Certificates_Counts_Expired"><value>Хугацаа дууссан</value></data>
+  <data name="Certificates_Counts_Revoked"><value>Хүчингүй болсон</value></data>
+  <data name="Certificates_Counts_Total"><value>Нийт</value></data>
+  <data name="Certificates_Type_Sign"><value>Гарын үсэг (PIN2)</value></data>
+  <data name="Certificates_Type_Auth"><value>Нэвтрэлт (PIN1)</value></data>
+  <data name="Certificates_Status_Valid"><value>Хүчинтэй</value></data>
+  <data name="Certificates_Status_Revoked"><value>Хүчингүй</value></data>
+  <data name="Certificates_Status_Expired"><value>Хугацаа дууссан</value></data>
+  <data name="Certificates_Status_Suspended"><value>Түр зогссон</value></data>
+  <data name="Certificates_Error_NotAvailable"><value>Гэрчилгээний үйлчилгээ серверт хараахан идэвхжээгүй байна.</value></data>
+  <data name="Certificates_Error_RateLimited"><value>Хэт олон хүсэлт илгээлээ. Хэсэг хүлээгээд дахин оролдоно уу.</value></data>
+  <data name="Certificates_Error_Unauthenticated"><value>Нэвтрэх хугацаа дууссан байна. Дахин нэвтэрнэ үү.</value></data>
+  <data name="Certificates_Error_Generic"><value>Гэрчилгээ ачаалахад алдаа гарлаа. Дахин оролдоно уу.</value></data>
+</root>

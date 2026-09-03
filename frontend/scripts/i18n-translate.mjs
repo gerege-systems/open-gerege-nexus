@@ -31,7 +31,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadDictionary, loadModule, loadOverlay, overlayFile } from "./i18n-layout.mjs";
+import { loadDictionary, loadOverlay, overlayFile } from "./i18n-layout.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const I18N = path.join(HERE, "..", "lib", "i18n");

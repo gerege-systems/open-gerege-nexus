@@ -1,43 +1,34 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+# Gerege Nexus — macOS клиентийг барих.
+#
+# CI энэ файлыг дуудна (.github/workflows/native-clients.yml). Xcode төслийг
+# репод хадгалдаггүй: `project.yml` нь эх сурвалж, `.xcodeproj` нь артефакт
+# (`.gitignore`). Тиймээс барихын өмнө үргэлж дахин үүсгэнэ — эс бөгөөс шинэ
+# файл нэмсэн хүн «яагаад компайл хийгдэхгүй байна» гэдгийг олоход хагас
+# өдөр алдана.
+#
+#   ./build.sh                 # Debug
+#   CONFIGURATION=Release ./build.sh
+#
+# Шаардлага: Xcode 16+, `brew install xcodegen`. `../gerege-token-kit`
+# (локал SPM багц) автоматаар resolve хийгдэнэ.
 
-echo "========================================================"
-echo " Building Pure Native macOS App (Swift + AppKit) "
-echo "========================================================"
+set -euo pipefail
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-OUTPUT_BIN="${SCRIPT_DIR}/GeregeNexusNativeMac"
+cd "$(dirname "$0")"
 
-SDK_PATH=$(xcrun --show-sdk-path)
+CONFIGURATION="${CONFIGURATION:-Debug}"
+SCHEME="${SCHEME:-NexusGeregeDesktop}"
 
-echo "[1/2] Compiling Swift source files..."
-swiftc \
-  -sdk "${SDK_PATH}" \
-  -target arm64-apple-macosx12.0 \
-  -framework AppKit \
-  -framework WebKit \
-  -framework Security \
-  -framework LocalAuthentication \
-  -framework CoreImage \
-  -O \
-  "${SCRIPT_DIR}/DesignSystem.swift" \
-  "${SCRIPT_DIR}/NativeIPC.swift" \
-  "${SCRIPT_DIR}/NativeAuth.swift" \
-  "${SCRIPT_DIR}/NativeLoginViewController.swift" \
-  "${SCRIPT_DIR}/NativeSettings.swift" \
-  "${SCRIPT_DIR}/DeviceEnrollment.swift" \
-  "${SCRIPT_DIR}/SettingsPaneViewController.swift" \
-  "${SCRIPT_DIR}/MainWindowController.swift" \
-  "${SCRIPT_DIR}/AppDelegate.swift" \
-  "${SCRIPT_DIR}/main.swift" \
-  -o "${OUTPUT_BIN}"
+command -v xcodegen >/dev/null || { echo "xcodegen олдсонгүй: brew install xcodegen" >&2; exit 1; }
 
-# No copy step for brand.png: the build writes the binary into this same
-# directory, so the mark is already beside it. The app loads it from there and
-# draws without it if it is missing, which is what happens when the binary is
-# moved somewhere on its own.
+xcodegen generate
 
-echo "[2/2] Native binary compiled successfully at:"
-echo "      ${OUTPUT_BIN}"
-
-echo "Done! You can run: ${OUTPUT_BIN}"
+# CODE_SIGNING_ALLOWED=NO нь CI-д зориулагдсан: тэнд гарын үсгийн түлхүүр
+# байхгүй бөгөөд энэ шалгалтын асуулт нь «компайл хийгдэж байна уу», «түгээхэд
+# бэлэн үү» биш.
+xcodebuild -project "${SCHEME}.xcodeproj" -scheme "$SCHEME" \
+           -configuration "$CONFIGURATION" \
+           -destination 'platform=macOS' \
+           CODE_SIGNING_ALLOWED=NO \
+           build

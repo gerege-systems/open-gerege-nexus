@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Template .appinstaller for e-ID Mongolia auto-update.
+
+  How auto-update works:
+    1. User installs the .msix referenced by the URI element below.
+    2. On every launch, Windows checks <UpdateSettings> against the
+       AppInstallerUri (this very file's URL).
+    3. If <Version> on the server is higher than the installed copy,
+       Windows downloads the new .msix and applies it on next exit.
+
+  Deploy:
+    - Host this .appinstaller at a stable HTTPS URL with TLS (no redirect).
+    - Update <Version> AND <MainPackage Version> when shipping a new build.
+    - The MSIX must be signed by the SAME publisher as the installed copy,
+      or Windows refuses the update.
+
+  Substitution placeholders (replace before publish):
+    {APPINSTALLER_URL}  e.g. https://eidmongolia.mn/download/NexusGeregeDesktop.appinstaller
+    {MSIX_URL}          e.g. https://eidmongolia.mn/download/eid-mongolia-setup.msix
+                        (nginx serves /download/ — alias /var/www/downloads/;
+                         there is no /desktop/ location)
+    {VERSION}           e.g. 0.1.0.0  (matches the .msix)
+    {PUBLISHER}         e.g. CN=Gerege Systems LLC, O=Gerege Systems LLC, C=MN
+
+  References:
+    https://learn.microsoft.com/en-us/windows/msix/app-installer/app-installer-file-overview
+    https://learn.microsoft.com/en-us/windows/msix/app-installer/auto-update-and-repair
+-->
+<AppInstaller xmlns="http://schemas.microsoft.com/appx/appinstaller/2018"
+              Version="{VERSION}"
+              Uri="{APPINSTALLER_URL}">
+
+  <!-- Багцын нэр нь Package.appxmanifest-ийн <Identity Name> ЯГ таарах ёстой.
+       Таарахгүй бол Windows шинэчлэлтийг «өөр апп» гэж үзэж татгалздаг —
+       энд `mn.eidmongol.desktop` гэж бичигдсэн байсныг залруулав. -->
+  <MainPackage Name="mn.gerege.nexus.desktop"
+               Version="{VERSION}"
+               Publisher="{PUBLISHER}"
+               Uri="{MSIX_URL}"
+               ProcessorArchitecture="x64" />
+
+  <UpdateSettings>
+    <OnLaunch HoursBetweenUpdateChecks="6" />
+    <AutomaticBackgroundTask />
+    <!--
+      ForceUpdateFromAnyVersion=true means downgrades to this published
+      version replace a higher local copy (useful for emergency rollback).
+      Off by default for safety.
+    -->
+    <ForceUpdateFromAnyVersion>false</ForceUpdateFromAnyVersion>
+  </UpdateSettings>
+</AppInstaller>

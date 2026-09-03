@@ -18,7 +18,6 @@ package optest
 import (
 	"context"
 	"fmt"
-	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
@@ -116,17 +115,6 @@ func Account(t *testing.T, pool *pgxpool.Pool, role operator.Role) (operator.Ope
 		t.Fatalf("confirm the second factor: %v", err)
 	}
 	return account, enrolment.Secret
-}
-
-func SessionCookie(t *testing.T, recorder *httptest.ResponseRecorder) string {
-	t.Helper()
-	for _, cookie := range recorder.Result().Cookies() {
-		if cookie.Name == operator.SessionCookieName && cookie.Value != "" {
-			return cookie.Value
-		}
-	}
-	t.Fatal("the response carried no session cookie")
-	return ""
 }
 
 func AuditCount(t *testing.T, pool *pgxpool.Pool, operatorID, action string) int {

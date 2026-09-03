@@ -1,0 +1,30 @@
+<!-- Аппын өөрийн мөрүүд (ҮҮСГЭГДДЭГГҮЙ) — ширээний каталогт байхгүй,
+     зөвхөн гар дээрх урсгалд хэрэгтэй болсон мөрүүд. -->
+<resources>
+    <string name="Login_AppToApp">Sign in with the eID app</string>
+    <string name="Login_Push">Send a push by registration number</string>
+    <string name="Login_OtherDevice">Approve on another device</string>
+    <string name="Login_Error_Failed">Verification failed.</string>
+    <string name="Login_Error_Expired">The request expired. Please try again.</string>
+    <string name="Login_Error_Refused">The request was refused on the phone.</string>
+    <string name="Login_Error_AppMissing">The eID Mongolia app was not found. Send a push by registration number and approve on another device.</string>
+    <string name="Read_Only_Hint">Read-only — changes happen in the eID Mongolia app (PIN2).</string>
+    <string name="Settings_Server">Server</string>
+    <string name="Settings_About">About</string>
+    <string name="App_VersionLabel">Version</string>
+    <string name="Settings_Host">Connected host</string>
+    <string name="Logs_Subtitle">Sign-in activity on this device</string>
+    <string name="Id_Subtitle">Your unified e-ID profile</string>
+    <string name="Id_RegNumber">Registration number</string>
+    <string name="Id_CivilId">Civil ID</string>
+    <string name="Id_DocNumber">Certificate serial</string>
+    <string name="Id_Level">Level</string>
+    <string name="Common_Active">Active</string>
+    <string name="Common_Registered">Registered</string>
+    <string name="Common_Pending">Pending</string>
+    <string name="Login_AppToApp_Hint">The eID Mongolia app opens and asks for approval. You return here once you approve.</string>
+    <string name="Login_SecurityFooter">eID Mongolia · secured by X-Road</string>
+    <string name="Common_Valid">ok</string>
+    <string name="Common_TooShort">short</string>
+    <string name="Id_Certificate">Certificate</string>
+</resources>

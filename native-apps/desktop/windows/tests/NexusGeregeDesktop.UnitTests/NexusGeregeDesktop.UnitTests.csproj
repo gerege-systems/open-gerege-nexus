@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <RootNamespace>NexusGeregeDesktop.UnitTests</RootNamespace>
+
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <UseRidGraph>true</UseRidGraph>
+    <NoWarn>$(NoWarn);CA1707;CA1812;CA1822;CA2007;CA1305</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.collector">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="NSubstitute" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+    <Using Include="FluentAssertions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\NexusGeregeDesktop.Domain\NexusGeregeDesktop.Domain.csproj" />
+    <ProjectReference Include="..\..\src\NexusGeregeDesktop.Application\NexusGeregeDesktop.Application.csproj" />
+    <ProjectReference Include="..\..\src\NexusGeregeDesktop.Infrastructure\NexusGeregeDesktop.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\NexusGeregeDesktop.Presentation\NexusGeregeDesktop.Presentation.csproj" />
+  </ItemGroup>
+
+</Project>

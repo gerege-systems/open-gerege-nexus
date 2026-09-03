@@ -1,0 +1,9 @@
+<resources>
+    <!-- Compose аппын гаднах бүрхүүл. Өнгө нь Compose дотор
+         (ui/theme/Theme.kt, үүсгэсэн EidColors) — энэ нь зөвхөн эхлэх дэлгэц. -->
+    <style name="Theme.NexusGerege" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">#F9F9FC</item>
+        <item name="android:statusBarColor">#F9F9FC</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+</resources>

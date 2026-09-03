@@ -163,7 +163,7 @@ func TestTheInitiateBodyCarriesTheAuthenticationChallenge(t *testing.T) {
 	t.Cleanup(server.Close)
 	client := NewClient(server.URL, "rp-uuid", "Gerege Nexus", "rp_sk_test", "")
 
-	started, err := client.Initiate(context.Background(), "111949212017", "Нэвтрэх", "")
+	started, err := client.Initiate(context.Background(), "111949212017", "Нэвтрэх", "gerege-nexus://auth")
 	if err != nil {
 		t.Fatalf("initiate: %v", err)
 	}
@@ -178,6 +178,9 @@ func TestTheInitiateBodyCarriesTheAuthenticationChallenge(t *testing.T) {
 	}
 	if body["signatureProtocol"] != "ACSP_V2" || body["certificateLevel"] != "ADVANCED" {
 		t.Errorf("protocol %v, level %v", body["signatureProtocol"], body["certificateLevel"])
+	}
+	if body["initialCallbackUrl"] != "gerege-nexus://auth" {
+		t.Errorf("native callback was not passed to eID: %v", body["initialCallbackUrl"])
 	}
 	// The text the eID app shows, capped at sixty characters by the protocol.
 	interactions, _ := body["interactions"].([]any)

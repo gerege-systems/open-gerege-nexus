@@ -52,7 +52,11 @@ coverage.html
 xcuserdata/
 *.xcuserstate
 native-apps/desktop/macos/build/
-native-apps/desktop/macos/GeregeNexusNativeMac
+native-apps/desktop/macos/NexusGeregeDesktop
+# .xcodeproj нь project.yml-ээс ҮҮСГЭГДДЭГ артефакт — build.sh бүрд шинэчлэгдэнэ.
+native-apps/desktop/macos/NexusGeregeDesktop.xcodeproj/
+native-apps/mobile/ios/NexusGeregeMobile.xcodeproj/
+native-apps/desktop/gerege-token-kit/.build/
 native-apps/mobile/android/**/build/
 native-apps/mobile/android/.gradle/
 native-apps/mobile/android/local.properties
