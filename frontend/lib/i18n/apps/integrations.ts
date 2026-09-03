@@ -6,10 +6,9 @@
 
 import { registerDictionary, source } from "../registry";
 import { integrations } from "../addons/integrations";
-import { ar } from "../locales/ar/integrations";
-import { zh } from "../locales/zh/integrations";
-import { fr } from "../locales/fr/integrations";
-import { ru } from "../locales/ru/integrations";
-import { es } from "../locales/es/integrations";
 
-registerDictionary("integrations", { ...source(integrations), ar, zh, fr, ru, es });
+// mn and en only. The five optional languages live in
+// lib/i18n/locales/<language>/index.ts and arrive through addLocale when a
+// reader picks one — importing them here put every language in every page's
+// first chunk, which is what nobody was reading.
+registerDictionary("integrations", source(integrations));
