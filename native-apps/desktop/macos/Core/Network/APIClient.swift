@@ -75,6 +75,10 @@ actor APIClient {
             throw APIError.invalidResponse
         }
         logger.info("← \(http.statusCode) \(endpoint.path)")
+        // Нэвтрэлт амжилттай болоход энд `session_token` ирнэ — ажлын мужийн
+        // цорын ганц нэвтрэлт. Дуудагч бүрт биш ЭНД байгаа нь санаатай: аль
+        // endpoint session өгөхийг клиент шийдэх ёсгүй, сервер өөрөө хэлнэ.
+        WorkAreaSession.capture(from: http, for: request.url)
 
         if http.statusCode >= 400 {
             throw Self.serverError(status: http.statusCode, data: data)

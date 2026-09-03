@@ -36,6 +36,10 @@ object ApiClient {
             .apply { if (body != null) post(body.toString().toRequestBody(json)) else get() }
             .build()
         client.newCall(request).execute().use { response ->
+            // Нэвтрэлт амжилттай болоход энд `session_token` ирнэ — ажлын
+            // мужийн цорын ганц нэвтрэлт. Дуудагч бүрт биш ЭНД байгаа нь
+            // санаатай: аль route session өгөхийг клиент шийдэх ёсгүй.
+            response.headers("Set-Cookie").forEach(WorkAreaSession::capture)
             val text = response.body?.string().orEmpty()
             if (!response.isSuccessful) {
                 val message = runCatching { JSONObject(text).optString("error") }.getOrNull()

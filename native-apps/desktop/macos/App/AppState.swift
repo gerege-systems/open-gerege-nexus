@@ -252,6 +252,9 @@ final class AppState: ObservableObject {
         EsignBridge.shared.clearIdentity()
         #endif
         try? KeychainManager.shared.delete(.identity)
+        // Ажлын мужийн session нь Keychain-д биш webview-ийн санд байдаг тул
+        // дээрх устгалд ОРДОГГҮЙ — тусад нь гаргана.
+        WorkAreaSession.clear()
         UserDefaults.standard.removeObject(forKey: Self.activityLogKey)
         nationalID = ""
         fullName = ""

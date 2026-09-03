@@ -23,6 +23,11 @@ private enum class Tab(val labelRes: Int, val icon: ImageVector) {
     ID(R.string.Nav_MyId, Icons.Filled.Badge),
     LOGS(R.string.Nav_Logs, Icons.Filled.History),
     SETTINGS(R.string.Nav_Settings, Icons.Filled.Settings),
+
+    // Платформын ажлын муж нь ЭНЭ аппын өөрийн дэлгэц биш тул native
+    // дэлгэцүүдийн ДАРАА — ширээний sidebar-т ч мөн сүүлд байдаг
+    // (`DashboardTab.mainNav`). Байрлал нь хүнд аль нь аль болохыг хэлнэ.
+    PLATFORM(R.string.Nav_Platform, Icons.Filled.GridView),
 }
 
 @Composable
@@ -62,6 +67,7 @@ fun MainScaffold(state: AppState) {
                 Tab.ID -> IdScreen(state)
                 Tab.LOGS -> LogsScreen(state)
                 Tab.SETTINGS -> SettingsScreen(state)
+                Tab.PLATFORM -> PlatformScreen()
             }
         }
     }

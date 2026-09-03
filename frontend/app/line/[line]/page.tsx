@@ -3,16 +3,26 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Boxes, FileText, Landmark, LayoutGrid, MonitorCog, Package, PenTool, Receipt, ScanLine, ShieldCheck, Users, Wallet } from "lucide-react";
+import { Boxes, FileText, KeyRound, Landmark, LayoutGrid, Link2, MonitorCog, Package, PenTool, Receipt, ScanLine, Settings, ShieldCheck, Users, Wallet } from "lucide-react";
 import { invokeShell, useShell, SHELL_METHODS } from "@/lib/shell";
 import { api } from "@/lib/api";
 import { formatDay } from "@/lib/datetime";
 import { LINES, isLine, type LineContent } from "./lines";
 
+/**
+ * `lines.ts`-ийн дүрсний нэр → зураг.
+ *
+ * Энд БАЙХГҮЙ нэр нь алдаа өгдөггүй, зүгээр л хоосон дөрвөлжин зурдаг —
+ * `key`, `link`, `settings`, `shield-check`, `monitor-cog` тав нь яг тэр
+ * байдлаар дөрвөн шугам дээр хоосон хайрцаг болж сууж байв. Шинэ үйлдэл
+ * нэмэхдээ дүрсээ ЭНД мөн нэм.
+ */
 const ICONS: Record<string, React.ReactNode> = {
   grid: <LayoutGrid />, file: <FileText />, pen: <PenTool />, landmark: <Landmark />,
   users: <Users />, monitor: <MonitorCog />, wallet: <Wallet />, boxes: <Boxes />,
   shield: <ShieldCheck />, package: <Package />, scan: <ScanLine />, receipt: <Receipt />,
+  key: <KeyRound />, link: <Link2 />, settings: <Settings />,
+  "shield-check": <ShieldCheck />, "monitor-cog": <MonitorCog />,
 };
 
 /** `device.identity`-ийн хариу. Талбар бүр байхгүй байж болно. */
@@ -39,15 +49,6 @@ function when(iso?: string) {
   if (!iso) return EMPTY;
   const at = new Date(iso);
   return Number.isNaN(at.getTime()) ? EMPTY : formatDay(at);
-}
-
-function Field({ label, value, wide }: { label: string; value?: React.ReactNode; wide?: boolean }) {
-  return (
-    <div className={`min-w-0 ${wide ? "sm:col-span-2 lg:col-span-3" : ""}`}>
-      <dt className="text-[0.625rem] uppercase tracking-[0.12em] text-muted">{label}</dt>
-      <dd className="mt-0.5 break-words font-mono text-[0.8125rem] text-foreground">{value || EMPTY}</dd>
-    </div>
-  );
 }
 
 /**
@@ -132,6 +133,25 @@ export default function LineHomePage() {
   const content: LineContent = LINES[line];
   const formFactor = identity?.form_factor || shell?.formFactor || EMPTY;
 
+  const actions = (
+    <nav className="line-actions" aria-label="Хаанаас эхлэх">
+      <p className="line-actions-head">Хаанаас эхлэх</p>
+      <ul>
+        {content.actions.map((action) => (
+          <li key={action.label + action.href}>
+            <Link href={action.href} className="line-action">
+              <span className="line-action-icon" aria-hidden="true">{ICONS[action.icon]}</span>
+              <span className="line-action-text">
+                <strong>{action.label}</strong>
+                <small>{action.hint}</small>
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+
   return (
     <div
       className={`line-home line-home--${content.posture}`}
@@ -143,116 +163,102 @@ export default function LineHomePage() {
         <p className="line-lede">{content.lede}</p>
       </header>
 
-      <div className="line-body">
-        {/*
-          Гэрэгэ — энэ аппын нэрийг үүрсэн эд. Монголын эзэнт гүрэн элчдээ
-          олгодог байсан төмөр пайз: эзэмшигчийн эрх, хаана хүчинтэйг нь сийлж
-          бичсэн байдаг. Төхөөрөмжийн бүртгэл яг үүнтэй ижил зүйл хийдэг тул
-          энд түүнийг чимэг биш, төхөөрөмжийн үнэмлэх болгож харууллаа.
-        */}
-        <figure className="paiza" aria-label="Энэ төхөөрөмжид олгосон гэрэгэ">
-          <span className="paiza-cord" aria-hidden="true" />
-          <div className="paiza-face">
-            <p className="paiza-mark">ГЭРЭГЭ</p>
-            <dl className="paiza-inscription">
-              <div><dt>Шугам</dt><dd>{host || EMPTY}</dd></div>
-              <div><dt>Хэлбэр</dt><dd>{formFactor}</dd></div>
-              <div><dt>Байршил</dt><dd>{identity?.site || EMPTY}</dd></div>
-              <div><dt>Дугаар</dt><dd>{identity?.id || EMPTY}</dd></div>
-            </dl>
-            <p className="paiza-seal">
-              {shell ? `Гэрээ v${shell.version}` : "Олгоогүй"}
-            </p>
-          </div>
-          <figcaption className="paiza-note">
-            {shell
-              ? "Энэ төхөөрөмж бүрхүүлээр нэвтэрсэн. Дугаар, байршлыг Тохиргоо → Төхөөрөмж дээрээс бүртгэнэ."
-              : "Хөтчөөр нээсэн байна. Гэрэгэ нь зөвхөн native бүрхүүлд олгогдоно."}
-          </figcaption>
-        </figure>
+      {content.posture === "public" ? (
+        <div className="line-body">
+          {/*
+            Гэрэгэ — энэ аппын нэрийг үүрсэн эд. Монголын эзэнт гүрэн элчдээ
+            олгодог байсан төмөр пайз: эзэмшигчийн эрх, хаана хүчинтэйг нь сийлж
+            бичсэн байдаг. Олон нийтийн терминалд хүн биш ТӨХӨӨРӨМЖ нь гол
+            баримт учир зөвхөн энд үлдэв — ширээ, гарын алган дээр тэр нь
+            дөрвөн зураас болж, хоосон чимэг үлдээж байсан.
+          */}
+          <figure className="paiza" aria-label="Энэ төхөөрөмжид олгосон гэрэгэ">
+            <span className="paiza-cord" aria-hidden="true" />
+            <div className="paiza-face">
+              <p className="paiza-mark">ГЭРЭГЭ</p>
+              <dl className="paiza-inscription">
+                <div><dt>Шугам</dt><dd>{host || EMPTY}</dd></div>
+                <div><dt>Хэлбэр</dt><dd>{formFactor}</dd></div>
+                <div><dt>Байршил</dt><dd>{identity?.site || EMPTY}</dd></div>
+                <div><dt>Дугаар</dt><dd>{identity?.id || EMPTY}</dd></div>
+              </dl>
+              <p className="paiza-seal">{shell ? `Гэрээ v${shell.version}` : "Олгоогүй"}</p>
+            </div>
+            <figcaption className="paiza-note">
+              {shell
+                ? "Энэ төхөөрөмж бүрхүүлээр нэвтэрсэн. Дугаар, байршлыг Тохиргоо → Төхөөрөмж дээрээс бүртгэнэ."
+                : "Хөтчөөр нээсэн байна. Гэрэгэ нь зөвхөн native бүрхүүлд олгогдоно."}
+            </figcaption>
+          </figure>
 
-        <nav className="line-actions" aria-label="Хаанаас эхлэх">
-          <p className="line-actions-head">Хаанаас эхлэх</p>
-          <ul>
-            {content.actions.map((action) => (
-              <li key={action.label + action.href}>
-                <Link href={action.href} className="line-action">
-                  <span className="line-action-icon" aria-hidden="true">{ICONS[action.icon]}</span>
-                  <span className="line-action-text">
-                    <strong>{action.label}</strong>
-                    <small>{action.hint}</small>
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      </div>
-
-      {/*
-        Нэвтэрсэн хүн. Бүрхүүл нэвтрэлтээ өөрөө эзэмшдэг тул ажлын муж хэнийг
-        авчирсныг харуулахгүй бол native талд амжилттай нэвтэрсэн эсэхийг web
-        талаас нотлох арга байхгүй байсан — эхний дэлгэц нь яг тэр асуултад
-        хариулна.
-      */}
-      {posture !== "public" && (
-        <section className="mt-10 rounded-xl border border-line bg-surface p-5">
-          <h2 className="text-sm font-semibold text-foreground">Нэвтэрсэн хүн</h2>
-          <p className="mt-0.5 text-xs text-muted">
-            Session-ээр уншсан бүртгэл — <code>/profile</code>, <code>/auth/me</code>.
-          </p>
-
-          {personNote && <p className="mt-3 text-sm text-muted">{personNote}</p>}
-
-          {person && session && (
-            <dl className="mt-4 grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
-              <Field label="Нэр" value={person.name} />
-              <Field label="И-мэйл" value={person.email} />
-              <Field label="Дугаар" value={person.id} />
-              <Field label="Бүртгүүлсэн" value={when(person.created_at)} />
-              <Field label="Админ" value={person.is_admin ? "тийм" : "үгүй"} />
-              <Field label="Идэвхтэй session" value={String(person.active_sessions)} />
-              <Field label="Ажлын муж" value={`${session.tenant_name} (${session.tenant_id})`} />
-              <Field label="Мужийн төрөл" value={session.workspace_kind} />
-              <Field label="Нэрийн өмнөөс" value={session.impersonated ? "тийм" : "үгүй"} />
-              <Field label="Гэрийн муж" value={person.home ? `${person.home.name} (${person.home.slug})` : EMPTY} />
-              <Field
-                label="Байгууллага"
-                value={person.organisations.map((one) => `${one.name} (${one.slug})`).join(", ")}
-                wide
-              />
-              <Field label="Эрх" value={session.permissions?.join(", ")} wide />
-            </dl>
-          )}
-
-          {/* Таних тэмдэг бүрийг бүтнээр нь: claims нь провайдер юу баталсныг
-              хэлдэг бөгөөд нэвтрэлт оношлоход хамгийн эхэнд хэрэгтэй хэсэг. */}
-          {person && person.identities.length > 0 && (
-            <ul className="mt-5 space-y-2">
-              {person.identities.map((one) => (
-                <li key={`${one.kind}:${one.issuer ?? ""}:${one.subject}`} className="rounded-lg border border-line p-3">
-                  <p className="text-sm font-semibold text-foreground">
-                    {one.provider} <span className="text-xs font-normal text-muted">({one.kind})</span>
-                  </p>
-                  <dl className="mt-2 grid gap-x-6 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
-                    <Field label="Subject" value={one.subject} />
-                    <Field label="И-мэйл" value={one.email} />
-                    <Field label="Нэр" value={[one.name, one.surname].filter(Boolean).join(" ")} />
-                    <Field label="Issuer" value={one.issuer} />
-                    <Field label="Холбосон" value={when(one.linked_at)} />
-                    <Field label="Сүүлд харагдсан" value={when(one.last_seen_at)} />
-                  </dl>
-                  {one.claims && (
-                    <pre className="mt-2 overflow-x-auto rounded-lg bg-surface-2 p-2 text-[0.6875rem] text-muted">
-                      {JSON.stringify(one.claims, null, 2)}
-                    </pre>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+          {actions}
+        </div>
+      ) : (
+        <>
+          <Person person={person} session={session} note={personNote} />
+          {actions}
+        </>
       )}
     </div>
+  );
+}
+
+/**
+ * Нэвтэрсэн хүн — ширээ ба гарын алган дээрх нүүрийн ГОЛ агуулга.
+ *
+ * Бүрхүүл нэвтрэлтээ өөрөө эзэмшдэг тул ажлын мужид «намайг хэн гэж уншиж
+ * байна» гэдгийг хэлэх газар өөр байхгүй. Тиймээс энэ нь хажуугийн жижиг
+ * хайрцаг биш, хуудсыг эзэлсэн нэр: хүн нээсэн даруйдаа зөв данснаас
+ * харагдаж байгаагаа уншина.
+ *
+ * Session байхгүй үед хуудас ЗОГСОНО — 401 нь энэ дэлгэцийн хувьд алдаа биш.
+ */
+function Person({ person, session, note }: { person: Person | null; session: Session | null; note: string }) {
+  if (!person || !session) {
+    return (
+      <section className="person" aria-label="Нэвтэрсэн хүн">
+        <p className="person-eyebrow">Нэвтэрсэн хүн</p>
+        <p className="person-empty">{note || "Уншиж байна…"}</p>
+      </section>
+    );
+  }
+
+  return (
+    <section className="person" aria-label="Нэвтэрсэн хүн">
+      <p className="person-eyebrow">Нэвтэрсэн хүн</p>
+      <h2 className="person-name">{person.name}</h2>
+      <p className="person-sub">{person.email}</p>
+
+      <dl className="person-facts">
+        <div><dt>Ажлын муж</dt><dd>{session.tenant_name}</dd></div>
+        <div><dt>Эрх</dt><dd>{person.is_admin ? "Админ" : "Гишүүн"}</dd></div>
+        <div><dt>Байгууллага</dt><dd>{person.organisations.length}</dd></div>
+        <div><dt>Идэвхтэй session</dt><dd>{person.active_sessions}</dd></div>
+        <div><dt>Бүртгүүлсэн</dt><dd>{when(person.created_at)}</dd></div>
+      </dl>
+
+      <dl className="person-rows">
+        <div><dt>Дугаар</dt><dd>{person.id}</dd></div>
+        <div><dt>Мужийн төрөл</dt><dd>{session.workspace_kind || EMPTY}</dd></div>
+        <div><dt>Гэрийн муж</dt><dd>{person.home ? `${person.home.name} (${person.home.slug})` : EMPTY}</dd></div>
+        <div>
+          <dt>Байгууллага</dt>
+          <dd>{person.organisations.map((one) => `${one.name} (${one.slug})`).join(", ") || EMPTY}</dd>
+        </div>
+        <div><dt>Эрх</dt><dd>{session.permissions?.join(", ") || EMPTY}</dd></div>
+        {session.impersonated && <div><dt>Нэрийн өмнөөс</dt><dd>тийм</dd></div>}
+        {/* Таних тэмдэг бүр нэг мөр: провайдер, түүн дэх дугаар, хэзээ холбогдсон.
+            Түүхий claims-ыг ХАССАН — оношлоход хэрэгтэй ч энэ хуудасны ажил биш. */}
+        {person.identities.map((one) => (
+          <div key={`${one.kind}:${one.issuer ?? ""}:${one.subject}`}>
+            <dt>{one.provider}</dt>
+            <dd>
+              <span>{one.subject}</span>
+              <small>{[one.email, `холбосон ${when(one.linked_at)}`, `сүүлд ${when(one.last_seen_at)}`].filter(Boolean).join(" · ")}</small>
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
   );
 }
