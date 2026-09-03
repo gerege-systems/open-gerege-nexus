@@ -1,186 +1,137 @@
-# Gerege Nexus — pure native clients
+# Gerege Nexus — native клиентүүд
 
-This directory (`native-apps/`) contains the native client codebases: **iOS/iPadOS** (`GeregeShellKit` SPM + SwiftUI/WKWebView), **windows** (C#/.NET 8 WPF + WebView2), **android** (Kotlin/Compose/WebView), and **macOS** (AppKit/WKWebView).
+Гурван клиент, нэг бүтээгдэхүүн: **macOS** (`desktop/macos`), **iOS/iPadOS**
+(`mobile/ios`), **Android** (`mobile/android`). Гурвуулаа Gerege Nexus
+байрлуулалтын иргэн рүү харсан клиент — вэб бүрхүүл БИШ, native апп.
 
-Each client develops natively from here on. Where a screen is still web, it is
-embedded as one of the app's own screens rather than as a second window.
+## Нэр нь шугамаа дагана
 
----
+Аппын нэр нь ПЛАТФОРМЫГ биш, ТӨХӨӨРӨМЖИЙН ШУГАМЫГ нэрлэнэ — хаягуудтайгаа
+яг ижил дүрэм (`shared/device_lines.json`):
 
-## 🧱 Two rules that govern every client
+| Шугам | Хаяг | Аппын нэр | Юу нь энэ нэрийг барих вэ |
+|---|---|---|---|
+| desktop | `desktop.nexus.gerege.mn` | **NexusGeregeDesktop** | Xcode target/scheme, .NET solution ба namespace |
+| mobile | `mobile.nexus.gerege.mn` | **NexusGeregeMobile** | Xcode target/scheme, Gradle `rootProject.name` |
+| kiosk | `kiosk.nexus.gerege.mn` | **NexusGeregeKiosk** | ЗАХИАЛГАТАЙ — клиент хараахан байхгүй |
+| pos | `pos.nexus.gerege.mn` | **NexusGeregePos** | ЗАХИАЛГАТАЙ — клиент хараахан байхгүй |
 
-**1. One frame.** Each client has exactly one window (macOS/Windows) or one
-scene (iOS/Android). Login, the work area, and settings are *screens* that swap
-inside that frame — never separate windows. The only thing allowed out of the
-frame is a popup: `NSAlert`/`NSMenu`/`NSSavePanel`, `MessageBox` and file
-dialogs, `alert`/`confirmationDialog`/share sheets, `BiometricPrompt` and
-permission dialogs. `window.open` and `target="_blank"` from the work area do
-not open a second webview; the shell hands the URL to the system browser.
+Ширээний macOS ба Windows хоёр НЭГ нэртэй байгаа нь алдаа биш: хүн тэр
+хоёртой ижил байдлаар харьцдаг тул тэд нэг шугам, нэг апп. Иргэний харах нэр
+нь эдгээрийн аль нь ч биш — **Gerege Nexus** (`PRODUCT_NAME`, `DisplayName`).
 
-Swapping to a native screen hides the webview, it does not remove it. Removing
-it rebuilds the webview and the person loses their page, their scroll position
-and anything half-typed.
+## Гурван зарчим (гурвуулан дээр ижил)
 
-**2. One backend, one domain line per device.** The backend is single. Each
-client talks to its own host, and that host serves `/api/v1` too, so calls from
-inside the webview are same-origin — the session cookie stays `SameSite=Strict`
-and no CORS preflight is ever issued.
+**1. Клиентэд secret байхгүй.** Бүх дуудлага өөрийн web backend-ийн нийтийн
+`/api/…` route-уудаар явна — хөтөчтэй яг ижил зам. RP-ийн нууцыг зөвхөн web
+сервер барина. Тиймээс аппыг задалж үзсэн хүнд авах юм алга.
 
-| Client | Line | Status |
-| --- | --- | --- |
-| Browser / PWA | `nexus.gerege.mn` | ✅ live |
-| macOS | `mac.nexus.gerege.mn` | ✅ live |
-| Windows Desktop | `win.nexus.gerege.mn` | ✅ live |
-| iOS / iPadOS | `ios.nexus.gerege.mn` | ✅ live |
-| Android mobile / tablet | `android.nexus.gerege.mn` | ✅ live |
-| Kiosk | `kiosk.nexus.gerege.mn` | ✅ live |
-| POS | `pos.nexus.gerege.mn` | ✅ live |
+**2. Identity нь snapshot, session биш.** Bearer token байхгүй: нэвтрэлтийн
+үр дүн (`documentNumber`, нэр, иргэний дугаар) нь дараагийн үйлдлийн бариул
+бөгөөд Keychain (Apple) / Android Keystore-оор шифрлэгдэж хадгалагдана. Апп
+сүлжээгүй ч нээгдэнэ — зөвхөн шинэ өгөгдөл татагдахгүй.
 
-All six are covered by a `*.nexus.gerege.mn` wildcard A record and share one
-Let's Encrypt certificate.
+**3. Нэр МОНГОЛООР.** Гэрчилгээний subject дэх нэр нь латин галиг
+(«ERDENEBAT TSENDDORJ») тул дэлгэцэнд харагдах нэрийг `POST /api/dashboard`
+(XYP-ийн хураангуй) -аас авна. Гурван клиент энэ дүрмийг нэвтрэлтийн урсгал
+дотроо хэрэгжүүлдэг — эхний кадраасаа зөв нэр.
 
-**When adding a NEW line, do not point a client at it before it resolves.** The
-app fails with `A server with the specified hostname could not be found` and
-nobody can sign in — this happened once. Do the DNS/nginx/TLS/CORS work first
-and change the client's origin constant last. The order and the exact line to
-edit are in [`shared/device_lines.json`](shared/device_lines.json)
-under `$provisioning`.
+## Нэвтрэлт — платформ бүрт өөр, session нь ижил
 
-Adding a line is a three-file change: [`shared/device_lines.json`](shared/device_lines.json),
-[`../frontend/lib/deviceLine.ts`](../frontend/lib/deviceLine.ts), and the deploy
-side (`DEVICE_LINE_ORIGINS` plus
-[`../deploy/nginx/device-lines.nexus.gerege.mn.conf`](../deploy/nginx/device-lines.nexus.gerege.mn.conf)).
+| Клиент | Хэрхэн | Яагаад |
+|---|---|---|
+| macOS | QR + РД push | Зөвшөөрөгч нь ХӨРШ утас |
+| iOS / Android | app-to-app (`geregesmartid://approve?sessionId=…`), fallback РД push | Зөвшөөрөгч нь ӨӨРӨӨ тэр утас — QR-аа өөрөө скан хийж чадахгүй |
 
-Both rules are specified in [`../docs/SHELL_CONTRACT.md`](../docs/SHELL_CONTRACT.md) §1a and §1b.
+Гурвуулан ижил `POST /api/start` → `GET /api/status` poll дээр суудаг: session
+нь хэн зөвшөөрснөөс үл хамааран ижил тул app-to-app-д НЭГ Ч шинэ backend
+endpoint нэмээгүй. eID Mongolia апп суугаагүй бол РД push зам үлдэнэ (утас
+дээрх схемийг асуухын тулд iOS `LSApplicationQueriesSchemes`, Android
+`<queries>` блокт бүртгэсэн байх ЁСТОЙ — эс бөгөөс OS «суугаагүй» гэж худал
+хэлнэ).
 
----
-
-## 📁 Architecture Overview
+## Код хуваалцах — хуулбар биш
 
 ```
-native-apps/
-├── macOS/                   # macOS Native Shell (Swift 5.10 + AppKit + WKWebView)
-│   ├── main.swift           # NSApplication Entry Point
-│   ├── AppDelegate.swift    # App Lifecycle & Native Menu Bar (Gerege Nexus, Удирдах, Харах)
-│   ├── MainWindowController.swift    # The single window: ribbon, rail, pane host, footer
-│   ├── SettingsPaneViewController.swift # Settings as an in-frame NSView, not a window
-│   ├── NativeIPC.swift      # WKScriptMessageHandler Native IPC Bridge
-│   └── build.sh             # Swiftc Compilation Script
-│
-├── iOS/                     # iOS/iPadOS app + shared Swift package
-│   ├── GeregeNexusIOS.xcodeproj # Xcode app project
-│   ├── Package.swift        # GeregeShellKit, GeregeShellUI, GeregeNexusApp
-│   ├── Sources/             # Native login/settings and WKWebView shell
-│   └── Tests/               # Swift auth state-machine tests
-│
-├── windows/                 # Windows Native Shell (C# .NET 8 + WPF + WebView2)
-│   ├── GeregeNexusWin.csproj # .NET 8 Project File
-│   ├── App.xaml / App.xaml.cs # WPF Application Lifecycle
-│   ├── MainWindow.xaml / MainWindow.xaml.cs # The single window: menu, rail, pane host, footer
-│   ├── SettingsPane.xaml / SettingsPane.xaml.cs # Settings as an in-frame UserControl
-│   └── NativeIPCBridge.cs   # CoreWebView2.WebMessageReceived IPC Bridge
-│
-├── android/                 # Android mobile/tablet/kiosk/POS clients
-│   ├── core/                # Shared auth/device behavior
-│   └── app/                 # Four form-factor flavors
-│
-└── shared/                  # Shared Specifications & Configurations
-    ├── app_config.json      # Window sizing & platform notes
-    ├── device_lines.json    # Canonical platform → origin map (one backend behind all)
-    └── IPC_CONTRACT.md      # Bi-directional JSON IPC Message Contract Specification
+desktop/macos/            macOS апп + ХУВААЛЦСАН давхаргууд
+  Core/Network            AppConfig, Endpoints, APIClient
+  Core/Keychain           identity snapshot
+  App/AppState.swift      төлөв, локал лог
+  Design/                 ШИРЭЭНИЙ өнгө, фонт, дүрсүүд (Windows-той нийцтэй)
+  Presentation/           локализаци (7 хэл)
+  Core/Token, Core/Esign   ← ЗӨВХӨН ширээний (PKCS#11, ws гүүр)
+mobile/ios/               iOS апп — дээрхийг `project.yml`-ээр ШУУД эх файлаар нь оруулна
+  Design/                 ← УТАСНЫ дизайны токенууд + дүрсүүд (доор үзнэ үү)
+mobile/android/           Android апп — өнгө, орчуулгыг ҮҮСГЭНЭ (scripts/gen_from_swift.py)
+  ui/theme/Gw.kt          ← УТАСНЫ дизайны токенууд (үүсгэгддэггүй)
 ```
 
----
+iOS нь ширээний файлуудыг хуулдаггүй, ШУУД эх файлаар нь компайл хийдэг тул
+endpoint, орчуулга хоёр дээр салбарлах боломжгүй. Android өөр хэл дээр
+тул тэр замыг явж чадахгүй — оронд нь `scripts/gen_from_swift.py` нь
+`Design/Colors.swift` → `EidColors.kt`, локализацийн каталог →
+`res/values*/eid_strings.xml` болгож үүсгэнэ. CI нь скриптийг дахин ажиллуулж
+ялгаа гарвал улаан болно.
 
-## 🚀 Building & Running
+## Харагдац — ширээ, утас хоёр ӨӨР
 
-### IDE-ээр шууд нээх
+Ширээний `Design/` нь Windows аппын `Colors.xaml`/`Typography.xaml`-ийн порт:
+тэр хоёр клиент нэг л зүйл харагдах ёстой. Утас нь **Gerege Wallet-ийн
+дизайны системээс** гаралтай — иргэн Gerege-гийн хоёр аппыг зэрэг барьдаг тул
+гар дээрх хоёр нь нэг гэр бүл байх ёстой.
 
-- iOS/iPadOS — Xcode-д `iOS/GeregeNexusIOS.xcodeproj`-ийг нээгээд `GeregeNexusIOS` scheme-ийг ажиллуулна. `project.yml` нь XcodeGen-ээр төслийг дахин үүсгэх эх файл.
-- macOS — Xcode-д `macOS/GeregeNexusNativeMac.xcodeproj`-ийг нээгээд `GeregeNexusNativeMac` scheme-ийг ажиллуулна.
-- Android — Android Studio-д `android/` хавтсыг нээнэ. Энд `.xcodeproj` эсвэл
-  `.sln` шиг тусдаа project файл БАЙХГҮЙ нь зөв: Gradle төслийн хувьд
-  `settings.gradle.kts` бүхий хавтас нь өөрөө төсөл. Wrapper нь repository-д
-  орсон тул Gradle тусад нь суулгах шаардлагагүй.
-- Windows — Visual Studio 2022-д `windows/GeregeNexusNativeWin.sln`-ийг нээнэ. Solution дотор WPF app болон `GeregeShell.Core` хоёулаа байна.
+| | Токен | Дүрсүүд | Фонт |
+|---|---|---|---|
+| macOS, Windows | `desktop/macos/Design/Colors.swift` | `Design/Styles.swift` | системийн |
+| iOS | `mobile/ios/Design/Theme.swift` | `mobile/ios/Design/BrandComponents.swift` | Montserrat |
+| Android | `mobile/android/.../ui/theme/Gw.kt` | `.../ui/components/Components.kt` | Montserrat |
 
-### 1. macOS Native Shell (Swift + AppKit)
+Утасны хоёр файл нь ХАРИЛЦАН ПОРТ: токены нэр (`bg`, `surface1..3`, `fg1..4`,
+`brand`/`brandSoft`/`brandLine`, `credit`/`debit`/`accent`/`gold`), геометр
+(52 оролтын мөр, 56 CTA, 14 радиус), фонтын хэмжээс гурвуулан 1:1. Нэг талд
+утга солиход нөгөөд нь механик — орчуулга биш, хуулбар.
 
-**Prerequisites**: macOS 12+, Xcode Command Line Tools (`swiftc`, `xcrun`)
+Ширээний `Design/` нь iOS target-д ОРСООР байна (`AppCard`, `StatusPill`,
+`VerificationCodeRow` … нь macOS-ынх); гар дээрх дэлгэцүүд түүнийг уншихаа
+больсон. Android талд `EidColors.kt` ба `gen_from_swift.py` гинж ХЭВЭЭР —
+ширээ↔Android нийцлийн CI шалгалт утасны харагдацаас хамаарахгүй.
+
+Montserrat нь `mobile/ios/Resources/Fonts/` (Info.plist `UIAppFonts`) ба
+`mobile/android/app/src/main/res/font/`-д — ЯГ ижил дөрвөн .ttf. Тоо (регистр,
+баримтын дугаар, баталгаажуулах код) нь monospace хэвээр: Montserrat-д tabular
+figure байхгүй тул баганаар эгнэхгүй.
+
+## Барих
 
 ```bash
-# Build the native macOS executable
-cd native-apps/macOS
-./build.sh
+# macOS (Xcode 16+, xcodegen)
+cd desktop/macos && ./build.sh
 
-# Run the native macOS application
-./GeregeNexusNativeMac
+# iOS/iPadOS
+cd mobile/ios && ./build.sh
+DESTINATION='generic/platform=iOS' ./build.sh     # төхөөрөмжид
+
+# Android (ANDROID_HOME эсвэл local.properties шаардлагатай)
+cd mobile/android && ./gradlew assembleDebug
+python3 scripts/gen_from_swift.py                 # өнгө/орчуулгыг дахин үүсгэх
 ```
 
-### 2. iOS/iPadOS app (SwiftUI + WKWebView)
+`.xcodeproj` нь артефакт (`.gitignore`) — `project.yml`-ийг засаж `build.sh`
+ажиллуулна. CI: `.github/workflows/native-clients.yml` гурвууланг компайл хийнэ.
 
-```bash
-cd native-apps/iOS
-xcodebuild -project GeregeNexusIOS.xcodeproj -scheme GeregeNexusIOS \
-  -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
-```
+## Төхөөрөмжийн шугам
 
-### 3. Windows Native Shell (C# + WPF + WebView2)
+| Клиент | Шугам | Төлөв |
+|---|---|---|
+| macOS | `desktop.nexus.gerege.mn` | ⏳ nginx/TLS шалгах |
+| iOS, Android | `mobile.nexus.gerege.mn` | ⏳ nginx/TLS шалгах |
 
-**Prerequisites**: Windows 10/11, .NET 8 SDK
+Бүртгэл ба асаах дараалал: [`shared/device_lines.json`](shared/device_lines.json)
+→ `$provisioning`. Клиентийн доторх хаягийг ХАМГИЙН СҮҮЛД солино — эсрэгээр
+явбал апп байхгүй host руу чиглэж унана.
 
-```powershell
-# Build and run on Windows
-cd native-apps/windows
-dotnet build -p:FormFactor=Desktop
-dotnet build -p:FormFactor=Kiosk
-dotnet build -p:FormFactor=POS
-```
+## Хараахан хийгээгүй (утсан дээр)
 
-### 4. Android native clients (Kotlin + Compose)
-
-Android Studio-д `native-apps/android`-ыг нээнэ. Нэг app module дөрвөн
-form-factor flavor-тай: `mobile`, `tablet`, `kiosk`, `pos`; auth state machine
-нь `:core` модульд байна.
-
-**Prerequisites**: Android SDK. Android Studio-гаар нээхэд `local.properties`-ыг
-өөрөө үүсгэдэг тул IDE дотор юу ч хийх шаардлагагүй. Харин **командын мөрнөөс**
-барихад тэр файл (эсвэл `ANDROID_HOME`) заавал хэрэгтэй — эс бөгөөс Gradle
-`SDK location not found` гэж шууд унана. `local.properties` нь машин бүрт өөр
-зам агуулдаг тул git-д ороогүй.
-
-```bash
-export ANDROID_HOME="$HOME/Library/Android/sdk"   # эсвэл local.properties бичих
-./gradlew :core:test
-./gradlew :app:assembleMobileDebug
-./gradlew :app:assembleTabletDebug :app:assembleKioskDebug :app:assemblePosDebug
-```
-
----
-
-## ⚡ Native Features & Principles Preserved
-
-1. **Native Login + Web Work Area**: Password and eID push are native controls. On success the shell copies `session_token` into the webview cookie store and opens the start route; web `/login` is never rendered in a native client, and the device lines redirect it away server-side.
-2. **Native Menu Bar**:
-   - macOS Top Menu Bar (`Gerege Nexus`, `Удирдах`, `Харах`) with native shortcuts (`⌘L`, `⌘,`, `⌘0`, `⌘R`, `⌘Q`).
-   - Windows Native Menu Bar (`Gerege Nexus`, `Удирдах`, `Харах`) with shortcuts (`Ctrl+L`, `Ctrl+,`, `F5`).
-3. **In-frame navigation**: a native rail (desktop) or tab bar (mobile) switches between the work area and the shell's own screens. It is deliberately *not* a copy of the tenant app menu — the work area draws that itself, and duplicating it would split one menu across two states.
-4. **Bridge Contract v1.4**:
-   - `window.GeregeShell` is injected at document start, main-frame only.
-   - `auth.reLogin` returns to native login; unknown methods reject.
-   - `shell.openPane` lets the work area move to a shell-owned screen without opening anything.
-   - [`../docs/SHELL_CONTRACT.md`](../docs/SHELL_CONTRACT.md) defines the shared state machine.
-
-## Deployment ба update суваг
-
-- macOS: notarized app bundle + Sparkle feed; signing/notarization identity нь
-  release environment-ийн secret байна.
-- iOS/iPadOS: TestFlight → phased App Store rollout, APNs entitlement/profile.
-- Windows: Desktop/Kiosk/POS тусдаа MSIX identity; Assigned Access template нь
-  [`windows/deployment`](windows/deployment)-д байна.
-- Android: Play managed publishing эсвэл EMM/private APK channel; kiosk нь
-  Android Enterprise device-owner + Lock Task ашиглана.
-
-Signing certificate, Apple team, Play service account, payment/vendor SDK нь
-repository-д хадгалагдахгүй. CI нь бүх unsigned compile target-ийг шалгана;
-release job нь deployment secret байгаа үед гарын үсэг зурна.
+Гарын үсэг (PDF), гэрчилгээ шалгах, платформын webview таб, биометр түгжээ,
+push мэдэгдэл. Ширээн дээр эдгээр бий; гар дээр суурь урсгал (нэвтрэлт,
+самбар, ID, лог, тохиргоо) эхэлж ирлээ.

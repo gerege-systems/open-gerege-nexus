@@ -1,0 +1,64 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{C1877884-3501-43FC-B365-9B3D370CE769}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NexusGeregeDesktop.Domain", "src\NexusGeregeDesktop.Domain\NexusGeregeDesktop.Domain.csproj", "{1E9B1730-60C6-4071-9252-CE03AD0F7876}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NexusGeregeDesktop.Application", "src\NexusGeregeDesktop.Application\NexusGeregeDesktop.Application.csproj", "{F31F06A6-CE82-491C-9933-4E955FEF4920}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NexusGeregeDesktop.Infrastructure", "src\NexusGeregeDesktop.Infrastructure\NexusGeregeDesktop.Infrastructure.csproj", "{5E3D33C3-78D9-43B9-B1F7-84769CEF716E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NexusGeregeDesktop.Presentation", "src\NexusGeregeDesktop.Presentation\NexusGeregeDesktop.Presentation.csproj", "{186D5681-2591-4B72-A299-4CDBB236EF11}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NexusGeregeDesktop.Client", "src\NexusGeregeDesktop.Client\NexusGeregeDesktop.Client.csproj", "{58518F07-3614-45D1-B380-439CF4C7981C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{20258842-6F32-4B36-A453-3B6EC66B53B9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NexusGeregeDesktop.UnitTests", "tests\NexusGeregeDesktop.UnitTests\NexusGeregeDesktop.UnitTests.csproj", "{D33F9C72-A661-49C4-9DEE-65B6FC3EA2DA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1E9B1730-60C6-4071-9252-CE03AD0F7876}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1E9B1730-60C6-4071-9252-CE03AD0F7876}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1E9B1730-60C6-4071-9252-CE03AD0F7876}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1E9B1730-60C6-4071-9252-CE03AD0F7876}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F31F06A6-CE82-491C-9933-4E955FEF4920}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F31F06A6-CE82-491C-9933-4E955FEF4920}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F31F06A6-CE82-491C-9933-4E955FEF4920}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F31F06A6-CE82-491C-9933-4E955FEF4920}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5E3D33C3-78D9-43B9-B1F7-84769CEF716E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E3D33C3-78D9-43B9-B1F7-84769CEF716E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5E3D33C3-78D9-43B9-B1F7-84769CEF716E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E3D33C3-78D9-43B9-B1F7-84769CEF716E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{186D5681-2591-4B72-A299-4CDBB236EF11}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{186D5681-2591-4B72-A299-4CDBB236EF11}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{186D5681-2591-4B72-A299-4CDBB236EF11}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{186D5681-2591-4B72-A299-4CDBB236EF11}.Release|Any CPU.Build.0 = Release|Any CPU
+		{58518F07-3614-45D1-B380-439CF4C7981C}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{58518F07-3614-45D1-B380-439CF4C7981C}.Debug|Any CPU.Build.0 = Debug|x64
+		{58518F07-3614-45D1-B380-439CF4C7981C}.Release|Any CPU.ActiveCfg = Release|x64
+		{58518F07-3614-45D1-B380-439CF4C7981C}.Release|Any CPU.Build.0 = Release|x64
+		{D33F9C72-A661-49C4-9DEE-65B6FC3EA2DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D33F9C72-A661-49C4-9DEE-65B6FC3EA2DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D33F9C72-A661-49C4-9DEE-65B6FC3EA2DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D33F9C72-A661-49C4-9DEE-65B6FC3EA2DA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{1E9B1730-60C6-4071-9252-CE03AD0F7876} = {C1877884-3501-43FC-B365-9B3D370CE769}
+		{F31F06A6-CE82-491C-9933-4E955FEF4920} = {C1877884-3501-43FC-B365-9B3D370CE769}
+		{5E3D33C3-78D9-43B9-B1F7-84769CEF716E} = {C1877884-3501-43FC-B365-9B3D370CE769}
+		{186D5681-2591-4B72-A299-4CDBB236EF11} = {C1877884-3501-43FC-B365-9B3D370CE769}
+		{58518F07-3614-45D1-B380-439CF4C7981C} = {C1877884-3501-43FC-B365-9B3D370CE769}
+		{D33F9C72-A661-49C4-9DEE-65B6FC3EA2DA} = {20258842-6F32-4B36-A453-3B6EC66B53B9}
+	EndGlobalSection
+EndGlobal

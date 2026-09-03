@@ -1,0 +1,387 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="NexusGeregeDesktop.Client.Views.Pages.OrganizationsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:NexusGeregeDesktop.Client.Controls"
+    xmlns:vm="using:NexusGeregeDesktop.Presentation.ViewModels.Pages"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Page.Resources>
+        <Style x:Key="CodeDigitBoxOrg" TargetType="Border">
+            <Setter Property="Width" Value="56" />
+            <Setter Property="Height" Value="64" />
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="BorderBrush" Value="{ThemeResource EidAccentBrush}" />
+            <Setter Property="Background" Value="{ThemeResource EidAccentSubtleBrush}" />
+        </Style>
+    </Page.Resources>
+
+    <ScrollViewer HorizontalScrollMode="Disabled"
+                  HorizontalScrollBarVisibility="Disabled"
+                  HorizontalContentAlignment="Center">
+        <StackPanel Padding="{StaticResource PagePadding}" Spacing="20" HorizontalAlignment="Stretch">
+
+            <!-- Hero -->
+            <StackPanel Spacing="8">
+                <TextBlock Text="{x:Bind ViewModel.Title, Mode=OneWay}" Style="{StaticResource HeroTitleTextBlock}" />
+                <TextBlock Text="{x:Bind ViewModel.Subtitle, Mode=OneWay}" Style="{StaticResource SubtleSubtitleTextBlock}" />
+            </StackPanel>
+
+            <!-- LIST view -->
+            <StackPanel Spacing="16"
+                        Visibility="{x:Bind ViewModel.IsList, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Grid ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{x:Bind ViewModel.ListHeader, Mode=OneWay}"
+                               Style="{StaticResource SectionTitleTextBlock}" VerticalAlignment="Center" />
+                    <Button Grid.Column="1" Command="{x:Bind ViewModel.ShowRegisterCommand}"
+                            Style="{ThemeResource AccentButtonStyle}">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE710;" FontSize="13" />
+                            <TextBlock Text="{x:Bind ViewModel.RegisterButtonLabel, Mode=OneWay}" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <controls:AppCard>
+                    <controls:AppCard.Body>
+                        <StackPanel Spacing="8">
+                            <ProgressRing IsActive="{x:Bind ViewModel.IsLoadingList, Mode=OneWay}"
+                                          HorizontalAlignment="Center"
+                                          Width="20" Height="20"
+                                          Visibility="{x:Bind ViewModel.IsLoadingList, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            <TextBlock Text="{x:Bind ViewModel.EmptyListLabel, Mode=OneWay}"
+                                       Style="{StaticResource SubtleSubtitleTextBlock}"
+                                       Visibility="{x:Bind ViewModel.Items.Count, Mode=OneWay, Converter={StaticResource IntZeroToVisibilityConverter}}" />
+                            <ItemsRepeater ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}">
+                                <ItemsRepeater.Layout>
+                                    <StackLayout Spacing="8" />
+                                </ItemsRepeater.Layout>
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:OrgRow">
+                                        <Button HorizontalAlignment="Stretch"
+                                                HorizontalContentAlignment="Stretch"
+                                                Background="{ThemeResource EidCardBackground}"
+                                                BorderBrush="{ThemeResource EidCardStroke}"
+                                                BorderThickness="1"
+                                                CornerRadius="8"
+                                                Padding="14,10"
+                                                Click="OnOrgRowClick"
+                                                Tag="{x:Bind}">
+                                            <Grid ColumnSpacing="12">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0" Spacing="2">
+                                                    <TextBlock Text="{x:Bind Name}" FontWeight="SemiBold" />
+                                                    <TextBlock Text="{x:Bind RegistrationNumber}" Style="{StaticResource LabelTextBlock}" FontFamily="Cascadia Code, Consolas, monospace" />
+                                                </StackPanel>
+                                                <Border Grid.Column="1"
+                                                        Background="{Binding StatusVariant, Converter={StaticResource StatusVariantBrushConverter}}"
+                                                        CornerRadius="12"
+                                                        Padding="10,4"
+                                                        VerticalAlignment="Center">
+                                                    <TextBlock Text="{x:Bind StatusLabel}"
+                                                               Foreground="White"
+                                                               FontSize="12" FontWeight="SemiBold" />
+                                                </Border>
+                                            </Grid>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                            </ItemsRepeater>
+                        </StackPanel>
+                    </controls:AppCard.Body>
+                </controls:AppCard>
+            </StackPanel>
+
+            <!-- REGISTER view -->
+            <StackPanel Spacing="16"
+                        Visibility="{x:Bind ViewModel.IsRegister, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Button Command="{x:Bind ViewModel.BackToListCommand}" HorizontalAlignment="Left">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE72B;" FontSize="12" />
+                        <TextBlock Text="{x:Bind ViewModel.BackLabel, Mode=OneWay}" />
+                    </StackPanel>
+                </Button>
+
+                <controls:AppCard>
+                    <controls:AppCard.Body>
+                        <StackPanel Spacing="14">
+                            <TextBlock Text="{x:Bind ViewModel.RegisterButtonLabel, Mode=OneWay}"
+                                       Style="{StaticResource SectionTitleTextBlock}" />
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="{x:Bind ViewModel.RegNumberLabel, Mode=OneWay}" Style="{StaticResource LabelTextBlock}" />
+                                <Grid ColumnSpacing="8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0"
+                                             Text="{x:Bind ViewModel.RegNumberInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             FontFamily="Cascadia Code, Consolas, monospace" />
+                                    <Button Grid.Column="1"
+                                            Command="{x:Bind ViewModel.LookupCommand}"
+                                            Style="{ThemeResource AccentButtonStyle}">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <ProgressRing IsActive="{x:Bind ViewModel.RegisterIsLooking, Mode=OneWay}" Width="14" Height="14" />
+                                            <TextBlock Text="{x:Bind ViewModel.SearchLabel, Mode=OneWay}" />
+                                        </StackPanel>
+                                    </Button>
+                                </Grid>
+                            </StackPanel>
+
+                            <Border Visibility="{x:Bind ViewModel.RegisterIsError, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
+                                    Background="#FEE2E2"
+                                    BorderBrush="#FCA5A5"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="12,10">
+                                <TextBlock Text="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" Foreground="#7F1D1D" TextWrapping="Wrap" />
+                            </Border>
+
+                            <!-- Lookup result -->
+                            <controls:AppCard Visibility="{x:Bind ViewModel.RegisterIsLookedUp, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <controls:AppCard.Body>
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="{x:Bind ViewModel.LookupName, Mode=OneWay}" FontWeight="SemiBold" FontSize="16" />
+                                        <TextBlock Style="{StaticResource LabelTextBlock}">
+                                            <Run x:Uid="Org_LookupCard_Type" Text="Type" />
+                                            <Run Text=": " />
+                                            <Run Text="{x:Bind ViewModel.LookupType, Mode=OneWay}" />
+                                        </TextBlock>
+                                        <TextBlock Style="{StaticResource LabelTextBlock}">
+                                            <Run x:Uid="Org_LookupCard_Ceo" Text="CEO" />
+                                            <Run Text=": " />
+                                            <Run Text="{x:Bind ViewModel.LookupCeo, Mode=OneWay}" />
+                                        </TextBlock>
+                                        <TextBlock Style="{StaticResource LabelTextBlock}">
+                                            <Run x:Uid="Org_LookupCard_Phone" Text="Phone" />
+                                            <Run Text=": " />
+                                            <Run Text="{x:Bind ViewModel.LookupPhone, Mode=OneWay}" />
+                                        </TextBlock>
+                                    </StackPanel>
+                                </controls:AppCard.Body>
+                            </controls:AppCard>
+
+                            <!-- Expiry selector + register button -->
+                            <StackPanel Spacing="10"
+                                        Visibility="{x:Bind ViewModel.RegisterIsLookedUp, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <TextBlock Text="{x:Bind ViewModel.ExpirySectionLabel, Mode=OneWay}"
+                                           Style="{StaticResource LabelTextBlock}" />
+                                <ComboBox ItemsSource="{x:Bind ViewModel.ExpiryChoices, Mode=OneWay}"
+                                          SelectedItem="{x:Bind ViewModel.SelectedExpiry, Mode=TwoWay}"
+                                          DisplayMemberPath="Label"
+                                          MinWidth="240" />
+                                <Button Command="{x:Bind ViewModel.RegisterCommand}"
+                                        Style="{ThemeResource AccentButtonStyle}"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Center"
+                                        Height="42">
+                                    <TextBlock Text="{x:Bind ViewModel.ContinueLabel, Mode=OneWay}" />
+                                </Button>
+                            </StackPanel>
+
+                            <!-- Sign-session waiting -->
+                            <StackPanel Spacing="14" HorizontalAlignment="Center"
+                                        Visibility="{x:Bind ViewModel.RegisterIsWaiting, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <TextBlock Text="{x:Bind ViewModel.VerificationLabel, Mode=OneWay}"
+                                           Style="{StaticResource LabelTextBlock}" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                                <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
+                                    <Border Style="{StaticResource CodeDigitBoxOrg}">
+                                        <TextBlock Text="{x:Bind ViewModel.VerificationCode, Mode=OneWay, Converter={StaticResource CharAtConverter}, ConverterParameter=0}"
+                                                   FontSize="28" FontWeight="Bold" Foreground="{ThemeResource EidAccentBrush}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <Border Style="{StaticResource CodeDigitBoxOrg}">
+                                        <TextBlock Text="{x:Bind ViewModel.VerificationCode, Mode=OneWay, Converter={StaticResource CharAtConverter}, ConverterParameter=1}"
+                                                   FontSize="28" FontWeight="Bold" Foreground="{ThemeResource EidAccentBrush}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <Border Style="{StaticResource CodeDigitBoxOrg}">
+                                        <TextBlock Text="{x:Bind ViewModel.VerificationCode, Mode=OneWay, Converter={StaticResource CharAtConverter}, ConverterParameter=2}"
+                                                   FontSize="28" FontWeight="Bold" Foreground="{ThemeResource EidAccentBrush}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <Border Style="{StaticResource CodeDigitBoxOrg}">
+                                        <TextBlock Text="{x:Bind ViewModel.VerificationCode, Mode=OneWay, Converter={StaticResource CharAtConverter}, ConverterParameter=3}"
+                                                   FontSize="28" FontWeight="Bold" Foreground="{ThemeResource EidAccentBrush}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                                    <FontIcon Glyph="&#xE121;" FontSize="14" />
+                                    <TextBlock Text="{x:Bind ViewModel.Countdown, Mode=OneWay}"
+                                               FontFamily="Cascadia Code, Consolas, monospace"
+                                               FontWeight="SemiBold" />
+                                </StackPanel>
+                                <Button Command="{x:Bind ViewModel.CancelRegisterCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">
+                                    <TextBlock Text="{x:Bind ViewModel.CancelLabel, Mode=OneWay}" />
+                                </Button>
+                            </StackPanel>
+
+                            <!-- Success -->
+                            <StackPanel Spacing="12" HorizontalAlignment="Center"
+                                        Visibility="{x:Bind ViewModel.RegisterIsSuccess, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <Border Background="#DCFCE7" Width="80" Height="80" CornerRadius="40" HorizontalAlignment="Center">
+                                    <FontIcon Glyph="&#xE930;" FontSize="36" Foreground="#16A34A" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <TextBlock Text="✓" Style="{StaticResource HeroTitleTextBlock}" HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </StackPanel>
+                    </controls:AppCard.Body>
+                </controls:AppCard>
+            </StackPanel>
+
+            <!-- DETAIL view -->
+            <StackPanel Spacing="16"
+                        Visibility="{x:Bind ViewModel.IsDetail, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Button Command="{x:Bind ViewModel.BackToListCommand}" HorizontalAlignment="Left">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE72B;" FontSize="12" />
+                        <TextBlock Text="{x:Bind ViewModel.BackLabel, Mode=OneWay}" />
+                    </StackPanel>
+                </Button>
+
+                <controls:AppCard>
+                    <controls:AppCard.Body>
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="{x:Bind ViewModel.Detail.Name, Mode=OneWay, FallbackValue=''}"
+                                       Style="{StaticResource HeroTitleTextBlock}" />
+                            <TextBlock Text="{x:Bind ViewModel.Detail.RegistrationNumber, Mode=OneWay, FallbackValue=''}"
+                                       Style="{StaticResource LabelTextBlock}"
+                                       FontFamily="Cascadia Code, Consolas, monospace" />
+
+                            <!-- English name editor -->
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="{x:Bind ViewModel.EnglishNameLabel, Mode=OneWay}"
+                                           Style="{StaticResource LabelTextBlock}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1"
+                                           Text="{x:Bind ViewModel.DetailNameEn, Mode=OneWay}"
+                                           Visibility="{x:Bind ViewModel.IsEditingNameEn, Mode=OneWay, Converter={StaticResource InverseBoolToVisibilityConverter}}"
+                                           VerticalAlignment="Center" />
+                                <TextBox Grid.Column="1"
+                                         Text="{x:Bind ViewModel.DetailNameEn, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         Visibility="{x:Bind ViewModel.IsEditingNameEn, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <Button Grid.Column="2"
+                                        Command="{x:Bind ViewModel.StartEditNameEnCommand}"
+                                        Visibility="{x:Bind ViewModel.IsEditingNameEn, Mode=OneWay, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                                    <TextBlock Text="{x:Bind ViewModel.EditLabel, Mode=OneWay}" />
+                                </Button>
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6"
+                                            Visibility="{x:Bind ViewModel.IsEditingNameEn, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <Button Command="{x:Bind ViewModel.SaveNameEnCommand}" Style="{ThemeResource AccentButtonStyle}">
+                                        <TextBlock Text="{x:Bind ViewModel.SaveLabel, Mode=OneWay}" />
+                                    </Button>
+                                    <Button Command="{x:Bind ViewModel.CancelEditNameEnCommand}">
+                                        <TextBlock Text="{x:Bind ViewModel.CancelLabel, Mode=OneWay}" />
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </controls:AppCard.Body>
+                </controls:AppCard>
+
+                <!-- Members -->
+                <controls:AppCard>
+                    <controls:AppCard.Body>
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="{x:Bind ViewModel.MembersSectionLabel, Mode=OneWay}"
+                                       Style="{StaticResource SectionTitleTextBlock}" />
+
+                            <ItemsRepeater ItemsSource="{x:Bind ViewModel.Members, Mode=OneWay}">
+                                <ItemsRepeater.Layout>
+                                    <StackLayout Spacing="6" />
+                                </ItemsRepeater.Layout>
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:MemberRow">
+                                        <Border BorderBrush="{ThemeResource EidCardStroke}"
+                                                BorderThickness="0,0,0,1"
+                                                Padding="0,8">
+                                            <Grid ColumnSpacing="10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0" Spacing="2">
+                                                    <TextBlock Text="{x:Bind UserName}" FontWeight="SemiBold" />
+                                                    <TextBlock Style="{StaticResource LabelTextBlock}" FontFamily="Cascadia Code, Consolas, monospace">
+                                                        <Run Text="{x:Bind NationalId}" />
+                                                        <Run Text=" · " />
+                                                        <Run Text="{x:Bind RoleLabel}" />
+                                                    </TextBlock>
+                                                </StackPanel>
+                                                <Border Grid.Column="1"
+                                                        Background="{Binding StatusVariant, Converter={StaticResource StatusVariantBrushConverter}}"
+                                                        CornerRadius="12"
+                                                        Padding="10,4"
+                                                        VerticalAlignment="Center">
+                                                    <TextBlock Text="{x:Bind StatusLabel}"
+                                                               Foreground="White" FontSize="12" FontWeight="SemiBold" />
+                                                </Border>
+                                                <Button Grid.Column="2"
+                                                        Click="OnRemoveMemberClick"
+                                                        Tag="{x:Bind}"
+                                                        VerticalAlignment="Center"
+                                                        Visibility="{x:Bind IsAdmin, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                                                    <FontIcon Glyph="&#xE74D;" FontSize="12" />
+                                                </Button>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                            </ItemsRepeater>
+
+                            <!-- Add member -->
+                            <Border BorderBrush="{ThemeResource EidCardStroke}"
+                                    BorderThickness="0,1,0,0"
+                                    Padding="0,12,0,0">
+                                <Grid ColumnSpacing="8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0"
+                                             Text="{x:Bind ViewModel.AddMemberNationalId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             PlaceholderText="AA00000000"
+                                             CharacterCasing="Upper" MaxLength="10"
+                                             FontFamily="Cascadia Code, Consolas, monospace" />
+                                    <ComboBox Grid.Column="1" Width="140"
+                                              SelectedIndex="{x:Bind ViewModel.AddMemberRole, Mode=TwoWay, Converter={StaticResource OrgRoleIndexConverter}}">
+                                        <ComboBoxItem Content="{x:Bind ViewModel.RoleSignerLabel, Mode=OneWay}" />
+                                        <ComboBoxItem Content="{x:Bind ViewModel.RoleAdminLabel, Mode=OneWay}" />
+                                    </ComboBox>
+                                    <Button Grid.Column="2"
+                                            Command="{x:Bind ViewModel.AddMemberCommand}"
+                                            Style="{ThemeResource AccentButtonStyle}">
+                                        <TextBlock x:Uid="Org_AddMember_Submit" Text="Add" />
+                                    </Button>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </controls:AppCard.Body>
+                </controls:AppCard>
+            </StackPanel>
+
+            <!-- Inline error info bar -->
+            <InfoBar IsOpen="{x:Bind ViewModel.ErrorMessage, Mode=OneWay, Converter={StaticResource StringToBoolConverter}}"
+                     Severity="Error"
+                     Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" />
+        </StackPanel>
+    </ScrollViewer>
+</Page>

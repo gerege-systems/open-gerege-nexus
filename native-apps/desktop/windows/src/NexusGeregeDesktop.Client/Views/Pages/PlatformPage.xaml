@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+    Gerege Nexus-ийн ажлын муж — энэ аппын нэг дэлгэц.
+
+    Цөмийн docs/SHELL_CONTRACT.md §1a: клиент бүр НЭГ хүрээтэй. Платформын вэб
+    апп нь тэр хүрээн доторх дэлгэц болохоос хоёр дахь цонх биш — тиймээс энэ нь
+    бусад route-той яг ижил NavigationService-ээр солигдоно.
+
+    Хаяг нь appsettings.json-ийн Backend:BaseUrl — native дуудлагууд явдаг ЯГ ТЭР
+    гарал. Хоёр өөр гарал ашигласан бол webview доторх session cookie
+    (SameSite=Strict) хэзээ ч илгээгдэхгүй байх байв.
+-->
+<Page
+    x:Class="NexusGeregeDesktop.Client.Views.Pages.PlatformPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <WebView2 x:Name="Work" />
+</Page>

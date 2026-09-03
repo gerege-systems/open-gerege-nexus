@@ -358,6 +358,16 @@ services:
       # Docker runs its containers in.
       - --containerd=/run/containerd/containerd.sock
       - --containerd-namespace=moby
+      # And the Docker handler has to be taken away, or it is still the one
+      # that answers. Both factories register, Docker's registers first, and
+      # cAdvisor gives each container to the first factory that claims it — so
+      # adding the containerd flags on their own changed nothing: measured on
+      # the rebuilt host on 2026-09-03, one `container_last_seen` series with
+      # them, eighteen with this line as well. Pointing --docker at a socket
+      # that does not exist is how the factory is declined; there is no flag
+      # for "no Docker". The path must not exist rather than be unreadable, and
+      # /var/run is mounted read-only here, so nothing can create it later.
+      - --docker=unix:///var/run/no-docker.sock
     # The host's process namespace, the way node_exporter above already has it.
     # Without it the containerd handler enumerates the containers and then
     # exports nothing for them, which looks exactly like the Docker handler

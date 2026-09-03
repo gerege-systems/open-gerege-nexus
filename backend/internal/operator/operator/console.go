@@ -56,7 +56,3 @@ func ConfiguredHost() string { return normaliseHost(os.Getenv("CONTROL_PLANE_HOS
 
 // Sessions is the store the console's own sign-in path issues through.
 func (c *Console) Sessions() *SessionStore { return c.sessions }
-
-// DB is the pool the console's screens read and write through. They share it so
-// that a change and its audit row are one transaction.
-func (c *Console) DB() *pgxpool.Pool { return c.db }

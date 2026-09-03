@@ -56,6 +56,8 @@ services:
       ENVIRONMENT: development
       PUBLIC_ORIGIN: http://nexus.localhost:3000
       ALLOWED_ORIGINS: http://nexus.localhost:3000,http://admin.localhost:3000
+      # Native debug builds use the same app-to-app return contract as release.
+      EID_APP_CALLBACKS: ${EID_APP_CALLBACKS:-gerege-nexus://auth}
       CONTROL_PLANE_HOST: admin.localhost
       # The same name the frontend service is given below. The API uses it in
       # the sentence it shows when linking an eID identity fails and as the

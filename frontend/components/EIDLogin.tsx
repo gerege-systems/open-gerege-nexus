@@ -1,11 +1,19 @@
 "use client";
 
 import {useCallback,useEffect,useRef,useState} from "react";
-import {QRCodeSVG} from "qrcode.react";
+import dynamic from "next/dynamic";
 import {api} from "@/lib/api";
 import {useI18n} from "@/lib/i18n";
 import {Fingerprint,RefreshCw,ShieldCheck,Smartphone,X} from "lucide-react";
 import {safeReturnPath} from "@/lib/safeReturnPath.mjs";
+
+// Fetched when a QR code is actually drawn, which is after the visitor has
+// chosen to sign in with their phone. Imported at the top it was 15 KB over the
+// wire on the landing page — this component is in the hero (components/landing/
+// Hero.tsx), so every visitor paid for a picture almost none of them ask for.
+const QRCodeSVG = dynamic(() => import("qrcode.react").then((m) => m.QRCodeSVG), {
+  ssr: false,
+});
 
 type Method="id"|"qr";
 type Phase="idle"|"starting"|"waiting"|"expired"|"refused"|"error"|"success";

@@ -1,0 +1,30 @@
+<!-- Аппын өөрийн мөрүүд (ҮҮСГЭГДДЭГГҮЙ) — ширээний каталогт байхгүй,
+     зөвхөн гар дээрх урсгалд хэрэгтэй болсон мөрүүд. -->
+<resources>
+    <string name="Login_AppToApp">Iniciar sesión con la app eID</string>
+    <string name="Login_Push">Enviar push por número de registro</string>
+    <string name="Login_OtherDevice">Aprobar en otro dispositivo</string>
+    <string name="Login_Error_Failed">La verificación falló.</string>
+    <string name="Login_Error_Expired">La solicitud caducó. Inténtalo de nuevo.</string>
+    <string name="Login_Error_Refused">La solicitud fue rechazada en el teléfono.</string>
+    <string name="Login_Error_AppMissing">No se encontró la app eID Mongolia. Envíe un push por número de registro.</string>
+    <string name="Read_Only_Hint">Solo lectura: los cambios se hacen en la app eID Mongolia (PIN2).</string>
+    <string name="Settings_Server">Servidor</string>
+    <string name="Settings_About">Acerca de</string>
+    <string name="App_VersionLabel">Versión</string>
+    <string name="Settings_Host">Host conectado</string>
+    <string name="Logs_Subtitle">Inicios de sesión en este dispositivo</string>
+    <string name="Id_Subtitle">Su perfil e-ID unificado</string>
+    <string name="Id_RegNumber">Número de registro</string>
+    <string name="Id_CivilId">ID civil</string>
+    <string name="Id_DocNumber">Número de serie del certificado</string>
+    <string name="Id_Level">Nivel</string>
+    <string name="Common_Active">Activo</string>
+    <string name="Common_Registered">Registrado</string>
+    <string name="Common_Pending">Pendiente</string>
+    <string name="Login_AppToApp_Hint">La aplicación eID Mongolia se abrirá y pedirá tu aprobación. Volverás aquí al aprobar.</string>
+    <string name="Login_SecurityFooter">eID Mongolia · protegido por X-Road</string>
+    <string name="Common_Valid">correcto</string>
+    <string name="Common_TooShort">corto</string>
+    <string name="Id_Certificate">Certificado</string>
+</resources>

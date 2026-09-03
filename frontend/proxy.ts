@@ -15,7 +15,7 @@ import { DEVICE_LINE_HEADER, deviceLineFromHost, lineHomePath } from "@/lib/devi
  * Төхөөрөмжийн шугам дээр хийх зүйл гурав:
  *
  * 1. `/` дээр тухайн шугамын өөрийн нүүр дэлгэц рүү шилжүүлнэ. Шугам бүр
- *    өөрийн нүүрээ (`/line/<platform>`) өөрөө хөгжүүлнэ.
+ *    өөрийн нүүрээ (`/line/<line>`) өөрөө хөгжүүлнэ.
  *
  *    Rewrite биш redirect: rewrite үед хөтчийн хаяг `/` хэвээр үлддэг тул
  *    client талын router динамик сегментийг олж харахгүй, `useParams()` хоосон
@@ -102,9 +102,9 @@ export function proxy(request: NextRequest) {
   }
 
   const headers = new Headers(request.headers);
-  headers.set(DEVICE_LINE_HEADER, line.platform);
+  headers.set(DEVICE_LINE_HEADER, line.line);
   const response = NextResponse.next({ request: { headers } });
-  response.headers.set(DEVICE_LINE_HEADER, line.platform);
+  response.headers.set(DEVICE_LINE_HEADER, line.line);
   response.headers.set("Vary", "Host");
   return response;
 }

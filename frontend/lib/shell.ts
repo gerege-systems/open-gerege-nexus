@@ -17,6 +17,22 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 export type ShellPlatform = "macos" | "windows" | "ios" | "android" | "kiosk" | "pos";
 export type ShellFormFactor = "desktop" | "mobile" | "tablet" | "kiosk" | "pos";
 
+/**
+ * Төхөөрөмжийн шугам — хаяг юуг нэрлэдэг вэ.
+ *
+ * `ShellPlatform`-тай ЗОРИУДААР ижил биш. Платформ гэдэг нь бүрхүүл өөрийгөө
+ * юу гэж хэлж байгаа нь (macOS уу, Windows уу); шугам гэдэг нь тухайн
+ * төхөөрөмжтэй хүн хэрхэн харьцаж байгаа нь. Ширээн дээрх Mac ба ширээн
+ * дээрх Windows хоёр НЭГ шугам — тэдгээрийн ялгаа нь дэлгэцийн нягтрал,
+ * товчны хэмжээ, юуг эхэнд тавихад нөлөөлдөггүй.
+ *
+ * `tablet` энд байхгүй: Android-ийн таблет flavor нь `mobile` шугам дээр
+ * ажиллана. `kiosk` ба `pos` нь тусдаа: нэг Windows машин дээр ажлын
+ * ширээний клиент ба киоск зэрэг ажиллаж болох тул тэдэнд host-only
+ * cookie-гийн тусгаарлалт хэрэгтэй.
+ */
+export type ShellLine = "desktop" | "mobile" | "kiosk" | "pos";
+
 export interface GeregeShell {
   /** Гэрээний semver. */
   version: string;

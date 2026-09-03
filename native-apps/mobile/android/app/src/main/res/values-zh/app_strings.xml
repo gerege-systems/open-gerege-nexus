@@ -1,0 +1,30 @@
+<!-- Аппын өөрийн мөрүүд (ҮҮСГЭГДДЭГГҮЙ) — ширээний каталогт байхгүй,
+     зөвхөн гар дээрх урсгалд хэрэгтэй болсон мөрүүд. -->
+<resources>
+    <string name="Login_AppToApp">使用 eID 应用登录</string>
+    <string name="Login_Push">按登记号发送推送</string>
+    <string name="Login_OtherDevice">在其他设备上确认</string>
+    <string name="Login_Error_Failed">验证失败。</string>
+    <string name="Login_Error_Expired">请求已过期，请重试。</string>
+    <string name="Login_Error_Refused">已在手机上拒绝该请求。</string>
+    <string name="Login_Error_AppMissing">未找到 eID Mongolia 应用。请按登记号发送推送。</string>
+    <string name="Read_Only_Hint">仅供查看——更改请在 eID Mongolia 应用中完成（PIN2）。</string>
+    <string name="Settings_Server">服务器</string>
+    <string name="Settings_About">关于</string>
+    <string name="App_VersionLabel">版本</string>
+    <string name="Settings_Host">连接的主机</string>
+    <string name="Logs_Subtitle">本设备上的登录记录</string>
+    <string name="Id_Subtitle">您的统一 e-ID 档案</string>
+    <string name="Id_RegNumber">登记号</string>
+    <string name="Id_CivilId">公民号</string>
+    <string name="Id_DocNumber">证书序列号</string>
+    <string name="Id_Level">等级</string>
+    <string name="Common_Active">有效</string>
+    <string name="Common_Registered">已注册</string>
+    <string name="Common_Pending">待处理</string>
+    <string name="Login_AppToApp_Hint">eID Mongolia 应用将打开并请求确认。确认后即返回本应用。</string>
+    <string name="Login_SecurityFooter">eID Mongolia · 由 X-Road 保护</string>
+    <string name="Common_Valid">有效</string>
+    <string name="Common_TooShort">太短</string>
+    <string name="Id_Certificate">证书</string>
+</resources>

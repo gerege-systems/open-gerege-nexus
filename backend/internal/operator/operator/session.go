@@ -183,19 +183,6 @@ func (s *SessionStore) Revoke(ctx context.Context, tx pgx.Tx, token string) erro
 	return err
 }
 
-// RevokeAllForOperator ends every session an account holds. It is what
-// disabling an operator has to do to take effect immediately rather than
-// whenever their current session happens to expire.
-func (s *SessionStore) RevokeAllForOperator(ctx context.Context, tx pgx.Tx, operatorID string) (int64, error) {
-	tag, err := tx.Exec(ctx,
-		`UPDATE operator.operator_sessions SET revoked_at = NOW()
-		  WHERE operator_id = $1 AND revoked_at IS NULL AND expires_at > NOW()`, operatorID)
-	if err != nil {
-		return 0, fmt.Errorf("revoke the operator's sessions: %w", err)
-	}
-	return tag.RowsAffected(), nil
-}
-
 // sweepInterval and the grace below follow the tenant side's reasoning: an
 // expired row authenticates nobody, so removing it promptly buys nothing, and
 // keeping it a while answers "when was this operator last here".

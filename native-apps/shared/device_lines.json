@@ -3,26 +3,40 @@
     "Төхөөрөмжийн domain шугамуудын цорын ганц эх сурвалж.",
     "",
     "Дүрэм: backend ЦОР ГАНЦ. Шугам бүр өөрийн host-той ч /api/v1 нь бүгд",
-    "нэг ижил API upstream руу очно (deploy/nginx/device-lines.gerege.mn.conf).",
+    "нэг ижил API upstream руу очно (nginx/device-lines.nexus.gerege.mn.conf).",
     "Тиймээс webview доторх дуудлага үргэлж SAME-ORIGIN — session cookie нь",
     "SameSite=Strict хэвээр ажиллаж, CORS preflight огт үүсэхгүй.",
     "",
-    "Шугам бүр тусдаа host учраас cookie нь host-only: mac дээрх session нь",
-    "pos руу урсахгүй. Энэ нь тусгаарлалт, регресс биш.",
+    "ХАЯГ НЬ FORM FACTOR-ЫГ НЭРЛЭНЭ, ПЛАТФОРМЫГ БИШ. Ширээн дээрх Mac ба",
+    "ширээн дээрх Windows хоёр нэг шугам: хүн тэр хоёртой ижил байдлаар",
+    "харьцдаг. Бүрхүүл өөрийгөө юу гэж хэлж байгаа нь тусдаа зүйл бөгөөд",
+    "window.GeregeShell.platform дээр хэвээр байна.",
+    "",
+    "kiosk ба pos нь desktop/mobile дотор ОРООГҮЙ: нэг Windows машин дээр",
+    "ажлын ширээний клиент ба киоск зэрэг ажиллаж болох тул тэдний хооронд",
+    "host-only cookie-гийн тусгаарлалт хэрэгтэй хэвээр. macOS ба Windows хоёр",
+    "нэг машин дээр хэзээ ч зэрэг ажиллахгүй тул тэдэнд хэрэггүй.",
     "",
     "Хөтчийн шугам (browserLine) хэвээр үлдэнэ — тэнд web app өөрөө бүрэн апп.",
-    "Төхөөрөмжийн шугам дээр web нь зөвхөн native хүрээн доторх ажлын муж."
+    "Төхөөрөмжийн шугам дээр web нь зөвхөн native хүрээн доторх ажлын муж.",
+    "",
+    "",
+    "АППЫН НЭР НЬ ШУГАМАА ДАГАНА: шугам бүрийн `app` талбар нь Xcode-ийн",
+    "target/scheme, Gradle-ийн rootProject, .NET-ийн solution/namespace-ийн нэр.",
+    "Тиймээс `desktop` шугамын macOS ба Windows хоёр НЭГ нэртэй",
+    "(NexusGeregeDesktop) — хүн тэр хоёртой ижил байдлаар харьцдагтай адил.",
+    "`kiosk`, `pos` хоёрын нэр нь ЗАХИАЛГАТАЙ: клиент нь хараахан байхгүй."
   ],
   "$provisioning": [
-    "Шугамууд 2026-08-12-нд АСАВ. Дөрвүүлэн бэлэн:",
+    "Шугамууд 2026-08-12-нд АСАВ, 2026-09-02-нд ДӨРӨВ БОЛОВ. Дөрвүүлэн бэлэн:",
     "  1. DNS   *.nexus.gerege.mn → 38.180.145.75 (wildcard)",
     "  2. nginx deploy/nginx/device-lines.nexus.gerege.mn.conf",
-    "  3. TLS   /etc/letsencrypt/live/device-lines.nexus.gerege.mn (6 нэр, 2026-11-10)",
+    "  3. TLS   /etc/letsencrypt/live/device-lines.nexus.gerege.mn (4 нэр)",
     "  4. API   DEVICE_LINE_ORIGINS → ALLOWED_ORIGINS",
     "",
-    "Мөн deploy/nginx/000-catch-all.conf нэмэгдсэн: wildcard-аас болж дурын",
-    "дэд домэйн resolve болдог болсон тул нэрээ нэрлээгүй хүсэлт нэг",
-    "бүтээгдэхүүнээс нөгөө рүү унахаас сэргийлнэ.",
+    "mac. / win. / ios. / android. нь 2026-09-02-нд server_name-ээс ХАСАГДСАН.",
+    "Тэдгээрийг одоо deploy/nginx/000-catch-all.conf 404-өөр барина; клиент бүрийн",
+    "«ажиллахаа больсон анхдагч» жагсаалт хадгалагдсан хуучин хаягийг зөөнө.",
     "",
     "ШИНЭ шугам нэмэх дараалал (нэг шугамд):",
     "  DNS (wildcard хамарна) → nginx server_name → certbot → DEVICE_LINE_ORIGINS",
@@ -35,59 +49,65 @@
     "devOrigin": "http://localhost:3000"
   },
   "deviceLines": {
-    "macos": {
-      "formFactor": "desktop",
-      "line": "https://mac.nexus.gerege.mn",
+    "desktop": {
+      "line": "https://desktop.nexus.gerege.mn",
+      "app": "NexusGeregeDesktop",
+      "platforms": [
+        "macos",
+        "windows"
+      ],
       "provisioned": true,
       "devOrigin": "http://localhost:3000",
       "startRoute": "/",
-      "client": "native-apps/macOS/NativeSettings.swift → lineOrigin",
-      "home": "/line/macos"
+      "client": [
+        "native-apps/desktop/macos/Core/Network/AppConfig.swift → apiBaseURL (#else салаа)",
+        "native-apps/desktop/windows/src/NexusGeregeDesktop.Client/appsettings.json → Api.BaseUrl"
+      ],
+      "home": "/line/desktop"
     },
-    "windows": {
-      "formFactor": "desktop",
-      "line": "https://win.nexus.gerege.mn",
+    "mobile": {
+      "line": "https://mobile.nexus.gerege.mn",
+      "app": "NexusGeregeMobile",
+      "platforms": [
+        "ios",
+        "android"
+      ],
       "provisioned": true,
-      "devOrigin": "http://localhost:3000",
+      "devOrigin": "http://localhost:3000 (Android эмулятор дээр http://10.0.2.2:3000)",
       "startRoute": "/",
-      "client": "native-apps/windows/ShellProfile.cs → LineOrigin",
-      "home": "/line/windows"
-    },
-    "ios": {
-      "formFactor": "mobile",
-      "line": "https://ios.nexus.gerege.mn",
-      "provisioned": true,
-      "devOrigin": "http://localhost:3000",
-      "startRoute": "/",
-      "client": "native-apps/iOS/Sources/GeregeShellKit/DeviceLine.swift → origin",
-      "home": "/line/ios"
-    },
-    "android": {
-      "formFactor": "mobile",
-      "line": "https://android.nexus.gerege.mn",
-      "provisioned": true,
-      "devOrigin": "http://10.0.2.2:3000",
-      "startRoute": "/",
-      "client": "native-apps/android/app/src/main/kotlin/mn/gerege/nexus/DeviceLine.kt → origin",
-      "home": "/line/android"
+      "client": [
+        "native-apps/desktop/macos/Core/Network/AppConfig.swift → apiBaseURL (#if os(iOS) салаа; iOS нь мак-тай эх кодоо хуваалцана)",
+        "native-apps/mobile/android/app/src/main/kotlin/mn/gerege/nexus/AppConfig.kt → DEFAULT_BASE_URL"
+      ],
+      "home": "/line/mobile"
     },
     "kiosk": {
-      "formFactor": "kiosk",
       "line": "https://kiosk.nexus.gerege.mn",
+      "app": "NexusGeregeKiosk",
+      "platforms": [
+        "windows",
+        "android"
+      ],
       "provisioned": true,
       "devOrigin": "http://localhost:3000",
       "startRoute": "/",
-      "client": "ShellProfile.cs (Windows) / DeviceLine.kt (Android)",
-      "home": "/line/kiosk"
+      "client": [],
+      "home": "/line/kiosk",
+      "$note": "Шугам асаалттай, КЛИЕНТ нь хараахан байхгүй. Нэр нь захиалгатай."
     },
     "pos": {
-      "formFactor": "pos",
       "line": "https://pos.nexus.gerege.mn",
+      "app": "NexusGeregePos",
+      "platforms": [
+        "windows",
+        "android"
+      ],
       "provisioned": true,
       "devOrigin": "http://localhost:3000",
       "startRoute": "/",
-      "client": "ShellProfile.cs (Windows) / DeviceLine.kt (Android)",
-      "home": "/line/pos"
+      "client": [],
+      "home": "/line/pos",
+      "$note": "Шугам асаалттай, КЛИЕНТ нь хараахан байхгүй. Нэр нь захиалгатай."
     }
   }
 }

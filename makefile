@@ -34,10 +34,10 @@ test:
 build:
 	cd backend && go build ./...
 	cd frontend && npm run build
-	cd native-apps/macOS && ./build.sh
+	cd native-apps/desktop/macos && ./build.sh
 
 build-mac:
-	cd native-apps/macOS && ./build.sh
+	cd native-apps/desktop/macos && ./build.sh
 
 run-mac: build-mac
-	native-apps/macOS/GeregeNexusNativeMac
+	open ~/Library/Developer/Xcode/DerivedData/NexusGeregeDesktop-*/Build/Products/Debug/NexusGeregeDesktop.app

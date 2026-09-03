@@ -51,15 +51,19 @@ coverage.html
 # Xcode-ийн хэрэглэгчийн төлөв — машин бүрт өөр, түүхэнд хэрэггүй.
 xcuserdata/
 *.xcuserstate
-native-apps/macOS/build/
-native-apps/macOS/GeregeNexusNativeMac
-native-apps/android/**/build/
-native-apps/android/.gradle/
-native-apps/android/local.properties
-native-apps/iOS/.build/
-native-apps/iOS/.swiftpm/
-native-apps/windows/**/bin/
-native-apps/windows/**/obj/
+native-apps/desktop/macos/build/
+native-apps/desktop/macos/NexusGeregeDesktop
+# .xcodeproj нь project.yml-ээс ҮҮСГЭГДДЭГ артефакт — build.sh бүрд шинэчлэгдэнэ.
+native-apps/desktop/macos/NexusGeregeDesktop.xcodeproj/
+native-apps/mobile/ios/NexusGeregeMobile.xcodeproj/
+native-apps/desktop/gerege-token-kit/.build/
+native-apps/mobile/android/**/build/
+native-apps/mobile/android/.gradle/
+native-apps/mobile/android/local.properties
+native-apps/mobile/ios/.build/
+native-apps/mobile/ios/.swiftpm/
+native-apps/desktop/windows/**/bin/
+native-apps/desktop/windows/**/obj/
 
 # Next.js build output for the store and console services
 services/*/.next/

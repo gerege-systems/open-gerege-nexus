@@ -1,0 +1,309 @@
+<?xml version='1.0' encoding='utf-8'?>
+<root xmlns:ns1="urn:schemas-microsoft-com:xml-msdata" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:schema id="root">
+    <xs:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xs:element name="root" ns1:IsDataSet="true">
+      <xs:complexType>
+        <xs:choice maxOccurs="unbounded">
+          <xs:element name="data">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="value" type="xsd:string" minOccurs="0" ns1:Ordinal="1" />
+                <xs:element name="comment" type="xsd:string" minOccurs="0" ns1:Ordinal="2" />
+              </xs:sequence>
+              <xs:attribute name="name" type="xsd:string" use="required" />
+              <xs:attribute name="type" type="xsd:string" />
+              <xs:attribute name="mimetype" type="xsd:string" />
+              <xs:attribute ref="xml:space" />
+            </xs:complexType>
+          </xs:element>
+        </xs:choice>
+      </xs:complexType>
+    </xs:element>
+  </xs:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+
+  <data name="App_Title"><value>Gerege Nexus</value></data>
+  <data name="App_Tagline"><value>السيادة الرقمية</value></data>
+  <data name="App_Wordmark_Top"><value>الهوية الوطنية</value></data>
+
+  <data name="Nav_Home"><value>الرئيسية</value></data>
+  <data name="Nav_Platform"><value>المنصة</value></data>
+  <data name="Dashboard_Wordmark"><value>GEREGE NEXUS</value></data>
+  <data name="Nav_Verify"><value>التحقق من شهادة</value></data>
+  <data name="Nav_Login"><value>تسجيل الدخول</value></data>
+  <data name="Nav_Dashboard"><value>لوحة التحكم</value></data>
+  <data name="Nav_Settings"><value>الإعدادات</value></data>
+  <data name="Nav_Logout"><value>تسجيل الخروج</value></data>
+  <data name="Nav_Tokens"><value>المفاتيح</value></data>
+  <data name="Tokens_Title"><value>إدارة مفاتيح USB</value></data>
+  <data name="Tokens_Subtitle"><value>استعرض البطاقات الذكية / مفاتيح USB المتصلة، واضبطها، وسجّل الشهادات.</value></data>
+  <data name="Nav_Organizations"><value>المؤسسات</value></data>
+
+  <data name="Org_Title"><value>المؤسسات</value></data>
+  <data name="Org_Subtitle"><value>إدارة التوقيعات الإلكترونية للمؤسسة</value></data>
+  <data name="Org_List_Header"><value>المؤسسات المسجَّلة</value></data>
+  <data name="Org_List_Empty"><value>لست مسجَّلاً في أي مؤسسة بعد.</value></data>
+  <data name="Org_Register_Button"><value>تسجيل مؤسسة</value></data>
+  <data name="Org_Back"><value>رجوع</value></data>
+  <data name="Org_RegNumber"><value>رقم سجل المؤسسة</value></data>
+  <data name="Org_Search"><value>بحث</value></data>
+  <data name="Org_Expiry_Section"><value>نافذة التوقيع</value></data>
+  <data name="Org_Expiry_Now"><value>الآن (5 دقائق)</value></data>
+  <data name="Org_Expiry_3Days"><value>خلال 3 أيام</value></data>
+  <data name="Org_Expiry_7Days"><value>خلال 7 أيام</value></data>
+  <data name="Org_Expiry_30Days"><value>خلال 30 يوماً</value></data>
+  <data name="Org_Verification"><value>رمز التحقق</value></data>
+  <data name="Org_Waiting"><value>بالانتظار…</value></data>
+  <data name="Org_Cancel"><value>إلغاء</value></data>
+  <data name="Org_Continue"><value>متابعة</value></data>
+  <data name="Org_Members_Section"><value>الأعضاء</value></data>
+  <data name="Org_AddMember"><value>إضافة عضو</value></data>
+  <data name="Org_AddMember_Submit"><value>إضافة</value></data>
+  <data name="Org_RemoveMember"><value>إزالة</value></data>
+  <data name="Org_RemoveMember_Confirm"><value>إزالة العضو؟</value></data>
+  <data name="Org_Role_Signer"><value>موقّع</value></data>
+  <data name="Org_Role_Admin"><value>مسؤول</value></data>
+  <data name="Org_Member_Active"><value>نشط</value></data>
+  <data name="Org_Member_Pending"><value>قيد الانتظار</value></data>
+  <data name="Org_Status_Active"><value>نشط</value></data>
+  <data name="Org_Status_Pending"><value>قيد الانتظار</value></data>
+  <data name="Org_Status_Suspended"><value>موقوف</value></data>
+  <data name="Org_Status_Removed"><value>مُزال</value></data>
+  <data name="Org_Status_Unknown"><value>غير معروف</value></data>
+  <data name="Org_EnglishName"><value>الاسم بالإنجليزية</value></data>
+  <data name="Org_EnglishName_Unset"><value>غير محدد</value></data>
+  <data name="Org_Edit"><value>تعديل</value></data>
+  <data name="Org_Save"><value>حفظ</value></data>
+  <data name="Org_LookupCard_Type"><value>النوع</value></data>
+  <data name="Org_LookupCard_Ceo"><value>المدير التنفيذي</value></data>
+  <data name="Org_LookupCard_Phone"><value>الهاتف</value></data>
+  <data name="Org_Error_Generic"><value>حدث خطأ.</value></data>
+  <data name="Org_Error_RegNumberTooShort"><value>رقم السجل قصير جداً.</value></data>
+  <data name="Org_Error_NotFound"><value>لا توجد مؤسسة بهذا الرقم في السجل.</value></data>
+  <data name="Org_Error_NotCeo"><value>أنت لست المدير التنفيذي لهذه المؤسسة.</value></data>
+  <data name="Org_Error_AlreadyRegistered"><value>هذه المؤسسة مسجَّلة بالفعل.</value></data>
+  <data name="Org_Error_ExpiryCap"><value>النافذة المختارة تتجاوز الحد المسموح.</value></data>
+  <data name="Org_Error_XypUnavailable"><value>بوابة السجل الحكومي غير متاحة مؤقتاً.</value></data>
+  <data name="Org_Error_NotImplemented"><value>هذه الميزة غير متاحة بعد.</value></data>
+  <data name="Org_Error_SelectExpiry"><value>اختر نافذة الصلاحية.</value></data>
+  <data name="Org_Error_SignTimeout"><value>انتهت مهلة الجلسة.</value></data>
+
+  <data name="Home_Title"><value>Gerege Nexus — الهوية الإلكترونية المنغولية</value></data>
+  <data name="Home_Subtitle"><value>التوقيع الرقمي عن بُعد وتسجيل الدخول والتحقق من الشهادات.</value></data>
+  <data name="Home_Backend_Title"><value>حالة الخادم</value></data>
+  <data name="Home_Backend_Version"><value>الإصدار</value></data>
+  <data name="Home_Backend_LastChecked"><value>آخر فحص</value></data>
+  <data name="Home_Backend_Refresh"><value>تحديث</value></data>
+  <data name="Home_Status_Unknown"><value>غير معروف</value></data>
+  <data name="Home_Status_Checking"><value>جارٍ الفحص…</value></data>
+  <data name="Home_Status_Healthy"><value>متصل</value></data>
+  <data name="Home_Status_Degraded"><value>بعض الخدمات غير سليمة</value></data>
+  <data name="Home_Status_Unreachable"><value>الخادم غير متاح</value></data>
+
+  <data name="Verify_Title"><value>التحقق من شهادة</value></data>
+  <data name="Verify_Subtitle"><value>أفلت شهادة X.509 (PEM أو DER) أو الصقها كنص لفحصها.</value></data>
+  <data name="Verify_DropZone_Hint"><value>أفلت ملف PEM/CER/CRT هنا — أو اضغط الزر لاختيار ملف.</value></data>
+  <data name="Verify_Paste_Hint"><value>…أو الصق PEM:</value></data>
+  <data name="Verify_PickFile"><value>اختيار ملف</value></data>
+  <data name="Verify_Parse"><value>تحليل النص</value></data>
+  <data name="Verify_Clear"><value>مسح</value></data>
+  <data name="Verify_Section_Identity"><value>الموضوع وجهة الإصدار</value></data>
+  <data name="Verify_Section_Validity"><value>فترة الصلاحية</value></data>
+  <data name="Verify_Section_Crypto"><value>التشفير</value></data>
+  <data name="Verify_Section_Fingerprints"><value>البصمات</value></data>
+  <data name="Verify_Section_KeyUsage"><value>استخدام المفتاح</value></data>
+  <data name="Verify_Section_San"><value>SAN — الأسماء البديلة للموضوع</value></data>
+  <data name="Verify_Field_Subject"><value>الموضوع</value></data>
+  <data name="Verify_Field_Issuer"><value>جهة الإصدار</value></data>
+  <data name="Verify_Field_Serial"><value>الرقم التسلسلي</value></data>
+  <data name="Verify_Field_NotBefore"><value>صالحة من</value></data>
+  <data name="Verify_Field_NotAfter"><value>صالحة حتى</value></data>
+  <data name="Verify_Field_SignatureAlgorithm"><value>خوارزمية التوقيع</value></data>
+  <data name="Verify_Field_PublicKey"><value>المفتاح العام</value></data>
+  <data name="Verify_Field_SpkiSha256"><value>SPKI SHA-256</value></data>
+  <data name="Verify_Field_Sha1"><value>SHA-1</value></data>
+  <data name="Verify_Field_Sha256"><value>SHA-256</value></data>
+  <data name="Verify_Validity_Valid"><value>صالحة</value></data>
+  <data name="Verify_Validity_Expired"><value>منتهية الصلاحية</value></data>
+  <data name="Verify_Validity_NotYetValid"><value>غير صالحة بعد</value></data>
+  <data name="Verify_Error_EmptyInput"><value>الإدخال فارغ.</value></data>
+
+  <data name="Login_Title"><value>تسجيل الدخول</value></data>
+  <data name="Login_Subtitle"><value>سجّل الدخول عبر تطبيق e-ID Mongolia</value></data>
+  <data name="Login_NationalId"><value>رقم الهوية الوطنية</value></data>
+  <data name="Login_NationalId_Placeholder"><value>AA00000000</value></data>
+  <data name="Login_NationalId_Hint"><value>مثال: AA00000000 (حرفان سيريليان + 8 أرقام)</value></data>
+  <data name="Login_VerificationCode"><value>رمز التحقق</value></data>
+  <data name="Login_Waiting_Title"><value>افتح تطبيق e-ID Mongolia</value></data>
+  <data name="Login_Waiting_Subtitle"><value>وصل طلب تسجيل دخول إلى تطبيق e-ID Mongolia على هاتفك</value></data>
+  <data name="Login_Waiting_Countdown"><value>بالانتظار…</value></data>
+  <data name="Login_Initiate"><value>تسجيل الدخول</value></data>
+  <data name="Login_Initiate_Loading"><value>جارٍ القراءة…</value></data>
+  <data name="Login_Cancel"><value>إلغاء</value></data>
+  <data name="Login_TryAgain"><value>إعادة المحاولة</value></data>
+  <data name="Login_SignOut"><value>تسجيل الخروج</value></data>
+  <data name="Login_Success_Title"><value>تم بنجاح!</value></data>
+  <data name="Login_Success_Subtitle"><value>جارٍ التحويل…</value></data>
+  <data name="Login_Footer_NewAccount"><value>إنشاء حساب جديد</value></data>
+  <data name="Login_Footer_Help"><value>تحتاج مساعدة؟</value></data>
+  <data name="Login_Error_NationalIdRequired"><value>رقم الهوية الوطنية مطلوب.</value></data>
+  <data name="Login_Error_UserNotFound"><value>لا يوجد حساب مسجَّل بهذا الرقم الوطني.</value></data>
+  <data name="Login_Error_Generic"><value>حدث خطأ</value></data>
+  <data name="Login_Error_Timeout"><value>انتهت مهلة الجلسة</value></data>
+  <data name="Login_Error_Declined"><value>تم الرفض على الهاتف</value></data>
+  <data name="Login_Error_VerifyFailed"><value>فشل التحقق</value></data>
+  <data name="Login_Error_Backend"><value>الخادم غير متاح. شغّل الخادم وأعد المحاولة.</value></data>
+  <data name="Login_Error_EndpointMissing"><value>منفذ الخادم هذا غير مفعّل بعد. استخدم تبويب «رمز QR» بدلاً منه.</value></data>
+  <data name="Login_Tab_NationalId"><value>الهوية الوطنية</value></data>
+  <data name="Login_Tab_Qr"><value>رمز QR</value></data>
+  <data name="Login_Tab_Token"><value>مفتاح USB</value></data>
+  <data name="Login_Qr_Hint"><value>امسح رمز QR هذا بتطبيق e-ID Mongolia.</value></data>
+  <data name="Login_Qr_Start"><value>إنشاء رمز QR</value></data>
+  <data name="Login_Result_NationalId"><value>رقم الهوية الوطنية</value></data>
+  <data name="Login_Result_KycLevel"><value>مستوى KYC</value></data>
+  <data name="Login_Token_Section"><value>المفاتيح المكتشفة</value></data>
+  <data name="Login_Token_Empty"><value>لم يُعثر على مفتاح USB. وصّل مفتاحك ثم حدّث.</value></data>
+  <data name="Login_Token_Scan"><value>تحديث</value></data>
+  <data name="Login_Token_Pin"><value>رمز PIN للمفتاح</value></data>
+  <data name="Login_Token_PinPlaceholder"><value>أدخل رمز PIN</value></data>
+  <data name="Login_Token_SignIn"><value>تسجيل الدخول بالمفتاح</value></data>
+  <data name="Login_Token_Status_Opening"><value>جارٍ فتح جلسة مع المفتاح…</value></data>
+  <data name="Login_Token_Status_Reading"><value>جارٍ قراءة الشهادة من المفتاح…</value></data>
+  <data name="Login_Token_Status_Challenge"><value>جارٍ طلب التحدي من الخادم…</value></data>
+  <data name="Login_Token_Status_Signing"><value>جارٍ التوقيع… (قد يعرض Windows نافذة PIN)</value></data>
+  <data name="Login_Token_Status_Verifying"><value>الخادم يتحقق من التوقيع…</value></data>
+  <data name="Login_Token_Error_NoKeyOrCert"><value>لا يحتوي هذا المفتاح على مفتاح توقيع أو شهادة متاحة.</value></data>
+
+  <data name="Dashboard_Title"><value>لوحة التحكم</value></data>
+  <data name="Dashboard_Subtitle"><value>لوحة معلومات هويتك الإلكترونية.</value></data>
+  <data name="Dashboard_Greeting"><value>أهلاً بك،</value></data>
+  <data name="Dashboard_StatusBadge"><value>النظام يعمل</value></data>
+  <data name="Dashboard_Stats_SecurityScore"><value>درجة الأمان</value></data>
+  <data name="Dashboard_Stats_Certificates"><value>العناصر المُتحقَّق منها</value></data>
+  <data name="Dashboard_Stats_Logins"><value>إجمالي مرات الدخول</value></data>
+  <data name="Dashboard_Stats_LastLogin"><value>آخر تسجيل دخول</value></data>
+  <data name="Dashboard_Devices_Section"><value>الأجهزة الموثوقة</value></data>
+  <data name="Dashboard_Devices_Empty"><value>لا توجد أجهزة مسجَّلة بعد.</value></data>
+  <data name="Dashboard_Device_Active"><value>نشط</value></data>
+  <data name="Dashboard_Device_Inactive"><value>غير نشط</value></data>
+  <data name="Dashboard_Activity_Section"><value>سجل التدقيق</value></data>
+  <data name="Dashboard_Activity_Empty"><value>سجل النشاط فارغ.</value></data>
+  <data name="Dashboard_Activity_Auth"><value>تسجيل دخول</value></data>
+  <data name="Dashboard_Activity_Sign"><value>توقيع</value></data>
+  <data name="Dashboard_Activity_Success"><value>نجح</value></data>
+  <data name="Dashboard_Activity_Failure"><value>مرفوض</value></data>
+  <data name="Dashboard_Refresh"><value>تحديث</value></data>
+  <data name="Dashboard_Loading"><value>جارٍ التحميل…</value></data>
+  <data name="Dashboard_Error_Generic"><value>تعذّر تحميل لوحة التحكم.</value></data>
+
+  <data name="Settings_Title"><value>الإعدادات</value></data>
+  <data name="Settings_Theme"><value>السمة</value></data>
+  <data name="Settings_Theme_System"><value>النظام</value></data>
+  <data name="Settings_Theme_Light"><value>فاتح</value></data>
+  <data name="Settings_Theme_Dark"><value>داكن</value></data>
+  <data name="Settings_Language"><value>اللغة</value></data>
+  <data name="Settings_Version"><value>الإصدار</value></data>
+
+  <data name="Common_Back"><value>رجوع</value></data>
+  <data name="Common_Loading"><value>جارٍ التحميل…</value></data>
+  <data name="Common_Cancel"><value>إلغاء</value></data>
+  <data name="Common_Save"><value>حفظ</value></data>
+  <data name="Common_OK"><value>موافق</value></data>
+  <data name="Settings_Tokens_Title"><value>مفتاح تشفيري (USB / بطاقة ذكية)</value></data>
+  <data name="Settings_Tokens_Refresh"><value>فحص</value></data>
+  <data name="Settings_Tokens_Empty"><value>لم يُعثر على مفاتيح متصلة.</value></data>
+  <data name="Settings_Tokens_Scanning"><value>جارٍ الفحص…</value></data>
+  <data name="Settings_Tokens_Provider"><value>الواجهة الخلفية</value></data>
+  <data name="Settings_Token_NoProvider"><value>لا توجد واجهة مفاتيح نشطة على هذا الجهاز</value></data>
+  <data name="Token_Detail_Title"><value>تفاصيل المفتاح</value></data>
+  <data name="Token_Back"><value>العودة إلى الإعدادات</value></data>
+  <data name="Token_Field_Backend"><value>الواجهة الخلفية</value></data>
+  <data name="Token_Field_Serial"><value>الرقم التسلسلي</value></data>
+  <data name="Token_Section_Pin"><value>فتح القفل برمز PIN</value></data>
+  <data name="Token_Pin_Placeholder"><value>رمز PIN للمستخدم</value></data>
+  <data name="Token_Unlock"><value>فتح القفل</value></data>
+  <data name="Token_Section_Objects"><value>عناصر المفتاح</value></data>
+  <data name="Token_Loading_Objects"><value>جارٍ تحميل العناصر…</value></data>
+  <data name="Token_Empty_Objects"><value>لا توجد عناصر على هذا المفتاح.</value></data>
+  <data name="Token_Section_SignTest"><value>اختبار التوقيع</value></data>
+  <data name="Token_SignTest_Data"><value>البيانات المراد توقيعها</value></data>
+  <data name="Token_SignTest_Run"><value>توقيع</value></data>
+  <data name="Token_SignTest_Result"><value>التوقيع (hex)</value></data>
+  <data name="Token_ReadCert"><value>قراءة الشهادة</value></data>
+  <data name="Token_Hint_Cng"><value>يعرض Windows نافذة PIN تلقائياً. اضغط توقيع أدناه لاختبار المفتاح.</value></data>
+  <data name="Token_Section_Enroll"><value>الإعداد لتسجيل الدخول (إصدار شهادة عبر CA)</value></data>
+  <data name="Token_Enroll_Hint"><value>استخدم مفتاح هذا الرمز لإنشاء CSR وطلب شهادة مرتبطة بالمواطن من سلطة الإصدار e-ID Mongolia. بعد التسجيل يمكن استخدام هذا المفتاح لتسجيل الدخول مباشرةً. شرط: يجب أن تكون قد سجّلت الدخول عبر QR أو الرقم الوطني قبل التسجيل.</value></data>
+  <data name="Token_Enroll_Run"><value>تسجيل هذا المفتاح لدى الـ CA</value></data>
+  <data name="Token_Enroll_Status_BuildingCsr"><value>جارٍ إنشاء CSR… (قد تظهر نافذة PIN)</value></data>
+  <data name="Token_Enroll_Status_Submitting"><value>جارٍ إرسال CSR إلى الخادم…</value></data>
+  <data name="Token_Enroll_Status_Installing"><value>جارٍ تثبيت الشهادة في مخزن Windows…</value></data>
+  <data name="Token_Enroll_Status_Done"><value>✅ تم تسجيل المفتاح. يمكنك الآن تسجيل الدخول من تبويب مفتاح USB.</value></data>
+  <data name="Token_Enroll_Error_NotLoggedIn"><value>يجب تسجيل الدخول (QR أو الرقم الوطني) قبل تسجيل المفتاح.</value></data>
+  <data name="Token_Enroll_Error_NoKey"><value>لم يُعثر على مفتاح توقيع على هذا المفتاح.</value></data>
+  <data name="Token_Enroll_Error_BadPem"><value>أعاد الخادم شهادة PEM غير قابلة للتحليل.</value></data>
+  <data name="Token_Status_Enrolled"><value>المفتاح مسجَّل بالكامل</value></data>
+  <data name="Token_State_Blank"><value>فارغ — يلزم الإعداد الأولي</value></data>
+  <data name="Token_State_Initialized"><value>تم ضبط رمز SO — اضبط رمز المستخدم تالياً</value></data>
+  <data name="Token_State_Provisioned"><value>مُهيَّأ — سجّله لدى الـ CA</value></data>
+  <data name="Token_State_Enrolled"><value>مسجَّل — جاهز لتسجيل الدخول</value></data>
+  <data name="Token_State_Unknown"><value>حالة غير معروفة</value></data>
+  <data name="Token_Cap_SoPinSet"><value>رمز SO ✓</value></data>
+  <data name="Token_Cap_SoPinUnset"><value>رمز SO ✗</value></data>
+  <data name="Token_Cap_UserPinSet"><value>رمز المستخدم ✓</value></data>
+  <data name="Token_Cap_UserPinUnset"><value>رمز المستخدم ✗</value></data>
+  <data name="Token_Cap_Biometric"><value>مستشعر البصمة</value></data>
+  <data name="Token_Cap_ProtectedAuth"><value>إدخال PIN محمي</value></data>
+  <data name="Token_Pin_StatusLow"><value>⚠ PIN — محاولات قليلة متبقية</value></data>
+  <data name="Token_Pin_StatusFinalTry"><value>⚠ PIN — المحاولة الأخيرة</value></data>
+  <data name="Token_Pin_StatusLocked"><value>🔒 رمز PIN مقفل</value></data>
+  <data name="Token_Memory_Prefix"><value>الذاكرة</value></data>
+  <data name="Token_Import_Button"><value>استيراد شهادة…</value></data>
+  <data name="Token_Import_Installing"><value>جارٍ تثبيت الشهادة وربطها بمفتاح البطاقة…</value></data>
+  <data name="Token_Import_Done"><value>✅ تم تثبيت الشهادة. تم تحديث قائمة العناصر.</value></data>
+  <data name="Token_Section_Diagnostics"><value>حالة المفتاح</value></data>
+  <data name="Token_Status_Opening"><value>جارٍ فتح المفتاح…</value></data>
+  <data name="Token_Status_Ready_Cng"><value>جاهز (يتولى Windows رمز PIN عند التوقيع)</value></data>
+  <data name="Token_Status_Ready_Pkcs11"><value>جاهز — أدخل رمز PIN لفتح القفل</value></data>
+  <data name="Token_Status_Unlocked"><value>تم فتح القفل</value></data>
+  <data name="Token_Status_Failed"><value>فشل الفتح</value></data>
+  <data name="Token_Status_SignOk"><value>نجح التوقيع</value></data>
+  <data name="Token_Error_PinRequired"><value>رمز PIN مطلوب.</value></data>
+  <data name="Token_Error_PinIncorrect"><value>رمز PIN غير صحيح.</value></data>
+  <data name="Token_Error_PinLocked"><value>رمز PIN مقفل. افتح قفل البطاقة أولاً.</value></data>
+  <data name="Token_Error_NoKeySelected"><value>اختر مفتاحاً أولاً.</value></data>
+  <data name="Token_Error_SignDataEmpty"><value>أدخل بيانات لتوقيعها.</value></data>
+  <data name="Token_Error_NotLoggedIn"><value>أدخل رمز PIN أولاً.</value></data>
+  <data name="Token_Error_KeyNotFound"><value>لم يُعثر على المفتاح.</value></data>
+  <data name="Token_Error_NotImplemented"><value>غير متاح بعد.</value></data>
+  <data name="Token_Error_Generic"><value>حدث خطأ.</value></data>
+  <data name="Token_View"><value>عرض</value></data>
+
+  <data name="Nav_Sign"><value>توقيع PDF</value></data>
+  <data name="Sign_Title"><value>توقيع ملف PDF</value></data>
+  <data name="Sign_Subtitle"><value>اختر ملف PDF ووافق برمز PIN2 في تطبيق e-ID Mongolia على هاتفك للحصول على توقيع مؤهل.</value></data>
+  <data name="Sign_Pick_Title"><value>اختيار ملف PDF</value></data>
+  <data name="Sign_Pick_Hint"><value>حتى 25 ميجابايت، PDF فقط</value></data>
+  <data name="Sign_Pick_Button"><value>اختيار ملف</value></data>
+  <data name="Sign_NotSignedIn"><value>يجب تسجيل الدخول قبل التوقيع.</value></data>
+  <data name="Sign_Uploading"><value>جارٍ الرفع…</value></data>
+  <data name="Sign_VerificationLabel"><value>رمز التحقق</value></data>
+  <data name="Sign_Waiting_Instruction"><value>تأكد من ظهور الرمز نفسه في تطبيق e-ID Mongolia ثم وافق برمز PIN2.</value></data>
+  <data name="Sign_Waiting_Status"><value>بالانتظار…</value></data>
+  <data name="Sign_File_Label"><value>الملف</value></data>
+  <data name="Sign_Cancel"><value>إلغاء</value></data>
+  <data name="Sign_Completed_Title"><value>تم التوقيع بنجاح</value></data>
+  <data name="Sign_Completed_Hint"><value>احفظ ملف PDF الموقّع.</value></data>
+  <data name="Sign_Save_Button"><value>حفظ</value></data>
+  <data name="Sign_Saved_Notice"><value>تم الحفظ.</value></data>
+  <data name="Sign_NewFile"><value>ملف جديد</value></data>
+  <data name="Sign_TryAgain"><value>إعادة المحاولة</value></data>
+  <data name="Sign_Error_TooLarge"><value>حجم الملف يتجاوز 25 ميجابايت.</value></data>
+  <data name="Sign_Error_Declined"><value>تم رفض التوقيع.</value></data>
+  <data name="Sign_Error_Timeout"><value>انتهت مهلة الجلسة. يرجى إعادة المحاولة.</value></data>
+  <data name="Sign_Error_Network"><value>خطأ في الشبكة. يرجى إعادة المحاولة.</value></data>
+  <data name="Sign_Error_Generic"><value>فشل التوقيع.</value></data>
+</root>

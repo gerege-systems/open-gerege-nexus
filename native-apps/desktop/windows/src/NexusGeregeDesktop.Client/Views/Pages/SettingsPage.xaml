@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="NexusGeregeDesktop.Client.Views.Pages.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:NexusGeregeDesktop.Client.Controls"
+    xmlns:vm="using:NexusGeregeDesktop.Presentation.ViewModels.Pages"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <ScrollViewer HorizontalScrollMode="Disabled" HorizontalScrollBarVisibility="Disabled" HorizontalContentAlignment="Center">
+        <StackPanel Padding="{StaticResource PagePadding}" Spacing="24" HorizontalAlignment="Stretch">
+            <!-- x:Bind defaults to OneTime — labels would only paint once
+                 at page load and never react to ILocalizationService
+                 .CultureChanged. Mode=OneWay turns on the PropertyChanged
+                 listener so the strings refresh in place when the citizen
+                 switches mn-MN ↔ en-US in the language combobox. -->
+            <TextBlock Text="{x:Bind ViewModel.Title, Mode=OneWay}" Style="{StaticResource HeroTitleTextBlock}" />
+
+            <controls:AppCard>
+                <controls:AppCard.Body>
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="{x:Bind ViewModel.ThemeSectionTitle, Mode=OneWay}" Style="{StaticResource SectionTitleTextBlock}" />
+                        <ComboBox
+                            ItemsSource="{x:Bind ViewModel.AvailableThemes}"
+                            SelectedItem="{x:Bind ViewModel.SelectedTheme, Mode=TwoWay}"
+                            DisplayMemberPath="Label"
+                            MinWidth="220" />
+                    </StackPanel>
+                </controls:AppCard.Body>
+            </controls:AppCard>
+
+            <controls:AppCard>
+                <controls:AppCard.Body>
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="{x:Bind ViewModel.LanguageSectionTitle, Mode=OneWay}" Style="{StaticResource SectionTitleTextBlock}" />
+                        <ComboBox
+                            ItemsSource="{x:Bind ViewModel.AvailableLanguages}"
+                            SelectedItem="{x:Bind ViewModel.SelectedLanguage, Mode=TwoWay}"
+                            DisplayMemberPath="Label"
+                            MinWidth="220" />
+                    </StackPanel>
+                </controls:AppCard.Body>
+            </controls:AppCard>
+
+            <!-- ESIGN — локал тоон гарын үсгийн гүүр (ws:59001 / wss:59005) -->
+            <controls:AppCard>
+                <controls:AppCard.Body>
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="{x:Bind ViewModel.EsignSectionTitle, Mode=OneWay}" Style="{StaticResource SectionTitleTextBlock}" />
+
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock Text="{x:Bind ViewModel.EsignPreferSoftwareLabel, Mode=OneWay}" />
+                                <TextBlock Text="{x:Bind ViewModel.EsignPreferSoftwareHint, Mode=OneWay}"
+                                           TextWrapping="Wrap"
+                                           Style="{StaticResource LabelTextBlock}" />
+                            </StackPanel>
+                            <ToggleSwitch Grid.Column="1"
+                                          IsOn="{x:Bind ViewModel.PreferSoftwareToken, Mode=TwoWay}"
+                                          OnContent="" OffContent=""
+                                          VerticalAlignment="Center" />
+                        </Grid>
+
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock Text="{x:Bind ViewModel.EsignBridgeLabel, Mode=OneWay}" />
+                                <TextBlock Text="{x:Bind ViewModel.EsignStatus, Mode=OneWay}"
+                                           TextWrapping="Wrap"
+                                           Style="{StaticResource LabelTextBlock}" />
+                            </StackPanel>
+                            <Button Grid.Column="1"
+                                    Command="{x:Bind ViewModel.ToggleEsignBridgeCommand}"
+                                    Content="{x:Bind ViewModel.EsignToggleBridgeLabel, Mode=OneWay}"
+                                    VerticalAlignment="Center" />
+                        </Grid>
+                    </StackPanel>
+                </controls:AppCard.Body>
+            </controls:AppCard>
+
+            <!-- Tokens section moved to its own top-level page
+                 (NavigationRoutes.Tokens). Settings stays focused on
+                 app-wide preferences only. -->
+        </StackPanel>
+    </ScrollViewer>
+</Page>

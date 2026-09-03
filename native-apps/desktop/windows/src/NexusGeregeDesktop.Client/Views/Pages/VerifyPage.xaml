@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="NexusGeregeDesktop.Client.Views.Pages.VerifyPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:NexusGeregeDesktop.Client.Controls"
+    xmlns:converters="using:NexusGeregeDesktop.Client.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Page.Resources>
+        <converters:StatusVariantBrushConverter x:Key="StatusVariantBrushConverter" />
+    </Page.Resources>
+
+    <ScrollViewer HorizontalScrollMode="Disabled" HorizontalScrollBarVisibility="Disabled" HorizontalContentAlignment="Center">
+        <StackPanel Padding="{StaticResource PagePadding}" Spacing="20" HorizontalAlignment="Stretch">
+            <StackPanel Spacing="8">
+                <TextBlock Text="{x:Bind ViewModel.Title}" Style="{StaticResource HeroTitleTextBlock}" />
+                <TextBlock Text="{x:Bind ViewModel.Subtitle}" Style="{StaticResource SubtleSubtitleTextBlock}" />
+            </StackPanel>
+
+            <Border x:Name="DropZone"
+                    AllowDrop="True"
+                    BorderBrush="{ThemeResource EidCardStroke}"
+                    BorderThickness="2"
+                    CornerRadius="{StaticResource RadiusLg}"
+                    Background="{ThemeResource EidAccentSubtleBrush}"
+                    Padding="32"
+                    DragOver="OnDragOver"
+                    Drop="OnDrop">
+                <StackPanel Spacing="12" HorizontalAlignment="Center">
+                    <FontIcon Glyph="&#xE73E;" FontSize="32" />
+                    <TextBlock Text="{x:Bind ViewModel.DropZoneHint, Mode=OneWay}"
+                               Style="{StaticResource SubtleSubtitleTextBlock}"
+                               TextAlignment="Center" />
+                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                        <Button Click="OnPickFileClick" Style="{ThemeResource AccentButtonStyle}">
+                            <TextBlock x:Uid="Verify_PickFile" Text="Choose file" />
+                        </Button>
+                        <Button Command="{x:Bind ViewModel.ClearCommand}">
+                            <TextBlock x:Uid="Verify_Clear" Text="Clear" />
+                        </Button>
+                    </StackPanel>
+                    <TextBlock Text="{x:Bind ViewModel.SelectedFilePath, Mode=OneWay}"
+                               Style="{StaticResource LabelTextBlock}"
+                               TextAlignment="Center" />
+                </StackPanel>
+            </Border>
+
+            <StackPanel Spacing="8">
+                <TextBlock Text="{x:Bind ViewModel.PasteHint, Mode=OneWay}" Style="{StaticResource LabelTextBlock}" />
+                <TextBox Text="{x:Bind ViewModel.PasteText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                         AcceptsReturn="True" TextWrapping="Wrap"
+                         FontFamily="Cascadia Code, Consolas, monospace"
+                         Height="160"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto" />
+                <Button Command="{x:Bind ViewModel.ParsePasteCommand}" HorizontalAlignment="Right">
+                    <TextBlock x:Uid="Verify_Parse" Text="Parse text" />
+                </Button>
+            </StackPanel>
+
+            <InfoBar IsOpen="{x:Bind ViewModel.ErrorMessage, Mode=OneWay, Converter={StaticResource StringToBoolConverter}}"
+                     Severity="Error"
+                     Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" />
+
+            <controls:AppCard Visibility="{x:Bind ViewModel.HasCertificate, Mode=OneWay}">
+                <controls:AppCard.Body>
+                    <StackPanel Spacing="16">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <Ellipse Width="14" Height="14" VerticalAlignment="Center"
+                                     Fill="{x:Bind ViewModel.ValidityVariant, Mode=OneWay, Converter={StaticResource StatusVariantBrushConverter}}" />
+                            <TextBlock Text="{x:Bind ViewModel.ValidityLabel, Mode=OneWay}"
+                                       Style="{StaticResource PageTitleTextBlock}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="8">
+                            <TextBlock x:Uid="Verify_Section_Identity" Text="Subject &amp; issuer" Style="{StaticResource SectionTitleTextBlock}" />
+                            <TextBlock>
+                                <Run x:Uid="Verify_Field_Subject" Text="Subject" FontWeight="SemiBold" /> :
+                                <Run Text="{x:Bind ViewModel.Certificate.Subject, Mode=OneWay}" />
+                            </TextBlock>
+                            <TextBlock>
+                                <Run x:Uid="Verify_Field_Issuer" Text="Issuer" FontWeight="SemiBold" /> :
+                                <Run Text="{x:Bind ViewModel.Certificate.Issuer, Mode=OneWay}" />
+                            </TextBlock>
+                            <TextBlock>
+                                <Run x:Uid="Verify_Field_Serial" Text="Serial" FontWeight="SemiBold" /> :
+                                <Run Text="{x:Bind ViewModel.Certificate.SerialNumberHex, Mode=OneWay}" />
+                            </TextBlock>
+                        </StackPanel>
+
+                        <StackPanel Spacing="8">
+                            <TextBlock x:Uid="Verify_Section_Validity" Text="Validity" Style="{StaticResource SectionTitleTextBlock}" />
+                            <TextBlock>
+                                <Run x:Uid="Verify_Field_NotBefore" Text="Not before" FontWeight="SemiBold" /> :
+                                <Run Text="{x:Bind ViewModel.Certificate.NotBefore, Mode=OneWay}" />
+                            </TextBlock>
+                            <TextBlock>
+                                <Run x:Uid="Verify_Field_NotAfter" Text="Not after" FontWeight="SemiBold" /> :
+                                <Run Text="{x:Bind ViewModel.Certificate.NotAfter, Mode=OneWay}" />
+                            </TextBlock>
+                        </StackPanel>
+
+                        <StackPanel Spacing="8">
+                            <TextBlock x:Uid="Verify_Section_Crypto" Text="Cryptography" Style="{StaticResource SectionTitleTextBlock}" />
+                            <TextBlock>
+                                <Run x:Uid="Verify_Field_SignatureAlgorithm" Text="Signature alg" FontWeight="SemiBold" /> :
+                                <Run Text="{x:Bind ViewModel.Certificate.SignatureAlgorithm, Mode=OneWay}" />
+                            </TextBlock>
+                            <TextBlock>
+                                <Run x:Uid="Verify_Field_PublicKey" Text="Public key" FontWeight="SemiBold" /> :
+                                <Run Text="{x:Bind ViewModel.Certificate.PublicKeyAlgorithm, Mode=OneWay}" />
+                                <Run Text=" / " />
+                                <Run Text="{x:Bind ViewModel.Certificate.PublicKeyBits, Mode=OneWay}" />
+                                <Run Text=" bit" />
+                            </TextBlock>
+                        </StackPanel>
+
+                        <StackPanel Spacing="8">
+                            <TextBlock x:Uid="Verify_Section_Fingerprints" Text="Fingerprints" Style="{StaticResource SectionTitleTextBlock}" />
+                            <TextBlock FontFamily="Cascadia Code, Consolas, monospace" FontSize="12" TextWrapping="Wrap">
+                                <Run x:Uid="Verify_Field_Sha256" Text="SHA-256" FontWeight="SemiBold" /> :
+                                <Run Text="{x:Bind ViewModel.Certificate.ThumbprintSha256Hex, Mode=OneWay}" />
+                            </TextBlock>
+                            <TextBlock FontFamily="Cascadia Code, Consolas, monospace" FontSize="12" TextWrapping="Wrap">
+                                <Run x:Uid="Verify_Field_Sha1" Text="SHA-1" FontWeight="SemiBold" /> :
+                                <Run Text="{x:Bind ViewModel.Certificate.ThumbprintSha1Hex, Mode=OneWay}" />
+                            </TextBlock>
+                            <TextBlock FontFamily="Cascadia Code, Consolas, monospace" FontSize="12" TextWrapping="Wrap">
+                                <Run x:Uid="Verify_Field_SpkiSha256" Text="SPKI SHA-256" FontWeight="SemiBold" /> :
+                                <Run Text="{x:Bind ViewModel.Certificate.SpkiSha256Base64, Mode=OneWay}" />
+                            </TextBlock>
+                        </StackPanel>
+                    </StackPanel>
+                </controls:AppCard.Body>
+            </controls:AppCard>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

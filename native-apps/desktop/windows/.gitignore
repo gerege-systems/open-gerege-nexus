@@ -1,0 +1,61 @@
+# .NET build output
+bin/
+obj/
+out/
+publish/
+artifacts/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.binlog
+
+# Rider / Visual Studio
+.vs/
+.idea/
+*.swp
+
+# WinUI / MSIX
+*.appx
+*.appxbundle
+*.msix
+*.msixbundle
+*.pfx
+AppPackages/
+BundleArtifacts/
+GeneratedArtifacts/
+*.aps
+*.pdb
+
+# Code coverage
+coverage/
+*.coverage
+*.coveragexml
+TestResults/
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+project.lock.json
+project.fragment.lock.json
+
+# Local environment
+.env
+.env.local
+*.local.json
+
+# Secrets — never commit
+secrets/
+*.pem
+*.key
+*.p12
+
+# Dev signing certs — generated per-developer, never commit
+tools/dev-cert/*.pfx
+tools/dev-cert/*.cer
+
+# OS files
+Thumbs.db
+.DS_Store

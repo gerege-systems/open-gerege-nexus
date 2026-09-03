@@ -71,15 +71,28 @@ Android дээр нэг scene. Нэвтрэлт, ажлын муж, тохирг
 | Шугам | Хэн ашиглах | Төлөв |
 | --- | --- | --- |
 | `nexus.gerege.mn` | Хөтөч / PWA — web app өөрөө бүрэн апп | ✅ ажиллаж байна |
-| `mac.nexus.gerege.mn` | macOS | ✅ ажиллаж байна |
-| `win.nexus.gerege.mn` | Windows Desktop | ✅ ажиллаж байна |
-| `ios.nexus.gerege.mn` | iOS / iPadOS | ✅ ажиллаж байна |
-| `android.nexus.gerege.mn` | Android mobile / tablet | ✅ ажиллаж байна |
+| `desktop.nexus.gerege.mn` | macOS, Windows Desktop | ✅ ажиллаж байна |
+| `mobile.nexus.gerege.mn` | iOS / iPadOS, Android mobile / tablet | ✅ ажиллаж байна |
 | `kiosk.nexus.gerege.mn` | Kiosk (Windows, Android) | ✅ ажиллаж байна |
 | `pos.nexus.gerege.mn` | POS (Windows, Android) | ✅ ажиллаж байна |
 
-Бүх нэр `*.nexus.gerege.mn` wildcard-аар нэг IP руу очиж, зургуулаа нэг
+Бүх нэр `*.nexus.gerege.mn` wildcard-аар нэг IP руу очиж, дөрвүүлээ нэг
 Let's Encrypt гэрчилгээнд багтана.
+
+**Хаяг нь form factor-ыг нэрлэнэ, платформыг биш** (2026-09-02-оос). Ширээн
+дээрх Mac ба ширээн дээрх Windows хоёр нэг шугам: хүн тэр хоёртой ижил
+байдлаар харьцдаг тул дэлгэцийн нягтрал, товчны хэмжээ, юуг эхэнд тавих нь
+ижил. Бүрхүүл өөрийгөө юу гэж хэлж байгаа нь **тусдаа** зүйл бөгөөд
+`window.GeregeShell.platform` дээр хэвээр байна — шаардлагатай бол нэг
+шугамын дэлгэц дотроос платформоор салаалж болно.
+
+`kiosk` ба `pos` нь `desktop`/`mobile` дотор ОРООГҮЙ: нэг Windows машин дээр
+ажлын ширээний клиент ба киоск зэрэг ажиллаж болох тул тэдний хооронд
+host-only cookie-гийн тусгаарлалт хэрэгтэй хэвээр. macOS ба Windows хоёр нэг
+машин дээр хэзээ ч зэрэг ажиллахгүй тул тэдэнд хэрэггүй.
+
+`mac.` / `win.` / `ios.` / `android.` нь 2026-09-02-нд **хасагдсан**: nginx
+тэдгээрийг үйлчлэхээ больж, `000-catch-all.conf` 404-өөр барина.
 
 > **ШИНЭ шугам нэмэхдээ клиентийг урьдчилж чиглүүлж БОЛОХГҮЙ.** DNS, nginx,
 > TLS, `DEVICE_LINE_ORIGINS` дөрвүүлэн бэлэн болохоос өмнө клиентийг зааж
@@ -502,13 +515,13 @@ f.contentWindow.webkit?.messageHandlers?.geregeShell; // undefined байх ёс
 
 **H. Төхөөрөмжийн domain шугам зөв эсэх** (§1b)
 
-1. Ажлын мужийн console дээр `location.host` — тухайн платформын шугам байна
+1. Ажлын мужийн console дээр `location.host` — тухайн form factor-ын шугам байна
    (`mac.`, `win.`, `ios.`, `android.`, `kiosk.`, `pos.`).
 2. Network таб: `/api/v1/...` дуудлагууд **ижил host** руу явж байна; `OPTIONS`
    preflight огт байхгүй.
 3. `document.cookie`-д `session_token` харагдахгүй (HttpOnly) ч API дуудлага
    200 буцааж байна — cookie same-origin-оор явж байгаагийн шинж.
-4. Хөтчөөр `https://mac.nexus.gerege.mn/login` руу орвол `/apps` руу
+4. Хөтчөөр `https://desktop.nexus.gerege.mn/login` руу орвол `/apps` руу
    шилжинэ — тэр шугам дээр нэвтрэлт нь native UI.
 5. `https://nexus.gerege.mn` хэвээр бүрэн web app: толгой хэсэг, хажуугийн цэс,
    `/login` бүгд урьдын адил.

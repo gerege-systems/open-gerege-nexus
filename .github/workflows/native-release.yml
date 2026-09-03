@@ -3,20 +3,31 @@ on:
   push:
     tags: ["native-v*"]
 permissions: { contents: read }
+
+# Гарын үсэг ЗУРААГҮЙ артефактууд. Гурван клиент нэг гэр бүл боловч сав нь
+# өөр: macOS нь .app, Android нь .apk, Windows нь single-file .exe.
 jobs:
-  windows:
-    runs-on: windows-latest
-    strategy: { matrix: { form_factor: [Desktop, Kiosk, POS] } }
+  apple:
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-dotnet@v6
-        with: { dotnet-version: 8.0.x }
-      - run: dotnet publish GeregeNexusWin.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:FormFactor=${{ matrix.form_factor }}
-        working-directory: native-apps/windows
+      - run: brew install xcodegen
+      # build.sh нь DerivedData руу бичдэг тул артефакт цуглуулахын тулд энд
+      # xcodebuild-ыг шууд дуудаж гаралтын замыг тогтооно.
+      - run: xcodegen generate
+        working-directory: native-apps/desktop/macos
+      - run: >-
+          xcodebuild -project NexusGeregeDesktop.xcodeproj -scheme NexusGeregeDesktop
+          -configuration Release -destination 'platform=macOS'
+          -derivedDataPath build CODE_SIGNING_ALLOWED=NO build
+        working-directory: native-apps/desktop/macos
       - uses: actions/upload-artifact@v7
         with:
-          name: windows-${{ matrix.form_factor }}-win-x64
-          path: "native-apps/windows/bin/Release/${{ matrix.form_factor }}/net8.0-windows*/win-x64/publish"
+          name: macos-arm64-unsigned
+          path: native-apps/desktop/macos/build/Build/Products/Release/NexusGeregeDesktop.app
+      - run: CONFIGURATION=Release DESTINATION='generic/platform=iOS' ./build.sh
+        working-directory: native-apps/mobile/ios
+
   android:
     runs-on: ubuntu-latest
     steps:
@@ -26,17 +37,22 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
       - uses: android-actions/setup-android@v4
       - run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
-      - run: ./gradlew :app:assembleMobileRelease :app:assembleTabletRelease :app:assembleKioskRelease :app:assemblePosRelease
-        working-directory: native-apps/android
+      - run: ./gradlew :app:assembleRelease
+        working-directory: native-apps/mobile/android
       - uses: actions/upload-artifact@v7
-        with: { name: android-all-form-factors-unsigned, path: native-apps/android/app/build/outputs/apk/*/release/*.apk }
-  ios:
-    runs-on: macos-latest
+        with:
+          name: android-unsigned
+          path: native-apps/mobile/android/app/build/outputs/apk/release/*.apk
+
+  windows:
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v7
-      - run: ./build.sh
-        working-directory: native-apps/macOS
-      - run: xcodebuild -quiet -project GeregeNexusIOS.xcodeproj -scheme GeregeNexusIOS -destination 'generic/platform=iOS' build CODE_SIGNING_ALLOWED=NO
-        working-directory: native-apps/iOS
+      - uses: actions/setup-dotnet@v6
+        with: { dotnet-version: 8.0.x }
+      - run: dotnet publish src/NexusGeregeDesktop.Client/NexusGeregeDesktop.Client.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
+        working-directory: native-apps/desktop/windows
       - uses: actions/upload-artifact@v7
-        with: { name: macos-arm64-unsigned, path: native-apps/macOS/GeregeNexusNativeMac }
+        with:
+          name: windows-win-x64
+          path: native-apps/desktop/windows/src/NexusGeregeDesktop.Client/bin/Release/net8.0-windows*/win-x64/publish

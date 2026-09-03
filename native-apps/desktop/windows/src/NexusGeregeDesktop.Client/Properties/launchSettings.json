@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "NexusGeregeDesktop.Client (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "NexusGeregeDesktop.Client (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

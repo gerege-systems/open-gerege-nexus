@@ -12,6 +12,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gerege-systems/open-gerege-nexus/backend/internal/kernel/geregecore"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -109,5 +110,24 @@ func TestTheWizardNoLongerLooksPeopleUp(t *testing.T) {
 
 	if rec.Code != http.StatusNotFound {
 		t.Fatalf("the person lookup answered %d; it should not exist", rec.Code)
+	}
+}
+
+// A registration number the directory does not know must not answer 404.
+//
+// 404 is requireToken's, and it means "there is no wizard here" — so the
+// browser reads one as a dead token and throws the operator back to the token
+// screen. A number that is merely wrong has to be distinguishable from a token
+// that is merely gone, or the wizard sends people hunting for a new link when
+// what they need is to retype seven digits.
+func TestADirectoryMissIsNotTheGatesFourOhFour(t *testing.T) {
+	rec := httptest.NewRecorder()
+	(&Service{}).failLookup(rec, geregecore.ErrNotFound)
+
+	if rec.Code == http.StatusNotFound {
+		t.Fatal("a directory miss answered 404, which the wizard reads as a stale setup token")
+	}
+	if rec.Code != http.StatusUnprocessableEntity {
+		t.Errorf("a directory miss answered %d, want %d", rec.Code, http.StatusUnprocessableEntity)
 	}
 }
