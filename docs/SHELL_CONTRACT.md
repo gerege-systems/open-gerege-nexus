@@ -152,6 +152,32 @@ session cookie нь `SameSite=Strict` хэвээр ажиллаж, CORS prefligh
 гарын алга (`hand`), олон нийтийн терминал (`public`) гурав нь товчны хэмжээ,
 нягтрал, юуг эхэнд тавихыг шийднэ.
 
+### Native нэвтрэлт ажлын мужид хэрхэн хүрэх вэ
+
+Бүрхүүл нэвтрэлтээ эзэмшдэг ба шугам дээр web-ийн `/login` хаалттай тул
+**ажлын муж өөрөө нэвтэрч чадахгүй**. Тэгвэл webview session-оо хаанаас авах
+вэ: платформын нэвтрэлт (`/api/v1/auth/eid/poll`) амжилттай болоход сервер
+`session_token`-ыг `Set-Cookie`-гээр буцаадаг бөгөөд бүрхүүл түүнийг webview-ийн
+cookie сан руу суулгана —
+[`WorkAreaSession.swift`](../native-apps/desktop/macos/Core/Network/WorkAreaSession.swift)
+(macOS, iOS), [`WorkAreaSession.kt`](../native-apps/mobile/android/app/src/main/kotlin/mn/gerege/nexus/net/WorkAreaSession.kt)
+(Android).
+
+Гурван нөхцөл зэрэг биелж байж ажиллана, аль нэг нь тасрахад алдаа нь 401 биш
+**хоосон дэлгэц** хэлбэрээр илэрнэ:
+
+* Cookie-гийн нэр серверийнхтэй таарах (`security.TenantSessionCookie`).
+  Гурвуулыг `WorkAreaSessionContractTest` эх кодоос нь уншиж тулгана.
+* Webview нь native дуудлагууд явдаг ЯГ ТЭР гаралыг ачаалах — cookie нь
+  host-only.
+* Гарахад бүрхүүл түүнийг мөн устгах. Native тал гарчихаад ажлын муж
+  нэвтэрсэн хэвээр үлдвэл дараагийн хүн өмнөх хүний мужийг харна.
+
+Native клиентийн HTTP давхарга нь cookie-г ЕРӨНХИЙД нь хүлээж авдаггүй
+(`httpCookieAcceptPolicy = .never`, OkHttp-д `CookieJar.NO_COOKIES`) — энэ нь
+зөв хэвээр. Дамжуулалт нь зөвхөн энэ НЭГ cookie-г, зөвхөн серверийн өгсөн
+хэлбэрээр нь (`HttpOnly`, `Secure`, `SameSite` бүгд хэвээр) авч явна.
+
 Бүртгэлүүд — шугам нэмэхэд **гурвуулыг** нь өөрчилнө:
 
 - [`native-apps/shared/device_lines.json`](../native-apps/shared/device_lines.json) — native талын эх сурвалж
