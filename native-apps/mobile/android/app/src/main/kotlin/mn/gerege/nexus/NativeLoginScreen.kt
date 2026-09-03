@@ -43,6 +43,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -53,6 +54,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -70,6 +72,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -115,7 +118,8 @@ internal fun NativeLogin(auth: AuthStateMachine, deviceToken: String?, apiOrigin
     when (BuildConfig.FORM_FACTOR) {
         "kiosk" -> KioskLogin(auth, phase)
         "pos" -> PosLogin(auth, phase, deviceToken, apiOrigin)
-        else -> DefaultLogin(auth, phase, deviceToken, apiOrigin)
+        "tablet" -> DefaultLogin(auth, phase, deviceToken, apiOrigin)
+        else -> MobileLogin(auth, phase, apiOrigin)
     }
 }
 
@@ -138,6 +142,311 @@ private fun openEidApp(context: android.content.Context, sessionId: String) {
     val launched = runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, approve)) }.isSuccess
     if (!launched) runCatching {
         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$EID_APP_PACKAGE")))
+    }
+}
+
+/* ================== v2 mobile нэвтрэх (design_handoff v2) ==================
+ * eID үндсэн зам; админ нь доод «Админ» линкээр нээгддэг ижил хэмжээт card
+ * (modal биш). Төлөвүүд eID card-ын дотор AnimatedContent-ээр солигдоно —
+ * хүрээний өнгө солигдохгүй, статусыг зөвхөн цэг/икон/label илэрхийлнэ (§1b).
+ * Бүх бичвэр stringResource — Тохиргооны «Хэл»-ээс mn/en/ru сэлгэнэ.        */
+
+@Composable
+private fun MobileLogin(auth: AuthStateMachine, phase: LoginPhase, apiOrigin: String) {
+    var adminMode by remember { mutableStateOf(false) }
+    var nationalId by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    BrandScreen {
+        Column(
+            Modifier.fillMaxSize()
+                .padding(start = Space.xl, end = Space.xl, top = Space.xxxl, bottom = Space.xl)
+                .imePadding(),
+        ) {
+            MobileHeader()
+            Spacer(Modifier.height(Space.xxl))
+            AnimatedContent(
+                targetState = adminMode,
+                transitionSpec = { fadeIn(tween(200)) togetherWith fadeOut(tween(200)) },
+                label = "login-mode",
+            ) { admin ->
+                if (admin) AdminCardV2(
+                    phase, email, { email = it }, password, { password = it },
+                    onBack = { adminMode = false },
+                    onSubmit = { auth.password(email, password) },
+                ) else EidCardV2(
+                    phase = phase, apiOrigin = apiOrigin,
+                    nationalId = nationalId, onNationalId = { nationalId = it.uppercase() },
+                    onSend = { auth.push(nationalId) },
+                    onAppToApp = { auth.appToApp("") },
+                    onCancel = auth::cancel,
+                    onRetry = { if (nationalId.isNotBlank()) auth.push(nationalId) else auth.cancel() },
+                )
+            }
+            Spacer(Modifier.weight(1f))
+            MobileFooter(showAdmin = !adminMode) { adminMode = true; auth.cancel() }
+        }
+    }
+}
+
+@Composable private fun MobileHeader() {
+    val gw = LocalGw.current
+    Column(verticalArrangement = Arrangement.spacedBy(Space.xl)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.md)) {
+            BrandWordmark(40.dp, Radius.md)
+            Row {
+                Text("GEREGE", color = gw.fg3, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 13.sp * 0.16f)
+                Text(" / ", color = gw.fg4, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 13.sp * 0.16f)
+                Text("NEXUS", color = gw.fg3, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 13.sp * 0.16f)
+            }
+        }
+        Text(stringResource(R.string.v2_title), color = gw.fg1, fontSize = 34.sp, lineHeight = 39.sp, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable private fun MobileFooter(showAdmin: Boolean, onAdmin: () -> Unit) {
+    val gw = LocalGw.current
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 48.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
+            Icon(Lucide.Lock, contentDescription = null, tint = gw.fg3, modifier = Modifier.size(14.dp))
+            Text(stringResource(R.string.v2_footer), color = gw.fg3, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+        }
+        if (showAdmin) Box(
+            Modifier.height(48.dp).clickable(onClick = onAdmin).padding(horizontal = Space.sm),
+            contentAlignment = Alignment.Center,
+        ) { Text(stringResource(R.string.v2_admin), color = gw.brand, fontSize = 13.sp, fontWeight = FontWeight.SemiBold) }
+    }
+}
+
+@Composable private fun V2Card(content: @Composable () -> Unit) {
+    val gw = LocalGw.current
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(Radius.xl),
+        color = gw.surface1,
+        border = BorderStroke(1.dp, gw.border),
+        shadowElevation = if (isLightTheme()) 8.dp else 0.dp,
+    ) { content() }
+}
+
+@Composable
+private fun EidCardV2(
+    phase: LoginPhase, apiOrigin: String,
+    nationalId: String, onNationalId: (String) -> Unit,
+    onSend: () -> Unit, onAppToApp: () -> Unit, onCancel: () -> Unit, onRetry: () -> Unit,
+) {
+    V2Card {
+        AnimatedContent(
+            targetState = phase, contentKey = ::phaseKey,
+            transitionSpec = { fadeIn(tween(200)) togetherWith fadeOut(tween(200)) },
+            label = "eid-state",
+        ) { state ->
+            when (phaseKey(state)) {
+                "form" -> if (state is LoginPhase.Starting) SendingCardV2(nationalId) else IdleCardV2(nationalId, onNationalId, onSend, onAppToApp)
+                "waiting" -> WaitingCardV2(state as? LoginPhase.Waiting, nationalId, onCancel)
+                "success" -> SuccessCardV2()
+                "expired" -> ExpiredCardV2(onRetry)
+                "refused" -> RefusedCardV2(onRetry)
+                else -> ErrorCardV2(state as? LoginPhase.Error, apiOrigin, onRetry)
+            }
+        }
+    }
+}
+
+/** Статусын мөр (§1b): 8dp цэг + ALL CAPS label, баруунд заавал биш trailing. */
+@Composable private fun StatusRowV2(color: ComposeColor, label: String, trailing: String? = null, pulse: Boolean = false) {
+    val gw = LocalGw.current
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 24.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
+            if (pulse) PulseDot() else Box(Modifier.size(8.dp).background(color, CircleShape))
+            Text(label, color = color, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 13.sp * 0.08f)
+        }
+        if (trailing != null) Text(trailing, color = gw.fg2, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+/** Төвлөрсөн статус агуулга: 56dp тонал дугуй + икон, гарчиг, тайлбар. */
+@Composable private fun CenteredStatusV2(color: ComposeColor, soft: ComposeColor, icon: ImageVector, title: String, desc: String) {
+    val gw = LocalGw.current
+    Column(
+        Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(Space.md),
+    ) {
+        Box(Modifier.size(56.dp).background(soft, CircleShape), contentAlignment = Alignment.Center) {
+            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(24.dp))
+        }
+        Text(title, color = gw.fg1, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center, lineHeight = 23.sp)
+        Text(desc, color = gw.fg2, fontSize = 15.sp, textAlign = TextAlign.Center, lineHeight = 22.sp)
+    }
+}
+
+/** Terminal төлөвийн бүрхүүл: дээр статус мөр, дунд төвлөрсөн, доор үйлдэл. */
+@Composable private fun TerminalCardV2(
+    color: ComposeColor, soft: ComposeColor, statusLabel: String,
+    icon: ImageVector, title: String, desc: String, action: @Composable () -> Unit,
+) {
+    Column(Modifier.fillMaxWidth().heightIn(min = 296.dp).padding(Space.xl)) {
+        StatusRowV2(color, statusLabel)
+        Box(Modifier.weight(1f).fillMaxWidth().padding(vertical = Space.sm), contentAlignment = Alignment.Center) {
+            CenteredStatusV2(color, soft, icon, title, desc)
+        }
+        action()
+    }
+}
+
+@Composable private fun IdleCardV2(nationalId: String, onNationalId: (String) -> Unit, onSend: () -> Unit, onAppToApp: () -> Unit) {
+    val gw = LocalGw.current
+    Column(
+        Modifier.padding(horizontal = Space.xl, vertical = Space.xxl),
+        verticalArrangement = Arrangement.spacedBy(Space.lg),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
+            Icon(Lucide.ShieldCheck, contentDescription = null, tint = gw.brand, modifier = Modifier.size(24.dp))
+            Text(stringResource(R.string.v2_eid_title), color = gw.fg1, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+        }
+        BrandField(nationalId, onNationalId, stringResource(R.string.v2_reg_number), height = 64.dp, fontSize = 17.sp)
+        LoadingPrimaryButton(stringResource(R.string.v2_send), isLoading = false, isEnabled = true, height = 64.dp, fontSize = 17.sp, trailingIcon = Lucide.ArrowRight, onClick = onSend)
+        TonalButton(stringResource(R.string.v2_app2app), height = 64.dp, fontSize = 17.sp, leadingIcon = Lucide.Smartphone, onClick = onAppToApp)
+    }
+}
+
+@Composable private fun SendingCardV2(nationalId: String) {
+    val gw = LocalGw.current
+    Column(Modifier.fillMaxWidth().heightIn(min = 296.dp).padding(Space.xl)) {
+        Column(verticalArrangement = Arrangement.spacedBy(Space.lg)) {
+            StatusRowV2(gw.brand, stringResource(R.string.v2_st_sending))
+            Surface(Modifier.fillMaxWidth().height(56.dp), RoundedCornerShape(Radius.md), color = gw.surface2, border = BorderStroke(1.dp, gw.borderStrong)) {
+                Box(Modifier.padding(horizontal = Space.lg), contentAlignment = Alignment.CenterStart) {
+                    Text(nationalId.ifBlank { stringResource(R.string.v2_reg_number) }, color = if (nationalId.isBlank()) gw.fg3 else gw.fg2, fontSize = 17.sp)
+                }
+            }
+        }
+        Spacer(Modifier.weight(1f))
+        Surface(Modifier.fillMaxWidth().height(56.dp), RoundedCornerShape(Radius.md), color = gw.brandDeep) {
+            Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                CircularProgressIndicator(color = gw.onBrand, strokeWidth = 2.dp, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(Space.sm))
+                Text(stringResource(R.string.v2_sending), color = gw.onBrand.copy(alpha = 0.7f), fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+            }
+        }
+    }
+}
+
+@Composable private fun WaitingCardV2(waiting: LoginPhase.Waiting?, nationalId: String, onCancel: () -> Unit) {
+    val gw = LocalGw.current
+    val remaining = rememberRemainingMillis(waiting)
+    val total = remember(waiting) { ((waiting?.expiresAtMillis ?: 0L) - System.currentTimeMillis()).coerceAtLeast(1L) }
+    Column(Modifier.fillMaxWidth().heightIn(min = 296.dp).padding(Space.xl)) {
+        Column(verticalArrangement = Arrangement.spacedBy(Space.lg)) {
+            StatusRowV2(gw.brand, stringResource(R.string.v2_st_waiting), trailing = remaining?.let { formatMmSs(it) }, pulse = true)
+            Text(stringResource(R.string.v2_wait_title), color = gw.fg1, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+            CodeBoxesV2(waiting?.verificationCode.orEmpty())
+            LinearProgressIndicator(
+                progress = { if (remaining != null) (remaining.toFloat() / total).coerceIn(0f, 1f) else 1f },
+                modifier = Modifier.fillMaxWidth().height(4.dp),
+                color = gw.brand, trackColor = gw.surface3, gapSize = 0.dp, drawStopIndicator = {},
+            )
+            Text(
+                if (nationalId.isBlank()) stringResource(R.string.v2_wait_hint_generic) else stringResource(R.string.v2_wait_hint, nationalId),
+                color = gw.fg3, fontSize = 13.sp, lineHeight = 20.sp,
+            )
+        }
+        Spacer(Modifier.weight(1f))
+        QuietButton(stringResource(R.string.v2_cancel), height = 56.dp, fontSize = 15.sp, onClick = onCancel)
+    }
+}
+
+@Composable private fun CodeBoxesV2(code: String) {
+    val gw = LocalGw.current
+    val digits = if (code.isEmpty()) "····" else code
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
+        digits.forEach { d ->
+            Surface(Modifier.weight(1f).height(64.dp), RoundedCornerShape(Radius.md), color = gw.brandSoft, border = BorderStroke(1.dp, gw.brandDeep)) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(if (d == '·') "" else d.toString(), color = gw.fg1, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+@Composable private fun SuccessCardV2() {
+    val gw = LocalGw.current
+    TerminalCardV2(
+        gw.credit, gw.creditSoft, stringResource(R.string.v2_st_success),
+        Lucide.Check, stringResource(R.string.v2_success_title), stringResource(R.string.v2_success_desc),
+    ) {
+        Surface(Modifier.fillMaxWidth().height(56.dp), RoundedCornerShape(Radius.md), color = gw.creditSoft) {
+            Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                CircularProgressIndicator(color = gw.credit, strokeWidth = 2.dp, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(Space.sm))
+                Text(stringResource(R.string.v2_entering), color = gw.credit, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+            }
+        }
+    }
+}
+
+@Composable private fun ExpiredCardV2(onResend: () -> Unit) {
+    val gw = LocalGw.current
+    TerminalCardV2(
+        gw.gold, gw.goldSoft, stringResource(R.string.v2_st_expired),
+        Lucide.Clock, stringResource(R.string.v2_expired_title), stringResource(R.string.v2_expired_desc),
+    ) { QuietButton(stringResource(R.string.v2_resend), height = 56.dp, fontSize = 15.sp, leadingIcon = Lucide.RefreshCw, onClick = onResend) }
+}
+
+@Composable private fun RefusedCardV2(onRetry: () -> Unit) {
+    val gw = LocalGw.current
+    TerminalCardV2(
+        gw.debit, gw.debitSoft, stringResource(R.string.v2_st_refused),
+        Lucide.X, stringResource(R.string.v2_refused_title), stringResource(R.string.v2_refused_desc),
+    ) { QuietButton(stringResource(R.string.v2_new_request), height = 56.dp, fontSize = 15.sp, onClick = onRetry) }
+}
+
+@Composable private fun ErrorCardV2(error: LoginPhase.Error?, apiOrigin: String, onRetry: () -> Unit) {
+    val gw = LocalGw.current
+    var showDiag by remember { mutableStateOf(false) }
+    Column(Modifier.fillMaxWidth().heightIn(min = 296.dp).padding(Space.xl)) {
+        StatusRowV2(gw.debit, stringResource(R.string.v2_st_error))
+        Box(Modifier.weight(1f).fillMaxWidth().padding(vertical = Space.sm), contentAlignment = Alignment.Center) {
+            CenteredStatusV2(gw.debit, gw.debitSoft, Lucide.TriangleAlert, error?.message ?: stringResource(R.string.v2_error_title), stringResource(R.string.v2_error_desc))
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
+            QuietButton(stringResource(R.string.v2_retry), Modifier.weight(1f), height = 56.dp, fontSize = 15.sp, onClick = onRetry)
+            QuietButton(stringResource(R.string.v2_diagnostics), Modifier.weight(1f), height = 56.dp, fontSize = 15.sp) { showDiag = !showDiag }
+        }
+        if (showDiag) Text("$apiOrigin · 1.4\n${error?.detail.orEmpty()}", color = gw.fg3, fontSize = 12.sp, modifier = Modifier.padding(top = Space.sm))
+    }
+}
+
+@Composable private fun AdminCardV2(
+    phase: LoginPhase, email: String, onEmail: (String) -> Unit, password: String, onPassword: (String) -> Unit,
+    onBack: () -> Unit, onSubmit: () -> Unit,
+) {
+    val gw = LocalGw.current
+    V2Card {
+        Column(Modifier.padding(horizontal = Space.xl, vertical = Space.xxl), verticalArrangement = Arrangement.spacedBy(Space.lg)) {
+            Row(
+                Modifier.heightIn(min = 24.dp).clickable(onClick = onBack),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Space.sm),
+            ) {
+                Icon(Lucide.ArrowLeft, contentDescription = null, tint = gw.fg3, modifier = Modifier.size(16.dp))
+                Text(stringResource(R.string.v2_admin_title), color = gw.fg1, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+            }
+            BrandField(email, onEmail, stringResource(R.string.v2_email), height = 64.dp, fontSize = 17.sp, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email))
+            BrandField(password, onPassword, stringResource(R.string.v2_password), height = 64.dp, fontSize = 17.sp, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), visualTransformation = PasswordVisualTransformation())
+            LoadingPrimaryButton(stringResource(R.string.v2_admin_submit), isLoading = phase is LoginPhase.Starting, isEnabled = phase !is LoginPhase.Starting, height = 64.dp, fontSize = 17.sp, trailingIcon = null, onClick = onSubmit)
+            if (phase is LoginPhase.Error) Text(phase.message, color = gw.debit, fontSize = 13.sp)
+        }
     }
 }
 

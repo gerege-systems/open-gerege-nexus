@@ -3,6 +3,7 @@ package mn.gerege.nexus
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.Context
+import android.content.res.Configuration
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
@@ -37,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -57,8 +59,23 @@ import mn.gerege.nexus.core.auth.AuthStateMachine
 import mn.gerege.nexus.core.auth.LoginPhase
 import mn.gerege.nexus.core.device.DeviceEnrollmentApi
 import org.json.JSONObject
+import java.util.Locale
 
 class MainActivity : FragmentActivity() {
+    // Аппыг төхөөрөмжийн хэлнээс үл хамааран Монголоор. Гэрэгэ Нексус нь Монголын
+    // төрийн платформ — утас en-US байлаа ч values-en биш, Монгол default (values/)
+    // сонгогдоно. WebView-ийн Accept-Language ч мөн mn болно.
+    override fun attachBaseContext(newBase: Context) {
+        // Хадгалсан хэл (native-settings-v1 → lang), анхдагч нь Монгол. Тохиргооны
+        // «Хэл» хэсгээс сонгож recreate() дуудахад энэ дахин ажиллаж, native бичвэр
+        // ба WebView-ийн Accept-Language хоёул сонгосон хэл рүү шилжинэ.
+        val lang = newBase.getSharedPreferences("native-settings-v1", Context.MODE_PRIVATE).getString("lang", "mn") ?: "mn"
+        val locale = Locale(lang)
+        Locale.setDefault(locale)
+        val config = Configuration(newBase.resources.configuration).apply { setLocale(locale) }
+        super.attachBaseContext(newBase.createConfigurationContext(config))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val nativeSettings = getSharedPreferences("native-settings-v1", MODE_PRIVATE)
@@ -208,9 +225,9 @@ private enum class Pane { Work, Settings }
             horizontalArrangement = Arrangement.spacedBy(Space.sm + Space.xxs),
         ) {
             if (pane == Pane.Settings) {
-                Text("Тохиргоо", color = gw.fg1, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+                Text(stringResource(R.string.v2_settings_title), color = gw.fg1, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.weight(1f))
-                BrandBadge("v${BuildConfig.VERSION_NAME} · ${BuildConfig.FORM_FACTOR}", color = gw.fg3, container = gw.surface2)
+                Text("v${BuildConfig.VERSION_NAME} · ${BuildConfig.FORM_FACTOR}", color = gw.fg4, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
             } else {
                 BrandWordmark(32.dp, Radius.sm)
                 Text("Gerege Nexus", color = gw.fg1, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
@@ -246,7 +263,7 @@ private enum class Pane { Work, Settings }
             horizontalArrangement = Arrangement.spacedBy(Space.sm),
         ) {
             Box(Modifier.size(8.dp).background(if (online) gw.credit else gw.debit, CircleShape))
-            Text(if (online) "Холбогдсон" else "Салсан", color = gw.fg2, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+            Text(if (online) stringResource(R.string.v2_connected) else stringResource(R.string.v2_disconnected), color = gw.fg2, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
         }
     }
 }
@@ -254,18 +271,17 @@ private enum class Pane { Work, Settings }
 /** Bottom nav (§1c): идэвхтэй таб — 56×32 brandSoft pill + брэнд өнгийн икон. */
 @Composable private fun ShellBottomNav(pane: Pane, activeRoute: String, onRoute: (String) -> Unit, onSettings: () -> Unit) {
     val gw = LocalGw.current
-    val tabs = listOf(
-        Triple(Lucide.LayoutGrid, "Аппууд", "/apps"),
-        Triple(Lucide.FileText, "Баримт", "/documents"),
-        Triple(Lucide.ChartBar, "Тайлан", "/reports"),
-    )
     Column {
         HorizontalDivider(color = gw.border)
-        Row(Modifier.fillMaxWidth().background(gw.bg).padding(vertical = Space.sm)) {
-            tabs.forEach { (icon, label, route) ->
-                NavTab(icon, label, selected = pane == Pane.Work && activeRoute == route) { onRoute(route) }
-            }
-            NavTab(Lucide.Sliders, "Тохиргоо", selected = pane == Pane.Settings, onTap = onSettings)
+        Row(
+            Modifier.fillMaxWidth().background(gw.surface1)
+                .padding(start = Space.sm, end = Space.sm, top = Space.sm, bottom = Space.md),
+            horizontalArrangement = Arrangement.spacedBy(Space.xs),
+        ) {
+            NavTab(Lucide.LayoutGrid, stringResource(R.string.v2_nav_apps), selected = pane == Pane.Work && activeRoute == "/apps") { onRoute("/apps") }
+            NavTab(Lucide.FileText, stringResource(R.string.v2_nav_docs), selected = pane == Pane.Work && activeRoute == "/documents") { onRoute("/documents") }
+            NavTab(Lucide.ChartBar, stringResource(R.string.v2_nav_reports), selected = pane == Pane.Work && activeRoute == "/reports") { onRoute("/reports") }
+            NavTab(Lucide.Sliders, stringResource(R.string.v2_nav_settings), selected = pane == Pane.Settings, onTap = onSettings)
         }
     }
 }
@@ -273,19 +289,16 @@ private enum class Pane { Work, Settings }
 @Composable private fun RowScope.NavTab(icon: ImageVector, label: String, selected: Boolean, onTap: () -> Unit) {
     val gw = LocalGw.current
     val tint = if (selected) gw.brand else gw.fg3
-    Column(
-        Modifier.weight(1f).clickable(onClick = onTap).padding(vertical = Space.xs),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(Space.xs),
+    Box(
+        Modifier.weight(1f).height(56.dp)
+            .background(if (selected) gw.brandSoft else ComposeColor.Transparent, RoundedCornerShape(Radius.md))
+            .clickable(onClick = onTap),
+        contentAlignment = Alignment.Center,
     ) {
-        Box(
-            Modifier.size(width = 56.dp, height = 32.dp)
-                .background(if (selected) gw.brandSoft else ComposeColor.Transparent, RoundedCornerShape(50)),
-            contentAlignment = Alignment.Center,
-        ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Space.xs)) {
             Icon(icon, contentDescription = label, tint = tint, modifier = Modifier.size(22.dp))
+            Text(label, color = tint, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
         }
-        Text(label, color = tint, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
     }
 }
 

@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -86,6 +87,14 @@ private class AndroidSettings(context: Context) {
 fun NativeSettingsScreen(themeMode: String, onThemeMode: (String) -> Unit) {
     val context = LocalContext.current
     val gw = LocalGw.current
+    val currentLang = remember { context.getSharedPreferences("native-settings-v1", Context.MODE_PRIVATE).getString("lang", "mn") ?: "mn" }
+    val pickLang: (String) -> Unit = { tag ->
+        val prefs = context.getSharedPreferences("native-settings-v1", Context.MODE_PRIVATE)
+        if (prefs.getString("lang", "mn") != tag) {
+            prefs.edit().putString("lang", tag).apply()
+            (context as? android.app.Activity)?.recreate()
+        }
+    }
     val settings = remember { AndroidSettings(context) }
     val tokenStore = remember { DeviceTokenStore(context) }
     val deviceApi = remember(settings.apiEndpoint) {
@@ -177,6 +186,11 @@ fun NativeSettingsScreen(themeMode: String, onThemeMode: (String) -> Unit) {
             SettingsGroup("ХАРАГДАЦ", listOf(
                 { PillsRow(Lucide.Moon, "Горим", listOf("Бараан", "Цайвар", "Систем"), themeLabel(themeMode)) { onThemeMode(themeValue(it)) } },
             ))
+            SettingsGroup(stringResource(R.string.v2_set_language), listOf(
+                { LanguageRow(stringResource(R.string.lang_mn), "mn", currentLang, pickLang) },
+                { LanguageRow(stringResource(R.string.lang_en), "en", currentLang, pickLang) },
+                { LanguageRow(stringResource(R.string.lang_ru), "ru", currentLang, pickLang) },
+            ))
             SettingsGroup("ХАМГААЛАЛТ", listOf(
                 { SwitchRow(Lucide.Lock, "Биометрик түгжээ", "Апп нээхэд хурууны хээ шаардана", settings.biometricLock) { settings.biometricLock = it } },
                 { FieldRow(Lucide.Clock, "Идэвхгүй үед түгжих (минут)", settings.idleMinutes, KeyboardType.Number) { settings.idleMinutes = it } },
@@ -247,7 +261,6 @@ private fun InfoRow(icon: ImageVector, label: String, value: String, dot: Color?
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.md),
     ) {
-        IconBox(icon)
         Text(label, color = gw.fg1, fontSize = 15.sp, modifier = Modifier.weight(1f))
         Text(value, color = gw.fg3, fontSize = 15.sp)
         if (dot != null) {
@@ -265,7 +278,6 @@ private fun FieldRow(icon: ImageVector, label: String, value: String, keyboardTy
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.md),
     ) {
-        IconBox(icon)
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xxs)) {
             Text(label, color = gw.fg3, fontSize = 12.sp)
             BasicTextField(
@@ -289,7 +301,6 @@ private fun SwitchRow(icon: ImageVector, label: String, subtitle: String?, check
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.md),
     ) {
-        IconBox(icon)
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xxs)) {
             Text(label, color = gw.fg1, fontSize = 15.sp)
             if (subtitle != null) Text(subtitle, color = gw.fg3, fontSize = 12.sp)
@@ -317,10 +328,9 @@ private fun PillsRow(icon: ImageVector, label: String, options: List<String>, se
         verticalArrangement = Arrangement.spacedBy(Space.md),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.md)) {
-            IconBox(icon)
-            Text(label, color = gw.fg1, fontSize = 15.sp)
+                Text(label, color = gw.fg1, fontSize = 15.sp)
         }
-        Row(Modifier.padding(start = 44.dp), horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
             options.forEach { option ->
                 val active = option == selected
                 Surface(
@@ -342,6 +352,19 @@ private fun PillsRow(icon: ImageVector, label: String, options: List<String>, se
 }
 
 @Composable
+private fun LanguageRow(label: String, tag: String, current: String, onPick: (String) -> Unit) {
+    val gw = LocalGw.current
+    val selected = current == tag
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { onPick(tag) }.padding(horizontal = Space.lg, vertical = Space.md),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label, color = gw.fg1, fontSize = 15.sp, fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal, modifier = Modifier.weight(1f))
+        if (selected) Icon(Lucide.Check, contentDescription = null, tint = gw.brand, modifier = Modifier.size(18.dp))
+    }
+}
+
+@Composable
 private fun ActionRow(icon: ImageVector, label: String, accent: Boolean = false, onClick: () -> Unit) {
     val gw = LocalGw.current
     Row(
@@ -349,7 +372,6 @@ private fun ActionRow(icon: ImageVector, label: String, accent: Boolean = false,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.md),
     ) {
-        IconBox(icon)
         Text(label, color = if (accent) gw.brand else gw.fg1, fontSize = 15.sp, fontWeight = if (accent) FontWeight.SemiBold else FontWeight.Normal, modifier = Modifier.weight(1f))
         Icon(Lucide.ChevronRight, contentDescription = null, tint = gw.fg4, modifier = Modifier.size(16.dp))
     }

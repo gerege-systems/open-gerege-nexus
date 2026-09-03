@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v2 дизайны (mobile нэвтрэх + хүрээ + тохиргоо) бичвэрүүд. Монгол нь анхдагч.
+     Хэл солих боломжтой (Тохиргоо → Хэл): Монгол / English / Русский. -->
+<resources>
+    <string name="v2_title">Таны баталгаатай ажлын орчин</string>
+    <string name="v2_eid_title">eID-ээр нэвтрэх</string>
+    <string name="v2_reg_number">Регистрийн дугаар</string>
+    <string name="v2_send">eID хүсэлт илгээх</string>
+    <string name="v2_app2app">eID апп-аар нэвтрэх</string>
+    <string name="v2_footer">Нууц үг дамжуулахгүй · eID апп дотор</string>
+    <string name="v2_admin">Админ</string>
+    <string name="v2_admin_title">Админ нэвтрэлт</string>
+    <string name="v2_email">Имэйл</string>
+    <string name="v2_password">Нууц үг</string>
+    <string name="v2_admin_submit">Админаар нэвтрэх</string>
+
+    <string name="v2_st_idle">EID-ЭЭР НЭВТРЭХ</string>
+    <string name="v2_st_sending">ХҮСЭЛТ ИЛГЭЭЖ БАЙНА</string>
+    <string name="v2_sending">Илгээж байна…</string>
+    <string name="v2_st_waiting">БАТАЛГААЖУУЛАЛТ ХҮЛЭЭЖ БАЙНА</string>
+    <string name="v2_wait_title">eID апп дээрх кодтой тулгана уу</string>
+    <string name="v2_wait_hint">%1$s бүртгэлтэй eID апп руу хүсэлт илгээгдлээ</string>
+    <string name="v2_wait_hint_generic">eID апп руу хүсэлт илгээгдлээ</string>
+    <string name="v2_cancel">Цуцлах</string>
+    <string name="v2_st_success">АМЖИЛТТАЙ</string>
+    <string name="v2_success_title">Баталгаажлаа</string>
+    <string name="v2_success_desc">Таны eID баталгаажуулалт хүлээн авагдлаа</string>
+    <string name="v2_entering">Нэвтэрч байна…</string>
+    <string name="v2_st_expired">ХУГАЦАА ДУУССАН</string>
+    <string name="v2_expired_title">Хариу ирсэнгүй</string>
+    <string name="v2_expired_desc">Баталгаажуулах код хүчингүй боллоо. Шинэ код авахын тулд дахин илгээнэ үү.</string>
+    <string name="v2_resend">Дахин илгээх</string>
+    <string name="v2_st_refused">ТАТГАЛЗСАН</string>
+    <string name="v2_refused_title">Хүсэлтийг татгалзсан</string>
+    <string name="v2_refused_desc">eID апп дээр энэ нэвтрэлтийг зөвшөөрөөгүй.</string>
+    <string name="v2_new_request">Шинэ хүсэлт илгээх</string>
+    <string name="v2_st_error">АЛДАА</string>
+    <string name="v2_error_title">Сервертэй холбогдож чадсангүй</string>
+    <string name="v2_error_desc">Холболтоо шалгаад дахин оролдоно уу.</string>
+    <string name="v2_retry">Дахин оролдох</string>
+    <string name="v2_diagnostics">Диагностик</string>
+
+    <string name="v2_nav_apps">Аппууд</string>
+    <string name="v2_nav_docs">Баримт</string>
+    <string name="v2_nav_reports">Тайлан</string>
+    <string name="v2_nav_settings">Тохиргоо</string>
+
+    <string name="v2_set_language">ХЭЛ</string>
+    <string name="v2_settings_title">Тохиргоо</string>
+    <string name="v2_online">Онлайн</string>
+    <string name="v2_connected">Холбогдсон</string>
+    <string name="v2_disconnected">Салсан</string>
+
+    <!-- Хэлний нэрс өөрсдийн бичгээр (autonym) — бүх хэлэнд ижил. -->
+    <string name="lang_mn">Монгол</string>
+    <string name="lang_en">English</string>
+    <string name="lang_ru">Русский</string>
+</resources>
