@@ -4,9 +4,9 @@
 # ХУВААЛЦДАГ), Android (Compose, өнгө/орчуулгаа мак-аас ҮҮСГЭДЭГ). Тиймээс
 # ширээний нэг файл эвдэрвэл утасны build ч улаан болно — тэр нь зөв дохио.
 #
-# Windows клиентэд job БАЙХГҮЙ: эх репод ч байгаагүй. Directory.Build.props
-# доторх lock файлын NU1004 асуудал шийдэгдтэл windows-latest дээр restore
-# улаан болно. Тэр шийдэгдэхэд `dotnet build NexusGeregeDesktop.sln` нэмнэ.
+# Windows клиент гурван distribution хэлбэрээр ижил solution-ийг компайлдана.
+# Job нэрүүд (`macos`, `windows (…)`, `android`) нь main branch protection-д
+# required check болсон тул нэрийг нь workflow-оос салгаж өөрчилж болохгүй.
 #
 # pull_request дээр path шүүлтгүй ажиллаж байгаа нь санаатай. Шаардлагатай
 # шалгалт (required check) нь path-аар шүүгдсэн бол шүүлтэд таараагүй PR дээр
@@ -25,8 +25,7 @@ permissions:
   contents: read
 
 jobs:
-  apple:
-    name: macOS + iOS
+  macos:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v7
@@ -39,6 +38,19 @@ jobs:
       # Утасны клиент — ижил эх файлуудыг iOS дээр компайл хийж байгааг шалгана.
       - run: ./build.sh
         working-directory: native-apps/mobile/ios
+
+  windows:
+    strategy:
+      matrix:
+        form_factor: [Desktop, Kiosk, POS]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet build NexusGeregeDesktop.sln --configuration Release -p:FormFactor=${{ matrix.form_factor }} -p:RestoreLockedMode=false
+        working-directory: native-apps/desktop/windows
 
   android:
     runs-on: ubuntu-latest
