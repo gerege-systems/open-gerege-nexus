@@ -17,31 +17,27 @@ import android.view.KeyEvent
 import android.view.ViewGroup
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
-import mn.gerege.nexus.ui.brand.BrandScreen
-import mn.gerege.nexus.ui.brand.BrandSectionLabel
+import mn.gerege.nexus.ui.brand.BrandBadge
 import mn.gerege.nexus.ui.brand.BrandWordmark
-import mn.gerege.nexus.ui.brand.BrandSecurityFooter
-import mn.gerege.nexus.ui.brand.LoadingPrimaryButton
+import mn.gerege.nexus.ui.icons.Lucide
 import mn.gerege.nexus.ui.theme.GeregeNexusTheme
 import mn.gerege.nexus.ui.theme.LocalGw
 import mn.gerege.nexus.ui.theme.Radius
 import mn.gerege.nexus.ui.theme.Space
 import androidx.compose.foundation.background
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color as ComposeColor
-import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -61,9 +57,6 @@ import mn.gerege.nexus.core.auth.AuthStateMachine
 import mn.gerege.nexus.core.auth.LoginPhase
 import mn.gerege.nexus.core.device.DeviceEnrollmentApi
 import org.json.JSONObject
-import com.google.zxing.BarcodeFormat
-import com.google.zxing.qrcode.QRCodeWriter
-import android.graphics.Bitmap
 
 class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -100,65 +93,18 @@ private fun GeregeApp(auth: AuthStateMachine, webOrigin: String, apiOrigin: Stri
     val deviceToken = remember { DeviceTokenStore(context).load() }
     var authenticated by remember { mutableStateOf(BuildConfig.FORM_FACTOR == "kiosk" && deviceToken != null) }
     LaunchedEffect(phase) { if (phase is LoginPhase.Success) { authenticated = true; if(fcmToken!=null)auth.registerPushToken(fcmToken,context.packageName) } }
-    GeregeNexusTheme {
-        if (authenticated) WorkArea(auth, webOrigin, apiOrigin, deviceToken, biometric) { authenticated = false; auth.cancel() }
-        else NativeLogin(auth, deviceToken)
-    }
-}
-
-@Composable
-private fun NativeLogin(auth: AuthStateMachine, deviceToken: String?) {
-    val phase by auth.phase.collectAsStateWithLifecycle()
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var nationalId by remember { mutableStateOf("") }
-    var staffPin by remember { mutableStateOf("") }
-    val context = LocalContext.current
-    val waiting = phase as? LoginPhase.Waiting
-    LaunchedEffect(waiting?.deviceLinkUrl) {
-        if(BuildConfig.FORM_FACTOR in setOf("mobile","tablet")) waiting?.deviceLinkUrl?.let { runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(it))) } }
-    }
-    val gw = LocalGw.current
-    BrandScreen {
-      Box(Modifier.fillMaxSize().padding(Space.xl), contentAlignment = Alignment.Center) {
-        Column(Modifier.widthIn(max = if (BuildConfig.FORM_FACTOR == "tablet") 520.dp else 420.dp), verticalArrangement = Arrangement.spacedBy(Space.md)) {
-            BrandWordmark()
-            BrandSectionLabel("GEREGE / NEXUS")
-            Text("Таны баталгаатай\nажлын орчин", color = gw.fg1, fontSize = 34.sp, lineHeight = 38.sp, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(Space.md))
-            if(BuildConfig.FORM_FACTOR != "kiosk") { OutlinedTextField(email, { email = it }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.auth_field_email)) }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email));OutlinedTextField(password, { password = it }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.auth_field_password)) }, singleLine = true, visualTransformation = PasswordVisualTransformation());LoadingPrimaryButton(label = stringResource(R.string.auth_action_admin_sign_in), isLoading = phase is LoginPhase.Starting, isEnabled = phase !is LoginPhase.Starting && phase !is LoginPhase.Waiting, onClick = { auth.password(email, password) });HorizontalDivider(Modifier.padding(vertical = Space.sm), color = gw.divider) }
-            OutlinedTextField(nationalId, { nationalId = it.uppercase() }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.auth_eid_reg_number)) }, singleLine = true)
-            LoadingPrimaryButton(label = stringResource(R.string.auth_eid_send_request), isLoading = phase is LoginPhase.Starting, isEnabled = phase !is LoginPhase.Starting && phase !is LoginPhase.Waiting, onClick = { auth.push(nationalId) })
-            if(BuildConfig.FORM_FACTOR in setOf("mobile","tablet")) OutlinedButton({ auth.appToApp("https://nexus.gerege.mn/auth/eid/callback") }, Modifier.fillMaxWidth(), enabled = phase !is LoginPhase.Starting && phase !is LoginPhase.Waiting) { Text(stringResource(R.string.auth_action_app_to_app)) }
-            if(BuildConfig.FORM_FACTOR=="kiosk") { OutlinedButton({ auth.appToApp("") },Modifier.fillMaxWidth(),enabled=phase !is LoginPhase.Starting&&phase !is LoginPhase.Waiting){Text("eID QR үүсгэх")};waiting?.deviceLinkUrl?.let{Image(qrBitmap(it).asImageBitmap(),"eID QR",Modifier.size(220.dp).align(Alignment.CenterHorizontally))} }
-            if (BuildConfig.FORM_FACTOR in setOf("pos", "tablet") && deviceToken != null) {
-                HorizontalDivider(Modifier.padding(vertical = Space.sm), color = gw.divider); BrandSectionLabel("АЖИЛТНЫ ХУРДАН НЭВТРЭЛТ")
-                OutlinedTextField(staffPin, { staffPin = it.filter(Char::isDigit).take(12) }, Modifier.fillMaxWidth(), label = { Text("PIN") }, singleLine = true, visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword))
-                Button({ auth.staffPin(staffPin, deviceToken) }, Modifier.fillMaxWidth(), enabled = staffPin.length >= 4 && phase !is LoginPhase.Starting) { Text(stringResource(R.string.auth_action_staff_sign_in)) }
-            }
-            StatusBlock(phase)
-            if (phase is LoginPhase.Starting || phase is LoginPhase.Waiting) TextButton(auth::cancel, Modifier.align(Alignment.End)) { Text(stringResource(R.string.auth_action_cancel)) }
-            BrandSecurityFooter("Нууц үг дамжуулахгүй · Баталгаажуулалт eID апп дотор")
-        }
-      }
-    }
-}
-
-private fun qrBitmap(value:String,size:Int=440):Bitmap{val matrix=QRCodeWriter().encode(value,BarcodeFormat.QR_CODE,size,size);return Bitmap.createBitmap(size,size,Bitmap.Config.RGB_565).apply{for(y in 0 until size)for(x in 0 until size)setPixel(x,y,if(matrix[x,y])Color.BLACK else Color.WHITE)}}
-
-@Composable private fun StatusBlock(phase: LoginPhase) {
-    val text = when (phase) {
-        LoginPhase.Idle -> ""
-        LoginPhase.Starting -> "Хүсэлт эхлүүлж байна…"
-        is LoginPhase.Waiting -> "eID апп дээрх кодтой тулгана уу  ·  ${phase.verificationCode}"
-        LoginPhase.Success -> "Амжилттай нэвтэрлээ"
-        LoginPhase.Expired -> "Хугацаа дууслаа. Шинэ хүсэлт эхлүүлнэ үү."
-        LoginPhase.Refused -> "Хүсэлтээс татгалзсан байна."
-        is LoginPhase.Error -> phase.message
-    }
-    val gw = LocalGw.current
-    if (text.isNotEmpty()) Surface(color = gw.surface2, shape = RoundedCornerShape(Radius.md)) {
-        Text(text, Modifier.fillMaxWidth().padding(Space.lg), color = gw.fg1)
+    // Харагдац: Бараан / Цайвар / Систем — тохиргооны дэлгэцээс сонгож,
+    // native-settings-v1-д хадгална (design/README.md § State Management).
+    val prefs = remember { context.getSharedPreferences("native-settings-v1", Context.MODE_PRIVATE) }
+    var themeMode by remember { mutableStateOf(prefs.getString("themeMode", "system")!!) }
+    val darkTheme = when (themeMode) { "dark" -> true; "light" -> false; else -> isSystemInDarkTheme() }
+    GeregeNexusTheme(darkTheme = darkTheme) {
+        if (authenticated) WorkArea(
+            auth, webOrigin, apiOrigin, deviceToken, biometric,
+            themeMode = themeMode,
+            onThemeMode = { mode -> themeMode = mode; prefs.edit().putString("themeMode", mode).apply() },
+        ) { authenticated = false; auth.cancel() }
+        else NativeLogin(auth, deviceToken, apiOrigin)
     }
 }
 
@@ -178,13 +124,14 @@ private enum class Pane { Work, Settings }
  * хуудас, гүйлгэсэн байрлал, бөглөж байсан маягт бүгд алга болно.
  */
 @SuppressLint("SetJavaScriptEnabled")
-@Composable private fun WorkArea(auth: AuthStateMachine, webOrigin: String, apiOrigin: String, deviceToken: String?, biometric: ((Boolean, String?) -> Unit) -> Unit, relogin: () -> Unit) {
+@Composable private fun WorkArea(auth: AuthStateMachine, webOrigin: String, apiOrigin: String, deviceToken: String?, biometric: ((Boolean, String?) -> Unit) -> Unit, themeMode: String, onThemeMode: (String) -> Unit, relogin: () -> Unit) {
     var pane by remember { mutableStateOf(Pane.Work) }
     // Шугамын нүүр. Тэнд тухайн платформын өөрийн эхлэх дэлгэц
     // рендерлэгдэнэ (frontend/app/line/<platform>).
     val startRoute = "/"
     var activeRoute by remember { mutableStateOf(startRoute) }
     val context = LocalContext.current
+    val gw = LocalGw.current
     val openPane: (String) -> Boolean = { requested ->
         when (requested) {
             "settings" -> { pane = Pane.Settings; true }
@@ -194,7 +141,7 @@ private enum class Pane { Work, Settings }
     }
     val nativeWebView = remember {
         WebView(context).apply {
-            setBackgroundColor(Color.rgb(11, 15, 23)); settings.javaScriptEnabled = true; settings.domStorageEnabled = true
+            setBackgroundColor(Color.rgb(11, 14, 17)); settings.javaScriptEnabled = true; settings.domStorageEnabled = true
             CookieManager.getInstance().setAcceptCookie(true)
             auth.sessionCookies().forEach { cookie ->
                 val flags = buildString { append("${cookie.name}=${cookie.value}; Path=${cookie.path}; SameSite=Lax"); if (cookie.secure) append("; Secure"); if (cookie.httpOnly) append("; HttpOnly") }
@@ -222,13 +169,8 @@ private enum class Pane { Work, Settings }
     // байхгүй тул системийн back өөрөө үүнийг мэдэхгүй. Ажлын муж дээр back нь
     // өмнөх шигээ системд үлдэнэ.
     BackHandler(enabled = pane != Pane.Work) { pane = Pane.Work }
-    Column(Modifier.fillMaxSize()) {
-      Surface(tonalElevation = 3.dp) { Row(Modifier.fillMaxWidth().height(48.dp).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text("Gerege Nexus", fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-        TextButton({ pane = if (pane == Pane.Settings) Pane.Work else Pane.Settings }) {
-            Text(if (pane == Pane.Settings) "Ажлын муж" else "Төхөөрөмжийн тохиргоо")
-        }
-      } }
+    Column(Modifier.fillMaxSize().background(gw.bg)) {
+      ShellTopBar(pane = pane, onTogglePane = { pane = if (pane == Pane.Settings) Pane.Work else Pane.Settings })
       Box(Modifier.weight(1f).fillMaxWidth()) {
         when (pane) {
           // Тохиргооноос буцаж ирэхэд AndroidView шинэ holder үүсгээд ижил
@@ -238,17 +180,112 @@ private enum class Pane { Work, Settings }
             factory = { (nativeWebView.parent as? ViewGroup)?.removeView(nativeWebView); nativeWebView },
             modifier = Modifier.fillMaxSize(),
           )
-          Pane.Settings -> NativeSettingsScreen { pane = Pane.Work }
+          Pane.Settings -> NativeSettingsScreen(themeMode = themeMode, onThemeMode = onThemeMode)
         }
       }
       // Bottom nav нь дэлгэц солигдох бүрд байрандаа үлдэнэ — энэ бол хүрээний
       // chrome, ажлын мужийн хэсэг биш.
-      if (BuildConfig.FORM_FACTOR in setOf("mobile", "tablet")) NavigationBar(containerColor = LocalGw.current.surface1) {
-        listOf("▦" to ("Аппууд" to "/apps"), "▤" to ("Баримт" to "/documents"), "▥" to ("Тайлан" to "/reports")).forEach { (icon, item) ->
-          NavigationBarItem(selected = pane == Pane.Work && activeRoute == item.second, onClick = { activeRoute = item.second; pane = Pane.Work; nativeWebView.loadUrl(webOrigin + item.second) }, icon = { Text(icon, fontSize = 20.sp) }, label = { Text(item.first) })
+      if (BuildConfig.FORM_FACTOR in setOf("mobile", "tablet")) ShellBottomNav(
+        pane = pane,
+        activeRoute = activeRoute,
+        onRoute = { route -> activeRoute = route; pane = Pane.Work; nativeWebView.loadUrl(webOrigin + route) },
+        onSettings = { pane = Pane.Settings },
+      )
+    }
+}
+
+/**
+ * Top bar (design/README.md §1c, §1d): 32dp лого + нэр + холболтын pill.
+ * Тохиргоон дээр гарчиг + version badge болж хувирна. Kiosk/POS-д bottom nav
+ * байхгүй тул тохиргоо руу орох ганц зам нь баруун талын icon товч.
+ */
+@Composable private fun ShellTopBar(pane: Pane, onTogglePane: () -> Unit) {
+    val gw = LocalGw.current
+    Column {
+        Row(
+            Modifier.fillMaxWidth().height(56.dp).padding(horizontal = Space.lg),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Space.sm + Space.xxs),
+        ) {
+            if (pane == Pane.Settings) {
+                Text("Тохиргоо", color = gw.fg1, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.weight(1f))
+                BrandBadge("v${BuildConfig.VERSION_NAME} · ${BuildConfig.FORM_FACTOR}", color = gw.fg3, container = gw.surface2)
+            } else {
+                BrandWordmark(32.dp, Radius.sm)
+                Text("Gerege Nexus", color = gw.fg1, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.weight(1f))
+                ConnectionPill()
+            }
+            if (BuildConfig.FORM_FACTOR in setOf("kiosk", "pos")) {
+                Box(
+                    Modifier.size(32.dp).background(gw.surface2, RoundedCornerShape(Radius.sm)).clickable(onClick = onTogglePane),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        if (pane == Pane.Settings) Lucide.X else Lucide.Sliders,
+                        contentDescription = if (pane == Pane.Settings) "Хаах" else "Тохиргоо",
+                        tint = gw.fg2,
+                        modifier = Modifier.size(16.dp),
+                    )
+                }
+            }
         }
-        NavigationBarItem(selected = pane == Pane.Settings, onClick = { pane = Pane.Settings }, icon = { Text("⚙", fontSize = 19.sp) }, label = { Text("Тохиргоо") })
-      }
+        HorizontalDivider(color = gw.border)
+    }
+}
+
+/** Сүлжээний төлөв (Connectivity.kt) — ногоон цэг «Холбогдсон», улаан цэг «Салсан». */
+@Composable private fun ConnectionPill() {
+    val gw = LocalGw.current
+    val online = rememberOnline()
+    Surface(shape = RoundedCornerShape(50), color = gw.surface1, border = androidx.compose.foundation.BorderStroke(1.dp, gw.border)) {
+        Row(
+            Modifier.padding(horizontal = Space.md, vertical = Space.xs + Space.xxs),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Space.sm),
+        ) {
+            Box(Modifier.size(8.dp).background(if (online) gw.credit else gw.debit, CircleShape))
+            Text(if (online) "Холбогдсон" else "Салсан", color = gw.fg2, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+        }
+    }
+}
+
+/** Bottom nav (§1c): идэвхтэй таб — 56×32 brandSoft pill + брэнд өнгийн икон. */
+@Composable private fun ShellBottomNav(pane: Pane, activeRoute: String, onRoute: (String) -> Unit, onSettings: () -> Unit) {
+    val gw = LocalGw.current
+    val tabs = listOf(
+        Triple(Lucide.LayoutGrid, "Аппууд", "/apps"),
+        Triple(Lucide.FileText, "Баримт", "/documents"),
+        Triple(Lucide.ChartBar, "Тайлан", "/reports"),
+    )
+    Column {
+        HorizontalDivider(color = gw.border)
+        Row(Modifier.fillMaxWidth().background(gw.bg).padding(vertical = Space.sm)) {
+            tabs.forEach { (icon, label, route) ->
+                NavTab(icon, label, selected = pane == Pane.Work && activeRoute == route) { onRoute(route) }
+            }
+            NavTab(Lucide.Sliders, "Тохиргоо", selected = pane == Pane.Settings, onTap = onSettings)
+        }
+    }
+}
+
+@Composable private fun RowScope.NavTab(icon: ImageVector, label: String, selected: Boolean, onTap: () -> Unit) {
+    val gw = LocalGw.current
+    val tint = if (selected) gw.brand else gw.fg3
+    Column(
+        Modifier.weight(1f).clickable(onClick = onTap).padding(vertical = Space.xs),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(Space.xs),
+    ) {
+        Box(
+            Modifier.size(width = 56.dp, height = 32.dp)
+                .background(if (selected) gw.brandSoft else ComposeColor.Transparent, RoundedCornerShape(50)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(icon, contentDescription = label, tint = tint, modifier = Modifier.size(22.dp))
+        }
+        Text(label, color = tint, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
     }
 }
 

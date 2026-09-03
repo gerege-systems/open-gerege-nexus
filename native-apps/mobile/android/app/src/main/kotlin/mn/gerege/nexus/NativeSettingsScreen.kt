@@ -1,3 +1,11 @@
+// Тохиргоо — design/README.md §1d-гийн бүлэглэсэн жагсаалт.
+//
+// Бүлэг бүр: eyebrow (13sp caps fg3) + card (surface1, хүрээ 6%, радиус 16),
+// доторх мөрүүд 48dp min, 32dp икон хайрцагтай, хооронд нь 4% зураас. Хуучин
+// master-detail хоёр түвшний бүтэц нэг гүйлгэдэг жагсаалт болов; талбар,
+// үйлдэл бүр хэвээрээ. Top bar («Тохиргоо» + version badge) нь хүрээний
+// ShellTopBar дотор — энэ дэлгэц зөвхөн агуулгаа зурна.
+
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 
 package mn.gerege.nexus
@@ -5,28 +13,42 @@ package mn.gerege.nexus
 import android.content.Context
 import android.net.Uri
 import android.os.Build
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import mn.gerege.nexus.core.device.DeviceEnrollmentApi
-
-private enum class SettingsSection(val title: String, val marker: String) {
-    General("Ерөнхий", "01"), Connection("Холболт", "02"), Printer("Принтер", "03"),
-    Scanner("Сканнер", "04"), Serial("Serial порт", "05"), Privacy("Нууцлал", "06"),
-    Device("Төхөөрөмж", "07"), Lockdown("Lockdown", "08"), Drawer("Cash drawer", "09"),
-    Update("Шинэчлэлт", "10"), Diagnostics("Оношлогоо", "11")
-}
+import mn.gerege.nexus.ui.brand.BrandSectionLabel
+import mn.gerege.nexus.ui.brand.TonalButton
+import mn.gerege.nexus.ui.icons.Lucide
+import mn.gerege.nexus.ui.theme.LocalGw
+import mn.gerege.nexus.ui.theme.Radius
+import mn.gerege.nexus.ui.theme.Space
 
 private class AndroidSettings(context: Context) {
     private val store = context.getSharedPreferences("native-settings-v1", Context.MODE_PRIVATE)
@@ -61,8 +83,9 @@ private class AndroidSettings(context: Context) {
 }
 
 @Composable
-fun NativeSettingsScreen(onClose: () -> Unit) {
+fun NativeSettingsScreen(themeMode: String, onThemeMode: (String) -> Unit) {
     val context = LocalContext.current
+    val gw = LocalGw.current
     val settings = remember { AndroidSettings(context) }
     val tokenStore = remember { DeviceTokenStore(context) }
     val deviceApi = remember(settings.apiEndpoint) {
@@ -70,16 +93,8 @@ fun NativeSettingsScreen(onClose: () -> Unit) {
         DeviceEnrollmentApi(if (root.endsWith("/api/v1")) "$root/" else "$root/api/v1/")
     }
     val scope = rememberCoroutineScope()
-    var selected by remember { mutableStateOf<SettingsSection?>(SettingsSection.General) }
     var status by remember { mutableStateOf("") }
-    val sections = remember { SettingsSection.entries.filter {
-        when (it) {
-            SettingsSection.Device -> BuildConfig.FORM_FACTOR in setOf("kiosk", "pos")
-            SettingsSection.Lockdown -> BuildConfig.FORM_FACTOR == "kiosk"
-            SettingsSection.Drawer -> BuildConfig.FORM_FACTOR == "pos"
-            else -> true
-        }
-    } }
+    val peripheral = BuildConfig.FORM_FACTOR in setOf("kiosk", "pos")
     LaunchedEffect(Unit) {
         tokenStore.load()?.let { token ->
             runCatching { deviceApi.me(token) }
@@ -95,67 +110,247 @@ fun NativeSettingsScreen(onClose: () -> Unit) {
                 .onFailure { status = it.message ?: "Enrollment амжилтгүй" }
         }
     }
-    val rotateToken:()->Unit={scope.launch { val current=tokenStore.load();if(current==null){status="Төхөөрөмж бүртгэгдээгүй";return@launch};runCatching{deviceApi.rotateToken(current)}.onSuccess{tokenStore.save(it);status="Device token шинэчлэгдлээ"}.onFailure{status=it.message?:"Token шинэчилсэнгүй"} }}
-    BoxWithConstraints(Modifier.fillMaxSize()) {
-        val wide = maxWidth >= 700.dp
-        if (wide) Row(Modifier.fillMaxSize()) {
-            SettingsMenu(sections, selected, { selected = it }, onClose, Modifier.width(260.dp).fillMaxHeight())
-            VerticalDivider(); SettingsDetail(selected ?: SettingsSection.General, settings, status, { status = it }, {
-                settings.save(); status = "Хадгаллаа"
-            }, enrollDevice, rotateToken, Modifier.weight(1f))
-        } else if (selected == null) {
-            SettingsMenu(sections, selected, { selected = it }, onClose, Modifier.fillMaxSize())
-        } else {
-            Column(Modifier.fillMaxSize()) {
-                Surface(tonalElevation = 2.dp) { Row(Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    TextButton({ selected = null }) { Text("‹ Ангилал") }; Text(selected!!.title, fontWeight = FontWeight.SemiBold)
-                } }
-                SettingsDetail(selected!!, settings, status, { status = it }, { settings.save(); status = "Хадгаллаа" }, enrollDevice, rotateToken, Modifier.weight(1f))
-            }
-        }
-    }
-}
+    val rotateToken: () -> Unit = { scope.launch { val current = tokenStore.load(); if (current == null) { status = "Төхөөрөмж бүртгэгдээгүй"; return@launch }; runCatching { deviceApi.rotateToken(current) }.onSuccess { tokenStore.save(it); status = "Device token шинэчлэгдлээ" }.onFailure { status = it.message ?: "Token шинэчилсэнгүй" } } }
 
-@Composable private fun SettingsMenu(sections: List<SettingsSection>, selected: SettingsSection?, select: (SettingsSection) -> Unit, close: () -> Unit, modifier: Modifier) {
-    Surface(modifier, color = MaterialTheme.colorScheme.surfaceContainer) {
-        LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            item { Text("DEVICE CONSOLE", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold); Spacer(Modifier.height(14.dp)) }
-            items(sections) { section ->
-                val color = if (section == selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainer
-                Surface(color = color, shape = MaterialTheme.shapes.small, modifier = Modifier.fillMaxWidth().clickable { select(section) }) {
-                    Row(Modifier.padding(12.dp)) { Text(section.marker, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelSmall); Spacer(Modifier.width(12.dp)); Text(section.title) }
+    Box(Modifier.fillMaxSize().background(gw.bg)) {
+        Column(
+            Modifier.widthIn(max = 640.dp).align(Alignment.TopCenter)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = Space.lg, vertical = Space.xl),
+            verticalArrangement = Arrangement.spacedBy(Space.xl),
+        ) {
+            SettingsGroup("ХОЛБОЛТ", listOf(
+                { InfoRow(Lucide.Server, "Сервер", Uri.parse(settings.webEndpoint).host ?: settings.webEndpoint, dot = gw.credit, dotLabel = "Онлайн") },
+                { FieldRow(Lucide.Server, "Web endpoint", settings.webEndpoint) { settings.webEndpoint = it } },
+                { FieldRow(Lucide.Server, "API endpoint", settings.apiEndpoint) { settings.apiEndpoint = it } },
+                { ActionRow(Lucide.Activity, "Холболт шалгах") { status = "Web/API холболтыг шалгаж байна…" } },
+            ))
+            SettingsGroup("ТӨХӨӨРӨМЖИЙН БҮРТГЭЛ", listOf<@Composable () -> Unit>(
+                { FieldRow(Lucide.Smartphone, "Нэр", settings.deviceName) { settings.deviceName = it } },
+                { FieldRow(Lucide.MapPin, "Байршил / site", settings.siteName) { settings.siteName = it } },
+                { FieldRow(Lucide.QrCode, "Бүртгэлийн код", settings.enrollmentCode) { settings.enrollmentCode = it.uppercase() } },
+                { InfoRow(Lucide.Check, "Device ID", settings.enrolledDeviceId.ifBlank { "—" }) },
+                { InfoRow(Lucide.ShieldCheck, "Төлөв", settings.enrollmentStatus) },
+                { ActionRow(Lucide.QrCode, "Нэг удаагийн кодоор холбох", accent = true, onClick = enrollDevice) },
+            ) + if (settings.enrolledDeviceId.isNotBlank()) listOf<@Composable () -> Unit>(
+                { ActionRow(Lucide.RefreshCw, "Device token шинэчлэх", onClick = rotateToken) },
+            ) else emptyList())
+            if (peripheral) {
+                SettingsGroup("ПРИНТЕР", listOf(
+                    { PillsRow(Lucide.Printer, "Холболтын төрөл", listOf("USB", "Network", "Serial"), settings.printerTransport) { settings.printerTransport = it } },
+                    { FieldRow(Lucide.Server, "IP / host", settings.printerHost) { settings.printerHost = it } },
+                    { FieldRow(Lucide.Server, "TCP port", settings.printerPort, KeyboardType.Number) { settings.printerPort = it } },
+                    { PillsRow(Lucide.FileText, "Цаас", listOf("58 mm", "80 mm"), settings.paperWidth) { settings.paperWidth = it } },
+                    { ActionRow(Lucide.Printer, "Туршилтын баримт хэвлэх") {
+                        if (settings.printerTransport == "Network") scope.launch {
+                            runCatching { PeripheralAdapters.printNetworkTest(settings.printerHost, settings.printerPort.toIntOrNull() ?: 9100) }
+                                .onSuccess { status = "Туршилтын баримт илгээгдлээ" }
+                                .onFailure { status = it.message ?: "Printer алдаа" }
+                        } else status = PeripheralAdapters.usbSummary(context)
+                    } },
+                ))
+                SettingsGroup("СКАННЕР", listOf(
+                    { PillsRow(Lucide.QrCode, "Унших горим", listOf("Keyboard wedge", "Camera", "Vendor SDK"), settings.scannerMode) { settings.scannerMode = it } },
+                    { ActionRow(Lucide.QrCode, "Туршилтын код унших") { status = if (settings.scannerMode == "Keyboard wedge") "Сканнерын keyboard input хүлээж байна…" else PeripheralAdapters.usbSummary(context) } },
+                ))
+                SettingsGroup("SERIAL ПОРТ", listOf(
+                    { FieldRow(Lucide.Server, "Port", settings.serialPort) { settings.serialPort = it } },
+                    { FieldRow(Lucide.Server, "Baud rate", settings.baudRate, KeyboardType.Number) { settings.baudRate = it } },
+                    { ActionRow(Lucide.Activity, "USB/Serial төхөөрөмж шалгах") { status = PeripheralAdapters.usbSummary(context) } },
+                ))
+            }
+            if (BuildConfig.FORM_FACTOR == "pos") SettingsGroup("CASH DRAWER", listOf(
+                { FieldRow(Lucide.Printer, "Printer pulse (ms)", settings.drawerPulse, KeyboardType.Number) { settings.drawerPulse = it } },
+                { ActionRow(Lucide.ChevronRight, "Шургуулга нээх") {
+                    scope.launch {
+                        runCatching { PeripheralAdapters.openDrawer(settings.printerHost, settings.printerPort.toIntOrNull() ?: 9100, settings.drawerPulse.toIntOrNull() ?: 120) }
+                            .onSuccess { status = "Шургуулгын pulse илгээгдлээ" }
+                            .onFailure { status = it.message ?: "Drawer алдаа" }
+                    }
+                } },
+            ))
+            if (BuildConfig.FORM_FACTOR == "kiosk") SettingsGroup("LOCKDOWN", listOf(
+                { SwitchRow(Lucide.Lock, "Dedicated device mode", null, settings.dedicatedMode) { settings.dedicatedMode = it } },
+                { FieldRow(Lucide.Clock, "Өдөр тутмын reboot", settings.rebootHour) { settings.rebootHour = it } },
+                { ActionRow(Lucide.Lock, "Lock task mode шалгах") { status = "Device owner эрх шаардлагатай" } },
+            ))
+            SettingsGroup("ХАРАГДАЦ", listOf(
+                { PillsRow(Lucide.Moon, "Горим", listOf("Бараан", "Цайвар", "Систем"), themeLabel(themeMode)) { onThemeMode(themeValue(it)) } },
+            ))
+            SettingsGroup("ХАМГААЛАЛТ", listOf(
+                { SwitchRow(Lucide.Lock, "Биометрик түгжээ", "Апп нээхэд хурууны хээ шаардана", settings.biometricLock) { settings.biometricLock = it } },
+                { FieldRow(Lucide.Clock, "Идэвхгүй үед түгжих (минут)", settings.idleMinutes, KeyboardType.Number) { settings.idleMinutes = it } },
+            ))
+            SettingsGroup("ШИНЭЧЛЭЛТ", listOf(
+                { PillsRow(Lucide.RefreshCw, "Суваг", listOf("Stable", "Pilot", "Internal"), settings.updateChannel) { settings.updateChannel = it } },
+                { SwitchRow(Lucide.Activity, "Оношлогооны мэдээлэл", null, settings.telemetry) { settings.telemetry = it } },
+                { ActionRow(Lucide.RefreshCw, "Шинэчлэлт шалгах") { status = "${settings.updateChannel} сувгийг шалгаж байна…" } },
+            ))
+            SettingsGroup("ДИАГНОСТИК", listOf(
+                { InfoRow(Lucide.Smartphone, "Android", "${Build.VERSION.RELEASE} / API ${Build.VERSION.SDK_INT}") },
+                { InfoRow(Lucide.ShieldCheck, "Shell contract", "1.4") },
+                { InfoRow(Lucide.Server, "Domain шугам", Uri.parse(settings.webEndpoint).host ?: settings.webEndpoint) },
+                { InfoRow(Lucide.Monitor, "WebView", android.webkit.WebView.getCurrentWebViewPackage()?.versionName ?: "Unknown") },
+                { ActionRow(Lucide.FileText, "Лог export хийх…") { status = "Log exporter device adapter-т холбогдоно" } },
+            ))
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.lg)) {
+                Text(status, color = gw.fg3, fontSize = 13.sp, modifier = Modifier.weight(1f))
+                Box(Modifier.width(160.dp)) {
+                    TonalButton("Хадгалах", height = 48.dp, fontSize = 15.sp) { settings.save(); status = "Хадгаллаа" }
                 }
             }
-            item { Spacer(Modifier.height(20.dp)); OutlinedButton(close, Modifier.fillMaxWidth()) { Text("Ажлын хэсэг рүү буцах") } }
         }
     }
 }
 
-@Composable private fun SettingsDetail(section: SettingsSection, s: AndroidSettings, status: String, setStatus: (String) -> Unit, save: () -> Unit, enroll: () -> Unit, rotateToken:()->Unit, modifier: Modifier) {
-    val context=LocalContext.current
-    val scope=rememberCoroutineScope()
-    Column(modifier.verticalScroll(rememberScrollState()).padding(28.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        Text(section.title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
-        when (section) {
-            SettingsSection.General -> { SettingText("Form factor", BuildConfig.FORM_FACTOR, {}, enabled = false); SettingText("Хэл", "mn", {}, enabled = false) }
-            SettingsSection.Connection -> { SettingText("Web endpoint", s.webEndpoint, { s.webEndpoint = it }); SettingText("API endpoint", s.apiEndpoint, { s.apiEndpoint = it }); TestButton("Холболт шалгах") { setStatus("Web/API холболтыг шалгаж байна…") } }
-            SettingsSection.Printer -> { SettingOptions("Холболтын төрөл", listOf("USB", "Network", "Serial"), s.printerTransport) { s.printerTransport = it }; SettingText("IP / host", s.printerHost, { s.printerHost = it }); SettingText("TCP port", s.printerPort, { s.printerPort = it }); SettingOptions("Цаас", listOf("58 mm", "80 mm"), s.paperWidth) { s.paperWidth = it }; TestButton("Туршилтын баримт хэвлэх") { if(s.printerTransport=="Network") scope.launch { runCatching { PeripheralAdapters.printNetworkTest(s.printerHost,s.printerPort.toIntOrNull()?:9100) }.onSuccess { setStatus("Туршилтын баримт илгээгдлээ") }.onFailure { setStatus(it.message?:"Printer алдаа") } } else setStatus(PeripheralAdapters.usbSummary(context)) } }
-            SettingsSection.Scanner -> { SettingOptions("Унших горим", listOf("Keyboard wedge", "Camera", "Vendor SDK"), s.scannerMode) { s.scannerMode = it }; TestButton("Туршилтын код унших") { setStatus(if(s.scannerMode=="Keyboard wedge") "Сканнерын keyboard input хүлээж байна…" else PeripheralAdapters.usbSummary(context)) } }
-            SettingsSection.Serial -> { SettingText("Port", s.serialPort, { s.serialPort = it }); SettingOptions("Baud rate", listOf("9600", "19200", "38400", "57600", "115200"), s.baudRate) { s.baudRate = it }; TestButton("USB/Serial төхөөрөмж шалгах") { setStatus(PeripheralAdapters.usbSummary(context)) } }
-            SettingsSection.Privacy -> { SettingSwitch("Биометрик түгжээ", s.biometricLock) { s.biometricLock = it }; SettingText("Идэвхгүй үед түгжих (минут)", s.idleMinutes, { s.idleMinutes = it }); TestButton("Android Keystore цэвэрлэх…") { setStatus("Төхөөрөмжийн баталгаажуулалт шаардлагатай") } }
-            SettingsSection.Device -> { SettingText("Төхөөрөмжийн нэр", s.deviceName, { s.deviceName = it }); SettingText("Байршил / site", s.siteName, { s.siteName = it }); SettingText("Enrollment code", s.enrollmentCode, { s.enrollmentCode = it.uppercase() }); SettingText("Device ID", s.enrolledDeviceId.ifBlank { "—" }, {}, false); SettingText("Төлөв", s.enrollmentStatus, {}, false); TestButton("Нэг удаагийн кодоор бүртгэх", enroll);if(s.enrolledDeviceId.isNotBlank())TestButton("Device token шинэчлэх",rotateToken) }
-            SettingsSection.Lockdown -> { SettingSwitch("Dedicated device mode", s.dedicatedMode) { s.dedicatedMode = it }; SettingText("Өдөр тутмын reboot", s.rebootHour, { s.rebootHour = it }); TestButton("Lock task mode шалгах") { setStatus("Device owner эрх шаардлагатай") } }
-            SettingsSection.Drawer -> { SettingText("Printer pulse (ms)", s.drawerPulse, { s.drawerPulse = it }); TestButton("Шургуулга нээх") { scope.launch { runCatching { PeripheralAdapters.openDrawer(s.printerHost,s.printerPort.toIntOrNull()?:9100,s.drawerPulse.toIntOrNull()?:120) }.onSuccess { setStatus("Шургуулгын pulse илгээгдлээ") }.onFailure { setStatus(it.message?:"Drawer алдаа") } } } }
-            SettingsSection.Update -> { SettingOptions("Суваг", listOf("Stable", "Pilot", "Internal"), s.updateChannel) { s.updateChannel = it }; SettingSwitch("Оношлогооны мэдээлэл", s.telemetry) { s.telemetry = it }; TestButton("Шинэчлэлт шалгах") { setStatus("${s.updateChannel} сувгийг шалгаж байна…") } }
-            SettingsSection.Diagnostics -> { SettingText("Android", "${Build.VERSION.RELEASE} / API ${Build.VERSION.SDK_INT}", {}, false); SettingText("Shell contract", "1.4", {}, false); SettingText("Domain шугам", Uri.parse(s.webEndpoint).host ?: s.webEndpoint, {}, false); SettingText("WebView", android.webkit.WebView.getCurrentWebViewPackage()?.versionName ?: "Unknown", {}, false); TestButton("Лог export хийх…") { setStatus("Log exporter device adapter-т холбогдоно") } }
-        }
-        HorizontalDivider(Modifier.padding(top = 12.dp)); Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text(status, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f)); Button(save) { Text("Хадгалах") }
+private fun themeLabel(mode: String) = when (mode) { "dark" -> "Бараан"; "light" -> "Цайвар"; else -> "Систем" }
+private fun themeValue(label: String) = when (label) { "Бараан" -> "dark"; "Цайвар" -> "light"; else -> "system" }
+
+/* ---------- Бүлэг ба мөрийн хэлбэрүүд (§1d) ---------- */
+
+@Composable
+private fun SettingsGroup(eyebrow: String, rows: List<@Composable () -> Unit>) {
+    val gw = LocalGw.current
+    Column(verticalArrangement = Arrangement.spacedBy(Space.sm)) {
+        BrandSectionLabel(eyebrow)
+        Surface(
+            shape = RoundedCornerShape(Radius.lg),
+            color = gw.surface1,
+            border = BorderStroke(1.dp, gw.border),
+        ) {
+            Column {
+                rows.forEachIndexed { index, row ->
+                    if (index > 0) HorizontalDivider(color = gw.divider)
+                    row()
+                }
+            }
         }
     }
 }
 
-@Composable private fun SettingText(label: String, value: String, change: (String) -> Unit, enabled: Boolean = true) { OutlinedTextField(value, change, Modifier.fillMaxWidth(), label = { Text(label) }, enabled = enabled, singleLine = true) }
-@Composable private fun SettingSwitch(label: String, value: Boolean, change: (Boolean) -> Unit) { Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) { Text(label, Modifier.weight(1f)); Switch(value, change) } }
-@Composable private fun SettingOptions(label: String, values: List<String>, selected: String, change: (String) -> Unit) { Column { Text(label, style = MaterialTheme.typography.labelMedium); SingleChoiceSegmentedButtonRow { values.forEachIndexed { index, value -> SegmentedButton(selected == value, { change(value) }, SegmentedButtonDefaults.itemShape(index, values.size)) { Text(value) } } } } }
-@Composable private fun TestButton(label: String, action: () -> Unit) { OutlinedButton(action) { Text(label) } }
+@Composable
+private fun IconBox(icon: ImageVector) {
+    val gw = LocalGw.current
+    Box(
+        Modifier.size(32.dp).background(gw.surface2, RoundedCornerShape(Radius.sm)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(icon, contentDescription = null, tint = gw.fg2, modifier = Modifier.size(16.dp))
+    }
+}
+
+@Composable
+private fun InfoRow(icon: ImageVector, label: String, value: String, dot: Color? = null, dotLabel: String? = null) {
+    val gw = LocalGw.current
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = Space.lg, vertical = Space.md),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Space.md),
+    ) {
+        IconBox(icon)
+        Text(label, color = gw.fg1, fontSize = 15.sp, modifier = Modifier.weight(1f))
+        Text(value, color = gw.fg3, fontSize = 15.sp)
+        if (dot != null) {
+            Box(Modifier.size(8.dp).background(dot, CircleShape))
+            if (dotLabel != null) Text(dotLabel, color = gw.fg2, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+        }
+    }
+}
+
+@Composable
+private fun FieldRow(icon: ImageVector, label: String, value: String, keyboardType: KeyboardType = KeyboardType.Text, onChange: (String) -> Unit) {
+    val gw = LocalGw.current
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = Space.lg, vertical = Space.md),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Space.md),
+    ) {
+        IconBox(icon)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xxs)) {
+            Text(label, color = gw.fg3, fontSize = 12.sp)
+            BasicTextField(
+                value = value,
+                onValueChange = onChange,
+                textStyle = TextStyle(color = gw.fg1, fontSize = 15.sp),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+                cursorBrush = SolidColor(gw.brand),
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+}
+
+@Composable
+private fun SwitchRow(icon: ImageVector, label: String, subtitle: String?, checked: Boolean, onChange: (Boolean) -> Unit) {
+    val gw = LocalGw.current
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = Space.lg, vertical = Space.md),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Space.md),
+    ) {
+        IconBox(icon)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xxs)) {
+            Text(label, color = gw.fg1, fontSize = 15.sp)
+            if (subtitle != null) Text(subtitle, color = gw.fg3, fontSize = 12.sp)
+        }
+        Switch(
+            checked = checked,
+            onCheckedChange = onChange,
+            colors = SwitchDefaults.colors(
+                checkedTrackColor = gw.brand,
+                checkedThumbColor = gw.onBrand,
+                uncheckedTrackColor = gw.surface3,
+                uncheckedThumbColor = gw.fg3,
+                uncheckedBorderColor = gw.borderStrong,
+            ),
+        )
+    }
+}
+
+/** Сонголтын pill-үүд — идэвхтэй нь brand filled, бусад нь surface2 (§1d). */
+@Composable
+private fun PillsRow(icon: ImageVector, label: String, options: List<String>, selected: String, onSelect: (String) -> Unit) {
+    val gw = LocalGw.current
+    Column(
+        Modifier.fillMaxWidth().padding(horizontal = Space.lg, vertical = Space.md),
+        verticalArrangement = Arrangement.spacedBy(Space.md),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.md)) {
+            IconBox(icon)
+            Text(label, color = gw.fg1, fontSize = 15.sp)
+        }
+        Row(Modifier.padding(start = 44.dp), horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
+            options.forEach { option ->
+                val active = option == selected
+                Surface(
+                    shape = RoundedCornerShape(50),
+                    color = if (active) gw.brand else gw.surface2,
+                    modifier = Modifier.clickable { onSelect(option) },
+                ) {
+                    Text(
+                        option,
+                        Modifier.padding(horizontal = Space.md, vertical = Space.xs + Space.xxs),
+                        color = if (active) gw.onBrand else gw.fg2,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ActionRow(icon: ImageVector, label: String, accent: Boolean = false, onClick: () -> Unit) {
+    val gw = LocalGw.current
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(onClick = onClick).padding(horizontal = Space.lg, vertical = Space.md),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Space.md),
+    ) {
+        IconBox(icon)
+        Text(label, color = if (accent) gw.brand else gw.fg1, fontSize = 15.sp, fontWeight = if (accent) FontWeight.SemiBold else FontWeight.Normal, modifier = Modifier.weight(1f))
+        Icon(Lucide.ChevronRight, contentDescription = null, tint = gw.fg4, modifier = Modifier.size(16.dp))
+    }
+}
