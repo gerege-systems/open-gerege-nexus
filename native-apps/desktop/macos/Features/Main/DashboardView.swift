@@ -17,6 +17,8 @@ struct DashboardView: View {
     /// nil = follow the window width; non-nil = user pinned the sidebar
     /// open/closed via the header toggle.
     @State private var sidebarCollapsedOverride: Bool? = nil
+    /// Ажлын мужийн навигаци — толгой хэсгийн буцах товч үүнээс уншина.
+    @ObservedObject private var workArea = WorkAreaNavigation.shared
 
     /// Below this content width the sidebar auto-collapses to an icon rail so
     /// the page content keeps a usable width on small windows.
@@ -250,6 +252,24 @@ struct DashboardView: View {
             }
             .buttonStyle(.plain)
             .help(collapsed ? "Хажуугийн цэсийг дэлгэх" : "Хажуугийн цэсийг хураах")
+
+            // Ажлын мужийн буцах товч. Зөвхөн платформын дэлгэц дээр, зөвхөн
+            // буцах түүх байх үед — өөр дэлгэцүүд нь native тул тэдэнд
+            // хамаагүй, эхний хуудсан дээр бол буцах газар байхгүй.
+            if appState.selectedTab == .platform, workArea.canGoBack {
+                Button {
+                    workArea.goBack()
+                } label: {
+                    Image(systemName: "chevron.backward")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Color.textSecondary)
+                        .frame(width: 28, height: 28)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .help("Буцах")
+                .keyboardShortcut("[", modifiers: .command)
+            }
 
             Text(loc.t(appState.selectedTab.labelKey))
                 .font(.system(size: 16, weight: .semibold))
