@@ -9,25 +9,44 @@ struct MainTabView: View {
     @EnvironmentObject private var appState: AppState
     @ObservedObject private var loc = LocalizationService.shared
 
+    /// Аль таб нээлттэй байх.
+    ///
+    /// `DashboardTab` БИШ: тэр нь ширээний sidebar-ын жагсаалт бөгөөд түүнд
+    /// `settings` гэсэн бичлэг байдаггүй (Мак дээр тохиргоо нь sheet). Гар
+    /// дээрх зурвас өөрийн таван нэртэй.
+    ///
+    /// `EID_DEBUG_TAB` нь ЗӨВХӨН Debug build дээр эхлэх табыг сонгоно —
+    /// дэлгэцийг зурган дээр шалгах цорын ганц арга. Release-д энэ код
+    /// байхгүй тул тойрох зам ч байхгүй.
+    @State private var tab: String = {
+        #if DEBUG
+        if let raw = ProcessInfo.processInfo.environment["EID_DEBUG_TAB"],
+           let first = raw.split(separator: ">").first { return String(first) }
+        #endif
+        return "dashboard"
+    }()
+
     var body: some View {
-        TabView {
+        TabView(selection: $tab) {
             MobileDashboardPage()
                 .tabItem { Label(loc.t("Nav_Dashboard"), systemImage: "house") }
+                .tag("dashboard")
             MobileIdPage()
                 .tabItem { Label(loc.t("Nav_MyId"), systemImage: "person.text.rectangle") }
+                .tag("id")
             MobileLogsPage()
                 .tabItem { Label(loc.t("Nav_Logs"), systemImage: "clock.arrow.circlepath") }
+                .tag("logs")
             MobileSettingsPage()
                 .tabItem { Label(loc.t("Nav_Settings"), systemImage: "gearshape") }
+                .tag("settings")
             // Платформын ажлын муж нь ЭНЭ аппын өөрийн дэлгэц биш тул native
-            // дэлгэцүүдийн ДАРАА — ширээний sidebar-т ч мөн адил сүүлд байдаг
+            // дэлгэцүүдийн ДАРАА — ширээний sidebar-т ч мөн сүүлд байдаг
             // (`DashboardTab.mainNav`). Байрлал нь хүнд аль нь аль болохыг хэлнэ.
             MobilePlatformPage()
                 .tabItem { Label(loc.t("Nav_Platform"), systemImage: "square.grid.2x2") }
+                .tag("platform")
         }
-        // Сонгогдсон таб нь БРЭНДИЙН цэнхэр биш, дулаан улбар шар. Дотор
-        // талын карт, товч, холбоос бүр брэндийн цэнхэр тул табыг мөн цэнхэр
-        // болговол «аль нь идэвхтэй вэ» гэдэг ялгарахаа болино (Apple HIG).
         .tint(Theme.accent)
     }
 }

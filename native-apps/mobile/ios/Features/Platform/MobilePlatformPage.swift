@@ -26,8 +26,9 @@ struct MobilePlatformPage: View {
         // `URL(string:)!` БИШ: суурь хаяг нь Тохиргооноос дарагддаг хэрэглэгчийн
         // утга. Буруу бичсэн хаяг аппыг унагах ёсгүй, уншигдах мессеж өгөх ёстой.
         if let url = URL(string: AppConfig.baseURL), url.scheme?.hasPrefix("http") == true {
+            // Safe area-г ҮЛ ТООХГҮЙ: доор нь табын зурвас байгаа тул
+            // хуудасны сүүлийн мөрүүд түүний ард орж, хүрч болохгүй болно.
             WorkAreaWebView(url: url)
-                .ignoresSafeArea(edges: .bottom)
         } else {
             MobilePage(title: loc.t("Nav_Platform"), subtitle: nil) {
                 VStack(alignment: .leading, spacing: Theme.Space.sm) {
