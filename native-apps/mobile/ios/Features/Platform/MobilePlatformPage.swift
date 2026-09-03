@@ -18,17 +18,72 @@ import WebKit
 /// хийдэггүй тул ажлын муж хоёр клиент дээр ижилхэн «хөтчийн горим»-оор
 /// ажиллана. Гэрээний бүтэн гүүр хэрэгтэй болбол хоёуланд нь НЭГ дор нэмнэ,
 /// эс бөгөөс хоёр бүрхүүл өөр өөр гэрээтэй болно.
+/// Ажлын мужийн навигаци — бүрхүүлийн товч руу.
+///
+/// Гэрээний §1: навигацийг бүрхүүл эзэмшинэ, вэб хуудас өөрийн буцахыг
+/// зурахгүй. Webview нь `UIViewRepresentable`-ийн дотор амьдардаг тул
+/// бүрхүүлд түүн рүү хүрэх зам хэрэгтэй: энэ нь тэр зам. macOS дээрх
+/// `WorkAreaNavigation`-ийн яг дүйцэл (тэр нь толгой хэсэгт, энэ нь дээд мөрөнд).
+///
+/// `canGoBack`-ыг KVO-оор дагана — товч нь буцах түүхгүй үед ОГТ гарахгүй.
+/// Идэвхгүй саарал товч нь эхний хуудсан дээр худал зүйл хэлнэ.
+@MainActor
+final class WorkAreaNavigation: ObservableObject {
+    static let shared = WorkAreaNavigation()
+
+    @Published private(set) var canGoBack = false
+
+    private weak var webView: WKWebView?
+    private var observation: NSKeyValueObservation?
+
+    func attach(_ webView: WKWebView) {
+        self.webView = webView
+        observation = webView.observe(\.canGoBack, options: [.initial, .new]) { [weak self] view, _ in
+            Task { @MainActor in self?.canGoBack = view.canGoBack }
+        }
+    }
+
+    func goBack() { webView?.goBack() }
+}
+
 struct MobilePlatformPage: View {
     @EnvironmentObject private var appState: AppState
     @ObservedObject private var loc = LocalizationService.shared
+    @ObservedObject private var nav = WorkAreaNavigation.shared
 
     var body: some View {
         // `URL(string:)!` БИШ: суурь хаяг нь Тохиргооноос дарагддаг хэрэглэгчийн
         // утга. Буруу бичсэн хаяг аппыг унагах ёсгүй, уншигдах мессеж өгөх ёстой.
         if let url = URL(string: AppConfig.baseURL), url.scheme?.hasPrefix("http") == true {
-            // Safe area-г ҮЛ ТООХГҮЙ: доор нь табын зурвас байгаа тул
-            // хуудасны сүүлийн мөрүүд түүний ард орж, хүрч болохгүй болно.
-            WorkAreaWebView(url: url)
+            VStack(spacing: 0) {
+                // Буцах нь бүрхүүлийнх. Зөвхөн буцах түүх байх үед гарах тул
+                // шугамын нүүрэн дээр энэ мөр огт эзлэхгүй.
+                if nav.canGoBack {
+                    HStack(spacing: Theme.Space.xs) {
+                        Button {
+                            nav.goBack()
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "chevron.backward")
+                                    .font(.system(size: 14, weight: .semibold))
+                                Text(loc.t("Nav_Platform"))
+                                    .font(Theme.TypeScale.footnote)
+                            }
+                            .foregroundStyle(Theme.accent)
+                            .padding(.vertical, Theme.Space.xs)
+                            .contentShape(Rectangle())
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.horizontal, Theme.Space.lg)
+                    .background(Theme.surface1)
+                    Divider()
+                }
+
+                // Safe area-г ҮЛ ТООХГҮЙ: доор нь табын зурвас байгаа тул
+                // хуудасны сүүлийн мөрүүд түүний ард орж, хүрч болохгүй болно.
+                WorkAreaWebView(url: url)
+            }
         } else {
             MobilePage(title: loc.t("Nav_Platform"), subtitle: nil) {
                 VStack(alignment: .leading, spacing: Theme.Space.sm) {
@@ -70,6 +125,7 @@ private struct WorkAreaWebView: UIViewRepresentable {
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
         webView.allowsBackForwardNavigationGestures = true
+        WorkAreaNavigation.shared.attach(webView)
         webView.load(URLRequest(url: url))
         return webView
     }
