@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentDialog
+    x:Class="NexusGeregeDesktop.Client.Controls.CertDetailDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="Certificate details"
+    PrimaryButtonText="Close"
+    SecondaryButtonText="Export to file..."
+    DefaultButton="Primary"
+    MaxWidth="900"
+    SecondaryButtonClick="OnExportClick">
+    <ScrollViewer MaxHeight="640" HorizontalScrollMode="Disabled" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Spacing="14" MinWidth="560">
+
+            <!-- Subject -->
+            <StackPanel Spacing="4">
+                <TextBlock Text="Subject" FontWeight="SemiBold" />
+                <TextBlock x:Name="SubjectText"
+                           TextWrapping="Wrap"
+                           FontFamily="Cascadia Code, Consolas, monospace"
+                           FontSize="12" />
+            </StackPanel>
+
+            <!-- Issuer -->
+            <StackPanel Spacing="4">
+                <TextBlock Text="Issuer" FontWeight="SemiBold" />
+                <TextBlock x:Name="IssuerText"
+                           TextWrapping="Wrap"
+                           FontFamily="Cascadia Code, Consolas, monospace"
+                           FontSize="12" />
+            </StackPanel>
+
+            <Grid ColumnSpacing="16" RowSpacing="6">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Grid.Column="0" Spacing="2">
+                    <TextBlock Text="Not before" Style="{StaticResource LabelTextBlock}" FontWeight="SemiBold" />
+                    <TextBlock x:Name="NotBeforeText" FontFamily="Cascadia Code, Consolas, monospace" FontSize="12" />
+                </StackPanel>
+                <StackPanel Grid.Row="0" Grid.Column="1" Spacing="2">
+                    <TextBlock Text="Not after" Style="{StaticResource LabelTextBlock}" FontWeight="SemiBold" />
+                    <TextBlock x:Name="NotAfterText" FontFamily="Cascadia Code, Consolas, monospace" FontSize="12" />
+                </StackPanel>
+                <StackPanel Grid.Row="1" Grid.Column="0" Spacing="2">
+                    <TextBlock Text="Public key" Style="{StaticResource LabelTextBlock}" FontWeight="SemiBold" />
+                    <TextBlock x:Name="PublicKeyText" FontFamily="Cascadia Code, Consolas, monospace" FontSize="12" />
+                </StackPanel>
+                <StackPanel Grid.Row="1" Grid.Column="1" Spacing="2">
+                    <TextBlock Text="Signature algorithm" Style="{StaticResource LabelTextBlock}" FontWeight="SemiBold" />
+                    <TextBlock x:Name="SignatureAlgText" FontFamily="Cascadia Code, Consolas, monospace" FontSize="12" />
+                </StackPanel>
+            </Grid>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Serial number" FontWeight="SemiBold" />
+                <TextBlock x:Name="SerialText"
+                           TextWrapping="Wrap"
+                           FontFamily="Cascadia Code, Consolas, monospace"
+                           FontSize="12" />
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="SHA-256 fingerprint" FontWeight="SemiBold" />
+                <TextBlock x:Name="Sha256Text"
+                           TextWrapping="Wrap"
+                           FontFamily="Cascadia Code, Consolas, monospace"
+                           FontSize="12" />
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="SHA-1 fingerprint" FontWeight="SemiBold" />
+                <TextBlock x:Name="Sha1Text"
+                           TextWrapping="Wrap"
+                           FontFamily="Cascadia Code, Consolas, monospace"
+                           FontSize="12" />
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Key usage" FontWeight="SemiBold" />
+                <TextBlock x:Name="KeyUsageText" TextWrapping="Wrap" FontSize="12" />
+            </StackPanel>
+
+            <StackPanel Spacing="4"
+                        Visibility="Collapsed"
+                        x:Name="ExtendedKeyUsagePanel">
+                <TextBlock Text="Extended key usage" FontWeight="SemiBold" />
+                <TextBlock x:Name="ExtendedKeyUsageText" TextWrapping="Wrap" FontSize="12" />
+            </StackPanel>
+
+            <StackPanel Spacing="4"
+                        Visibility="Collapsed"
+                        x:Name="SanPanel">
+                <TextBlock Text="Subject Alternative Names" FontWeight="SemiBold" />
+                <TextBlock x:Name="SanText"
+                           TextWrapping="Wrap"
+                           FontFamily="Cascadia Code, Consolas, monospace"
+                           FontSize="12" />
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="PEM" FontWeight="SemiBold" />
+                <TextBox x:Name="PemText"
+                         IsReadOnly="True"
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"
+                         FontFamily="Cascadia Code, Consolas, monospace"
+                         FontSize="10"
+                         MinHeight="120"
+                         MaxHeight="200" />
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</ContentDialog>

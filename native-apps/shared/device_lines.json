@@ -3,14 +3,14 @@
     "Төхөөрөмжийн domain шугамуудын цорын ганц эх сурвалж.",
     "",
     "Дүрэм: backend ЦОР ГАНЦ. Шугам бүр өөрийн host-той ч /api/v1 нь бүгд",
-    "нэг ижил API upstream руу очно (deploy/nginx/device-lines.nexus.gerege.mn.conf).",
+    "нэг ижил API upstream руу очно (nginx/device-lines.nexus.gerege.mn.conf).",
     "Тиймээс webview доторх дуудлага үргэлж SAME-ORIGIN — session cookie нь",
     "SameSite=Strict хэвээр ажиллаж, CORS preflight огт үүсэхгүй.",
     "",
-    "ХАЯГ НЬ FORM FACTOR-ЫГ НЭРЛЭНЭ, ПЛАТФОРМЫГ БИШ (2026-09-02-оос).",
-    "Ширээн дээрх Mac ба ширээн дээрх Windows хоёр нэг шугам: хүн тэр хоёртой",
-    "ижил байдлаар харьцдаг. Бүрхүүл өөрийгөө юу гэж хэлж байгаа нь тусдаа",
-    "зүйл бөгөөд window.GeregeShell.platform дээр хэвээр байна.",
+    "ХАЯГ НЬ FORM FACTOR-ЫГ НЭРЛЭНЭ, ПЛАТФОРМЫГ БИШ. Ширээн дээрх Mac ба",
+    "ширээн дээрх Windows хоёр нэг шугам: хүн тэр хоёртой ижил байдлаар",
+    "харьцдаг. Бүрхүүл өөрийгөө юу гэж хэлж байгаа нь тусдаа зүйл бөгөөд",
+    "window.GeregeShell.platform дээр хэвээр байна.",
     "",
     "kiosk ба pos нь desktop/mobile дотор ОРООГҮЙ: нэг Windows машин дээр",
     "ажлын ширээний клиент ба киоск зэрэг ажиллаж болох тул тэдний хооронд",
@@ -18,7 +18,14 @@
     "нэг машин дээр хэзээ ч зэрэг ажиллахгүй тул тэдэнд хэрэггүй.",
     "",
     "Хөтчийн шугам (browserLine) хэвээр үлдэнэ — тэнд web app өөрөө бүрэн апп.",
-    "Төхөөрөмжийн шугам дээр web нь зөвхөн native хүрээн доторх ажлын муж."
+    "Төхөөрөмжийн шугам дээр web нь зөвхөн native хүрээн доторх ажлын муж.",
+    "",
+    "",
+    "АППЫН НЭР НЬ ШУГАМАА ДАГАНА: шугам бүрийн `app` талбар нь Xcode-ийн",
+    "target/scheme, Gradle-ийн rootProject, .NET-ийн solution/namespace-ийн нэр.",
+    "Тиймээс `desktop` шугамын macOS ба Windows хоёр НЭГ нэртэй",
+    "(NexusGeregeDesktop) — хүн тэр хоёртой ижил байдлаар харьцдагтай адил.",
+    "`kiosk`, `pos` хоёрын нэр нь ЗАХИАЛГАТАЙ: клиент нь хараахан байхгүй."
   ],
   "$provisioning": [
     "Шугамууд 2026-08-12-нд АСАВ, 2026-09-02-нд ДӨРӨВ БОЛОВ. Дөрвүүлэн бэлэн:",
@@ -44,6 +51,7 @@
   "deviceLines": {
     "desktop": {
       "line": "https://desktop.nexus.gerege.mn",
+      "app": "NexusGeregeDesktop",
       "platforms": [
         "macos",
         "windows"
@@ -52,13 +60,14 @@
       "devOrigin": "http://localhost:3000",
       "startRoute": "/",
       "client": [
-        "native-apps/desktop/macos/NativeSettings.swift → lineOrigin",
-        "native-apps/desktop/windows/ShellProfile.cs → Desktop.LineOrigin"
+        "native-apps/desktop/macos/Core/Network/AppConfig.swift → apiBaseURL (#else салаа)",
+        "native-apps/desktop/windows/src/NexusGeregeDesktop.Client/appsettings.json → Api.BaseUrl"
       ],
       "home": "/line/desktop"
     },
     "mobile": {
       "line": "https://mobile.nexus.gerege.mn",
+      "app": "NexusGeregeMobile",
       "platforms": [
         "ios",
         "android"
@@ -67,13 +76,14 @@
       "devOrigin": "http://localhost:3000 (Android эмулятор дээр http://10.0.2.2:3000)",
       "startRoute": "/",
       "client": [
-        "native-apps/mobile/ios/Sources/GeregeShellKit/DeviceLine.swift → origin",
-        "native-apps/mobile/android/app/src/main/kotlin/mn/gerege/nexus/DeviceLine.kt → origin"
+        "native-apps/desktop/macos/Core/Network/AppConfig.swift → apiBaseURL (#if os(iOS) салаа; iOS нь мак-тай эх кодоо хуваалцана)",
+        "native-apps/mobile/android/app/src/main/kotlin/mn/gerege/nexus/AppConfig.kt → DEFAULT_BASE_URL"
       ],
       "home": "/line/mobile"
     },
     "kiosk": {
       "line": "https://kiosk.nexus.gerege.mn",
+      "app": "NexusGeregeKiosk",
       "platforms": [
         "windows",
         "android"
@@ -81,14 +91,13 @@
       "provisioned": true,
       "devOrigin": "http://localhost:3000",
       "startRoute": "/",
-      "client": [
-        "native-apps/desktop/windows/ShellProfile.cs → Kiosk.LineOrigin",
-        "native-apps/mobile/android/app/src/main/kotlin/mn/gerege/nexus/DeviceLine.kt → origin (kiosk flavor)"
-      ],
-      "home": "/line/kiosk"
+      "client": [],
+      "home": "/line/kiosk",
+      "$note": "Шугам асаалттай, КЛИЕНТ нь хараахан байхгүй. Нэр нь захиалгатай."
     },
     "pos": {
       "line": "https://pos.nexus.gerege.mn",
+      "app": "NexusGeregePos",
       "platforms": [
         "windows",
         "android"
@@ -96,11 +105,9 @@
       "provisioned": true,
       "devOrigin": "http://localhost:3000",
       "startRoute": "/",
-      "client": [
-        "native-apps/desktop/windows/ShellProfile.cs → Pos.LineOrigin",
-        "native-apps/mobile/android/app/src/main/kotlin/mn/gerege/nexus/DeviceLine.kt → origin (pos flavor)"
-      ],
-      "home": "/line/pos"
+      "client": [],
+      "home": "/line/pos",
+      "$note": "Шугам асаалттай, КЛИЕНТ нь хараахан байхгүй. Нэр нь захиалгатай."
     }
   }
 }

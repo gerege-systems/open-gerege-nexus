@@ -288,6 +288,3 @@ func (s *Service) StartBackgroundJobs(ctx context.Context) {
 	s.op.Sessions().StartHousekeeping(ctx)
 	s.tenants.StartDeletionSweep(ctx)
 }
-
-// Enabled reports whether the console answers at all on this deployment.
-func (s *Service) Enabled() bool { return s.op.Enabled() }

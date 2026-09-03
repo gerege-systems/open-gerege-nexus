@@ -1,0 +1,309 @@
+<?xml version='1.0' encoding='utf-8'?>
+<root xmlns:ns1="urn:schemas-microsoft-com:xml-msdata" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:schema id="root">
+    <xs:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xs:element name="root" ns1:IsDataSet="true">
+      <xs:complexType>
+        <xs:choice maxOccurs="unbounded">
+          <xs:element name="data">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="value" type="xsd:string" minOccurs="0" ns1:Ordinal="1" />
+                <xs:element name="comment" type="xsd:string" minOccurs="0" ns1:Ordinal="2" />
+              </xs:sequence>
+              <xs:attribute name="name" type="xsd:string" use="required" />
+              <xs:attribute name="type" type="xsd:string" />
+              <xs:attribute name="mimetype" type="xsd:string" />
+              <xs:attribute ref="xml:space" />
+            </xs:complexType>
+          </xs:element>
+        </xs:choice>
+      </xs:complexType>
+    </xs:element>
+  </xs:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+
+  <data name="App_Title"><value>Gerege Nexus</value></data>
+  <data name="App_Tagline"><value>Soberanía digital</value></data>
+  <data name="App_Wordmark_Top"><value>Identidad nacional</value></data>
+
+  <data name="Nav_Home"><value>Inicio</value></data>
+  <data name="Nav_Platform"><value>Plataforma</value></data>
+  <data name="Dashboard_Wordmark"><value>GEREGE NEXUS</value></data>
+  <data name="Nav_Verify"><value>Verificar certificado</value></data>
+  <data name="Nav_Login"><value>Iniciar sesión</value></data>
+  <data name="Nav_Dashboard"><value>Panel</value></data>
+  <data name="Nav_Settings"><value>Ajustes</value></data>
+  <data name="Nav_Logout"><value>Cerrar sesión</value></data>
+  <data name="Nav_Tokens"><value>Tokens</value></data>
+  <data name="Tokens_Title"><value>Gestión de tokens USB</value></data>
+  <data name="Tokens_Subtitle"><value>Explore las tarjetas inteligentes / tokens USB conectados, configúrelos y emita certificados.</value></data>
+  <data name="Nav_Organizations"><value>Organizaciones</value></data>
+
+  <data name="Org_Title"><value>Organizaciones</value></data>
+  <data name="Org_Subtitle"><value>Gestione las firmas electrónicas de la organización</value></data>
+  <data name="Org_List_Header"><value>Organizaciones registradas</value></data>
+  <data name="Org_List_Empty"><value>Todavía no está registrado en ninguna organización.</value></data>
+  <data name="Org_Register_Button"><value>Registrar organización</value></data>
+  <data name="Org_Back"><value>Atrás</value></data>
+  <data name="Org_RegNumber"><value>Número de registro de la organización</value></data>
+  <data name="Org_Search"><value>Buscar</value></data>
+  <data name="Org_Expiry_Section"><value>Ventana de firma</value></data>
+  <data name="Org_Expiry_Now"><value>Ahora (5 min)</value></data>
+  <data name="Org_Expiry_3Days"><value>En 3 días</value></data>
+  <data name="Org_Expiry_7Days"><value>En 7 días</value></data>
+  <data name="Org_Expiry_30Days"><value>En 30 días</value></data>
+  <data name="Org_Verification"><value>CÓDIGO DE VERIFICACIÓN</value></data>
+  <data name="Org_Waiting"><value>Esperando…</value></data>
+  <data name="Org_Cancel"><value>Cancelar</value></data>
+  <data name="Org_Continue"><value>Continuar</value></data>
+  <data name="Org_Members_Section"><value>Miembros</value></data>
+  <data name="Org_AddMember"><value>Añadir miembro</value></data>
+  <data name="Org_AddMember_Submit"><value>Añadir</value></data>
+  <data name="Org_RemoveMember"><value>Quitar</value></data>
+  <data name="Org_RemoveMember_Confirm"><value>¿Quitar al miembro?</value></data>
+  <data name="Org_Role_Signer"><value>Firmante</value></data>
+  <data name="Org_Role_Admin"><value>Administrador</value></data>
+  <data name="Org_Member_Active"><value>Activo</value></data>
+  <data name="Org_Member_Pending"><value>Pendiente</value></data>
+  <data name="Org_Status_Active"><value>Activo</value></data>
+  <data name="Org_Status_Pending"><value>Pendiente</value></data>
+  <data name="Org_Status_Suspended"><value>Suspendido</value></data>
+  <data name="Org_Status_Removed"><value>Eliminado</value></data>
+  <data name="Org_Status_Unknown"><value>Desconocido</value></data>
+  <data name="Org_EnglishName"><value>Nombre en inglés</value></data>
+  <data name="Org_EnglishName_Unset"><value>Sin definir</value></data>
+  <data name="Org_Edit"><value>Editar</value></data>
+  <data name="Org_Save"><value>Guardar</value></data>
+  <data name="Org_LookupCard_Type"><value>Tipo</value></data>
+  <data name="Org_LookupCard_Ceo"><value>Director ejecutivo</value></data>
+  <data name="Org_LookupCard_Phone"><value>Teléfono</value></data>
+  <data name="Org_Error_Generic"><value>Se produjo un error.</value></data>
+  <data name="Org_Error_RegNumberTooShort"><value>El número de registro es demasiado corto.</value></data>
+  <data name="Org_Error_NotFound"><value>No se encontró ninguna organización con ese número de registro.</value></data>
+  <data name="Org_Error_NotCeo"><value>Usted no es el director ejecutivo de esta organización.</value></data>
+  <data name="Org_Error_AlreadyRegistered"><value>Esta organización ya está registrada.</value></data>
+  <data name="Org_Error_ExpiryCap"><value>La ventana seleccionada supera el límite permitido.</value></data>
+  <data name="Org_Error_XypUnavailable"><value>La pasarela del registro estatal no está disponible temporalmente.</value></data>
+  <data name="Org_Error_NotImplemented"><value>Esta función aún no está implementada.</value></data>
+  <data name="Org_Error_SelectExpiry"><value>Seleccione una ventana de validez.</value></data>
+  <data name="Org_Error_SignTimeout"><value>La sesión ha caducado.</value></data>
+
+  <data name="Home_Title"><value>Gerege Nexus — identidad electrónica de Mongolia</value></data>
+  <data name="Home_Subtitle"><value>Firma digital remota, inicio de sesión y verificación de certificados.</value></data>
+  <data name="Home_Backend_Title"><value>Estado del servidor</value></data>
+  <data name="Home_Backend_Version"><value>Versión</value></data>
+  <data name="Home_Backend_LastChecked"><value>Última comprobación</value></data>
+  <data name="Home_Backend_Refresh"><value>Actualizar</value></data>
+  <data name="Home_Status_Unknown"><value>Desconocido</value></data>
+  <data name="Home_Status_Checking"><value>Comprobando…</value></data>
+  <data name="Home_Status_Healthy"><value>Conectado</value></data>
+  <data name="Home_Status_Degraded"><value>Algunos servicios no funcionan</value></data>
+  <data name="Home_Status_Unreachable"><value>Servidor inaccesible</value></data>
+
+  <data name="Verify_Title"><value>Verificar certificado</value></data>
+  <data name="Verify_Subtitle"><value>Suelte un certificado X.509 (PEM o DER) o péguelo como texto para inspeccionarlo.</value></data>
+  <data name="Verify_DropZone_Hint"><value>Suelte aquí un archivo PEM/CER/CRT o pulse el botón para elegir uno.</value></data>
+  <data name="Verify_Paste_Hint"><value>…o pegue el PEM:</value></data>
+  <data name="Verify_PickFile"><value>Elegir archivo</value></data>
+  <data name="Verify_Parse"><value>Analizar el texto</value></data>
+  <data name="Verify_Clear"><value>Borrar</value></data>
+  <data name="Verify_Section_Identity"><value>Sujeto y emisor</value></data>
+  <data name="Verify_Section_Validity"><value>Periodo de validez</value></data>
+  <data name="Verify_Section_Crypto"><value>Criptografía</value></data>
+  <data name="Verify_Section_Fingerprints"><value>Huellas</value></data>
+  <data name="Verify_Section_KeyUsage"><value>Uso de la clave</value></data>
+  <data name="Verify_Section_San"><value>SAN: nombres alternativos del sujeto</value></data>
+  <data name="Verify_Field_Subject"><value>Sujeto</value></data>
+  <data name="Verify_Field_Issuer"><value>Emisor</value></data>
+  <data name="Verify_Field_Serial"><value>Número de serie</value></data>
+  <data name="Verify_Field_NotBefore"><value>Válido desde</value></data>
+  <data name="Verify_Field_NotAfter"><value>Válido hasta</value></data>
+  <data name="Verify_Field_SignatureAlgorithm"><value>Algoritmo de firma</value></data>
+  <data name="Verify_Field_PublicKey"><value>Clave pública</value></data>
+  <data name="Verify_Field_SpkiSha256"><value>SPKI SHA-256</value></data>
+  <data name="Verify_Field_Sha1"><value>SHA-1</value></data>
+  <data name="Verify_Field_Sha256"><value>SHA-256</value></data>
+  <data name="Verify_Validity_Valid"><value>Válido</value></data>
+  <data name="Verify_Validity_Expired"><value>Caducado</value></data>
+  <data name="Verify_Validity_NotYetValid"><value>Aún no válido</value></data>
+  <data name="Verify_Error_EmptyInput"><value>La entrada está vacía.</value></data>
+
+  <data name="Login_Title"><value>Iniciar sesión</value></data>
+  <data name="Login_Subtitle"><value>Inicie sesión con la aplicación e-ID Mongolia</value></data>
+  <data name="Login_NationalId"><value>Documento nacional de identidad</value></data>
+  <data name="Login_NationalId_Placeholder"><value>AA00000000</value></data>
+  <data name="Login_NationalId_Hint"><value>Ejemplo: AA00000000 (letras cirílicas + 8 dígitos)</value></data>
+  <data name="Login_VerificationCode"><value>CÓDIGO DE VERIFICACIÓN</value></data>
+  <data name="Login_Waiting_Title"><value>Abra la aplicación e-ID Mongolia</value></data>
+  <data name="Login_Waiting_Subtitle"><value>Ha llegado una solicitud de inicio de sesión a la aplicación e-ID Mongolia de su teléfono</value></data>
+  <data name="Login_Waiting_Countdown"><value>Esperando…</value></data>
+  <data name="Login_Initiate"><value>Iniciar sesión</value></data>
+  <data name="Login_Initiate_Loading"><value>Leyendo…</value></data>
+  <data name="Login_Cancel"><value>Cancelar</value></data>
+  <data name="Login_TryAgain"><value>Reintentar</value></data>
+  <data name="Login_SignOut"><value>Cerrar sesión</value></data>
+  <data name="Login_Success_Title"><value>¡Correcto!</value></data>
+  <data name="Login_Success_Subtitle"><value>Redirigiendo…</value></data>
+  <data name="Login_Footer_NewAccount"><value>Crear una cuenta nueva</value></data>
+  <data name="Login_Footer_Help"><value>¿Necesita ayuda?</value></data>
+  <data name="Login_Error_NationalIdRequired"><value>El documento nacional de identidad es obligatorio.</value></data>
+  <data name="Login_Error_UserNotFound"><value>No hay ninguna cuenta registrada con ese documento nacional.</value></data>
+  <data name="Login_Error_Generic"><value>Se produjo un error</value></data>
+  <data name="Login_Error_Timeout"><value>La sesión ha caducado</value></data>
+  <data name="Login_Error_Declined"><value>Rechazado en el teléfono</value></data>
+  <data name="Login_Error_VerifyFailed"><value>Falló la verificación</value></data>
+  <data name="Login_Error_Backend"><value>Servidor inaccesible. Inicie el servidor e inténtelo de nuevo.</value></data>
+  <data name="Login_Error_EndpointMissing"><value>Este endpoint del servidor aún no está activo. Use la pestaña «Código QR».</value></data>
+  <data name="Login_Tab_NationalId"><value>Documento nacional</value></data>
+  <data name="Login_Tab_Qr"><value>Código QR</value></data>
+  <data name="Login_Tab_Token"><value>Token USB</value></data>
+  <data name="Login_Qr_Hint"><value>Escanee este código QR con la aplicación e-ID Mongolia.</value></data>
+  <data name="Login_Qr_Start"><value>Generar QR</value></data>
+  <data name="Login_Result_NationalId"><value>Documento nacional de identidad</value></data>
+  <data name="Login_Result_KycLevel"><value>Nivel KYC</value></data>
+  <data name="Login_Token_Section"><value>Tokens detectados</value></data>
+  <data name="Login_Token_Empty"><value>No se encontró ningún token USB. Conecte su token y actualice.</value></data>
+  <data name="Login_Token_Scan"><value>Actualizar</value></data>
+  <data name="Login_Token_Pin"><value>PIN del token</value></data>
+  <data name="Login_Token_PinPlaceholder"><value>Introduzca su PIN</value></data>
+  <data name="Login_Token_SignIn"><value>Iniciar sesión con el token</value></data>
+  <data name="Login_Token_Status_Opening"><value>Abriendo sesión con el token…</value></data>
+  <data name="Login_Token_Status_Reading"><value>Leyendo el certificado del token…</value></data>
+  <data name="Login_Token_Status_Challenge"><value>Solicitando el desafío al servidor…</value></data>
+  <data name="Login_Token_Status_Signing"><value>Firmando… (Windows puede mostrar un diálogo de PIN)</value></data>
+  <data name="Login_Token_Status_Verifying"><value>El servidor está verificando la firma…</value></data>
+  <data name="Login_Token_Error_NoKeyOrCert"><value>Este token no tiene clave de firma ni certificado disponibles.</value></data>
+
+  <data name="Dashboard_Title"><value>Panel</value></data>
+  <data name="Dashboard_Subtitle"><value>Su panel de información de e-ID.</value></data>
+  <data name="Dashboard_Greeting"><value>Bienvenido,</value></data>
+  <data name="Dashboard_StatusBadge"><value>Sistema operativo</value></data>
+  <data name="Dashboard_Stats_SecurityScore"><value>Puntuación de seguridad</value></data>
+  <data name="Dashboard_Stats_Certificates"><value>Elementos verificados</value></data>
+  <data name="Dashboard_Stats_Logins"><value>Inicios de sesión totales</value></data>
+  <data name="Dashboard_Stats_LastLogin"><value>Último inicio de sesión</value></data>
+  <data name="Dashboard_Devices_Section"><value>Dispositivos de confianza</value></data>
+  <data name="Dashboard_Devices_Empty"><value>Todavía no hay dispositivos registrados.</value></data>
+  <data name="Dashboard_Device_Active"><value>Activo</value></data>
+  <data name="Dashboard_Device_Inactive"><value>Inactivo</value></data>
+  <data name="Dashboard_Activity_Section"><value>Registro de auditoría</value></data>
+  <data name="Dashboard_Activity_Empty"><value>El historial de actividad está vacío.</value></data>
+  <data name="Dashboard_Activity_Auth"><value>Inicio de sesión</value></data>
+  <data name="Dashboard_Activity_Sign"><value>Firma</value></data>
+  <data name="Dashboard_Activity_Success"><value>Correcto</value></data>
+  <data name="Dashboard_Activity_Failure"><value>Denegado</value></data>
+  <data name="Dashboard_Refresh"><value>Actualizar</value></data>
+  <data name="Dashboard_Loading"><value>Cargando…</value></data>
+  <data name="Dashboard_Error_Generic"><value>No se pudo cargar el panel.</value></data>
+
+  <data name="Settings_Title"><value>Ajustes</value></data>
+  <data name="Settings_Theme"><value>Tema</value></data>
+  <data name="Settings_Theme_System"><value>Sistema</value></data>
+  <data name="Settings_Theme_Light"><value>Claro</value></data>
+  <data name="Settings_Theme_Dark"><value>Oscuro</value></data>
+  <data name="Settings_Language"><value>Idioma</value></data>
+  <data name="Settings_Version"><value>Versión</value></data>
+
+  <data name="Common_Back"><value>Atrás</value></data>
+  <data name="Common_Loading"><value>Cargando…</value></data>
+  <data name="Common_Cancel"><value>Cancelar</value></data>
+  <data name="Common_Save"><value>Guardar</value></data>
+  <data name="Common_OK"><value>OK</value></data>
+  <data name="Settings_Tokens_Title"><value>Token criptográfico (USB / tarjeta inteligente)</value></data>
+  <data name="Settings_Tokens_Refresh"><value>Escanear</value></data>
+  <data name="Settings_Tokens_Empty"><value>No se encontraron tokens conectados.</value></data>
+  <data name="Settings_Tokens_Scanning"><value>Escaneando…</value></data>
+  <data name="Settings_Tokens_Provider"><value>Backend</value></data>
+  <data name="Settings_Token_NoProvider"><value>No hay backend de token activo en este equipo</value></data>
+  <data name="Token_Detail_Title"><value>Detalles del token</value></data>
+  <data name="Token_Back"><value>Volver a Ajustes</value></data>
+  <data name="Token_Field_Backend"><value>Backend</value></data>
+  <data name="Token_Field_Serial"><value>Número de serie</value></data>
+  <data name="Token_Section_Pin"><value>Desbloqueo con PIN</value></data>
+  <data name="Token_Pin_Placeholder"><value>PIN de usuario</value></data>
+  <data name="Token_Unlock"><value>Desbloquear</value></data>
+  <data name="Token_Section_Objects"><value>Objetos del token</value></data>
+  <data name="Token_Loading_Objects"><value>Cargando objetos…</value></data>
+  <data name="Token_Empty_Objects"><value>No se encontraron objetos en este token.</value></data>
+  <data name="Token_Section_SignTest"><value>Prueba de firma</value></data>
+  <data name="Token_SignTest_Data"><value>Datos que firmar</value></data>
+  <data name="Token_SignTest_Run"><value>Firmar</value></data>
+  <data name="Token_SignTest_Result"><value>Firma (hex)</value></data>
+  <data name="Token_ReadCert"><value>Leer el certificado</value></data>
+  <data name="Token_Hint_Cng"><value>Windows muestra el diálogo de PIN automáticamente. Pulse Firmar abajo para probar la clave.</value></data>
+  <data name="Token_Section_Enroll"><value>Configuración para el inicio de sesión (emitir certificado en la AC)</value></data>
+  <data name="Token_Enroll_Hint"><value>Use la clave de este token para crear una CSR y solicitar un certificado vinculado al ciudadano a la AC emisora de e-ID Mongolia. Tras la emisión, este token permitirá iniciar sesión directamente. REQUISITO: debe haber iniciado sesión con QR o documento nacional antes de emitirlo.</value></data>
+  <data name="Token_Enroll_Run"><value>Emitir certificado para este token en la AC</value></data>
+  <data name="Token_Enroll_Status_BuildingCsr"><value>Creando la CSR… (puede aparecer el diálogo de PIN)</value></data>
+  <data name="Token_Enroll_Status_Submitting"><value>Enviando la CSR al servidor…</value></data>
+  <data name="Token_Enroll_Status_Installing"><value>Instalando el certificado en el almacén de Windows…</value></data>
+  <data name="Token_Enroll_Status_Done"><value>✅ Token emitido. Ya puede iniciar sesión desde la pestaña Token USB.</value></data>
+  <data name="Token_Enroll_Error_NotLoggedIn"><value>Debe iniciar sesión (QR o documento nacional) antes de emitir un token.</value></data>
+  <data name="Token_Enroll_Error_NoKey"><value>No se encontró clave de firma en este token.</value></data>
+  <data name="Token_Enroll_Error_BadPem"><value>El servidor devolvió un PEM de certificado ilegible.</value></data>
+  <data name="Token_Status_Enrolled"><value>Token totalmente emitido</value></data>
+  <data name="Token_State_Blank"><value>En blanco: se requiere configuración inicial</value></data>
+  <data name="Token_State_Initialized"><value>PIN de SO configurado: ahora defina el PIN de usuario</value></data>
+  <data name="Token_State_Provisioned"><value>Aprovisionado: emita el certificado en la AC</value></data>
+  <data name="Token_State_Enrolled"><value>Emitido: listo para iniciar sesión</value></data>
+  <data name="Token_State_Unknown"><value>Estado desconocido</value></data>
+  <data name="Token_Cap_SoPinSet"><value>PIN de SO ✓</value></data>
+  <data name="Token_Cap_SoPinUnset"><value>PIN de SO ✗</value></data>
+  <data name="Token_Cap_UserPinSet"><value>PIN de usuario ✓</value></data>
+  <data name="Token_Cap_UserPinUnset"><value>PIN de usuario ✗</value></data>
+  <data name="Token_Cap_Biometric"><value>Sensor de huella</value></data>
+  <data name="Token_Cap_ProtectedAuth"><value>Introducción de PIN protegida</value></data>
+  <data name="Token_Pin_StatusLow"><value>⚠ PIN: quedan pocos intentos</value></data>
+  <data name="Token_Pin_StatusFinalTry"><value>⚠ PIN: último intento</value></data>
+  <data name="Token_Pin_StatusLocked"><value>🔒 PIN bloqueado</value></data>
+  <data name="Token_Memory_Prefix"><value>Memoria</value></data>
+  <data name="Token_Import_Button"><value>Importar certificado…</value></data>
+  <data name="Token_Import_Installing"><value>Instalando el certificado y vinculándolo a la clave de la tarjeta…</value></data>
+  <data name="Token_Import_Done"><value>✅ Certificado instalado. Lista de objetos actualizada.</value></data>
+  <data name="Token_Section_Diagnostics"><value>Estado del token</value></data>
+  <data name="Token_Status_Opening"><value>Abriendo el token…</value></data>
+  <data name="Token_Status_Ready_Cng"><value>Listo (Windows gestiona el PIN al firmar)</value></data>
+  <data name="Token_Status_Ready_Pkcs11"><value>Listo: introduzca el PIN para desbloquear</value></data>
+  <data name="Token_Status_Unlocked"><value>Desbloqueado</value></data>
+  <data name="Token_Status_Failed"><value>No se pudo abrir</value></data>
+  <data name="Token_Status_SignOk"><value>Firma correcta</value></data>
+  <data name="Token_Error_PinRequired"><value>El PIN es obligatorio.</value></data>
+  <data name="Token_Error_PinIncorrect"><value>PIN incorrecto.</value></data>
+  <data name="Token_Error_PinLocked"><value>El PIN está bloqueado. Desbloquee primero la tarjeta.</value></data>
+  <data name="Token_Error_NoKeySelected"><value>Seleccione primero una clave.</value></data>
+  <data name="Token_Error_SignDataEmpty"><value>Introduzca datos para firmar.</value></data>
+  <data name="Token_Error_NotLoggedIn"><value>Introduzca primero su PIN.</value></data>
+  <data name="Token_Error_KeyNotFound"><value>No se encontró la clave.</value></data>
+  <data name="Token_Error_NotImplemented"><value>Aún no implementado.</value></data>
+  <data name="Token_Error_Generic"><value>Se produjo un error.</value></data>
+  <data name="Token_View"><value>Ver</value></data>
+
+  <data name="Nav_Sign"><value>Firmar PDF</value></data>
+  <data name="Sign_Title"><value>Firmar un PDF</value></data>
+  <data name="Sign_Subtitle"><value>Elija un PDF y apruebe con el PIN2 en la aplicación e-ID Mongolia de su teléfono para obtener una firma cualificada.</value></data>
+  <data name="Sign_Pick_Title"><value>Elegir un PDF</value></data>
+  <data name="Sign_Pick_Hint"><value>Hasta 25 MB, solo PDF</value></data>
+  <data name="Sign_Pick_Button"><value>Seleccionar archivo</value></data>
+  <data name="Sign_NotSignedIn"><value>Debe iniciar sesión antes de firmar.</value></data>
+  <data name="Sign_Uploading"><value>Subiendo…</value></data>
+  <data name="Sign_VerificationLabel"><value>CÓDIGO DE VERIFICACIÓN</value></data>
+  <data name="Sign_Waiting_Instruction"><value>Compruebe que el mismo código aparece en la aplicación e-ID Mongolia y apruebe con el PIN2.</value></data>
+  <data name="Sign_Waiting_Status"><value>Esperando…</value></data>
+  <data name="Sign_File_Label"><value>Archivo</value></data>
+  <data name="Sign_Cancel"><value>Cancelar</value></data>
+  <data name="Sign_Completed_Title"><value>Firmado correctamente</value></data>
+  <data name="Sign_Completed_Hint"><value>Guarde su PDF firmado.</value></data>
+  <data name="Sign_Save_Button"><value>Guardar</value></data>
+  <data name="Sign_Saved_Notice"><value>Guardado.</value></data>
+  <data name="Sign_NewFile"><value>Archivo nuevo</value></data>
+  <data name="Sign_TryAgain"><value>Reintentar</value></data>
+  <data name="Sign_Error_TooLarge"><value>El archivo supera los 25 MB.</value></data>
+  <data name="Sign_Error_Declined"><value>Se rechazó la firma.</value></data>
+  <data name="Sign_Error_Timeout"><value>La sesión ha caducado. Inténtelo de nuevo.</value></data>
+  <data name="Sign_Error_Network"><value>Error de red. Inténtelo de nuevo.</value></data>
+  <data name="Sign_Error_Generic"><value>Falló la firma.</value></data>
+</root>

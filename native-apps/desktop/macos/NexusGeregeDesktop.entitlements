@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>com.apple.security.network.client</key>
+	<true/>
+	<key>com.apple.security.smartcard</key>
+	<true/>
+	<!-- Required to dlopen the FEITIAN PKCS#11 middleware (libcastle, signed by
+	     team S47T4UESP3) under Hardened Runtime. Library validation would
+	     otherwise reject any dylib not signed by our team (CQTHTD6YJQ) or Apple,
+	     causing "PKCS#11 сан олдсонгүй". Trade-off: re-opens the dylib-injection
+	     vector — partially compensated by SecurityGuard.isInjected(). -->
+	<key>com.apple.security.cs.disable-library-validation</key>
+	<true/>
+	<!-- Apple Passkey (ASAuthorizationPlatformPublicKeyCredentialProvider).
+	     RP scoped to e-id.mn; AASA at /.well-known/apple-app-site-association
+	     already lists CQTHTD6YJQ.mn.eidmongol.desktop in webcredentials.apps.
+	     Re-commented because the Mac Team Provisioning Profile on Apple's
+	     side did not pick up this Mac's UDID after device registration —
+	     `xcodebuild -allowProvisioningUpdates` still fetches the stale
+	     profile. Enable manually via Xcode UI → Signing & Capabilities →
+	     "Try Again" once Apple regenerates the auto-managed profile
+	     (allow 5-30 min after device add), or create a manual profile
+	     in the Developer portal. See desktop-app/macos-app/CLAUDE.md
+	     "Passkey deployment checklist" for the full sequence.
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>webcredentials:e-id.mn</string>
+	</array>
+	-->
+</dict>
+</plist>

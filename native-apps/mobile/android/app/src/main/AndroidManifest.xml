@@ -1,22 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Top bar-ын «Холбогдсон» pill сүлжээний төлөвийг уншина -->
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- Android 11-ээс хойш багцын харагдац хаалттай: энэ блокгүй бол
+         `resolveActivity` нь eID Mongolia аппыг ОЛОХГҮЙ бөгөөд апп «суугаагүй»
+         гэж худал хэлнэ. iOS дээрх `LSApplicationQueriesSchemes`-ийн яг дүйцэл. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="geregesmartid" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="eidmongolia" />
+        </intent>
+    </queries>
+
     <application
         android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher" android:theme="@style/Theme.GeregeNexus" android:label="Gerege Nexus" android:usesCleartextTraffic="true">
-        <receiver android:name=".GeregeDeviceAdminReceiver" android:permission="android.permission.BIND_DEVICE_ADMIN" android:exported="true"><meta-data android:name="android.app.device_admin" android:resource="@xml/device_admin"/><intent-filter><action android:name="android.app.action.DEVICE_ADMIN_ENABLED"/></intent-filter></receiver>
-        <activity android:name=".MainActivity" android:exported="true" android:screenOrientation="unspecified">
+        android:roundIcon="@mipmap/ic_launcher"
+        android:label="@string/App_Name"
+        android:theme="@style/Theme.NexusGerege">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize"
+            android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <intent-filter android:autoVerify="true">
+            <!-- eID апп-аас буцах зам (app-to-app). Session-ий үр дүнг poll-оос
+                 авдаг тул энэ нь зөвхөн аппыг НҮҮР рүү авчирна.
+
+                 `launchMode="singleTop"` нь ЗААВАЛ: анхдагч (standard) горимд
+                 deep link нь ШИНЭ Activity үүсгэж, ажиллаж байсан poll ба
+                 ViewModel хамт алга болно — хүн буцаж ирээд хоосон нэвтрэх
+                 дэлгэц хардаг. singleTop үед байгаа Activity нь дахин
+                 ашиглагдана. -->
+            <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="nexus.gerege.mn" android:pathPrefix="/auth/eid/callback" />
+                <data android:scheme="gerege-nexus" android:host="auth" />
             </intent-filter>
         </activity>
     </application>

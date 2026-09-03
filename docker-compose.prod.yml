@@ -218,6 +218,11 @@ services:
       # Extra hostnames a verification link may return somebody to.
       # PUBLIC_ORIGIN is always allowed without being listed here.
       EMAIL_VERIFY_REDIRECT_HOSTS: ${EMAIL_VERIFY_REDIRECT_HOSTS:-}
+      # Native клиент eID-ээс буцаж ирэх хаяг (жишээ нь gerege-nexus://auth).
+      # Таслалаар, ЯГ таарах утга. Мөн eID Mongolia талын RP-ийн
+      # callback_hosts-д түүний scheme (`gerege-nexus://`)-ийг
+      # бүртгэсэн байх ёстой — эс бөгөөс тэд чимээгүй хаяна.
+      EID_APP_CALLBACKS: ${EID_APP_CALLBACKS:-}
       # How long a session may go unused, on top of its absolute lifetime.
       # 0 turns it off.
       SESSION_IDLE_TIMEOUT: ${SESSION_IDLE_TIMEOUT:-90m}

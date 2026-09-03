@@ -40,4 +40,4 @@ build-mac:
 	cd native-apps/desktop/macos && ./build.sh
 
 run-mac: build-mac
-	native-apps/desktop/macos/GeregeNexusNativeMac
+	open ~/Library/Developer/Xcode/DerivedData/NexusGeregeDesktop-*/Build/Products/Debug/NexusGeregeDesktop.app

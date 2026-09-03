@@ -1,0 +1,30 @@
+<!-- Аппын өөрийн мөрүүд (ҮҮСГЭГДДЭГГҮЙ) — ширээний каталогт байхгүй,
+     зөвхөн гар дээрх урсгалд хэрэгтэй болсон мөрүүд. -->
+<resources>
+    <string name="Login_AppToApp">Se connecter avec l\'application eID</string>
+    <string name="Login_Push">Envoyer une notification par numéro d\'enregistrement</string>
+    <string name="Login_OtherDevice">Approuver sur un autre appareil</string>
+    <string name="Login_Error_Failed">La vérification a échoué.</string>
+    <string name="Login_Error_Expired">La demande a expiré. Réessayez.</string>
+    <string name="Login_Error_Refused">La demande a été refusée sur le téléphone.</string>
+    <string name="Login_Error_AppMissing">Application eID Mongolia introuvable. Envoyez une notification par numéro d\'enregistrement.</string>
+    <string name="Read_Only_Hint">Lecture seule — les modifications se font dans l\'application eID Mongolia (PIN2).</string>
+    <string name="Settings_Server">Serveur</string>
+    <string name="Settings_About">À propos</string>
+    <string name="App_VersionLabel">Version</string>
+    <string name="Settings_Host">Hôte connecté</string>
+    <string name="Logs_Subtitle">Connexions sur cet appareil</string>
+    <string name="Id_Subtitle">Votre profil e-ID unifié</string>
+    <string name="Id_RegNumber">Numéro d\'enregistrement</string>
+    <string name="Id_CivilId">Identifiant civil</string>
+    <string name="Id_DocNumber">Numéro de série du certificat</string>
+    <string name="Id_Level">Niveau</string>
+    <string name="Common_Active">Actif</string>
+    <string name="Common_Registered">Enregistré</string>
+    <string name="Common_Pending">En attente</string>
+    <string name="Login_AppToApp_Hint">L\'application eID Mongolia s\'ouvre et demande votre approbation. Vous reviendrez ici après approbation.</string>
+    <string name="Login_SecurityFooter">eID Mongolia · sécurisé par X-Road</string>
+    <string name="Common_Valid">valide</string>
+    <string name="Common_TooShort">trop court</string>
+    <string name="Id_Certificate">Certificat</string>
+</resources>

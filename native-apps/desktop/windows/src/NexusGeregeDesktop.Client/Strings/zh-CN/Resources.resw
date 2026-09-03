@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+
+  <data name="App_Title"><value>Gerege Nexus</value></data>
+  <data name="App_Tagline"><value>数字主权</value></data>
+  <data name="App_Wordmark_Top"><value>国家身份</value></data>
+
+  <data name="Nav_Home"><value>首页</value></data>
+  <data name="Nav_Platform"><value>平台</value></data>
+  <data name="Dashboard_Wordmark"><value>GEREGE NEXUS</value></data>
+  <data name="Nav_Verify"><value>验证证书</value></data>
+  <data name="Nav_Login"><value>登录</value></data>
+  <data name="Nav_Dashboard"><value>控制台</value></data>
+  <data name="Nav_Settings"><value>设置</value></data>
+  <data name="Nav_Logout"><value>退出登录</value></data>
+  <data name="Nav_Tokens"><value>令牌</value></data>
+
+  <data name="Tokens_Title"><value>USB 令牌管理</value></data>
+  <data name="Tokens_Subtitle"><value>查看已连接的智能卡 / USB 令牌，进行配置并签发证书。</value></data>
+
+  <data name="Nav_Organizations"><value>组织机构</value></data>
+
+  <data name="Org_Title"><value>组织机构</value></data>
+  <data name="Org_Subtitle"><value>管理组织的数字签名</value></data>
+  <data name="Org_List_Header"><value>已注册的组织</value></data>
+  <data name="Org_List_Empty"><value>您尚未在任何组织中注册。</value></data>
+  <data name="Org_Register_Button"><value>注册组织</value></data>
+  <data name="Org_Back"><value>返回</value></data>
+  <data name="Org_RegNumber"><value>组织登记号</value></data>
+  <data name="Org_Search"><value>搜索</value></data>
+  <data name="Org_Expiry_Section"><value>签名有效期</value></data>
+  <data name="Org_Expiry_Now"><value>立即（5 分钟）</value></data>
+  <data name="Org_Expiry_3Days"><value>3 天内</value></data>
+  <data name="Org_Expiry_7Days"><value>7 天内</value></data>
+  <data name="Org_Expiry_30Days"><value>30 天内</value></data>
+  <data name="Org_Verification"><value>验证码</value></data>
+  <data name="Org_Waiting"><value>等待中...</value></data>
+  <data name="Org_Cancel"><value>取消</value></data>
+  <data name="Org_Continue"><value>继续</value></data>
+  <data name="Org_Members_Section"><value>成员</value></data>
+  <data name="Org_AddMember"><value>添加成员</value></data>
+  <data name="Org_AddMember_Submit"><value>添加</value></data>
+  <data name="Org_RemoveMember"><value>移除</value></data>
+  <data name="Org_RemoveMember_Confirm"><value>确定移除该成员？</value></data>
+  <data name="Org_Role_Signer"><value>签署人</value></data>
+  <data name="Org_Role_Admin"><value>管理员</value></data>
+  <data name="Org_Member_Active"><value>在用</value></data>
+  <data name="Org_Member_Pending"><value>待处理</value></data>
+  <data name="Org_Status_Active"><value>有效</value></data>
+  <data name="Org_Status_Pending"><value>待处理</value></data>
+  <data name="Org_Status_Suspended"><value>已暂停</value></data>
+  <data name="Org_Status_Removed"><value>已移除</value></data>
+  <data name="Org_Status_Unknown"><value>未知</value></data>
+  <data name="Org_EnglishName"><value>英文名称</value></data>
+  <data name="Org_EnglishName_Unset"><value>未设置</value></data>
+  <data name="Org_Edit"><value>编辑</value></data>
+  <data name="Org_Save"><value>保存</value></data>
+  <data name="Org_LookupCard_Type"><value>类型</value></data>
+  <data name="Org_LookupCard_Ceo"><value>法定代表人</value></data>
+  <data name="Org_LookupCard_Phone"><value>电话</value></data>
+  <data name="Org_Error_Generic"><value>发生错误。</value></data>
+  <data name="Org_Error_RegNumberTooShort"><value>登记号过短。</value></data>
+  <data name="Org_Error_NotFound"><value>未找到该登记号对应的组织。</value></data>
+  <data name="Org_Error_NotCeo"><value>您不是该组织的法定代表人。</value></data>
+  <data name="Org_Error_AlreadyRegistered"><value>该组织已注册。</value></data>
+  <data name="Org_Error_ExpiryCap"><value>所选有效期超出允许上限。</value></data>
+  <data name="Org_Error_XypUnavailable"><value>国家登记网关暂时不可用。</value></data>
+  <data name="Org_Error_NotImplemented"><value>该功能尚未实现。</value></data>
+  <data name="Org_Error_SelectExpiry"><value>请选择有效期。</value></data>
+  <data name="Org_Error_SignTimeout"><value>会话已超时。</value></data>
+
+  <data name="Home_Title"><value>Gerege Nexus —— 蒙古国电子身份证</value></data>
+  <data name="Home_Subtitle"><value>远程数字签名、登录与证书验证。</value></data>
+  <data name="Home_Backend_Title"><value>后端状态</value></data>
+  <data name="Home_Backend_Version"><value>版本</value></data>
+  <data name="Home_Backend_LastChecked"><value>最近检查</value></data>
+  <data name="Home_Backend_Refresh"><value>刷新</value></data>
+  <data name="Home_Status_Unknown"><value>未知</value></data>
+  <data name="Home_Status_Checking"><value>检查中…</value></data>
+  <data name="Home_Status_Healthy"><value>已连接</value></data>
+  <data name="Home_Status_Degraded"><value>部分服务异常</value></data>
+  <data name="Home_Status_Unreachable"><value>无法连接后端</value></data>
+
+  <data name="Verify_Title"><value>验证证书</value></data>
+  <data name="Verify_Subtitle"><value>拖入 PEM 或 DER 格式的 X.509 证书，或以文本形式粘贴以查看详情。</value></data>
+  <data name="Verify_DropZone_Hint"><value>将 PEM/CER/CRT 文件拖到此处 —— 或点击按钮选择文件。</value></data>
+  <data name="Verify_Paste_Hint"><value>…或粘贴 PEM：</value></data>
+  <data name="Verify_PickFile"><value>选择文件</value></data>
+  <data name="Verify_Parse"><value>解析文本</value></data>
+  <data name="Verify_Clear"><value>清除</value></data>
+  <data name="Verify_Section_Identity"><value>持有者与颁发者</value></data>
+  <data name="Verify_Section_Validity"><value>有效期</value></data>
+  <data name="Verify_Section_Crypto"><value>密码学</value></data>
+  <data name="Verify_Section_Fingerprints"><value>指纹</value></data>
+  <data name="Verify_Section_KeyUsage"><value>密钥用途</value></data>
+  <data name="Verify_Section_San"><value>SAN —— 主体备用名称</value></data>
+  <data name="Verify_Field_Subject"><value>持有者</value></data>
+  <data name="Verify_Field_Issuer"><value>颁发者</value></data>
+  <data name="Verify_Field_Serial"><value>序列号</value></data>
+  <data name="Verify_Field_NotBefore"><value>生效日期</value></data>
+  <data name="Verify_Field_NotAfter"><value>失效日期</value></data>
+  <data name="Verify_Field_SignatureAlgorithm"><value>签名算法</value></data>
+  <data name="Verify_Field_PublicKey"><value>公钥</value></data>
+  <data name="Verify_Field_SpkiSha256"><value>SPKI SHA-256</value></data>
+  <data name="Verify_Field_Sha1"><value>SHA-1</value></data>
+  <data name="Verify_Field_Sha256"><value>SHA-256</value></data>
+  <data name="Verify_Validity_Valid"><value>有效</value></data>
+  <data name="Verify_Validity_Expired"><value>已过期</value></data>
+  <data name="Verify_Validity_NotYetValid"><value>尚未生效</value></data>
+  <data name="Verify_Error_EmptyInput"><value>输入内容为空。</value></data>
+
+  <data name="Login_Title"><value>登录</value></data>
+  <data name="Login_Subtitle"><value>使用 e-ID Mongolia 应用登录</value></data>
+  <data name="Login_NationalId"><value>登记号</value></data>
+  <data name="Login_NationalId_Placeholder"><value>AA00000000</value></data>
+  <data name="Login_NationalId_Hint"><value>示例：AA00000000（西里尔字母 + 8 位数字）</value></data>
+  <data name="Login_VerificationCode"><value>验证码</value></data>
+  <data name="Login_Waiting_Title"><value>请打开 e-ID Mongolia 应用</value></data>
+  <data name="Login_Waiting_Subtitle"><value>登录请求已发送至您手机上的 e-ID Mongolia 应用</value></data>
+  <data name="Login_Waiting_Countdown"><value>等待中...</value></data>
+  <data name="Login_Initiate"><value>登录</value></data>
+  <data name="Login_Initiate_Loading"><value>读取中...</value></data>
+  <data name="Login_Cancel"><value>取消</value></data>
+  <data name="Login_TryAgain"><value>重试</value></data>
+  <data name="Login_SignOut"><value>退出登录</value></data>
+  <data name="Login_Success_Title"><value>成功！</value></data>
+  <data name="Login_Success_Subtitle"><value>正在跳转...</value></data>
+  <data name="Login_Footer_NewAccount"><value>创建新账户</value></data>
+  <data name="Login_Footer_Help"><value>需要帮助？</value></data>
+  <data name="Login_Error_NationalIdRequired"><value>请填写登记号。</value></data>
+  <data name="Login_Error_UserNotFound"><value>未找到使用该登记号注册的账户。</value></data>
+  <data name="Login_Error_Generic"><value>发生错误</value></data>
+  <data name="Login_Error_Timeout"><value>会话已超时</value></data>
+  <data name="Login_Error_Declined"><value>用户已在手机上拒绝</value></data>
+  <data name="Login_Error_VerifyFailed"><value>验证失败</value></data>
+  <data name="Login_Error_Backend"><value>无法连接后端。请启动服务器后重试。</value></data>
+  <data name="Login_Error_EndpointMissing"><value>该服务器接口尚未启用，请改用“二维码”选项卡。</value></data>
+  <data name="Login_Tab_NationalId"><value>登记号</value></data>
+  <data name="Login_Tab_Qr"><value>二维码</value></data>
+  <data name="Login_Tab_Token"><value>USB 令牌</value></data>
+  <data name="Login_Qr_Hint"><value>请使用 e-ID Mongolia 应用扫描此二维码。</value></data>
+  <data name="Login_Qr_Start"><value>生成二维码</value></data>
+  <data name="Login_Result_NationalId"><value>登记号</value></data>
+  <data name="Login_Result_KycLevel"><value>KYC 等级</value></data>
+  <data name="Login_Token_Section"><value>已检测到的令牌</value></data>
+  <data name="Login_Token_Empty"><value>未找到 USB 令牌。请插入令牌后刷新。</value></data>
+  <data name="Login_Token_Scan"><value>刷新</value></data>
+  <data name="Login_Token_Pin"><value>令牌 PIN</value></data>
+  <data name="Login_Token_PinPlaceholder"><value>请输入 PIN</value></data>
+  <data name="Login_Token_SignIn"><value>使用令牌登录</value></data>
+  <data name="Login_Token_Status_Opening"><value>正在与令牌建立会话...</value></data>
+  <data name="Login_Token_Status_Reading"><value>正在从令牌读取证书...</value></data>
+  <data name="Login_Token_Status_Challenge"><value>正在向服务器请求挑战码...</value></data>
+  <data name="Login_Token_Status_Signing"><value>正在签名...（Windows 可能弹出 PIN 对话框）</value></data>
+  <data name="Login_Token_Status_Verifying"><value>服务器正在校验签名...</value></data>
+  <data name="Login_Token_Error_NoKeyOrCert"><value>该令牌上没有可用的签名密钥或证书。</value></data>
+
+  <data name="Dashboard_Title"><value>控制台</value></data>
+  <data name="Dashboard_Subtitle"><value>您的 e-ID 信息概览。</value></data>
+  <data name="Dashboard_Greeting"><value>欢迎，</value></data>
+  <data name="Dashboard_StatusBadge"><value>系统运行正常</value></data>
+  <data name="Dashboard_Stats_SecurityScore"><value>安全评分</value></data>
+  <data name="Dashboard_Stats_Certificates"><value>已验证资产</value></data>
+  <data name="Dashboard_Stats_Logins"><value>登录总次数</value></data>
+  <data name="Dashboard_Stats_LastLogin"><value>最近登录</value></data>
+  <data name="Dashboard_Devices_Section"><value>受信任设备</value></data>
+  <data name="Dashboard_Devices_Empty"><value>尚无已注册的设备。</value></data>
+  <data name="Dashboard_Device_Active"><value>在用</value></data>
+  <data name="Dashboard_Device_Inactive"><value>未在用</value></data>
+  <data name="Dashboard_Activity_Section"><value>审计日志</value></data>
+  <data name="Dashboard_Activity_Empty"><value>活动记录为空。</value></data>
+  <data name="Dashboard_Activity_Auth"><value>登录</value></data>
+  <data name="Dashboard_Activity_Sign"><value>签名</value></data>
+  <data name="Dashboard_Activity_Success"><value>成功</value></data>
+  <data name="Dashboard_Activity_Failure"><value>已拒绝</value></data>
+  <data name="Dashboard_Refresh"><value>刷新</value></data>
+  <data name="Dashboard_Loading"><value>加载中...</value></data>
+  <data name="Dashboard_Error_Generic"><value>控制台加载失败。</value></data>
+
+  <data name="Settings_Title"><value>设置</value></data>
+  <data name="Settings_Theme"><value>主题</value></data>
+  <data name="Settings_Theme_System"><value>跟随系统</value></data>
+  <data name="Settings_Theme_Light"><value>浅色</value></data>
+  <data name="Settings_Theme_Dark"><value>深色</value></data>
+  <data name="Settings_Language"><value>语言</value></data>
+  <data name="Settings_Version"><value>版本</value></data>
+
+  <data name="Common_Back"><value>返回</value></data>
+  <data name="Common_Loading"><value>加载中…</value></data>
+  <data name="Common_Cancel"><value>取消</value></data>
+  <data name="Common_Save"><value>保存</value></data>
+  <data name="Common_OK"><value>好</value></data>
+
+  <data name="Settings_Tokens_Title"><value>加密令牌（USB / 智能卡）</value></data>
+  <data name="Settings_Tokens_Refresh"><value>扫描</value></data>
+  <data name="Settings_Tokens_Empty"><value>未找到已连接的令牌。</value></data>
+  <data name="Settings_Tokens_Scanning"><value>扫描中...</value></data>
+  <data name="Settings_Tokens_Provider"><value>后端</value></data>
+  <data name="Settings_Token_NoProvider"><value>本机没有可用的令牌后端</value></data>
+
+  <data name="Token_Detail_Title"><value>令牌详情</value></data>
+  <data name="Token_Back"><value>返回设置</value></data>
+  <data name="Token_Field_Backend"><value>后端</value></data>
+  <data name="Token_Field_Serial"><value>序列号</value></data>
+  <data name="Token_Section_Pin"><value>PIN 解锁</value></data>
+  <data name="Token_Pin_Placeholder"><value>用户 PIN</value></data>
+  <data name="Token_Unlock"><value>解锁</value></data>
+  <data name="Token_Section_Objects"><value>令牌对象</value></data>
+  <data name="Token_Loading_Objects"><value>正在加载对象...</value></data>
+  <data name="Token_Empty_Objects"><value>该令牌上未找到任何对象。</value></data>
+  <data name="Token_Section_SignTest"><value>签名测试</value></data>
+  <data name="Token_SignTest_Data"><value>待签名数据</value></data>
+  <data name="Token_SignTest_Run"><value>签名</value></data>
+  <data name="Token_SignTest_Result"><value>签名（十六进制）</value></data>
+  <data name="Token_ReadCert"><value>读取证书</value></data>
+  <data name="Token_Hint_Cng"><value>Windows 会自动弹出 PIN 对话框。点击下方“签名”以测试密钥。</value></data>
+  <data name="Token_Section_Enroll"><value>登录配置（通过 CA 签发证书）</value></data>
+  <data name="Token_Enroll_Hint"><value>使用该令牌上的密钥生成 CSR，并向 e-ID Mongolia 签发 CA 申请与公民绑定的证书。签发完成后，即可直接使用该令牌登录。前提条件：在签发之前，您必须已通过二维码或登记号完成登录。</value></data>
+  <data name="Token_Enroll_Run"><value>为该令牌向 CA 申请证书</value></data>
+  <data name="Token_Enroll_Status_BuildingCsr"><value>正在生成 CSR...（可能弹出 PIN 对话框）</value></data>
+  <data name="Token_Enroll_Status_Submitting"><value>正在向服务器提交 CSR...</value></data>
+  <data name="Token_Enroll_Status_Installing"><value>正在将证书安装到 Windows 存储...</value></data>
+  <data name="Token_Enroll_Status_Done"><value>✅ 令牌已完成签发。现在可使用“USB 令牌”选项卡登录。</value></data>
+  <data name="Token_Enroll_Error_NotLoggedIn"><value>在为令牌签发证书之前，您必须先登录（二维码或登记号）。</value></data>
+  <data name="Token_Enroll_Error_NoKey"><value>该令牌上未找到签名密钥。</value></data>
+  <data name="Token_Enroll_Error_BadPem"><value>服务器返回的证书 PEM 无法解析。</value></data>
+  <data name="Token_Status_Enrolled"><value>令牌已完成签发</value></data>
+  <data name="Token_State_Blank"><value>空白 —— 需要首次初始化</value></data>
+  <data name="Token_State_Initialized"><value>已设置 SO PIN —— 接下来请设置用户 PIN</value></data>
+  <data name="Token_State_Provisioned"><value>已配置 —— 请向 CA 申请证书</value></data>
+  <data name="Token_State_Enrolled"><value>已签发 —— 可用于登录</value></data>
+  <data name="Token_State_Unknown"><value>状态未知</value></data>
+  <data name="Token_Cap_SoPinSet"><value>SO PIN ✓</value></data>
+  <data name="Token_Cap_SoPinUnset"><value>SO PIN ✗</value></data>
+  <data name="Token_Cap_UserPinSet"><value>用户 PIN ✓</value></data>
+  <data name="Token_Cap_UserPinUnset"><value>用户 PIN ✗</value></data>
+  <data name="Token_Cap_Biometric"><value>指纹传感器</value></data>
+  <data name="Token_Cap_ProtectedAuth"><value>受保护的 PIN 输入</value></data>
+  <data name="Token_Pin_StatusLow"><value>⚠ PIN —— 剩余尝试次数不多</value></data>
+  <data name="Token_Pin_StatusFinalTry"><value>⚠ PIN —— 仅剩最后一次尝试</value></data>
+  <data name="Token_Pin_StatusLocked"><value>🔒 PIN 已锁定</value></data>
+  <data name="Token_Memory_Prefix"><value>内存</value></data>
+  <data name="Token_Import_Button"><value>导入证书…</value></data>
+  <data name="Token_Import_Installing"><value>正在安装证书并绑定到卡内密钥…</value></data>
+  <data name="Token_Import_Done"><value>✅ 证书已安装。对象列表已刷新。</value></data>
+  <data name="Token_Section_Diagnostics"><value>令牌状态</value></data>
+  <data name="Token_Status_Opening"><value>正在打开令牌...</value></data>
+  <data name="Token_Status_Ready_Cng"><value>就绪（Windows 将在签名时请求 PIN）</value></data>
+  <data name="Token_Status_Ready_Pkcs11"><value>就绪 —— 请输入 PIN 解锁</value></data>
+  <data name="Token_Status_Unlocked"><value>已解锁</value></data>
+  <data name="Token_Status_Failed"><value>打开失败</value></data>
+  <data name="Token_Status_SignOk"><value>签名成功</value></data>
+  <data name="Token_Error_PinRequired"><value>需要输入 PIN。</value></data>
+  <data name="Token_Error_PinIncorrect"><value>PIN 不正确。</value></data>
+  <data name="Token_Error_PinLocked"><value>PIN 已锁定，请先解锁该卡。</value></data>
+  <data name="Token_Error_NoKeySelected"><value>请先选择一个密钥。</value></data>
+  <data name="Token_Error_SignDataEmpty"><value>请输入待签名的数据。</value></data>
+  <data name="Token_Error_NotLoggedIn"><value>请先输入 PIN。</value></data>
+  <data name="Token_Error_KeyNotFound"><value>未找到密钥。</value></data>
+  <data name="Token_Error_NotImplemented"><value>尚未实现。</value></data>
+  <data name="Token_Error_Generic"><value>发生错误。</value></data>
+  <data name="Token_View"><value>查看</value></data>
+
+  <data name="Nav_Sign"><value>签署 PDF</value></data>
+
+  <data name="Sign_Title"><value>签署 PDF</value></data>
+  <data name="Sign_Subtitle"><value>选择 PDF 文件，并在手机上的 e-ID Mongolia 应用中使用 PIN2 确认，即可生成合格电子签名。</value></data>
+  <data name="Sign_Pick_Title"><value>选择 PDF 文件</value></data>
+  <data name="Sign_Pick_Hint"><value>最大 25 MB，仅限 PDF</value></data>
+  <data name="Sign_Pick_Button"><value>选择文件</value></data>
+  <data name="Sign_NotSignedIn"><value>签名前请先登录。</value></data>
+  <data name="Sign_Uploading"><value>上传中…</value></data>
+  <data name="Sign_VerificationLabel"><value>验证码</value></data>
+  <data name="Sign_Waiting_Instruction"><value>请确认 e-ID Mongolia 应用中显示相同的验证码，然后使用 PIN2 确认。</value></data>
+  <data name="Sign_Waiting_Status"><value>等待中…</value></data>
+  <data name="Sign_File_Label"><value>文件</value></data>
+  <data name="Sign_Cancel"><value>取消</value></data>
+  <data name="Sign_Completed_Title"><value>签署成功</value></data>
+  <data name="Sign_Completed_Hint"><value>请保存已签署的 PDF。</value></data>
+  <data name="Sign_Save_Button"><value>保存</value></data>
+  <data name="Sign_Saved_Notice"><value>已保存。</value></data>
+  <data name="Sign_NewFile"><value>新建文件</value></data>
+  <data name="Sign_TryAgain"><value>重试</value></data>
+  <data name="Sign_Error_TooLarge"><value>文件超过 25 MB。</value></data>
+  <data name="Sign_Error_Declined"><value>签名已被拒绝。</value></data>
+  <data name="Sign_Error_Timeout"><value>会话已过期，请重试。</value></data>
+  <data name="Sign_Error_Network"><value>网络错误，请重试。</value></data>
+  <data name="Sign_Error_Generic"><value>签名失败。</value></data>
+
+  <data name="Nav_Children"><value>子女</value></data>
+  <data name="Children_Title"><value>我的子女</value></data>
+  <data name="Children_Subtitle"><value>在您监护下登记的子女及其数字身份。</value></data>
+  <data name="Children_List_Header"><value>子女</value></data>
+  <data name="Children_List_Empty"><value>尚未登记任何子女。</value></data>
+  <data name="Children_Add_Button"><value>添加子女</value></data>
+  <data name="Children_Add_Init"><value>继续</value></data>
+  <data name="Children_Back"><value>返回</value></data>
+  <data name="Children_Cancel"><value>取消</value></data>
+  <data name="Children_Done"><value>完成</value></data>
+  <data name="Children_Revoke"><value>撤销</value></data>
+  <data name="Children_Copy"><value>复制</value></data>
+  <data name="Children_Copied"><value>已复制 — 30 秒后将自动从剪贴板清除。</value></data>
+  <data name="Children_ChildRegNo"><value>子女登记号</value></data>
+  <data name="Children_Registered"><value>已注册</value></data>
+  <data name="Children_NotRegistered"><value>未注册</value></data>
+  <data name="Children_Verification"><value>验证码</value></data>
+  <data name="Children_Waiting"><value>请在手机的 eID Mongolia 应用中使用 PIN2 授权。</value></data>
+  <data name="Children_EnrollCode_Header"><value>注册码</value></data>
+  <data name="Children_EnrollCode_Hint"><value>在子女手机的 eID Mongolia 应用中输入此代码即可完成注册。</value></data>
+  <data name="Children_Error_Generic"><value>出现错误，请重试。</value></data>
+  <data name="Children_Error_NotAvailable"><value>服务器尚未启用子女服务。</value></data>
+  <data name="Children_Error_NotGuardian"><value>您未被登记为该子女的监护人。</value></data>
+  <data name="Children_Error_RegNoTooShort"><value>登记号无效。</value></data>
+  <data name="Children_Error_Timeout"><value>未在规定时间内收到授权，请重试。</value></data>
+  <data name="Children_Error_XypUnavailable"><value>国家登记系统（XYP）暂时不可用。</value></data>
+
+  <data name="Nav_Certificates"><value>我的证书</value></data>
+  <data name="Certificates_Title"><value>我的证书</value></data>
+  <data name="Certificates_Subtitle"><value>颁发给您的电子签名证书。点击行内的查看按钮可查阅完整的 X.509 信息并导出为文件。</value></data>
+  <data name="Certificates_Refresh"><value>刷新</value></data>
+  <data name="Certificates_Empty"><value>未找到证书。</value></data>
+  <data name="Certificates_Counts_Valid"><value>有效</value></data>
+  <data name="Certificates_Counts_Expired"><value>已过期</value></data>
+  <data name="Certificates_Counts_Revoked"><value>已吊销</value></data>
+  <data name="Certificates_Counts_Total"><value>总计</value></data>
+  <data name="Certificates_Type_Sign"><value>数字签名（PIN2）</value></data>
+  <data name="Certificates_Type_Auth"><value>身份认证（PIN1）</value></data>
+  <data name="Certificates_Status_Valid"><value>有效</value></data>
+  <data name="Certificates_Status_Revoked"><value>已吊销</value></data>
+  <data name="Certificates_Status_Expired"><value>已过期</value></data>
+  <data name="Certificates_Status_Suspended"><value>已暂停</value></data>
+  <data name="Certificates_Error_NotAvailable"><value>服务器尚未启用证书服务。</value></data>
+  <data name="Certificates_Error_RateLimited"><value>请求过于频繁，请稍后重试。</value></data>
+  <data name="Certificates_Error_Unauthenticated"><value>会话已过期，请重新登录。</value></data>
+  <data name="Certificates_Error_Generic"><value>无法加载证书，请重试。</value></data>
+
+  <data name="Consent_Reason_SignPdf"><value>确认为此文档签名</value></data>
+  <data name="Consent_Error_Declined"><value>未通过 Windows Hello 验证，签名已取消。</value></data>
+
+  <data name="Settings_Esign_Title"><value>电子签名（ESIGN）</value></data>
+  <data name="Settings_Esign_PreferSoftware"><value>使用软件令牌</value></data>
+  <data name="Settings_Esign_PreferSoftware_Hint"><value>开启后，即使插入了 USB 令牌，也始终以已登录公民的身份签名，并向其手机推送 PIN2 授权。关闭时优先使用已连接的令牌。</value></data>
+  <data name="Settings_Esign_Bridge"><value>本地网桥</value></data>
+  <data name="Settings_Esign_Bridge_Running"><value>运行中 — ws:{0} / wss:{1}</value></data>
+  <data name="Settings_Esign_Bridge_Stopped"><value>已停止。若端口被其他程序占用，请停止后重新启动。</value></data>
+  <data name="Settings_Esign_Bridge_Start"><value>启动</value></data>
+  <data name="Settings_Esign_Bridge_Stop"><value>停止</value></data>
+
+  <data name="Org_Error_NotAvailable"><value>桌面应用暂不支持此操作。请通过网页注册机构并管理成员。</value></data>
+</root>

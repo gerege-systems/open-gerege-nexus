@@ -1,0 +1,97 @@
+name: NexusGeregeDesktop
+options:
+  bundleIdPrefix: mn.gerege.nexus
+  deploymentTarget:
+    macOS: "14.0"
+  xcodeVersion: "16.0"
+  generateEmptyDirectories: true
+
+packages:
+  GeregeTokenKit:
+    path: ../gerege-token-kit
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: "2.6.0"
+
+settings:
+  base:
+    SWIFT_VERSION: "5.10"
+    MARKETING_VERSION: "1.0.9"
+    CURRENT_PROJECT_VERSION: "10"
+    DEVELOPMENT_TEAM: "CQTHTD6YJQ"
+    CODE_SIGN_STYLE: Automatic
+  configs:
+    Release:
+      SWIFT_OPTIMIZATION_LEVEL: "-Owholemodule"
+      STRIP_INSTALLED_PRODUCT: "YES"
+      STRIP_SWIFT_SYMBOLS: "YES"
+      DEAD_CODE_STRIPPING: "YES"
+      GCC_GENERATE_DEBUGGING_SYMBOLS: "NO"
+      DEPLOYMENT_POSTPROCESSING: "YES"
+      COPY_PHASE_STRIP: "YES"
+      OTHER_SWIFT_FLAGS: "-Xfrontend -disable-reflection-names"
+
+targets:
+  NexusGeregeDesktop:
+    type: application
+    platform: macOS
+    sources:
+      - path: App
+      - path: Core
+      - path: Domain
+      - path: Infrastructure
+      - path: Presentation
+      - path: Features
+      - path: Design
+      - path: Resources
+    dependencies:
+      - package: GeregeTokenKit
+      - package: Sparkle
+      # macOS-ийн БУЙ гэрчилгээ харах цонх (SFCertificatePanel) — Keychain Access-ийнхтэй
+      # ижил дэлгэц. Өөрсдөө дахин зурахгүй.
+      - sdk: SecurityInterface.framework
+    settings:
+      base:
+        PRODUCT_NAME: NexusGeregeDesktop
+        INFOPLIST_FILE: Info.plist
+        PRODUCT_BUNDLE_IDENTIFIER: mn.gerege.nexus.desktop
+        CODE_SIGN_ENTITLEMENTS: NexusGeregeDesktop.entitlements
+        ENABLE_HARDENED_RUNTIME: true
+        COMBINE_HIDPI_IMAGES: true
+    info:
+      path: Info.plist
+      properties:
+        CFBundleDisplayName: NexusGeregeDesktop
+        CFBundleName: NexusGeregeDesktop
+        CFBundleShortVersionString: "1.0.9"
+        CFBundleVersion: "10"
+        LSMinimumSystemVersion: "14.0"
+        CFBundleURLTypes:
+          - CFBundleURLSchemes:
+              - gerege-nexus
+            CFBundleURLName: "mn.gerege.nexus.desktop.deeplink"
+        NSHumanReadableCopyright: "Copyright © 2026 Gerege Systems LLC. All rights reserved."
+        # Sparkle-ийн шинэчлэлтийн суваг. Хаяг нь ЭНЭ байрлуулалтынх:
+        # хуучин хаягийг үлдээвэл манай апп өөр бүтээгдэхүүн рүү өөрийгөө
+        # шинэчилнэ. Feed хараахан нийтлэгдээгүй тул шинэчлэлт олдохгүй —
+        # тэр нь буруу апп суулгахаас хамаагүй дээр.
+        SUFeedURL: "https://desktop.nexus.gerege.mn/appcast.xml"
+        # Автомат шалгалт УНТРААЛТТАЙ, feed нийтлэгдэх хүртэл.
+        #
+        # Тэр хаяг өнөөдөр appcast буцаадаггүй: `/` нь бүрхүүл рүү очдог тул
+        # тодорхойгүй зам бүр вэб аппын 404 ХУУДСЫГ (10 КБ HTML, text/html)
+        # өгнө. Sparkle түүнийг appcast гэж задлахыг оролдож, дэвсгэр урсгал
+        # дээр давтан унана — үр дүн нь хэрэглэгчийн хийж байсан үйлдэлтэй
+        # огт холбоогүй мэт харагдах краш.
+        #
+        # Гар аргаар шалгах цэс (CheckForUpdatesView) ХЭВЭЭР: тэр нь хүний
+        # эхлүүлсэн үйлдэл бөгөөд алдаа нь харагдана.
+        #
+        # Жинхэнэ appcast нийтлэгдэж, SUPublicEDKey доор өөрийн түлхүүрээр
+        # солигдмогц энэ мөрийг `true` болгоно.
+        SUEnableAutomaticChecks: false
+        # ЭНЭ нь эх төслийн EdDSA нийтийн түлхүүр. Өөрийн feed нийтлэхийн
+        # өмнө өөрийн түлхүүрээр солино (`generate_keys` — Sparkle). Хүртэл
+        # нь энэ түлхүүрээр гарын үсэг зураагүй шинэчлэлт татгалзагдана,
+        # тэр нь зөв бүтэлгүйтэл.
+        SUPublicEDKey: "Bn4Yty0uXTIvam8KgoWu3vRpSotar1/U1CSD+e7QH50="

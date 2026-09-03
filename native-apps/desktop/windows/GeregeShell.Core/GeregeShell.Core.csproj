@@ -1,1 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><RootNamespace>GeregeShell.Core</RootNamespace></PropertyGroup><ItemGroup><Compile Include="..\NativeAuth.cs" Link="Auth\NativeAuth.cs"/></ItemGroup></Project>

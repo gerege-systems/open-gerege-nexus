@@ -1,4 +1,16 @@
-name: GeregeNexusIOS
+# Gerege Nexus — iOS/iPadOS клиент.
+#
+# Код нь ширээний аппын БОДИТ ФАЙЛУУДЫГ хуваалцана (`../../desktop/macos/...`):
+# сүлжээ, Keychain, төлөв, локализаци, дизайны токенууд хоёр дээр НЭГ эх сурвалж.
+# Хуулбарлавал хоёр апп өөр өөр endpoint, өөр өнгө, өөр орчуулгатай болж
+# салбарлана — тэр нь мэдэгддэггүй, дараа нь засахад хамгийн үнэтэй нь.
+#
+# ponytail: SPM багц болгож тусгаарлаагүй — тэр нь бүх төрлийг `public` болгох
+# ~3k мөрийн засвар шаардана. Хил хамгаалах шаардлага гарвал тэр үед нүүлгэнэ.
+#
+# Ширээний-ОНЦЛОГ хэсгүүд энд ОРОХГҮЙ: Core/Token (PKCS#11/APDU), Core/Esign
+# (ws://127.0.0.1 гүүр), MenuBar, Sparkle, login item, SecurityGuard.
+name: NexusGeregeMobile
 options:
   bundleIdPrefix: mn.gerege.nexus
   deploymentTarget:
@@ -6,52 +18,84 @@ options:
   xcodeVersion: "16.0"
   createIntermediateGroups: true
 
-packages:
-  GeregeShellKit:
-    path: .
-
 settings:
   base:
-    SWIFT_VERSION: "6.0"
+    SWIFT_VERSION: "5.10"
     MARKETING_VERSION: "1.0.0"
     CURRENT_PROJECT_VERSION: "1"
+    SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited)"
 
 targets:
-  GeregeNexusIOS:
+  NexusGeregeMobile:
     type: application
     platform: iOS
     sources:
-      - path: Examples
+      # Энэ аппын өөрийн дэлгэцүүд.
+      - path: App
+      - path: Features
+      - path: Design
       - path: Assets.xcassets
-    dependencies:
-      - package: GeregeShellKit
-        product: GeregeShellKit
-      - package: GeregeShellKit
-        product: GeregeShellUI
+      # Montserrat .ttf. xcodegen-д ТАРГЕТИЙН `resources:` гэсэн түлхүүр
+      # БАЙХГҮЙ — тэрийг чимээгүй алгасдаг тул фонт багцад ордоггүй
+      # (`Font.custom` нь nil буцааж, системийн фонт руу унана). Эх файлын
+      # жагсаалтад орсон эх код БУС файлыг xcodegen нь Resources фазад
+      # өөрөө хийнэ, тиймээс зам нь ЭНД байх ёстой.
+      - path: Resources
+      # Ширээний аппаас ХУВААЛЦСАН давхаргууд.
+      - path: ../../desktop/macos/App/AppState.swift
+      - path: ../../desktop/macos/Core/Network
+      - path: ../../desktop/macos/Core/Keychain
+      - path: ../../desktop/macos/Design
+      - path: ../../desktop/macos/Domain
+      - path: ../../desktop/macos/Presentation
+      - path: ../../desktop/macos/Infrastructure/Security/Pinning
+      # SPKI pin-үүд XOR-оор далдлагдсан тул pinning нь энэ файлыг дуудна.
+      # Хажуугийн `SecurityGuard.swift` нь ЗӨВХӨН macOS (anti-debug) тул орохгүй.
+      - path: ../../desktop/macos/Infrastructure/Security/Integrity/Obfuscated.swift
     settings:
       base:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         PRODUCT_BUNDLE_IDENTIFIER: mn.gerege.nexus.ios
-        PRODUCT_NAME: Gerege Nexus
+        PRODUCT_NAME: NexusGeregeMobile
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: CQTHTD6YJQ
-        CODE_SIGN_ENTITLEMENTS: GeregeNexusIOS.entitlements
+        CODE_SIGN_ENTITLEMENTS: NexusGeregeMobile.entitlements
         TARGETED_DEVICE_FAMILY: "1,2"
         SUPPORTS_MACCATALYST: false
-        INFOPLIST_KEY_CFBundleDisplayName: Gerege Nexus
-        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.business
-        INFOPLIST_KEY_NSFaceIDUsageDescription: Gerege Nexus session-ийг аюулгүй нээхийн тулд Face ID ашиглана.
-        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: true
-        INFOPLIST_KEY_UILaunchScreen_Generation: true
     info:
-      path: GeregeNexusIOS-Info.plist
+      path: NexusGeregeMobile-Info.plist
       properties:
+        # ЭДГЭЭР нь build-д хүрдэг цорын ганц газар. Дээрх settings дотор
+        # INFOPLIST_KEY_* бичвэл чимээгүй унтарна: тэр угтвар нь зөвхөн
+        # GENERATE_INFOPLIST_FILE=YES үед ажилладаг ба энэ target өөрийн
+        # Info.plist-тэй. NSFaceIDUsageDescription байхгүй бол iOS нь Face ID
+        # дуудмагц аппыг унагаана.
+        CFBundleDisplayName: NexusGeregeMobile
+        LSApplicationCategoryType: public.app-category.business
+        NSFaceIDUsageDescription: Gerege Nexus session-ийг аюулгүй нээхийн тулд Face ID ашиглана.
+        UIApplicationSupportsIndirectInputEvents: true
         CFBundleURLTypes:
           - CFBundleTypeRole: Editor
             CFBundleURLName: mn.gerege.nexus.ios
             CFBundleURLSchemes:
               - gerege-nexus
+        # eID Mongolia апп руу app-to-app үсрэхийн ӨМНӨ суусан эсэхийг асуухад
+        # эдгээр схем ЗААВАЛ энд бүртгэгдсэн байх ёстой — эс бөгөөс
+        # `canOpenURL` үргэлж false буцааж, апп «суугаагүй» гэж худал хэлнэ.
+        LSApplicationQueriesSchemes:
+          - eidmongolia
+          - geregesmartid
         UILaunchScreen: {}
+        # Брэндийн фонт. xcodegen нь `Resources/` доторх хавтасны бүтцийг
+        # багцын үндэс рүү ХАВТГАЙЛДАГ тул энд зөвхөн файлын нэр
+        # (`Fonts/` угтваргүй). `Font.custom` нь файлын нэрээр биш
+        # PostScript нэрээр хайдаг — тэр буулгалт `Design/Theme.swift`-ийн
+        # `Theme.TypeScale` дотор ганц газар байна.
+        UIAppFonts:
+          - Montserrat-Regular.ttf
+          - Montserrat-Medium.ttf
+          - Montserrat-SemiBold.ttf
+          - Montserrat-Bold.ttf
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationLandscapeLeft
@@ -63,10 +107,10 @@ targets:
           - UIInterfaceOrientationLandscapeRight
 
 schemes:
-  GeregeNexusIOS:
+  NexusGeregeMobile:
     build:
       targets:
-        GeregeNexusIOS: all
+        NexusGeregeMobile: all
     run:
       config: Debug
     archive:

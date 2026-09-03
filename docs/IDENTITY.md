@@ -29,6 +29,24 @@
 Клиент бүр `nil` байж болно. Тохируулаагүй рэйл нь алдаа биш — тохируулаагүй
 гэдгээ хэлдэг.
 
+### Native App2App callback
+
+Утасны Nexus клиент eID аппыг `geregesmartid://approve?sessionId=…`
+хаягаар нээгээд, зөвшөөрсний дараа `gerege-nexus://auth?sessionId=…`
+хаягаар буцаж ирнэ. Энэ буцалт дөрвөн тааралтай:
+
+- native клиент `callbackUrl`-аар бүтэн `gerege-nexus://auth` URI-г илгээнэ;
+- Android Manifest / iOS Info.plist нь `gerege-nexus` scheme-ийг өөртөө холбоно;
+- Nexus backend-ийн `EID_APP_CALLBACKS` бүтэн URI-тэй яг таарна;
+- eID Mongolia дээрх тухайн RP-ийн `callback_hosts`-д `gerege-nexus://`
+  scheme бүртгэгдсэн байна.
+
+`EID_APP_CALLBACKS` дутвал Nexus session эхлүүлэх хүсэлтийг `400`-гаар
+татгалзана. RP-ийн `callback_hosts`-д scheme дутвал eID буцах хаягийг
+чимээгүй хаяна: session нь poll-оороо дуусах ч хүн eID апп дотроо үлдэнэ.
+Callback зөвхөн клиентийг дахин идэвхжүүлнэ; нэвтрэлтийн үр дүнг URI-гаас
+биш, серверийн `/auth/eid/poll`-оос авна.
+
 ## Хаалттай эсэх — access mode
 
 Нэг шалгалт, бүртгэл үүсгэдэг бүх зам дээр, **анхдагчаараа хаалттай**.
