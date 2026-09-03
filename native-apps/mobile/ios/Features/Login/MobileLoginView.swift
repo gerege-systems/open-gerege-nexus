@@ -22,6 +22,7 @@ import UIKit
 /// дээрээ зөвшөөрнө.
 struct MobileLoginView: View {
     @EnvironmentObject private var appState: AppState
+    @Environment(\.scenePhase) private var scenePhase
     @ObservedObject private var loc = LocalizationService.shared
 
     private enum Phase: Equatable { case idle, starting, waiting, success, error }
@@ -33,6 +34,10 @@ struct MobileLoginView: View {
     @State private var signedInName = ""
     @State private var task: Task<Void, Never>?
     @State private var showRegisterField = false
+    @State private var sessionTerminated = false
+    #if os(iOS)
+    @State private var backgroundTaskID: UIBackgroundTaskIdentifier = .invalid
+    #endif
     @FocusState private var registerFocused: Bool
 
     /// eID Mongolia аппын deep link. Схемийг Info.plist-ийн
@@ -61,7 +66,25 @@ struct MobileLoginView: View {
                 }
             }
         }
-        .onDisappear { task?.cancel() }
+        .onDisappear {
+            task?.cancel()
+            #if os(iOS)
+            endBackgroundTask()
+            #endif
+        }
+        .onOpenURL { url in
+            handleCallbackURL(url)
+        }
+        .onChange(of: appState.authCallbackURL) { url in
+            if let url = url {
+                handleCallbackURL(url)
+            }
+        }
+        .onChange(of: scenePhase) { newPhase in
+            if newPhase == .active {
+                handleAppBecameActive()
+            }
+        }
     }
 
     // MARK: - Хэсгүүд
@@ -177,6 +200,11 @@ struct MobileLoginView: View {
             }
             BrandLinkButton(title: loc.t("Login_Cancel")) {
                 task?.cancel()
+                #if os(iOS)
+                endBackgroundTask()
+                #endif
+                sessionTerminated = true
+                appState.sessionID = ""
                 phase = .idle
             }
         }
@@ -234,11 +262,31 @@ struct MobileLoginView: View {
         }
     }
 
+    #if os(iOS)
+    private func beginBackgroundTask() {
+        endBackgroundTask()
+        backgroundTaskID = UIApplication.shared.beginBackgroundTask(withName: "mn.gerege.nexus.eid_poll") {
+            DispatchQueue.main.async {
+                self.endBackgroundTask()
+            }
+        }
+    }
+
+    private func endBackgroundTask() {
+        if backgroundTaskID != .invalid {
+            let current = backgroundTaskID
+            backgroundTaskID = .invalid
+            UIApplication.shared.endBackgroundTask(current)
+        }
+    }
+    #endif
+
     private func startAppToApp() {
+        sessionTerminated = false
+        #if os(iOS)
+        beginBackgroundTask()
+        #endif
         run { () -> (String, String)? in
-            // Буцах хаяг ХООСОН: платформ нь өөрийн origin-ы callback-аас өөрийг
-            // хүлээж авахгүй (`validEIDCallback`). eID апп зөвшөөрснийхөө дараа
-            // энэ аппыг өөрөө нээхгүй тул хүн гараараа буцна — poll нь ажилласаар.
             let response: AuthStartResponse = try await APIClient.shared
                 .request(.authStart(callbackURL: AppConfig.appToAppCallback))
             let sid = response.sessionID
@@ -253,6 +301,7 @@ struct MobileLoginView: View {
     }
 
     private func startPush() {
+        sessionTerminated = false
         let typed = register.trimmingCharacters(in: .whitespaces).uppercased()
         run { () -> (String, String)? in
             let response: AuthStartResponse = try await APIClient.shared
@@ -272,18 +321,77 @@ struct MobileLoginView: View {
         errorMessage = ""
         phase = .starting
         task = Task {
+            #if os(iOS)
+            defer { endBackgroundTask() }
+            #endif
             do {
                 guard let (sessionID, typedID) = try await start() else { return }
                 let poll = try await APIClient.shared.waitForPlatformAuth(sessionID: sessionID)
                 await finish(poll, typedID: typedID)
             } catch is CancellationError {
                 // Хүн цуцаллаа.
+            } catch let urlErr as URLError where urlErr.code == .cancelled {
+                // Цуцлагдсан.
             } catch {
                 await MainActor.run {
                     errorMessage = error.localizedDescription
                     phase = .error
+                    if let apiErr = error as? APIError, case .server = apiErr {
+                        sessionTerminated = true
+                    }
                 }
             }
+        }
+    }
+
+    /// Callback deep link эсвэл app active болоход poll-ыг сэргээж шалгана.
+    private func resumeOrVerify(sessionID: String) {
+        guard phase != .success else { return }
+        task?.cancel()
+        errorMessage = ""
+        phase = .waiting
+        let typed = register.trimmingCharacters(in: .whitespaces).uppercased()
+        task = Task {
+            #if os(iOS)
+            beginBackgroundTask()
+            defer { endBackgroundTask() }
+            #endif
+            do {
+                let poll = try await APIClient.shared.waitForPlatformAuth(sessionID: sessionID)
+                await finish(poll, typedID: typed)
+            } catch is CancellationError {
+                // Superseded
+            } catch let urlErr as URLError where urlErr.code == .cancelled {
+                // Цуцлагдсан
+            } catch {
+                await MainActor.run {
+                    errorMessage = error.localizedDescription
+                    phase = .error
+                    if let apiErr = error as? APIError, case .server = apiErr {
+                        sessionTerminated = true
+                    }
+                }
+            }
+        }
+    }
+
+    private func handleCallbackURL(_ url: URL) {
+        guard url.scheme == "gerege-nexus" else { return }
+        let urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        let querySid = urlComponents?.queryItems?.first(where: { $0.name == "sessionId" || $0.name == "session_id" })?.value
+        let sid = (querySid?.isEmpty == false) ? querySid! : appState.sessionID
+        guard !sid.isEmpty else { return }
+        sessionTerminated = false
+        resumeOrVerify(sessionID: sid)
+    }
+
+    private func handleAppBecameActive() {
+        // Хүн eID аппаас гараараа (дэлгэцийн зүүн дээд «‹ eID Mongolia» товчоор эсвэл app switcher-ээр)
+        // буцаж ирэхэд deep link өдөөгдөхгүй байж болно. Хэрэв түр сүлжээ тасарсан (.error) эсвэл
+        // хүлээгдэж буй (.waiting) төлөвтэй бөгөөд sessionID байгаа бол шалгалтыг сэргээнэ.
+        guard phase != .success, !sessionTerminated, !appState.sessionID.isEmpty else { return }
+        if phase == .waiting || phase == .error {
+            resumeOrVerify(sessionID: appState.sessionID)
         }
     }
 
@@ -317,6 +425,7 @@ struct MobileLoginView: View {
             await MainActor.run {
                 errorMessage = Self.stateMessage(poll.state, loc: loc)
                 phase = .error
+                sessionTerminated = true
             }
             return
         }
@@ -328,7 +437,7 @@ struct MobileLoginView: View {
             documentNumber: identity.certificateSerial ?? "",
             fullName: name,
             civilID: identity.civilID ?? "",
-            nationalID: identity.regNumber ?? typedID,
+            nationalID: identity.regNumber ?? (typedID.isEmpty ? register : typedID),
             // Нэвтрэлтийн доод хязгаар нь ADVANCED (`EID_CERT_LEVEL`); QUALIFIED
             // гэж бичих нь баталгаагүй зүйлийг батласан болно.
             certificateLevel: "ADVANCED",
@@ -337,6 +446,7 @@ struct MobileLoginView: View {
         await MainActor.run {
             signedInName = name
             phase = .success
+            sessionTerminated = true
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 appState.didLogin(identity: stored)
             }

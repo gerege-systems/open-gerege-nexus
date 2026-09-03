@@ -19,10 +19,49 @@ actor APIClient {
         config.timeoutIntervalForResource = 180
         config.httpCookieAcceptPolicy = .never
         config.httpShouldSetCookies = false
+        config.waitsForConnectivity = true
+        #if os(iOS)
+        config.shouldUseExtendedBackgroundIdleMode = true
+        #endif
         // SEC-1: SPKI pinning (Release + `security.tlsPinning` идэвхтэй үед).
         self.session = URLSession(configuration: config,
                                   delegate: PinnedSessionDelegate(),
                                   delegateQueue: nil)
+    }
+
+    // MARK: - Transient error helper
+
+    static func isTransientNetworkError(_ error: Error) -> Bool {
+        if let urlError = error as? URLError {
+            switch urlError.code {
+            case .networkConnectionLost,
+                 .timedOut,
+                 .cannotConnectToHost,
+                 .notConnectedToInternet,
+                 .dnsLookupFailed,
+                 .dataNotAllowed,
+                 .internationalRoamingOff:
+                return true
+            default:
+                return false
+            }
+        }
+        let nsError = error as NSError
+        if nsError.domain == NSURLErrorDomain {
+            switch nsError.code {
+            case NSURLErrorNetworkConnectionLost,
+                 NSURLErrorTimedOut,
+                 NSURLErrorCannotConnectToHost,
+                 NSURLErrorNotConnectedToInternet,
+                 NSURLErrorDNSLookupFailed,
+                 NSURLErrorDataNotAllowed,
+                 NSURLErrorInternationalRoamingOff:
+                return true
+            default:
+                return false
+            }
+        }
+        return false
     }
 
     // MARK: - Request
@@ -60,14 +99,36 @@ actor APIClient {
         timeout: Duration = .seconds(300)
     ) async throws -> StatusResponse {
         let deadline = ContinuousClock.now + timeout
+        var transientErrorCount = 0
         while ContinuousClock.now < deadline {
-            let status: StatusResponse = try await request(.status(sessionID: sessionID, pollToken: pollToken))
-            if let err = status.error, !err.isEmpty {
-                throw APIError.server(200, err)
-            }
-            if status.isComplete { return status }
-            try await Task.sleep(for: .milliseconds(400))
             try Task.checkCancellation()
+            do {
+                let status: StatusResponse = try await request(.status(sessionID: sessionID, pollToken: pollToken))
+                transientErrorCount = 0
+                if let err = status.error, !err.isEmpty {
+                    throw APIError.server(200, err)
+                }
+                if status.isComplete { return status }
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch let error as APIError {
+                if case .server(let status, _) = error, (status == 502 || status == 503 || status == 504) {
+                    transientErrorCount += 1
+                    logger.warning("Auth poll transient gateway error (\(status)), retrying in 1s...")
+                    try await Task.sleep(for: .seconds(1))
+                    continue
+                }
+                throw error
+            } catch {
+                if Self.isTransientNetworkError(error) {
+                    transientErrorCount += 1
+                    logger.warning("Auth poll transient network error (\(transientErrorCount)): \(error.localizedDescription), retrying in 1s...")
+                    try await Task.sleep(for: .seconds(1))
+                    continue
+                }
+                throw error
+            }
+            try await Task.sleep(for: .milliseconds(400))
         }
         throw APIError.timeout
     }
@@ -80,15 +141,41 @@ actor APIClient {
     /// богино завсарлага хэрэггүй — RUNNING буцаж ирэх нь тэр цонх дүүрсэн гэсэн
     /// үг. COMPLETE боловч баталгаажаагүй бол сервер 401 өгнө: тэр нь энд
     /// `APIError.server` болж шидэгдэнэ, дуудагч түүнийг л харуулна.
+    ///
+    /// Хэрэв app background руу шилжих үед эсвэл буцаж сэргэхэд сүлжээ түр
+    /// тасарсан (`networkConnectionLost` / timeout) бол шууд уналгүйгээр
+    /// дахин оролдоно — хүн eID апп дээр зөвшөөрөөд буцахад poll тасраагүй байна.
     func waitForPlatformAuth(
         sessionID: String,
         timeout: Duration = .seconds(300)
     ) async throws -> AuthPollResponse {
         let deadline = ContinuousClock.now + timeout
+        var transientErrorCount = 0
         while ContinuousClock.now < deadline {
-            let poll: AuthPollResponse = try await request(.authPoll(sessionID: sessionID))
-            if !poll.isRunning { return poll }
             try Task.checkCancellation()
+            do {
+                let poll: AuthPollResponse = try await request(.authPoll(sessionID: sessionID))
+                transientErrorCount = 0
+                if !poll.isRunning { return poll }
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch let error as APIError {
+                if case .server(let status, _) = error, (status == 502 || status == 503 || status == 504) {
+                    transientErrorCount += 1
+                    logger.warning("Platform poll transient gateway error (\(status)), retrying in 1s...")
+                    try await Task.sleep(for: .seconds(1))
+                    continue
+                }
+                throw error
+            } catch {
+                if Self.isTransientNetworkError(error) {
+                    transientErrorCount += 1
+                    logger.warning("Platform poll transient network error (\(transientErrorCount)): \(error.localizedDescription), retrying in 1s...")
+                    try await Task.sleep(for: .seconds(1))
+                    continue
+                }
+                throw error
+            }
         }
         throw APIError.timeout
     }
