@@ -57,6 +57,7 @@ object Lucide {
         "M7 11V7a5 5 0 0 1 10 0v4",
     )
     val ArrowRight = lucide("arrow-right", "M5 12h14", "m12 5 7 7-7 7")
+    val ArrowLeft = lucide("arrow-left", "M19 12H5", "m12 19-7-7 7-7")
     val Check = lucide("check", "M20 6 9 17l-5-5")
     val X = lucide("x", "M18 6 6 18", "m6 6 12 12")
     val Clock = lucide(
