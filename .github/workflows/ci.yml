@@ -257,6 +257,21 @@ jobs:
             echo "::error::seeded-role tests skipped — TEST_DATABASE_URL is not reaching the test"
             exit 1
           fi
+      - name: Fail if the console policy tests were skipped
+        # Зөвхөн нэг хэсэгт, дээрхтэй ижил шалтгаанаар.
+        if: matrix.shard == 1
+        # 00049-ийн консолын гурван policy нь арван найман хүснэгт дээр нэг
+        # нэрээр давтагдана. GRANT дангаараа юу ч өгдөггүй ба policy алга
+        # болоход алдаа гарахгүй — асуулт амжилттай болж, тэг мөр буцна.
+        # Тиймээс энэ тестүүд алгасагдвал «консол ажиллаж байна» гэдэг
+        # мэдэгдэл нотлогдоогүй үлдэнэ, яг тэдгээрийг бичихээс өмнөх байдал.
+        run: |
+          go test -run 'TestTheConsoleReadsEveryTableItsPoliciesCover' -v \
+            ./db/migrations/ | tee /tmp/console.log
+          if grep -q -- '--- SKIP' /tmp/console.log; then
+            echo "::error::console policy tests skipped — TEST_DATABASE_URL is not reaching the test"
+            exit 1
+          fi
       - name: Fail if the signing store tests were skipped
         # The e-signature app's isolation is in its WHERE clauses, its batch's
         # refusal is a subquery's row count, and its archive is a column rather

@@ -24,24 +24,14 @@ import (
 // The list is the point of this file. Everything in it is a policy nobody has
 // asserted from the role it governs, which is the state 00102 and 00106 were
 // both written into and the state this test exists to stop growing.
-var policiesWithoutATest = map[string]string{
-	// 00049's console family, on eighteen tables between them. They are
-	// read-only by construction — the operator role's grants are a
-	// hand-written list — and every test that exercises the console today
-	// runs as the login role, which is outside the policies entirely and so
-	// would not notice if one of them were dropped.
-	//
-	// Writing them is one test per plane rather than eighteen: bind
-	// gerege_nexus_operator, read one row of each table, assert it arrives.
-	// It is not in this change because this change is about registry.
-	"operator_read":   "00049's console reads; no test binds the operator role to them",
-	"operator_write":  "00049's console writes; the same",
-	"operator_shared": "00049's shared AI tables; the same",
-
-	// The console's half of the service directory (00090). Its tenant half
-	// is asserted in internal/person; this half is not.
-	"directory_is_public_to_the_console": "00090; the console's half of the directory has no test",
-}
+// It is empty, and the way it emptied is the argument for keeping it. The four
+// that were here — 00049's `operator_read`, `operator_write` and
+// `operator_shared` across eighteen tables, and 00090's
+// `directory_is_public_to_the_console` — are asserted in console_policy_test.go
+// now: a row per table written by the owner, read back after SET LOCAL ROLE
+// gerege_nexus_operator. An empty map is not a reason to delete it; the next
+// policy written without a test needs somewhere to be written down.
+var policiesWithoutATest = map[string]string{}
 
 // Every policy is asserted from the role it is written for.
 //
