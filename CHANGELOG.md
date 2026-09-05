@@ -3,6 +3,12 @@
 All notable changes to **open-gerege-nexus** (Gerege Nexus) will be documented in
 this file.
 
+Тэр журмаас үүдэн зарим бичлэг нь хожим устсан баримтыг нэрлэдэг
+(`docs/RELEASING.md`, `docs/MONITORING.md`, `docs/CONTROL_PLANE.md`,
+`docs/URTUU.md` гэх мэт). Нэрийг нь үлдээж, ХОЛБООСЫГ нь авсан: бичлэг тухайн
+өдрөө юуг заасныг хэлсээр байх ёстой ч GitHub дээр 404 өгөх ёсгүй. Кодын зам
+руу заасан хуучин холбоосууд ҮЛДСЭН — тэдгээрийг цэвэрлэх нь тусдаа шийдвэр.
+
 Entries below the rebrand keep the names that were true when they shipped — the
 `open-gerege-mn-erp` repository, the ERP framing, and the `openerp.gerege.mn`
 deployment, which has since moved to `nexus.gerege.mn`. A changelog edited to
@@ -1148,7 +1154,7 @@ Copilot, ярианаас бичвэр, бичвэрээс яриа, орчуу�
 тайлан), `urtuu_request_codes`, `urtuu_peer_codes`, `urtuu_deliveries`-ыг тус
 бүр. Хажууд нь «энэ хоёр пакет бол давхаргаар хуваагдсан нэг бүтээгдэхүүн,
 нэг схем хуваалцдаг» гэсэн тайлбар бичээстэй байсан — тэр нь хоёул нэг репод
-байх хүртэл үнэн бөгөөд [ADR 0004](docs/adr/0004-a-pilot-that-did-not-ship.md)
+байх хүртэл үнэн бөгөөд ADR 0004 (`docs/adr/0004-a-pilot-that-did-not-ship.md`)
 энэ аппыг цөмөөс гаргах гол саад гэж нэрлэсэн.
 
 Одоо дөрвөн метод:
@@ -1681,8 +1687,8 @@ Nexus дээр суурилсан платформууд дээд/доод хо�
 харагдана. Их Монгол Улсын өртөө шуудангийн зарчим: захиаг өртөөнөөс өртөөнд
 дамжуулж, хүрсэн эсэхийг нь буцааж мэдэгддэг.
 
-Дизайны санал [`docs/URTUU_PROPOSAL.md`](docs/URTUU_PROPOSAL.md), ажиллагааны
-заавар [`docs/URTUU.md`](docs/URTUU.md).
+Дизайны санал `docs/URTUU_PROPOSAL.md`, ажиллагааны
+заавар `docs/URTUU.md`.
 
 **Гурван давхарга, зааг нь тодорхой.** `pkg/urtuu` — гэрээ (дугтуй, гарын
 үсэг, статусын машин), distribution бүр ижил ойлголттой байхын тулд `pkg`-д.
@@ -1711,7 +1717,7 @@ JSONB нь түлхүүрийн дарааллыг эмхэлдэг тул ха�
 
 **Кодын бүртгэлийн стандартыг бид тогтоов.** ring.dgov.mn-ий утасны форматыг
 хүлээхийн оронд түүнийг санал болгож бичив:
-[`docs/RING_STANDARD.md`](docs/RING_STANDARD.md) — гарын үсэгтэй баримт, ETag,
+`docs/RING_STANDARD.md` — гарын үсэгтэй баримт, ETag,
 Ed25519. Гарын үсгийн вход нь аппын каталог болон Өртөөгийн дугтуйтай ЯГ ИЖИЛ
 (`generated_at + '\n' + түүхий байт`): нэг дүрэм гурван газар, нэгийг нь
 уншсан хүн гурвуулангийнхыг ойлгоно. Хэрэгжилт нь бүрэн — нөхцөлт татах,
@@ -2295,7 +2301,7 @@ in `internal/apps/runtime.go` — the lines that become a distribution's
 Эхний тогтвортой хувилбар: `backend/pkg/nexus` нь semver амлалттай нийтийн
 API болж, экосистемийн салгалтын 0-р (нэршил) ба 1-р (SDK) алхам дуусав.
 Энэ хувилбараас эхлэн distribution repo нь цөмийг fork хийхгүйгээр
-dependency болгон авч чадна — [хувилбар гаргах журам](docs/RELEASING.md).
+dependency болгон авч чадна — хувилбар гаргах журам (`docs/RELEASING.md`).
 
 ### Added — a release process, and the tests that make its promise checkable
 
@@ -2721,7 +2727,7 @@ and what has been done to them — and until now that somebody used `psql`. This
 is the first phase of the operator console described in
 `docs/CONTROL_PLANE_PLAN.md`: the foundation, on
 which suspension, support and configuration are built next. Guide in
-[`docs/CONTROL_PLANE.md`](docs/CONTROL_PLANE.md).
+`docs/CONTROL_PLANE.md`.
 
 - **One binary, nothing else shared.** The console is `/cp/api` on the same Go
   process and `/cp` on the same Next.js build, because a second service would
@@ -2779,7 +2785,7 @@ own tenant; the mine wants one consolidated "Transport" report. That request
 runs against everything this platform is built to prevent, so the answer is not
 to weaken the isolation but to add a separate, permissioned path beside it.
 §3.5 of the design; guide in
-[`docs/REPORT_SHARING.md`](docs/REPORT_SHARING.md).
+`docs/REPORT_SHARING.md`.
 
 - **Nothing crosses a tenant boundary.** A consolidated run calls the *ordinary*
   report once per grantor, **inside that grantor's own tenant context**. No
@@ -2872,7 +2878,7 @@ serving them knows about none of them. Guide in
 ### Added — Traces, and errors that group themselves
 
 The third pillar and the tool beside it, both env-gated and both off by default.
-Guides in [`docs/MONITORING.md`](docs/MONITORING.md) §11 and §12.
+Guides in `docs/MONITORING.md` §11 and §12.
 
 - **`SetupTracing` now sets up tracing.** It was a stub that logged
   "opentelemetry tracing initialized" and initialized nothing — worse than no
@@ -2924,7 +2930,7 @@ Guides in [`docs/MONITORING.md`](docs/MONITORING.md) §11 and §12.
 
 `deploy/docker-compose.monitoring.yml`: Prometheus, Alertmanager, Loki, Alloy,
 Grafana, node_exporter, cAdvisor, postgres_exporter, redis_exporter. Guides in
-[`docs/MONITORING.md`](docs/MONITORING.md) and, for every alert,
+`docs/MONITORING.md` and, for every alert,
 [`docs/RUNBOOKS.md`](docs/RUNBOOKS.md).
 
 - **A separate compose file, brought up as a separate project.** Nothing in
@@ -3055,7 +3061,7 @@ party of the provider named there — including of another Gerege Nexus — and 
 two halves are independent: an instance can be a provider, a client, or both,
 which is what a regional deployment federating upward while still issuing
 identities to its own installed apps needs. Full guide in
-[`docs/SSO_FEDERATION.md`](docs/SSO_FEDERATION.md).
+`docs/SSO_FEDERATION.md`.
 
 - **`ssoclient`, the relying-party protocol.** Discovery with the issuer check
   that makes every advertised endpoint trustworthy, a JWKS cache that refetches
@@ -3421,7 +3427,7 @@ green throughout.
   API does not serve, and counted the 404 as healthy. It now polls `/health` and
   requires a 2xx.
 
-### Added — Tauri v2 desktop shell ([`desktop-tauri/`](desktop-tauri))
+### Added — Tauri v2 desktop shell (`desktop-tauri/`)
 
 - **A second implementation of one contract, not a second product.** The bridge
   contract ([`docs/SHELL_CONTRACT.md`](docs/SHELL_CONTRACT.md)) is the
@@ -3433,7 +3439,7 @@ green throughout.
   reaches the styling as `<html data-shell>`. Declared capabilities are
   `notify`, `badge`, `external.open`, `print.system`, `fs.save`, `menu.native`.
 - **Native sign-in window** with email/password and both eID flows. The polling
-  loop is Rust ([`auth.rs`](desktop-tauri/src-tauri/src/auth.rs)) and carries the
+  loop is Rust (`auth.rs`) and carries the
   same reasoning as [`EIDLogin.tsx`](frontend/components/EIDLogin.tsx): one check
   in flight at a time, a 400 ms gap between them because the server already holds
   each request for 25 s, three tolerated failures because a dropped long-poll is
@@ -3445,7 +3451,7 @@ green throughout.
   "include"` and no bearer header, and neither Tauri nor wry can write a cookie
   into a webview from outside. The only way it lands in the right jar is for that
   webview to receive the `Set-Cookie` itself, so the sign-in requests are issued
-  there ([`bridge.rs`](desktop-tauri/src-tauri/src/bridge.rs)) while the flow
+  there (`bridge.rs`) while the flow
   logic stays in Rust. The work-area window is created hidden and stays hidden
   until sign-in completes.
 - **The native menu is the tenant's menu.** `GET /api/v1/menus` with the
@@ -3462,7 +3468,7 @@ green throughout.
 - **Security**: main-frame navigation is confined to the Web URL's origin and
   everything else opens in the system browser; the bridge is main-frame only and
   the remote origin allowed to reach IPC is pinned in
-  [`capabilities/`](desktop-tauri/src-tauri/capabilities); every native→web value
+  `capabilities/` (`desktop-tauri/src-tauri/capabilities`); every native→web value
   is JSON-encoded rather than concatenated into JavaScript; `external.open`
   accepts only `http`, `https`, `mailto`, `tel`; `fs.saveAs` writes only where the
   person pointed. In a release build the API and Web URLs are compile-time
@@ -3480,11 +3486,11 @@ green throughout.
 - **Not included**: installers and code signing. The shell builds; shipping it
   needs a Developer ID identity plus notarisation on macOS and an Authenticode
   certificate on Windows, both listed as TODO in
-  [`desktop-tauri/README.md`](desktop-tauri/README.md).
+  `desktop-tauri/README.md`.
 
 ### Added — CI for both desktop shells
 
-- **[`desktop-tauri.yml`](.github/workflows/desktop-tauri.yml) builds on Linux,
+- **`desktop-tauri.yml` builds on Linux,
   Windows and macOS.** Much of the shell sits behind `#[cfg(target_os = ...)]`, so
   a green build on one machine says nothing about the other two. It runs
   `cargo clippy --all-targets -- -D warnings`, `cargo build --locked` and
@@ -3575,7 +3581,7 @@ green throughout.
 ### Added — Email verification as a platform capability
 
 - **One flow instead of one per app**
-  ([`internal/platform/emailverify`](backend/internal/platform/emailverify)):
+  (`internal/platform/emailverify`):
   proving that somebody controls an address is not one module's business.
   Contacts wants it before it trusts an address, Documents before a signing link
   leaves for an outsider, Gov Services before it answers a citizen at one. Each
@@ -3623,7 +3629,7 @@ green throughout.
 
 ### Added — PDF E-Sign v2: eID Mongolia qualified remote signing
 
-- **eID Mongolia signature client ([`internal/platform/eidsign`](backend/internal/platform/eidsign))**:
+- **eID Mongolia signature client (`internal/platform/eidsign`)**:
   a real relying-party client for the v3 signature API. The citizen's own device
   holds the private key and approves with PIN2, so nothing here ever touches a
   signing key: we hash the PDF, eID pushes that digest to the phone, and the
@@ -3654,7 +3660,7 @@ green throughout.
 
 - **The app's permissions were declared but never enforced.** `io.example.esign`
   is absent from the platform's blanket app gate
-  ([`server.go`](backend/internal/platform/server.go)) and its handlers only
+  (`server.go`) and its handlers only
   checked the tenant, so anyone in a tenant could sign. Every route now asserts
   `esign.read`, `esign.sign` or `esign.manage` explicitly. Migration `00010`
   backfills the grants existing roles should already have had, so no current
@@ -3676,9 +3682,9 @@ green throughout.
 
 ### Added
 
-- **PDF E-Sign App Module ([`io.example.esign`](backend/internal/apps/esign))**:
+- **PDF E-Sign App Module (`io.example.esign` (`backend/internal/apps/esign`))**:
   - PDF document upload with tenant-scoped storage (migration `00009`), page-count detection, and original/signed download endpoints (`/api/v1/esign`).
-  - Digital signature (тоон гарын үсэг) certificate validation and PKCS#7 PDF signing via the Gerege eSign HSM platform client ([`internal/platform/gerege/esign.go`](backend/internal/platform/gerege/esign.go)) — the private signing key never leaves the HSM.
+  - Digital signature (тоон гарын үсэг) certificate validation and PKCS#7 PDF signing via the Gerege eSign HSM platform client (`internal/platform/gerege/esign.go`) — the private signing key never leaves the HSM.
   - Visible signature stamp placement with last-page auto-targeting and signature audit log (`esign_signature_logs`).
   - Frontend signing flow (`/esign`): certificate check → canvas signature pad → HSM signing → signed PDF download.
   - Mock mode by default (`ESIGN_MOCK_MODE`); configure `ESIGN_LOGIN_URL`, `ESIGN_SIGN_URL`, and `ESIGN_TOKEN` for live signing.
@@ -3778,10 +3784,10 @@ green throughout.
 - **Modular Monolith Core Architecture**:
   - Pure Go compile-time `Module` interface and global module registry (`appregistry`).
   - Tenant-level app installation, enablement, and menu visibility engine (`appinstaller`).
-  - **ORY Hydra-Grade OAuth2 & OpenID Connect (OIDC) SSO Provider ([`internal/platform/ssoprovider`](backend/internal/platform/ssoprovider))**:
+  - **ORY Hydra-Grade OAuth2 & OpenID Connect (OIDC) SSO Provider (`internal/platform/ssoprovider`)**:
   - OpenID Connect Discovery (`/.well-known/openid-configuration`), JWKS URI (`/.well-known/jwks.json`), and OAuth2 Authorization Server (`/oauth2/token`, `/oauth2/introspect`, `/oauth2/revoke`).
   - Supports `authorization_code`, `client_credentials`, and `refresh_token` grant flows.
-- **Developer Portal App Module ([`io.example.developer_portal`](backend/internal/apps/developer_portal))**:
+- **Developer Portal App Module (`io.example.developer_portal` (`backend/internal/apps/developer_portal`))**:
   - Developer portal interface (`/developer/apps`) to register third-party OAuth2 client applications, issue Client IDs and Client Secrets, and manage redirect URIs.
 - **Automated Production Deployment & CI/CD Pipeline ([`openerp.gerege.mn`](.github/workflows/deploy.yml))**:
   - Continuous Integration & Automated Deployment pipeline building GHCR Docker images and deploying to `openerp.gerege.mn`.
@@ -3809,18 +3815,18 @@ green throughout.
   - Prometheus metrics endpoint (`/metrics`) recording HTTP request rates and latency histograms (`github.com/prometheus/client_golang`).
   - OpenTelemetry tracing initialization (`SetupTracing`).
   - Async OTP Mailer queue with worker pool, retry logic, and graceful shutdown (`internal/platform/mailer`).
-- **Public Billing & e-Barimt Module ([`io.example.billing`](backend/internal/apps/billing))**:
+- **Public Billing & e-Barimt Module (`io.example.billing` (`backend/internal/apps/billing`))**:
   - Public service fee invoices, 10% VAT calculation for Mongolia e-Barimt, and status tracking (`/billing`).
-- **Gerege DAN SSO Gateway System ([`dan.gerege.mn`](backend/internal/platform/dan))**:
+- **Gerege DAN SSO Gateway System (`dan.gerege.mn` (`backend/internal/platform/dan`))**:
   - Official Gerege Systems DAN SSO Gateway integration service (`POST /api/v1/auth/dan/login`).
   - Citizen identity verification and session token validation against `https://dan.gerege.mn/api/v1`.
-- **E-ID Digital Identity & DAN SSO Authentication ([`internal/platform/eid`](backend/internal/platform/eid))**:
+- **E-ID Digital Identity & DAN SSO Authentication (`internal/platform/eid`)**:
   - Aligned 100% with official **[eidmongolia.mn](https://eidmongolia.mn)** & **[developer.gerege.mn](https://developer.gerege.mn)** OAuth2 and OpenID Connect (OIDC) specifications.
   - Supports 4 official Mongolian authentication channels: PKI Digital Signature (Тоон гарын үсэг), Mobile OTP, Bank SSO, and Biometric Face Verification.
-- **External System Integrations & Webhook Engine ([`internal/platform/integration`](backend/internal/platform/integration))**:
+- **External System Integrations & Webhook Engine (`internal/platform/integration`)**:
   - Event Dispatcher & Connector Manager supporting HMAC-SHA256 signature signing, asynchronous webhooks, and third-party REST connectors.
   - Dedicated Integration Settings Manager UI (`/settings/integrations`) with real-time status & health tracking.
-- **XYP State Data Exchange System ([`xyp.gerege.mn`](backend/internal/platform/gerege/xyp.go))**:
+- **XYP State Data Exchange System (`xyp.gerege.mn` (`backend/internal/platform/gerege/xyp.go`))**:
   - Official Mongolian State Data Exchange (ХУР Төрийн мэдээлэл солилцооны систем) integration service.
   - Citizen civil registration (`POST /api/v1/xyp/citizen`) & company legal entity verification (`POST /api/v1/xyp/company`).
   - Interactive "ХУР / XYP Auto-fill" button integration on Contacts page.

@@ -101,6 +101,15 @@ jobs:
       - name: Test deployment safety helpers
         run: python3 -m unittest discover -s deploy/scripts -p 'test_*.py'
 
+      # Баримтын харьцангуй холбоос бүр хүрэх газартай эсэх. `links:check` нь
+      # бүрхүүлийн санал болгодог route-уудыг барьдаг; энэ нь баримтуудыг.
+      # Ялгаа нь чухал: `docs/adr/`, `docs/RELEASING.md` ба бусад есөн баримт
+      # устахад CHANGELOG-оос 28 холбоос тэдгээр рүү заасаар үлдэж, GitHub дээр
+      # долоо хоногоор 404 өгсөн ч юу ч улаан болоогүй — холбоос доторх зам бол
+      # мөр, мөр нь үргэлж хүчинтэй.
+      - name: Every documented path leads somewhere
+        run: node scripts/check-doc-links.mjs
+
   test:
     name: Test (${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
