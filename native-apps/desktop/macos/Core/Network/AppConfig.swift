@@ -70,11 +70,24 @@ enum AppConfig {
         // (native-apps/shared/device_lines.json).
         //
         // Апп нь eID-ийн `/api/*` route-уудыг ШУУД биш, өөрийн хостоор
-        // дамжуулан дуудна: nginx тэдгээрийг eID платформ руу proxy хийнэ
-        // (nginx/device-lines.nexus.gerege.mn.conf, snippets/eid-api-proxy.conf).
-        // Ингэсний шалтгаан нь гоо сайхан биш: клиент нэг гарал мэддэг бол
-        // webview доторх ажлын муж, native дуудлага хоёр НЭГ origin дээр
-        // үлдэж, session cookie нь SameSite=Strict хэвээр байна.
+        // дамжуулан дуудна. Ингэсний шалтгаан нь гоо сайхан биш: клиент нэг
+        // гарал мэддэг бол webview доторх ажлын муж, native дуудлага хоёр НЭГ
+        // origin дээр үлдэж, session cookie нь SameSite=Strict хэвээр байна.
+        //
+        // ⚠ ЭНЭ PROXY ХАРААХАН БАЙХГҮЙ. `device-lines.nexus.gerege.mn.conf`-ын
+        // `location /api/` нь бүгдийг платформын Go backend (127.0.0.1:8080)
+        // руу явуулдаг бөгөөд тэр нь `/api/v1/auth/eid/{start,start-id,poll}`-ыг
+        // л мэднэ. `Endpoints.swift` дэх нөгөө бүлэг — `/api/start`,
+        // `/api/status`, `/api/login-notify`, `/api/dashboard`,
+        // `/api/representations`, `/api/children`, `/api/certificates`,
+        // `/api/sign-pdf-start`, `/api/esign-sign` — өнөөдөр 404 буцаана.
+        // Өөрөөр хэлбэл нэвтрэлт ажиллана, түүний дараах самбар ажиллахгүй
+        // (README-ийн 3-р зарчим «нэр МОНГОЛООР» нь `/api/dashboard`-оос
+        // хамаардаг тул тэр ч мөн адил).
+        //
+        // Дутуу зүйл нь nginx-ийн нэг блок: эдгээр замуудыг eID платформ руу
+        // proxy хийх. Түүнийг энэ репод бичихийн өмнө аль upstream руу, ямар
+        // нөхцөлтэйгээр иргэний хүсэлт явахыг байрлуулалтын эзэн шийдэх ёстой.
         //
         // Энэ хостыг заахын өмнө DNS → nginx → certbot гурав бэлэн байх
         // ЁСТОЙ. Тэр дараалал алдагдвал апп «A TLS error caused the secure

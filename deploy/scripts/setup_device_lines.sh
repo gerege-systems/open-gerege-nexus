@@ -105,12 +105,18 @@ cat <<EOF
    шинээр дарж бичдэг тул гараар нэмсэн мөр дараагийн rollout-д арчигдана.
 
 2. Клиентүүдийг шугам руу нь чиглүүлнэ — ЗӨВХӨН одоо, өмнө нь биш.
-   native-apps/shared/device_lines.json-ы \$provisioning заасан мөрүүд:
-     macOS    native-apps/desktop/macos/NativeSettings.swift        → activeOrigin
-     Windows  native-apps/desktop/windows/ShellProfile.cs           → ActiveOrigin
-     iOS      .../GeregeShellKit/DeviceLine.swift           → origin
-     Android  .../mn/gerege/nexus/DeviceLine.kt             → origin
-   мөн device_lines.json дотор provisioned: true болгоно.
+   Аль файлыг засахыг ЭНД БИШ, шугам бүрийн \`client\` талбар нэрлэнэ:
+
+     jq -r '.deviceLines[] | [.line, (.client | join("; "))] | @tsv' \\
+        native-apps/shared/device_lines.json
+
+   Замуудыг энэ скриптэд давхардуулж бичихээ больсон: өмнө нь тэдгээр нь
+   энд байсан бөгөөд файлууд нэрээ солиход (NativeSettings.swift,
+   ShellProfile.cs, DeviceLine.swift, DeviceLine.kt — дөрвүүлээ байхгүй
+   болсон) энэ заавар зөвхөн бодит биш байсан төдийгүй, унших хүнд ЗӨВ
+   мэт харагдсаар байв.
+
+   Дараа нь device_lines.json дотор provisioned: true болгоно.
 
 ==== Шалгах ====
 EOF

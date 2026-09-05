@@ -1,12 +1,22 @@
-# e-ID Mongolia macOS Desktop — CLAUDE.md
+# NexusGeregeDesktop (macOS) — CLAUDE.md
+
+> **Энэ файл e-ID Mongolia-гийн клиентээс порт хийгдсэн бөгөөд түүний
+> ул мөрийг хараахан бүрэн арилгаагүй.** 2026-09-05-нд кодоос шалгаж
+> баталсан хэсгүүд (нэр, тохиргоо, барих, локал туршилт) залруулагдсан.
+> Урсгалын тайлбарууд (`/api/*` дуудлагууд) нь ПОРТ хийгдсэн хэвээр —
+> тэдгээрийн ихэнх нь энэ байрлуулалт дээр өнөөдөр ажиллахгүй, доорх
+> «Урсгалууд» хэсгийн анхааруулгыг үз.
 
 ## Тойм
 
-macOS desktop app (SwiftUI) — **first-party клиент**. iOS app шиг клиентэд RP
-secret/бүртгэл огт байхгүй: бүх дуудлага өөрийн web backend-ийн нийтийн
-`/api/*` route-уудаар (browser-тэй яг ижил зам) дамжина. Go RP-API (`/v3/*`)-ийн
-secret-ийг web сервер (`web/src/lib/rpclient.ts`, `RP_API_SECRET` env) л барьдаг.
-`../eid-mongolia-mn/desktop-app/macos-app`-аас порт хийсэн.
+macOS desktop клиент (SwiftUI) — **first-party**. iOS клиент шиг энд RP
+secret/бүртгэл огт байхгүй: бүх дуудлага өөрийн хостын нийтийн `/api/*`
+route-уудаар (хөтөчтэй яг ижил зам) дамжина. RP-ийн secret-ийг зөвхөн
+сервер тал барина.
+
+Хаяг нь **төхөөрөмжийн шугам**: `https://desktop.nexus.gerege.mn`
+(iOS салаа нь `https://mobile.nexus.gerege.mn`). Шугам нь платформыг биш
+form factor-ыг нэрлэдэг — `native-apps/shared/device_lines.json`.
 
 ## Tech Stack
 
@@ -15,7 +25,15 @@ secret-ийг web сервер (`web/src/lib/rpclient.ts`, `RP_API_SECRET` env) 
 - GeregeTokenKit (`../gerege-token-kit`, local SPM) — USB FEITIAN token (локал PKCS#11/APDU)
 - Sparkle 2 (auto-update), XcodeGen (`project.yml`)
 
-## Урсгалууд (web-ийн нийтийн route-ууд — `web/src/app/api/*`)
+## Урсгалууд
+
+> ⚠ **Доорх `/api/*` бүлэг өнөөдөр 404 буцаана.** Тэдгээр нь eID Mongolia-гийн
+> вэб аппын route-ууд бөгөөд шугам дээр тэднийг тэр платформ руу дамжуулах
+> nginx блок ЭНЭ РЕПОД БАЙХГҮЙ: `device-lines.nexus.gerege.mn.conf`-ын
+> `location /api/` нь бүгдийг платформын Go backend руу явуулдаг, тэр нь
+> зөвхөн `/api/v1/auth/eid/{start,start-id,poll}`-ыг мэднэ.
+> Өөрөөр хэлбэл **нэвтрэлт ажиллана, түүний дараах самбар ажиллахгүй.**
+> Дэлгэрэнгүйг `Core/Network/AppConfig.swift`.
 
 ### Нэвтрэлт (LoginView)
 - **QR**: `POST /api/start` → `{sessionId, qr, vc}` — QR-д `qr` (= sessionId)
@@ -47,7 +65,7 @@ Bearer session байхгүй — `documentNumber` нь identity handle (web liv
 
 | Утга | Эх сурвалж (дараалал) | Default |
 |---|---|---|
-| Сервер URL (web app) | `UserDefaults["API_BASE_URL_OVERRIDE"]` (Settings) → env `API_BASE_URL` | DEBUG: `http://localhost:3000`, Release: `https://eidmongolia.mn` |
+| Сервер URL | `UserDefaults["API_BASE_URL_OVERRIDE"]` (Settings) → env `API_BASE_URL` | DEBUG ба Release НЭГ ижил: `https://desktop.nexus.gerege.mn` (iOS: `https://mobile.…`). DEBUG нь өмнө `localhost:3000` байсныг болиулсан — локал сервергүй хүн «Could not connect» дээр гацдаг байв. |
 
 Secret, RP UUID, RP name — **байхгүй** (first-party).
 
@@ -78,18 +96,21 @@ support/privacy/lock). `organizations`/`children` нь ЗӨВХӨН УНШИХ �
 ## Build & Run
 
 ```bash
-cd desktop/macos-app
-xcodegen generate
-xcodebuild -project NexusGeregeDesktop.xcodeproj -scheme NexusGeregeDesktop \
-           -configuration Debug -destination 'platform=macOS,arch=arm64' build
-open NexusGeregeDesktop.xcodeproj    # ⌘R
+cd native-apps/desktop/macos
+./build.sh                      # CI яг үүнийг дуудна (xcodegen + xcodebuild)
+CONFIGURATION=Release ./build.sh
+open NexusGeregeDesktop.xcodeproj    # ⌘R (build.sh үүсгэсний дараа)
 ```
+
+`.xcodeproj` нь репод БАЙХГҮЙ (`.gitignore`): `project.yml` нь эх сурвалж,
+төслийг `build.sh` бүр удаа `xcodegen`-ээр дахин үүсгэнэ.
 
 ⚠ `-scheme NexusGeregeDesktop` (`-target` биш) — local `GeregeTokenKit` SPM resolve-д шаардлагатай.
 
-Локал туршилт: Go сервер (`cd server && go run ./cmd/smartid`, :8080) + web
-(`cd web && npm run dev`, :3000) хоёуланг нь асаана — DEBUG default сервер нь
-web (:3000). Утасны app мөн ижил Go серверт заасан байх ёстой.
+Локал туршилт: `backend` (`cd backend && go run ./cmd/api`) + `frontend`
+(`cd frontend && npm run dev`, :3000) хоёуланг нь асаана, дараа нь клиентийг
+Settings → Сервер эсвэл `API_BASE_URL=http://localhost:3000`-аар тийш заа.
+Анхдагчаар клиент прод шугам руугаа заадаг тул энэ алхмыг ЗААВАЛ хийнэ.
 
 ## Security
 
