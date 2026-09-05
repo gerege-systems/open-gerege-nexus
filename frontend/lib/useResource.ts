@@ -69,26 +69,35 @@ export function useResource<T>(
   // called from a button always runs the current version.
   const loadRef = useRef(load);
   const onErrorRef = useRef(options.onError);
+  const requestIdRef = useRef(0);
   useEffect(() => {
     loadRef.current = load;
     onErrorRef.current = options.onError;
   });
 
   const reload = useCallback(async () => {
+    const requestId = ++requestIdRef.current;
     setLoading(true);
     try {
-      setData(await loadRef.current());
+      const nextData = await loadRef.current();
+      if (requestId !== requestIdRef.current) return;
+      setData(nextData);
       setFailed(false);
     } catch (err) {
+      if (requestId !== requestIdRef.current) return;
       setFailed(true);
       onErrorRef.current?.(err);
     } finally {
-      setLoading(false);
+      if (requestId === requestIdRef.current) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
+    const requests = requestIdRef;
     void reload();
+    // Invalidate pending work on unmount and during Strict Mode effect replay.
+    // Only the latest request may change this screen or report an error.
+    return () => { ++requests.current; };
   }, [reload]);
 
   return { data, loading, failed, setData, reload };

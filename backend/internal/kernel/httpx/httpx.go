@@ -13,6 +13,7 @@ package httpx
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 
@@ -39,5 +40,21 @@ func Error(w http.ResponseWriter, status int, message string) { nexus.Error(w, s
 // this many callers share is part of the request vocabulary, which is what this
 // package is.
 func DecodeLimited(r *http.Request, dst any, max int64) error {
-	return json.NewDecoder(io.LimitReader(r.Body, max)).Decode(dst)
+	if r.Body == nil {
+		return io.EOF
+	}
+	decoder := json.NewDecoder(http.MaxBytesReader(nil, r.Body, max))
+	if err := decoder.Decode(dst); err != nil {
+		return err
+	}
+	// Require the whole body to fit and contain exactly one JSON value.
+	// LimitReader alone makes the size limit look like a successful EOF.
+	var extra json.RawMessage
+	if err := decoder.Decode(&extra); err != io.EOF {
+		if err != nil {
+			return err
+		}
+		return errors.New("request body must contain a single JSON value")
+	}
+	return nil
 }

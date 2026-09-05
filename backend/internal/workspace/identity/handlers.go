@@ -9,6 +9,7 @@ package identity
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -29,7 +30,11 @@ func (h *Handlers) HandleEIDStart(w http.ResponseWriter, r *http.Request) {
 		CallbackURL string `json:"callbackUrl"`
 	}
 	if r.Body != nil {
-		_ = httpx.DecodeLimited(r, &req, 8<<10)
+		// An absent body is supported by QR clients; a supplied body must be valid.
+		if err := httpx.DecodeLimited(r, &req, 8<<10); err != nil && !errors.Is(err, io.EOF) {
+			httpx.Error(w, http.StatusBadRequest, "invalid request body")
+			return
+		}
 	}
 	callback, err := validEIDCallback(req.CallbackURL)
 	if err != nil {

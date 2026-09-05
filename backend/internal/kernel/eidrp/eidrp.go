@@ -482,7 +482,13 @@ func (c *client) do(req *http.Request) ([]byte, int, error) {
 		return nil, 0, fmt.Errorf("eid: http: %w", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
-	raw, _ := io.ReadAll(io.LimitReader(resp.Body, maxRespBytes))
+	raw, err := io.ReadAll(io.LimitReader(resp.Body, maxRespBytes+1))
+	if err != nil {
+		return nil, resp.StatusCode, fmt.Errorf("eid: read response: %w", err)
+	}
+	if len(raw) > maxRespBytes {
+		return nil, resp.StatusCode, fmt.Errorf("eid: response exceeds %d bytes", maxRespBytes)
+	}
 	return raw, resp.StatusCode, nil
 }
 
