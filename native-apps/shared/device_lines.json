@@ -60,7 +60,7 @@
       "devOrigin": "http://localhost:3000",
       "startRoute": "/",
       "client": [
-        "native-apps/desktop/macos/Core/Network/AppConfig.swift → apiBaseURL (#else салаа)",
+        "native-apps/desktop/macos/Core/Network/AppConfig.swift → baseURL (#else салаа)",
         "native-apps/desktop/windows/src/NexusGeregeDesktop.Client/appsettings.json → Api.BaseUrl"
       ],
       "home": "/line/desktop"
@@ -76,7 +76,7 @@
       "devOrigin": "http://localhost:3000 (Android эмулятор дээр http://10.0.2.2:3000)",
       "startRoute": "/",
       "client": [
-        "native-apps/desktop/macos/Core/Network/AppConfig.swift → apiBaseURL (#if os(iOS) салаа; iOS нь мак-тай эх кодоо хуваалцана)",
+        "native-apps/desktop/macos/Core/Network/AppConfig.swift → baseURL (#if os(iOS) салаа; iOS нь мак-тай эх кодоо хуваалцана)",
         "native-apps/mobile/android/app/src/main/kotlin/mn/gerege/nexus/AppConfig.kt → DEFAULT_BASE_URL"
       ],
       "home": "/line/mobile"
