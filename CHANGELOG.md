@@ -3427,7 +3427,7 @@ green throughout.
   API does not serve, and counted the 404 as healthy. It now polls `/health` and
   requires a 2xx.
 
-### Added — Tauri v2 desktop shell ([`desktop-tauri/`](desktop-tauri))
+### Added — Tauri v2 desktop shell (`desktop-tauri/`)
 
 - **A second implementation of one contract, not a second product.** The bridge
   contract ([`docs/SHELL_CONTRACT.md`](docs/SHELL_CONTRACT.md)) is the
@@ -3439,7 +3439,7 @@ green throughout.
   reaches the styling as `<html data-shell>`. Declared capabilities are
   `notify`, `badge`, `external.open`, `print.system`, `fs.save`, `menu.native`.
 - **Native sign-in window** with email/password and both eID flows. The polling
-  loop is Rust ([`auth.rs`](desktop-tauri/src-tauri/src/auth.rs)) and carries the
+  loop is Rust (`auth.rs`) and carries the
   same reasoning as [`EIDLogin.tsx`](frontend/components/EIDLogin.tsx): one check
   in flight at a time, a 400 ms gap between them because the server already holds
   each request for 25 s, three tolerated failures because a dropped long-poll is
@@ -3451,7 +3451,7 @@ green throughout.
   "include"` and no bearer header, and neither Tauri nor wry can write a cookie
   into a webview from outside. The only way it lands in the right jar is for that
   webview to receive the `Set-Cookie` itself, so the sign-in requests are issued
-  there ([`bridge.rs`](desktop-tauri/src-tauri/src/bridge.rs)) while the flow
+  there (`bridge.rs`) while the flow
   logic stays in Rust. The work-area window is created hidden and stays hidden
   until sign-in completes.
 - **The native menu is the tenant's menu.** `GET /api/v1/menus` with the
@@ -3468,7 +3468,7 @@ green throughout.
 - **Security**: main-frame navigation is confined to the Web URL's origin and
   everything else opens in the system browser; the bridge is main-frame only and
   the remote origin allowed to reach IPC is pinned in
-  [`capabilities/`](desktop-tauri/src-tauri/capabilities); every native→web value
+  `capabilities/` (`desktop-tauri/src-tauri/capabilities`); every native→web value
   is JSON-encoded rather than concatenated into JavaScript; `external.open`
   accepts only `http`, `https`, `mailto`, `tel`; `fs.saveAs` writes only where the
   person pointed. In a release build the API and Web URLs are compile-time
@@ -3486,11 +3486,11 @@ green throughout.
 - **Not included**: installers and code signing. The shell builds; shipping it
   needs a Developer ID identity plus notarisation on macOS and an Authenticode
   certificate on Windows, both listed as TODO in
-  [`desktop-tauri/README.md`](desktop-tauri/README.md).
+  `desktop-tauri/README.md`.
 
 ### Added — CI for both desktop shells
 
-- **[`desktop-tauri.yml`](.github/workflows/desktop-tauri.yml) builds on Linux,
+- **`desktop-tauri.yml` builds on Linux,
   Windows and macOS.** Much of the shell sits behind `#[cfg(target_os = ...)]`, so
   a green build on one machine says nothing about the other two. It runs
   `cargo clippy --all-targets -- -D warnings`, `cargo build --locked` and
@@ -3581,7 +3581,7 @@ green throughout.
 ### Added — Email verification as a platform capability
 
 - **One flow instead of one per app**
-  ([`internal/platform/emailverify`](backend/internal/platform/emailverify)):
+  (`internal/platform/emailverify`):
   proving that somebody controls an address is not one module's business.
   Contacts wants it before it trusts an address, Documents before a signing link
   leaves for an outsider, Gov Services before it answers a citizen at one. Each
@@ -3629,7 +3629,7 @@ green throughout.
 
 ### Added — PDF E-Sign v2: eID Mongolia qualified remote signing
 
-- **eID Mongolia signature client ([`internal/platform/eidsign`](backend/internal/platform/eidsign))**:
+- **eID Mongolia signature client (`internal/platform/eidsign`)**:
   a real relying-party client for the v3 signature API. The citizen's own device
   holds the private key and approves with PIN2, so nothing here ever touches a
   signing key: we hash the PDF, eID pushes that digest to the phone, and the
@@ -3660,7 +3660,7 @@ green throughout.
 
 - **The app's permissions were declared but never enforced.** `io.example.esign`
   is absent from the platform's blanket app gate
-  ([`server.go`](backend/internal/platform/server.go)) and its handlers only
+  (`server.go`) and its handlers only
   checked the tenant, so anyone in a tenant could sign. Every route now asserts
   `esign.read`, `esign.sign` or `esign.manage` explicitly. Migration `00010`
   backfills the grants existing roles should already have had, so no current
@@ -3682,9 +3682,9 @@ green throughout.
 
 ### Added
 
-- **PDF E-Sign App Module ([`io.example.esign`](backend/internal/apps/esign))**:
+- **PDF E-Sign App Module (`io.example.esign` (`backend/internal/apps/esign`))**:
   - PDF document upload with tenant-scoped storage (migration `00009`), page-count detection, and original/signed download endpoints (`/api/v1/esign`).
-  - Digital signature (тоон гарын үсэг) certificate validation and PKCS#7 PDF signing via the Gerege eSign HSM platform client ([`internal/platform/gerege/esign.go`](backend/internal/platform/gerege/esign.go)) — the private signing key never leaves the HSM.
+  - Digital signature (тоон гарын үсэг) certificate validation and PKCS#7 PDF signing via the Gerege eSign HSM platform client (`internal/platform/gerege/esign.go`) — the private signing key never leaves the HSM.
   - Visible signature stamp placement with last-page auto-targeting and signature audit log (`esign_signature_logs`).
   - Frontend signing flow (`/esign`): certificate check → canvas signature pad → HSM signing → signed PDF download.
   - Mock mode by default (`ESIGN_MOCK_MODE`); configure `ESIGN_LOGIN_URL`, `ESIGN_SIGN_URL`, and `ESIGN_TOKEN` for live signing.
@@ -3784,10 +3784,10 @@ green throughout.
 - **Modular Monolith Core Architecture**:
   - Pure Go compile-time `Module` interface and global module registry (`appregistry`).
   - Tenant-level app installation, enablement, and menu visibility engine (`appinstaller`).
-  - **ORY Hydra-Grade OAuth2 & OpenID Connect (OIDC) SSO Provider ([`internal/platform/ssoprovider`](backend/internal/platform/ssoprovider))**:
+  - **ORY Hydra-Grade OAuth2 & OpenID Connect (OIDC) SSO Provider (`internal/platform/ssoprovider`)**:
   - OpenID Connect Discovery (`/.well-known/openid-configuration`), JWKS URI (`/.well-known/jwks.json`), and OAuth2 Authorization Server (`/oauth2/token`, `/oauth2/introspect`, `/oauth2/revoke`).
   - Supports `authorization_code`, `client_credentials`, and `refresh_token` grant flows.
-- **Developer Portal App Module ([`io.example.developer_portal`](backend/internal/apps/developer_portal))**:
+- **Developer Portal App Module (`io.example.developer_portal` (`backend/internal/apps/developer_portal`))**:
   - Developer portal interface (`/developer/apps`) to register third-party OAuth2 client applications, issue Client IDs and Client Secrets, and manage redirect URIs.
 - **Automated Production Deployment & CI/CD Pipeline ([`openerp.gerege.mn`](.github/workflows/deploy.yml))**:
   - Continuous Integration & Automated Deployment pipeline building GHCR Docker images and deploying to `openerp.gerege.mn`.
@@ -3815,18 +3815,18 @@ green throughout.
   - Prometheus metrics endpoint (`/metrics`) recording HTTP request rates and latency histograms (`github.com/prometheus/client_golang`).
   - OpenTelemetry tracing initialization (`SetupTracing`).
   - Async OTP Mailer queue with worker pool, retry logic, and graceful shutdown (`internal/platform/mailer`).
-- **Public Billing & e-Barimt Module ([`io.example.billing`](backend/internal/apps/billing))**:
+- **Public Billing & e-Barimt Module (`io.example.billing` (`backend/internal/apps/billing`))**:
   - Public service fee invoices, 10% VAT calculation for Mongolia e-Barimt, and status tracking (`/billing`).
-- **Gerege DAN SSO Gateway System ([`dan.gerege.mn`](backend/internal/platform/dan))**:
+- **Gerege DAN SSO Gateway System (`dan.gerege.mn` (`backend/internal/platform/dan`))**:
   - Official Gerege Systems DAN SSO Gateway integration service (`POST /api/v1/auth/dan/login`).
   - Citizen identity verification and session token validation against `https://dan.gerege.mn/api/v1`.
-- **E-ID Digital Identity & DAN SSO Authentication ([`internal/platform/eid`](backend/internal/platform/eid))**:
+- **E-ID Digital Identity & DAN SSO Authentication (`internal/platform/eid`)**:
   - Aligned 100% with official **[eidmongolia.mn](https://eidmongolia.mn)** & **[developer.gerege.mn](https://developer.gerege.mn)** OAuth2 and OpenID Connect (OIDC) specifications.
   - Supports 4 official Mongolian authentication channels: PKI Digital Signature (Тоон гарын үсэг), Mobile OTP, Bank SSO, and Biometric Face Verification.
-- **External System Integrations & Webhook Engine ([`internal/platform/integration`](backend/internal/platform/integration))**:
+- **External System Integrations & Webhook Engine (`internal/platform/integration`)**:
   - Event Dispatcher & Connector Manager supporting HMAC-SHA256 signature signing, asynchronous webhooks, and third-party REST connectors.
   - Dedicated Integration Settings Manager UI (`/settings/integrations`) with real-time status & health tracking.
-- **XYP State Data Exchange System ([`xyp.gerege.mn`](backend/internal/platform/gerege/xyp.go))**:
+- **XYP State Data Exchange System (`xyp.gerege.mn` (`backend/internal/platform/gerege/xyp.go`))**:
   - Official Mongolian State Data Exchange (ХУР Төрийн мэдээлэл солилцооны систем) integration service.
   - Citizen civil registration (`POST /api/v1/xyp/citizen`) & company legal entity verification (`POST /api/v1/xyp/company`).
   - Interactive "ХУР / XYP Auto-fill" button integration on Contacts page.
