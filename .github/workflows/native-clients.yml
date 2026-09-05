@@ -51,6 +51,14 @@ jobs:
           dotnet-version: 8.0.x
       - run: dotnet build NexusGeregeDesktop.sln --configuration Release -p:FormFactor=${{ matrix.form_factor }} -p:RestoreLockedMode=false
         working-directory: native-apps/desktop/windows
+      # `dotnet build` компайл хийгээд зогсдог тул `tests/` доторх таван багц —
+      # SPKI pin validator, HMAC signer, sensitive-action guard, гэрчилгээний
+      # үйлчилгээ, esign тохиргоо — бичигдсэн өдрөөсөө хойш нэг ч удаа
+      # ажиллаагүй. Pin шалгагчийн логик эвдэрсэн ч энэ workflow ногоон
+      # хэвээр байх байсан: тест байхгүй ба тест ногоон хоёрыг ялгах зүйл
+      # энэ мөр.
+      - run: dotnet test NexusGeregeDesktop.sln --configuration Release -p:FormFactor=${{ matrix.form_factor }} -p:RestoreLockedMode=false
+        working-directory: native-apps/desktop/windows
 
   android:
     runs-on: ubuntu-latest
