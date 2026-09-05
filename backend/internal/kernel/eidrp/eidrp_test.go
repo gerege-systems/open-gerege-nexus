@@ -125,6 +125,24 @@ func TestTheTerminalResultDecidesTheState(t *testing.T) {
 	}
 }
 
+// A session eID no longer holds is over, not broken. Reported as a failure it
+// became a 502 on the citizen's sign-in card, once per check.
+func TestSessionTreatsNotFoundAsExpired(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	t.Cleanup(server.Close)
+	client := NewClient(server.URL, "rp-uuid", "", "rp_sk_test", "")
+
+	result, err := client.Session(context.Background(), "s-gone", 1000)
+	if err != nil {
+		t.Fatalf("session: %v", err)
+	}
+	if result.State != StateExpired {
+		t.Fatalf("state is %s, want %s", result.State, StateExpired)
+	}
+}
+
 // A citizen who represents nobody is an answer, not a failure.
 func TestRepresentationsTreatsNotFoundAsNone(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
