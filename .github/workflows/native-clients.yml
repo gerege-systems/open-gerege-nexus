@@ -17,7 +17,10 @@ name: Native clients
 on:
   push:
     branches: [main]
-    paths: ["native-apps/**", ".github/workflows/native-clients.yml"]
+    paths:
+      - "native-apps/**"
+      - ".github/workflows/native-clients.yml"
+      - "scripts/check-native-tests.mjs"
   pull_request:
     branches: [main]
 
@@ -25,6 +28,20 @@ permissions:
   contents: read
 
 jobs:
+  # Тесттэй клиент тестээ гүйцэтгэдэг эсэх. Windows тал таван тест файлтай
+  # атлаа `dotnet build` дээр зогсдог байсан бөгөөд тэдгээр нь бичигдсэн
+  # өдрөөсөө 2026-09-05 хүртэл нэг ч удаа гүйгээгүй — sln-д орсон тул
+  # компайл хийгддэг, ногоон тэмдэг нь «энэ компайл хийгдэж байна» гэсэн
+  # утгатай байв. Тестгүй клиент нь скрипт доторх жагсаалтад шалтгаанаа
+  # бичүүлнэ: тестгүй байх нь байр суурь байж болно, түүнийг ЧИМЭЭГҮЙ
+  # барих нь болохгүй.
+  guard:
+    name: Every client with tests runs them
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: node scripts/check-native-tests.mjs
+
   macos:
     runs-on: macos-latest
     steps:
