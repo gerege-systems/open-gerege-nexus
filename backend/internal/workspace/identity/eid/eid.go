@@ -286,8 +286,16 @@ func (s *EIDService) startMock(nationalID string, deviceLink bool) *StartResult 
 // minutes: a p99 of ninety seconds on operation="poll" is a normal sign-in, not
 // an incident.
 func (s *EIDService) Poll(ctx context.Context, sessionID string) (*PollResult, error) {
-	return telemetry.ObserveExternalValue(ctx, telemetry.SystemEID, "poll",
+	result, err := telemetry.ObserveExternalValue(ctx, telemetry.SystemEID, "poll",
 		func(ctx context.Context) (*PollResult, error) { return s.poll(ctx, sessionID) })
+	// All three poll routes answer a failure with the same fixed sentence, and
+	// nothing wrote down why. What the log held was `status:502` and a request
+	// id — eID's own reason for refusing the check was thrown away at the point
+	// it was known, which left the 502s in production undiagnosable.
+	if err != nil {
+		slog.Warn("eID session poll failed", "error", err)
+	}
+	return result, err
 }
 
 func (s *EIDService) poll(ctx context.Context, sessionID string) (*PollResult, error) {

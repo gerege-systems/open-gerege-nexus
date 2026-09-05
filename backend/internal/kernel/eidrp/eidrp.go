@@ -352,6 +352,14 @@ func (c *client) Session(ctx context.Context, sessionID string, timeoutMs int) (
 	if err != nil {
 		return nil, err
 	}
+	// eID keeps a session only while it lives: once it has ended and been read,
+	// or its deadline has passed, the id is gone and every further poll is a
+	// 404. That is the session's answer, not a failure of this platform — as a
+	// failure it reached the citizen as a 502 on the sign-in card, one per
+	// check, until the screen gave up on a session that was merely over.
+	if status == http.StatusNotFound {
+		return &SessionResult{State: StateExpired}, nil
+	}
 	if status >= 300 {
 		return nil, fmt.Errorf("eid session: status %d: %s", status, snippet(raw))
 	}
