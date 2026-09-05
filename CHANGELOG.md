@@ -3,6 +3,12 @@
 All notable changes to **open-gerege-nexus** (Gerege Nexus) will be documented in
 this file.
 
+Тэр журмаас үүдэн зарим бичлэг нь хожим устсан баримтыг нэрлэдэг
+(`docs/RELEASING.md`, `docs/MONITORING.md`, `docs/CONTROL_PLANE.md`,
+`docs/URTUU.md` гэх мэт). Нэрийг нь үлдээж, ХОЛБООСЫГ нь авсан: бичлэг тухайн
+өдрөө юуг заасныг хэлсээр байх ёстой ч GitHub дээр 404 өгөх ёсгүй. Кодын зам
+руу заасан хуучин холбоосууд ҮЛДСЭН — тэдгээрийг цэвэрлэх нь тусдаа шийдвэр.
+
 Entries below the rebrand keep the names that were true when they shipped — the
 `open-gerege-mn-erp` repository, the ERP framing, and the `openerp.gerege.mn`
 deployment, which has since moved to `nexus.gerege.mn`. A changelog edited to
@@ -1148,7 +1154,7 @@ Copilot, ярианаас бичвэр, бичвэрээс яриа, орчуу�
 тайлан), `urtuu_request_codes`, `urtuu_peer_codes`, `urtuu_deliveries`-ыг тус
 бүр. Хажууд нь «энэ хоёр пакет бол давхаргаар хуваагдсан нэг бүтээгдэхүүн,
 нэг схем хуваалцдаг» гэсэн тайлбар бичээстэй байсан — тэр нь хоёул нэг репод
-байх хүртэл үнэн бөгөөд [ADR 0004](docs/adr/0004-a-pilot-that-did-not-ship.md)
+байх хүртэл үнэн бөгөөд ADR 0004 (`docs/adr/0004-a-pilot-that-did-not-ship.md`)
 энэ аппыг цөмөөс гаргах гол саад гэж нэрлэсэн.
 
 Одоо дөрвөн метод:
@@ -1681,8 +1687,8 @@ Nexus дээр суурилсан платформууд дээд/доод хо�
 харагдана. Их Монгол Улсын өртөө шуудангийн зарчим: захиаг өртөөнөөс өртөөнд
 дамжуулж, хүрсэн эсэхийг нь буцааж мэдэгддэг.
 
-Дизайны санал [`docs/URTUU_PROPOSAL.md`](docs/URTUU_PROPOSAL.md), ажиллагааны
-заавар [`docs/URTUU.md`](docs/URTUU.md).
+Дизайны санал `docs/URTUU_PROPOSAL.md`, ажиллагааны
+заавар `docs/URTUU.md`.
 
 **Гурван давхарга, зааг нь тодорхой.** `pkg/urtuu` — гэрээ (дугтуй, гарын
 үсэг, статусын машин), distribution бүр ижил ойлголттой байхын тулд `pkg`-д.
@@ -1711,7 +1717,7 @@ JSONB нь түлхүүрийн дарааллыг эмхэлдэг тул ха�
 
 **Кодын бүртгэлийн стандартыг бид тогтоов.** ring.dgov.mn-ий утасны форматыг
 хүлээхийн оронд түүнийг санал болгож бичив:
-[`docs/RING_STANDARD.md`](docs/RING_STANDARD.md) — гарын үсэгтэй баримт, ETag,
+`docs/RING_STANDARD.md` — гарын үсэгтэй баримт, ETag,
 Ed25519. Гарын үсгийн вход нь аппын каталог болон Өртөөгийн дугтуйтай ЯГ ИЖИЛ
 (`generated_at + '\n' + түүхий байт`): нэг дүрэм гурван газар, нэгийг нь
 уншсан хүн гурвуулангийнхыг ойлгоно. Хэрэгжилт нь бүрэн — нөхцөлт татах,
@@ -2295,7 +2301,7 @@ in `internal/apps/runtime.go` — the lines that become a distribution's
 Эхний тогтвортой хувилбар: `backend/pkg/nexus` нь semver амлалттай нийтийн
 API болж, экосистемийн салгалтын 0-р (нэршил) ба 1-р (SDK) алхам дуусав.
 Энэ хувилбараас эхлэн distribution repo нь цөмийг fork хийхгүйгээр
-dependency болгон авч чадна — [хувилбар гаргах журам](docs/RELEASING.md).
+dependency болгон авч чадна — хувилбар гаргах журам (`docs/RELEASING.md`).
 
 ### Added — a release process, and the tests that make its promise checkable
 
@@ -2721,7 +2727,7 @@ and what has been done to them — and until now that somebody used `psql`. This
 is the first phase of the operator console described in
 `docs/CONTROL_PLANE_PLAN.md`: the foundation, on
 which suspension, support and configuration are built next. Guide in
-[`docs/CONTROL_PLANE.md`](docs/CONTROL_PLANE.md).
+`docs/CONTROL_PLANE.md`.
 
 - **One binary, nothing else shared.** The console is `/cp/api` on the same Go
   process and `/cp` on the same Next.js build, because a second service would
@@ -2779,7 +2785,7 @@ own tenant; the mine wants one consolidated "Transport" report. That request
 runs against everything this platform is built to prevent, so the answer is not
 to weaken the isolation but to add a separate, permissioned path beside it.
 §3.5 of the design; guide in
-[`docs/REPORT_SHARING.md`](docs/REPORT_SHARING.md).
+`docs/REPORT_SHARING.md`.
 
 - **Nothing crosses a tenant boundary.** A consolidated run calls the *ordinary*
   report once per grantor, **inside that grantor's own tenant context**. No
@@ -2872,7 +2878,7 @@ serving them knows about none of them. Guide in
 ### Added — Traces, and errors that group themselves
 
 The third pillar and the tool beside it, both env-gated and both off by default.
-Guides in [`docs/MONITORING.md`](docs/MONITORING.md) §11 and §12.
+Guides in `docs/MONITORING.md` §11 and §12.
 
 - **`SetupTracing` now sets up tracing.** It was a stub that logged
   "opentelemetry tracing initialized" and initialized nothing — worse than no
@@ -2924,7 +2930,7 @@ Guides in [`docs/MONITORING.md`](docs/MONITORING.md) §11 and §12.
 
 `deploy/docker-compose.monitoring.yml`: Prometheus, Alertmanager, Loki, Alloy,
 Grafana, node_exporter, cAdvisor, postgres_exporter, redis_exporter. Guides in
-[`docs/MONITORING.md`](docs/MONITORING.md) and, for every alert,
+`docs/MONITORING.md` and, for every alert,
 [`docs/RUNBOOKS.md`](docs/RUNBOOKS.md).
 
 - **A separate compose file, brought up as a separate project.** Nothing in
@@ -3055,7 +3061,7 @@ party of the provider named there — including of another Gerege Nexus — and 
 two halves are independent: an instance can be a provider, a client, or both,
 which is what a regional deployment federating upward while still issuing
 identities to its own installed apps needs. Full guide in
-[`docs/SSO_FEDERATION.md`](docs/SSO_FEDERATION.md).
+`docs/SSO_FEDERATION.md`.
 
 - **`ssoclient`, the relying-party protocol.** Discovery with the issuer check
   that makes every advertised endpoint trustworthy, a JWKS cache that refetches
