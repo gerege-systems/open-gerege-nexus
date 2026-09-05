@@ -29,7 +29,7 @@
   ],
   "$provisioning": [
     "Шугамууд 2026-08-12-нд АСАВ, 2026-09-02-нд ДӨРӨВ БОЛОВ. Дөрвүүлэн бэлэн:",
-    "  1. DNS   *.nexus.gerege.mn → 38.180.145.75 (wildcard)",
+    "  1. DNS   *.nexus.gerege.mn → платформын хост (wildcard A-бичлэг)",
     "  2. nginx deploy/nginx/device-lines.nexus.gerege.mn.conf",
     "  3. TLS   /etc/letsencrypt/live/device-lines.nexus.gerege.mn (4 нэр)",
     "  4. API   DEVICE_LINE_ORIGINS → ALLOWED_ORIGINS",

@@ -1,7 +1,7 @@
 #!/bin/sh
 # Угсраад байршуулна. Ганц аргумент нь ssh-ийн alias.
 #
-#   sh deploy.sh nexus-root
+#   sh deploy.sh <ssh-host>
 #
 # Угсралт нь алсын хост дээр явагдана: тэнд Docker байгаа, мөн macOS дээрх
 # Docker Desktop-ийн хавтас хуваалцах зан төлөвөөс хамаарахгүй.
