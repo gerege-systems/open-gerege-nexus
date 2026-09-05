@@ -63,28 +63,15 @@ enum AppConfig {
         if let e = ProcessInfo.processInfo.environment["API_BASE_URL"], !e.isEmpty {
             return normalize(e)
         }
-        // DEBUG-д ч ижил анхдагч. Өмнө нь DEBUG нь `http://localhost:3000`-д ордог байсан тул
-        // локал web сервер ажиллуулаагүй хүн (тестлэгч, дизайнер, эсвэл зүгээр л Debug build
-        // ажиллуулсан) "Could not connect to the server" аваад гацдаг байв. Локал backend руу
-        // заахдаа Settings → Сервер, эсвэл `API_BASE_URL=http://localhost:3000` env.
-        // ЭНЭ БАЙРЛУУЛАЛТЫН төхөөрөмжийн шугам. Апп нь eID-ийн `/api/*`
-        // route-уудыг ШУУД биш, өөрийн хостоор дамжуулан дуудна: nginx тэр
-        // замуудыг eID платформ руу proxy хийнэ
-        // (nginx/device-lines.nexus.gerege.mn.conf).
+        // ЭНЭ БАЙРЛУУЛАЛТЫН төхөөрөмжийн шугам.
         //
-        // Ингэсний шалтгаан нь гоо сайхан биш: клиент нэг гарал мэддэг бол
-        // webview доторх ажлын муж, native дуудлага хоёр НЭГ origin дээр
-        // үлдэж, session cookie нь SameSite=Strict хэвээр байна.
-        //
-        // TLS pinning нь Let's Encrypt-ийн E7/E8 ЗАВСРЫН гэрчилгээг заадаг
-        // тул (leaf биш) энэ хост certbot-оор гэрчилгээ авдаг л бол pin
-        // хэвээр таарна.
-        // ЭНЭ БАЙРЛУУЛАЛТЫН ширээний шугам.
+        // Шугам нь ПЛАТФОРМ биш FORM FACTOR-ыг нэрлэнэ: ширээн дээрх Mac ба
+        // Windows нэг шугам, гарын дээрх iOS ба Android нөгөө шугам
+        // (native-apps/shared/device_lines.json).
         //
         // Апп нь eID-ийн `/api/*` route-уудыг ШУУД биш, өөрийн хостоор
         // дамжуулан дуудна: nginx тэдгээрийг eID платформ руу proxy хийнэ
         // (nginx/device-lines.nexus.gerege.mn.conf, snippets/eid-api-proxy.conf).
-        //
         // Ингэсний шалтгаан нь гоо сайхан биш: клиент нэг гарал мэддэг бол
         // webview доторх ажлын муж, native дуудлага хоёр НЭГ origin дээр
         // үлдэж, session cookie нь SameSite=Strict хэвээр байна.
@@ -93,12 +80,19 @@ enum AppConfig {
         // ЁСТОЙ. Тэр дараалал алдагдвал апп «A TLS error caused the secure
         // connection to fail» дээр буудаг — нэг удаа яг тэр болсон.
         //
-        // TLS pinning нь гинжний ISRG-ийн үндсийг заадаг (Let's Encrypt
-        // завсрынхаа эргүүлдэг тул), энэ хост certbot-оор гэрчилгээ авдаг л
-        // бол таарна.
-        // Шугам нь ПЛАТФОРМ биш FORM FACTOR-ыг нэрлэнэ: ширээн дээрх Mac ба
-        // Windows нэг шугам, гарын дээрх iOS ба Android нөгөө шугам
-        // (native-apps/shared/device_lines.json).
+        // TLS pinning-ийн тухай: pin багц нь Let's Encrypt-ийн E7/E8 ЗАВСРЫН
+        // гэрчилгээ БА ISRG-ийн X1/X2 ҮНДСИЙГ хоёуланг агуулна, таарах нөхцөл
+        // нь гинжний дурын нэгтэй тохирох явдал. Эхэндээ зөвхөн завсрынх
+        // байсан бөгөөд хост YE2 руу шилжихэд таарахаа больсон — үндэс нь
+        // тэр эргэлтийг барих зорилготой. (Release-д ч pinning нь opt-in:
+        // `UserDefaults["security.tlsPinning"]`. Дэлгэрэнгүйг
+        // Infrastructure/Security/Pinning/PinnedSessionDelegate.swift.)
+        //
+        // DEBUG-д ч ижил анхдагч. Өмнө нь DEBUG нь `http://localhost:3000`-д
+        // ордог байсан тул локал web сервер ажиллуулаагүй хүн (тестлэгч,
+        // дизайнер, эсвэл зүгээр л Debug build ажиллуулсан) "Could not
+        // connect to the server" аваад гацдаг байв. Локал backend руу заахдаа
+        // Settings → Сервер, эсвэл `API_BASE_URL=http://localhost:3000` env.
         #if os(iOS)
         return "https://mobile.nexus.gerege.mn"
         #else
