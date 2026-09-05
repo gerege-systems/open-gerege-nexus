@@ -158,20 +158,27 @@ GitHub-д үлдэнэ: тэдгээр нь хост руу хүрэх зам б
 Infisical дээр өөр хоёр төсөл бас байна — `petronet-gerege-nexus` ба
 `tsm-gerege-mn` — тэдгээр нь тухайн репод зориулагдсан бөгөөд энд хамаарахгүй.
 
+Хостын хаяг энд байхгүй нь санаатай: энэ репо нийтийн бөгөөд «хост + тэр
+хост дээрх нууцын файлын зам» нэг мөрөнд бичигдсэн хүснэгт нь хайлтын үр дүн
+болж эхэлдэг. Хавтас бүрийн бодит хаяг нь `Archive` төслийн тухайн хавтас
+дотор өөрөө байдаг (`INFRA_HOST`), тиймээс энд зөвхөн юу хаана байдгийн
+**хэлбэр** үлдэнэ.
+
 | Хавтас | Хост | Файл |
 | --- | --- | --- |
-| `nexus`, `tsm` | 38.180.145.75 | `.env.monitoring`, `.env.backups`, `/etc/default/nexus-backup`, `/opt/tsm/.env` |
-| `appstore`, `business`, `developer`, `benzin-app`, `appstore-legacy`, `mcp` | 38.180.146.236 | `/opt/<нэр>/.env` |
-| `dgov`, `sso-dgov` | 38.180.243.138 | `/opt/open-dgov-mn/.env`, `/opt/sso-dgov-mn/deploy/.env` |
-| `petronet` | 38.180.120.144 | `/opt/petronet/.env` |
-| `geregeapp` | 38.180.251.213 | `/opt/app-nexus/.env` |
-| `eduge` | 38.180.137.169 | `/opt/eduge-nexus/.env`, `.admin-password` |
-| `eid` | 38.180.117.155 | `/opt/eid-nexus/.env` |
+| `nexus`, `tsm` | `<host-a>` | `.env.monitoring`, `.env.backups`, `/etc/default/nexus-backup`, `/opt/tsm/.env` |
+| `appstore`, `business`, `developer`, `benzin-app`, `appstore-legacy`, `mcp` | `<host-b>` | `/opt/<нэр>/.env` |
+| `dgov`, `sso-dgov` | `<host-c>` | `/opt/open-dgov-mn/.env`, `/opt/sso-dgov-mn/deploy/.env` |
+| `petronet` | `<host-d>` | `/opt/petronet/.env` |
+| `geregeapp` | `<host-e>` | `/opt/app-nexus/.env` |
+| `eduge` | `<host-f>` | `/opt/eduge-nexus/.env`, `.admin-password` |
+| `eid` | `<host-g>` | `/opt/eid-nexus/.env` |
 
-**Хоёр хост дутуу**: 38.180.137.241 (Benzin, OpenSandbox) ба 38.180.254.231
-(POS) руу бидний барьж байгаа ямар ч түлхүүр хүрэхгүй. Хостынгоо самбараар
-дамжуулан түлхүүр сэргээх хүртэл тэдгээрийн нууц зөвхөн тэр хоёр машин дээр
-байна.
+**Хоёр хост дутуу**: Benzin/OpenSandbox ба POS ажиллуулдаг хоёр машин руу
+бидний барьж байгаа ямар ч түлхүүр хүрэхгүй. Хостынгоо самбараар дамжуулан
+түлхүүр сэргээх хүртэл тэдгээрийн нууц зөвхөн тэр хоёр машин дээр байна.
+(Аль хоёр машин болохыг `Archive` төслөөс хар — тэднийг нэрлэсэн жагсаалт нь
+хамгийн бага хамгаалалттай хостуудын жагсаалт тул нийтийн репод байх ёсгүй.)
 
 **`_EMPTY_ON_HOST`.** Infisical хоосон утга хүлээж авдаггүй бөгөөд нэгийг
 таарахад бүх импортыг татгалздаг. Тиймээс хоосон түлхүүрүүд хасагдаж, нэрс нь

@@ -31,7 +31,7 @@ macOS дээр Docker Desktop нь `/private/tmp` доорх замыг хува
 ## Байршуулах
 
 ```bash
-sh deploy.sh nexus-root      # угсраад /var/www/docs руу хуулна
+sh deploy.sh <ssh-host>      # угсраад /var/www/docs руу хуулна
 ```
 
 nginx-ийн тохиргоо нь `deploy/nginx/docs.nexus.gerege.mn.conf`.

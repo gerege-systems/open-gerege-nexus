@@ -93,11 +93,16 @@ cat <<EOF
 
 ==== Үлдсэн хоёр алхам ====
 
-1. /opt/open-gerege-nexus/.env дотор:
+1. Origin allowlist.
 
-   DEVICE_LINE_ORIGINS=$(printf 'https://%s,' "${LINES[@]}" | sed 's/,$//')
+   Дараах жагсаалт нь docker-compose.prod.yml доторх анхдагчтай ТААРЧ байвал
+   хийх зүйл алга — тэр анхдагч өөрөө хүчинтэй:
 
-   дараа нь:  docker compose -f docker-compose.prod.yml up -d api
+     $(printf 'https://%s,' "${LINES[@]}" | sed 's/,$//')
+
+   ЯЛГААТАЙ бол GitHub → Settings → Variables дээр DEVICE_LINE_ORIGINS
+   хувьсагчаар тавь. Хостын .env дээр гараар бүү бич: түүнийг deploy бүр
+   шинээр дарж бичдэг тул гараар нэмсэн мөр дараагийн rollout-д арчигдана.
 
 2. Клиентүүдийг шугам руу нь чиглүүлнэ — ЗӨВХӨН одоо, өмнө нь биш.
    native-apps/shared/device_lines.json-ы \$provisioning заасан мөрүүд:
