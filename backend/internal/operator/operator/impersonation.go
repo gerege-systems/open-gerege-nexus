@@ -31,8 +31,8 @@ import (
 // data" is a question they can answer without asking us.
 //
 // The handover exists because a cookie cannot cross hostnames. The console
-// runs on cp.nexus.gerege.mn and the session has to be set on
-// nexus.gerege.mn, so the console mints a single-use token, hands the operator
+// runs on cp.open.gerege.mn and the session has to be set on
+// open.gerege.mn, so the console mints a single-use token, hands the operator
 // a link, and the platform side exchanges it for the session — once, within a
 // minute.
 

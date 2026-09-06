@@ -1,6 +1,6 @@
 # Production stack for Gerege Nexus.
 #
-# The default origin is nexus.gerege.mn. It drives CORS, the OIDC issuer and the
+# The default origin is open.gerege.mn. It drives CORS, the OIDC issuer and the
 # eID callback in one place, so moving it is a coordinated change: DNS, the TLS
 # certificate and any client pinning the issuer all follow. It replaced
 # openerp.gerege.mn in the Gerege Nexus rebrand. Set PUBLIC_ORIGIN to move it.
@@ -18,7 +18,7 @@
 # Everything a deployment must not share with a neighbour is a variable now:
 # STACK prefixes the container names, POSTGRES_VOLUME and CATALOG_CACHE_VOLUME
 # name the data, and the four *_HOST_PORT variables place the published ports.
-# Every default is what nexus.gerege.mn already runs, so this file unchanged is
+# Every default is what open.gerege.mn already runs, so this file unchanged is
 # still that deployment, byte for byte.
 #
 # It is written down because the alternative was found the hard way. Gerege
@@ -115,12 +115,12 @@ services:
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       PORT: 8080
       ENVIRONMENT: production
-      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-https://nexus.gerege.mn}
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-https://open.gerege.mn}
       # The browser line plus one origin per device line. Every device line is
       # a separate host that nginx points at this same API container — the
       # backend stays single, the origins do not, and both CORS and the CSRF
       # origin check read this one list.
-      ALLOWED_ORIGINS: ${PUBLIC_ORIGIN:-https://nexus.gerege.mn},${DEVICE_LINE_ORIGINS:-https://desktop.nexus.gerege.mn,https://mobile.nexus.gerege.mn,https://kiosk.nexus.gerege.mn,https://pos.nexus.gerege.mn}
+      ALLOWED_ORIGINS: ${PUBLIC_ORIGIN:-https://open.gerege.mn},${DEVICE_LINE_ORIGINS:-https://desktop.open.gerege.mn,https://mobile.open.gerege.mn,https://kiosk.open.gerege.mn,https://pos.open.gerege.mn}
       # Nginx terminates TLS in front of the API, so the forwarded client
       # address can be trusted here.
       TRUST_PROXY_HEADERS: "true"
@@ -129,12 +129,12 @@ services:
       # stack that renames only one of them has an eID prompt and a sign-in
       # screen disagreeing about which product this is. Unset is Gerege Nexus.
       BRAND_NAME: ${BRAND_NAME:-}
-      SSO_ISSUER: ${PUBLIC_ORIGIN:-https://nexus.gerege.mn}
+      SSO_ISSUER: ${PUBLIC_ORIGIN:-https://open.gerege.mn}
       # Which hosts an OAuth client may be redirected back to. The list is exact
-      # hostnames and does NOT inherit subdomains — `nexus.gerege.mn` in it does
-      # not admit `monitor.nexus.gerege.mn`, which is the whole point and also
+      # hostnames and does NOT inherit subdomains — `open.gerege.mn` in it does
+      # not admit `monitor.open.gerege.mn`, which is the whole point and also
       # the thing that catches people out. Empty falls back to
-      # `nexus.gerege.mn` alone, which is what every deployment ran on until
+      # `open.gerege.mn` alone, which is what every deployment ran on until
       # Grafana needed a callback of its own.
       OAUTH_REDIRECT_HOSTS: ${OAUTH_REDIRECT_HOSTS:-}
       SSO_DEFAULT_CLIENT_SECRET: ${SSO_DEFAULT_CLIENT_SECRET:?SSO_DEFAULT_CLIENT_SECRET is required in production}

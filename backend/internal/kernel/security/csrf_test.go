@@ -37,7 +37,7 @@ func TestCSRFMiddleware(t *testing.T) {
 // The two gaps the earlier version left open, and the path the desktop clients
 // are meant to use.
 func TestCookieWritesNeedEvidenceThatAPageOfOursMadeThem(t *testing.T) {
-	t.Setenv("ALLOWED_ORIGINS", "https://nexus.gerege.mn")
+	t.Setenv("ALLOWED_ORIGINS", "https://open.gerege.mn")
 	handler := CSRFMiddleware(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	}))
@@ -77,10 +77,10 @@ func TestCookieWritesNeedEvidenceThatAPageOfOursMadeThem(t *testing.T) {
 		// frontend and the API are one host on two ports. There the Origin is
 		// on the list, and blocking it would break every local sign-in.
 		{"same-site in development", map[string]string{
-			"Sec-Fetch-Site": "same-site", "Origin": "https://nexus.gerege.mn"}, true, http.StatusNoContent},
+			"Sec-Fetch-Site": "same-site", "Origin": "https://open.gerege.mn"}, true, http.StatusNoContent},
 
 		// Older clients that still send Origin.
-		{"allowed origin", map[string]string{"Origin": "https://nexus.gerege.mn"}, true, http.StatusNoContent},
+		{"allowed origin", map[string]string{"Origin": "https://open.gerege.mn"}, true, http.StatusNoContent},
 		{"foreign origin", map[string]string{"Origin": "https://phishing.example"}, true, http.StatusForbidden},
 
 		// The hole: participate in neither signal and the check used to pass.

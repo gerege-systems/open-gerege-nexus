@@ -10,12 +10,12 @@
 
 | хост | платформ | form factor |
 |---|---|---|
-| `mac.nexus.gerege.mn` | macos | desktop |
-| `win.nexus.gerege.mn` | windows | desktop |
-| `ios.nexus.gerege.mn` | ios | mobile |
-| `android.nexus.gerege.mn` | android | mobile |
-| `kiosk.nexus.gerege.mn` | kiosk | kiosk |
-| `pos.nexus.gerege.mn` | pos | pos |
+| `mac.open.gerege.mn` | macos | desktop |
+| `win.open.gerege.mn` | windows | desktop |
+| `ios.open.gerege.mn` | ios | mobile |
+| `android.open.gerege.mn` | android | mobile |
+| `kiosk.open.gerege.mn` | kiosk | kiosk |
+| `pos.open.gerege.mn` | pos | pos |
 
 Backend цор ганц: зургуулаа ижил upstream руу (3000 frontend, 8080 API) очдог.
 Тусдаа хост байгаагийн шалтгаан нь webview доторх дуудлагыг same-origin
@@ -45,10 +45,10 @@ Backend цор ганц: зургуулаа ижил upstream руу (3000 front
 ### Дөрвөн шугам
 
 ```
-desktop.nexus.gerege.mn   ← macOS, Windows
-mobile.nexus.gerege.mn    ← iOS, Android (таблет ч мөн)
-kiosk.nexus.gerege.mn     ← Windows Kiosk, Android Kiosk
-pos.nexus.gerege.mn       ← Windows POS, Android POS
+desktop.open.gerege.mn   ← macOS, Windows
+mobile.open.gerege.mn    ← iOS, Android (таблет ч мөн)
+kiosk.open.gerege.mn     ← Windows Kiosk, Android Kiosk
+pos.open.gerege.mn       ← Windows POS, Android POS
 ```
 
 `kiosk` ба `pos` нь desktop/mobile дотор ОРОХГҮЙ. Нэг Windows машин дээр
@@ -120,10 +120,10 @@ native-apps/
 
 | файл | шинэ утга |
 |---|---|
-| `desktop/macos/NativeSettings.swift` → `lineOrigin` | `https://desktop.nexus.gerege.mn` |
-| `desktop/windows/ShellProfile.cs` → `Desktop.LineOrigin` | `https://desktop.nexus.gerege.mn` |
-| `mobile/ios/Sources/GeregeShellKit/DeviceLine.swift` → `origin` | `https://mobile.nexus.gerege.mn` |
-| `mobile/android/.../DeviceLine.kt` → `origin` (else салаа) | `https://mobile.nexus.gerege.mn` |
+| `desktop/macos/NativeSettings.swift` → `lineOrigin` | `https://desktop.open.gerege.mn` |
+| `desktop/windows/ShellProfile.cs` → `Desktop.LineOrigin` | `https://desktop.open.gerege.mn` |
+| `mobile/ios/Sources/GeregeShellKit/DeviceLine.swift` → `origin` | `https://mobile.open.gerege.mn` |
+| `mobile/android/.../DeviceLine.kt` → `origin` (else салаа) | `https://mobile.open.gerege.mn` |
 
 `ShellProfile.cs`-ийн `Kiosk`/`Pos`, `DeviceLine.kt`-ийн `kiosk`/`pos` салаанууд
 хөдлөхгүй.
@@ -141,9 +141,9 @@ native-apps/
 certbot → `DEVICE_LINE_ORIGINS` → хамгийн сүүлд клиентийн тогтмол.** Эсрэг
 дараалал нь аппыг байхгүй хост руу чиглүүлж унагаана.
 
-1. **DNS** — `*.nexus.gerege.mn` wildcard нь `desktop.`, `mobile.`-ыг аль
+1. **DNS** — `*.open.gerege.mn` wildcard нь `desktop.`, `mobile.`-ыг аль
    хэдийн хамарна. Шинэ бичлэг хэрэггүй.
-2. **nginx** — `deploy/nginx/device-lines.nexus.gerege.mn.conf` дотор
+2. **nginx** — `deploy/nginx/device-lines.open.gerege.mn.conf` дотор
    `server_name` дөрвөн нэр болно.
 3. **certbot** — гэрчилгээг дөрвөн нэрээр дахин гаргана
    (`desktop`, `mobile` шинэ; `kiosk`, `pos` хэвээр).
@@ -169,11 +169,11 @@ certbot → `DEVICE_LINE_ORIGINS` → хамгийн сүүлд клиентий
 
 `deviceLine`-д өнөөдөр **тест байхгүй**. Нэг жижиг unit тест нэмнэ:
 
-* `deviceLineFromHost("desktop.nexus.gerege.mn")` → `desktop` шугам
+* `deviceLineFromHost("desktop.open.gerege.mn")` → `desktop` шугам
 * `deviceLineFromHost("mobile.nexus.staging.gerege.mn")` → `mobile`
   (шошгоор таарах нь орчноос хамаарахгүйг батална)
-* `deviceLineFromHost("mac.nexus.gerege.mn")` → `null` (хуучин нэр үхсэн)
-* `deviceLineFromHost("nexus.gerege.mn")` → `null` (хөтчийн шугам)
+* `deviceLineFromHost("mac.open.gerege.mn")` → `null` (хуучин нэр үхсэн)
+* `deviceLineFromHost("open.gerege.mn")` → `null` (хөтчийн шугам)
 
 Native талд CI-ийн `macos`, `android`, `windows` job-ууд хавтасны шинэ замыг
 шалгана. Клиентийн тогтмолыг ажиллуулж шалгах тест байхгүй — тэр нь
@@ -183,7 +183,7 @@ Native талд CI-ийн `macos`, `android`, `windows` job-ууд хавтас�
 
 * `window.GeregeShell.platform` ба `ShellPlatform`-ийн зургаан утга — IPC
   гэрээ. Native бүрхүүл өөрийгөө юу гэж хэлэхийг энэ ажил хөндөхгүй.
-* Хөтчийн шугам `nexus.gerege.mn`.
+* Хөтчийн шугам `open.gerege.mn`.
 * `kiosk`, `pos` шугамын хаяг, дэлгэц, клиентийн тогтмол.
 * Backend-ийн код. Энэ бүхэн nginx, frontend, native тогтмол гурав дээр
   дуусна; API-д зөвхөн `DEVICE_LINE_ORIGINS`-ийн жагсаалт хүрнэ.

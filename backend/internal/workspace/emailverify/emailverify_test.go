@@ -134,8 +134,8 @@ func TestReferencesAreUniqueAndStoredOnlyAsHashes(t *testing.T) {
 // PUBLIC_ORIGIN, never from a request: it is handed to another service and
 // outlives the call, so a forged Host header must not be able to point it.
 func TestReturnURLIsBuiltFromPublicOrigin(t *testing.T) {
-	t.Setenv("PUBLIC_ORIGIN", "https://nexus.gerege.mn/")
-	if got := ReturnURL(); got != "https://nexus.gerege.mn/api/v1/verify/landed" {
+	t.Setenv("PUBLIC_ORIGIN", "https://open.gerege.mn/")
+	if got := ReturnURL(); got != "https://open.gerege.mn/api/v1/verify/landed" {
 		t.Errorf("ReturnURL() = %q", got)
 	}
 

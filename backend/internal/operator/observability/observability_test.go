@@ -126,7 +126,7 @@ func TestToneMatchesTheThresholds(t *testing.T) {
 // Prometheus holds no series for it, every query answers with an empty vector,
 // and the screen used to render that as 0.00% errors and a green light — the
 // most reassuring possible way to say "nothing is watching this". Six external
-// systems sat green on nexus.gerege.mn for as long as the panel had existed.
+// systems sat green on open.gerege.mn for as long as the panel had existed.
 func TestAnUnmeasuredSystemIsNotGreen(t *testing.T) {
 	prometheus := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = w.Write([]byte(`{"status":"success","data":{"resultType":"vector","result":[]}}`))

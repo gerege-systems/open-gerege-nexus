@@ -1,9 +1,9 @@
 #!/bin/bash
-# Script to issue and configure free SSL certificate via Let's Encrypt Certbot for nexus.gerege.mn
+# Script to issue and configure free SSL certificate via Let's Encrypt Certbot for open.gerege.mn
 
 set -e
 
-DOMAIN="nexus.gerege.mn"
+DOMAIN="open.gerege.mn"
 EMAIL="admin@gerege.mn"
 
 echo "==== SSL Certificate Provisioning for ${DOMAIN} ===="
@@ -27,12 +27,12 @@ sudo certbot --nginx \
 
 # HTTP/2, on the block certbot has just written.
 #
-# It cannot be pre-written into deploy/nginx/nexus.gerege.mn.conf: that file
+# It cannot be pre-written into deploy/nginx/open.gerege.mn.conf: that file
 # carries only the port-80 server, and the TLS block does not exist until the
 # line above runs. So it is added here, right after, which is the first moment
 # there is something to add it to.
 #
-# Measured on nexus.gerege.mn at 218 ms round-trip: the landing page's twelve
+# Measured on open.gerege.mn at 218 ms round-trip: the landing page's twelve
 # JavaScript chunks took **12.35 s** over HTTP/1.1 and **3.62 s** over HTTP/2.
 # The whole difference is handshakes. HTTP/1.1 gives a browser six connections
 # and each one pays its own TLS negotiation — about two round trips — before it

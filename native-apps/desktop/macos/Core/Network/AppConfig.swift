@@ -74,7 +74,7 @@ enum AppConfig {
         // гарал мэддэг бол webview доторх ажлын муж, native дуудлага хоёр НЭГ
         // origin дээр үлдэж, session cookie нь SameSite=Strict хэвээр байна.
         //
-        // ⚠ ЭНЭ PROXY ХАРААХАН БАЙХГҮЙ. `device-lines.nexus.gerege.mn.conf`-ын
+        // ⚠ ЭНЭ PROXY ХАРААХАН БАЙХГҮЙ. `device-lines.open.gerege.mn.conf`-ын
         // `location /api/` нь бүгдийг платформын Go backend (127.0.0.1:8080)
         // руу явуулдаг бөгөөд тэр нь `/api/v1/auth/eid/{start,start-id,poll}`-ыг
         // л мэднэ. `Endpoints.swift` дэх нөгөө бүлэг — `/api/start`,
@@ -107,9 +107,9 @@ enum AppConfig {
         // connect to the server" аваад гацдаг байв. Локал backend руу заахдаа
         // Settings → Сервер, эсвэл `API_BASE_URL=http://localhost:3000` env.
         #if os(iOS)
-        return "https://mobile.nexus.gerege.mn"
+        return "https://mobile.open.gerege.mn"
         #else
-        return "https://desktop.nexus.gerege.mn"
+        return "https://desktop.open.gerege.mn"
         #endif
     }
 

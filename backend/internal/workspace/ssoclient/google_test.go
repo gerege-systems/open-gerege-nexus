@@ -28,7 +28,7 @@ func TestGoogleLoginDoesNotInheritTheConnectorCredentials(t *testing.T) {
 func TestGoogleConfigDerivesItsCallbackAndAsksOnlyWhoYouAre(t *testing.T) {
 	t.Setenv("GOOGLE_LOGIN_CLIENT_ID", "123.apps.googleusercontent.com")
 	t.Setenv("GOOGLE_LOGIN_CLIENT_SECRET", "s3cret")
-	t.Setenv("SSO_ISSUER", "https://nexus.gerege.mn")
+	t.Setenv("SSO_ISSUER", "https://open.gerege.mn")
 
 	cfg := GoogleConfigFromEnv()
 	if err := cfg.Validate(); err != nil {
@@ -37,7 +37,7 @@ func TestGoogleConfigDerivesItsCallbackAndAsksOnlyWhoYouAre(t *testing.T) {
 	if cfg.Issuer != GoogleIssuer {
 		t.Errorf("issuer = %q, want it fixed at Google's", cfg.Issuer)
 	}
-	if want := "https://nexus.gerege.mn" + GoogleCallbackPath; cfg.RedirectURI != want {
+	if want := "https://open.gerege.mn" + GoogleCallbackPath; cfg.RedirectURI != want {
 		t.Errorf("redirect_uri = %q, want %q", cfg.RedirectURI, want)
 	}
 	// A sign-in screen asking for anything beyond identity is a consent prompt

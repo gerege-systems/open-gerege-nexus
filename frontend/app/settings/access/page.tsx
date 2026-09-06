@@ -43,7 +43,7 @@ export default function AccessSettingsPage(){
   // Granting `admin` is asked about; every other role is one click.
   //
   // These chips sit side by side and the strongest of them used to be as easy
-  // to press by accident as the weakest. Two people on nexus.gerege.mn became
+  // to press by accident as the weakest. Two people on open.gerege.mn became
   // administrators of organisations they had just been let into, twenty
   // seconds after their requests were approved, and nothing on the screen had
   // asked whether that was meant.

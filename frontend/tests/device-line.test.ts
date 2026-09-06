@@ -11,10 +11,10 @@ import { deviceLineFromHost, lineHomePath } from "@/lib/deviceLine";
  */
 describe("deviceLineFromHost", () => {
   it("хаягийн эхний шошгоор шугамыг таана", () => {
-    expect(deviceLineFromHost("desktop.nexus.gerege.mn")?.line).toBe("desktop");
-    expect(deviceLineFromHost("mobile.nexus.gerege.mn")?.line).toBe("mobile");
-    expect(deviceLineFromHost("kiosk.nexus.gerege.mn")?.line).toBe("kiosk");
-    expect(deviceLineFromHost("pos.nexus.gerege.mn")?.line).toBe("pos");
+    expect(deviceLineFromHost("desktop.open.gerege.mn")?.line).toBe("desktop");
+    expect(deviceLineFromHost("mobile.open.gerege.mn")?.line).toBe("mobile");
+    expect(deviceLineFromHost("kiosk.open.gerege.mn")?.line).toBe("kiosk");
+    expect(deviceLineFromHost("pos.open.gerege.mn")?.line).toBe("pos");
   });
 
   // Домэйн бүтнээр нь биш зөвхөн шошгоор тааруулдаг нь санаатай: staging,
@@ -28,20 +28,20 @@ describe("deviceLineFromHost", () => {
   // nginx эдгээр нэрийг үйлчлэхээ больсон тул энд ч танигдах ёсгүй — танивал
   // байхгүй хост дээр ажиллах дүр эсгэсэн код үлдэнэ.
   it("хуучин платформын нэрсийг танихаа больсон", () => {
-    for (const host of ["mac.nexus.gerege.mn", "win.nexus.gerege.mn", "ios.nexus.gerege.mn", "android.nexus.gerege.mn"]) {
+    for (const host of ["mac.open.gerege.mn", "win.open.gerege.mn", "ios.open.gerege.mn", "android.open.gerege.mn"]) {
       expect(deviceLineFromHost(host)).toBeNull();
     }
   });
 
   it("хөтчийн шугам ба утгагүй оролтод null", () => {
-    expect(deviceLineFromHost("nexus.gerege.mn")).toBeNull();
+    expect(deviceLineFromHost("open.gerege.mn")).toBeNull();
     expect(deviceLineFromHost("")).toBeNull();
     expect(deviceLineFromHost(null)).toBeNull();
     expect(deviceLineFromHost(undefined)).toBeNull();
   });
 
   it("нүүр дэлгэцийн зам нь шугамын нэрээр гарна", () => {
-    const line = deviceLineFromHost("desktop.nexus.gerege.mn");
+    const line = deviceLineFromHost("desktop.open.gerege.mn");
     expect(line && lineHomePath(line)).toBe("/line/desktop");
   });
 });

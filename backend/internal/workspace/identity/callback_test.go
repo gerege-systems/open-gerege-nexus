@@ -14,13 +14,13 @@ import "testing"
 // guards is this one: a callback the caller supplies, on a rail that hands the
 // address to somebody else's service.
 func TestValidEIDCallback(t *testing.T) {
-	t.Setenv("PUBLIC_ORIGIN", "https://nexus.gerege.mn")
+	t.Setenv("PUBLIC_ORIGIN", "https://open.gerege.mn")
 	t.Setenv("ENVIRONMENT", "production")
 	t.Setenv("EID_APP_CALLBACKS", "")
-	if got, err := validEIDCallback("https://nexus.gerege.mn/auth/eid/callback"); err != nil || got == "" {
+	if got, err := validEIDCallback("https://open.gerege.mn/auth/eid/callback"); err != nil || got == "" {
 		t.Fatalf("expected callback to be accepted: %q, %v", got, err)
 	}
-	for _, raw := range []string{"http://nexus.gerege.mn/auth/eid/callback", "https://evil.example/auth/eid/callback", "https://nexus.gerege.mn/login"} {
+	for _, raw := range []string{"http://open.gerege.mn/auth/eid/callback", "https://evil.example/auth/eid/callback", "https://open.gerege.mn/login"} {
 		if _, err := validEIDCallback(raw); err == nil {
 			t.Fatalf("expected %q to be rejected", raw)
 		}

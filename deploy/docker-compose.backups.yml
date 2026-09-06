@@ -5,7 +5,7 @@
 # the host it was taken from. This is the other half — an S3-compatible store on
 # a *different* machine that every deployment pushes its encrypted dump to.
 #
-# It runs on nexus.gerege.mn, and that has one honest limitation worth writing
+# It runs on open.gerege.mn, and that has one honest limitation worth writing
 # down rather than discovering: for nexus's *own* dump this is a second copy on
 # the same machine. It defends against somebody dropping a table, a bad
 # migration, or a volume being recreated — not against losing the host.

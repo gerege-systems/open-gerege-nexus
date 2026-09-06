@@ -33,7 +33,7 @@ import vm from "node:vm";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const workerPath = join(here, "..", "public", "sw.js");
-const ORIGIN = "https://nexus.gerege.mn";
+const ORIGIN = "https://open.gerege.mn";
 
 const source = readFileSync(workerPath, "utf8");
 const OFFLINE = { offlinePage: true };

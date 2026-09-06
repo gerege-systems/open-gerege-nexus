@@ -72,7 +72,7 @@ struct MobileSettingsPage: View {
     }
 
     /// Сервер солих нь ЗӨВХӨН туршилтад. Хоосон бол энэ байрлуулалтын
-    /// гарын шугам (`mobile.nexus.gerege.mn`) — `AppConfig.baseURL`.
+    /// гарын шугам (`mobile.open.gerege.mn`) — `AppConfig.baseURL`.
     private var serverCard: some View {
         BrandCard {
             Text(loc.pick("Сервер", "Server", "Сервер", "服务器"))

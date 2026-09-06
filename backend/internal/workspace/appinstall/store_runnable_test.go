@@ -10,7 +10,7 @@ import (
 // The catalogue outlives the split, and the store keeps advertising what left.
 //
 // This is not a hypothetical. State Services moved to its own repository on
-// 2026-08-15 and nexus.gerege.mn went on carrying `io.gerege.nexus.gov_services`
+// 2026-08-15 and open.gerege.mn went on carrying `io.gerege.nexus.gov_services`
 // in its apps table the same afternoon, because that row comes from a signed
 // catalogue served to every deployment in the field — not from this
 // repository's manifests. Republishing the catalogue is a deliberate act with
@@ -54,7 +54,7 @@ func TestAnExternalAppIsOfferedWithoutAModule(t *testing.T) {
 // store offers.
 //
 // The screen that lists installed apps read straight from workspace.app_installations,
-// so on nexus.gerege.mn it showed nine rows under a banner saying the
+// so on open.gerege.mn it showed nine rows under a banner saying the
 // catalogue has five: State Services, Products, Inventory and Billing were all
 // listed as installed and active months after their code left for other
 // repositories. Nothing about them worked — no routes, no menu entry — and the

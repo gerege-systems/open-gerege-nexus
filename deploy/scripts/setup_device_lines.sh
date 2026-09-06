@@ -7,7 +7,7 @@
 #
 # nginx хийж ЧАДАХГҮЙ ганц зүйл бол нэрийг resolve болгох. Тэр нь DNS-ийн
 # ажил: шугам бүрт `A → <энэ серверийн IP>` бичлэг хэрэгтэй, яг одоо
-# ds.nexus.gerege.mn дээр байгаа шиг. Тиймээс скрипт хамгийн түрүүнд DNS-ийг
+# ds.open.gerege.mn дээр байгаа шиг. Тиймээс скрипт хамгийн түрүүнд DNS-ийг
 # шалгаад, resolve болоогүй нэр байвал зогсоно — эсрэг дараалал нь клиентийг
 # байхгүй host руу чиглүүлж, "A server with the specified hostname could not
 # be found" гэсэн алдаа өгдөг.
@@ -17,14 +17,14 @@ set -euo pipefail
 # Шугам бүр нэг form factor. Платформ биш: ширээн дээрх Mac ба Windows хоёр
 # `desktop`-ыг хуваалцана.
 LINES=(
-  desktop.nexus.gerege.mn
-  mobile.nexus.gerege.mn
-  kiosk.nexus.gerege.mn
-  pos.nexus.gerege.mn
+  desktop.open.gerege.mn
+  mobile.open.gerege.mn
+  kiosk.open.gerege.mn
+  pos.open.gerege.mn
 )
 EMAIL="admin@gerege.mn"
-VHOST_SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/nginx/device-lines.nexus.gerege.mn.conf"
-VHOST_DST="/etc/nginx/sites-available/device-lines.nexus.gerege.mn.conf"
+VHOST_SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/nginx/device-lines.open.gerege.mn.conf"
+VHOST_DST="/etc/nginx/sites-available/device-lines.open.gerege.mn.conf"
 
 echo "==== Device domain lines ===="
 
@@ -49,24 +49,24 @@ done
 
 if (( ${#missing[@]} )); then
     echo
-    echo "DNS-д доорх бичлэгүүдийг нэмнэ үү (ds.nexus.gerege.mn-тэй яг ижил хэлбэр):"
+    echo "DNS-д доорх бичлэгүүдийг нэмнэ үү (ds.open.gerege.mn-тэй яг ижил хэлбэр):"
     echo
     for host in "${missing[@]}"; do
-        printf '  %-26s  A  %s\n' "${host%%.nexus.gerege.mn}" "${SERVER_IP:-<энэ серверийн IP>}"
+        printf '  %-26s  A  %s\n' "${host%%.open.gerege.mn}" "${SERVER_IP:-<энэ серверийн IP>}"
     done
     cat <<EOF
 
-Бүх дэд домэйныг нэг дор шийдэх бол `*.nexus.gerege.mn A ${SERVER_IP}` гэсэн
+Бүх дэд домэйныг нэг дор шийдэх бол `*.open.gerege.mn A ${SERVER_IP}` гэсэн
 wildcard бичлэг мөн болно. Гэхдээ энэ vhost нь server_name-ээ нэрлэн бичдэг
 тул wildcard нь ирээдүйн өөр дэд домэйныг санамсаргүй залгихгүй — nginx
-яг тохирох server_name-ыг үргэлж эхэлж сонгоно (ds.nexus.gerege.mn аюулгүй).
+яг тохирох server_name-ыг үргэлж эхэлж сонгоно (ds.open.gerege.mn аюулгүй).
 
 Бичлэгүүд тархсаны дараа энэ скриптийг дахин ажиллуулна уу.
 EOF
     exit 1
 fi
 
-# 2. vhost. Upstream нь nexus.gerege.mn-тэй ИЖИЛ — backend цор ганц хэвээр.
+# 2. vhost. Upstream нь open.gerege.mn-тэй ИЖИЛ — backend цор ганц хэвээр.
 echo
 echo "vhost суулгаж байна: ${VHOST_DST}"
 sudo cp "$VHOST_SRC" "$VHOST_DST"

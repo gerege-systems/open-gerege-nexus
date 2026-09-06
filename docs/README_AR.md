@@ -272,12 +272,12 @@ npm run dev
 | `DEPLOY_SSH_KEY` | نعم | المفتاح الخاص لمستخدم النشر. بدونه يُتخطَّى النشر |
 | `POSTGRES_PASSWORD` | نعم | كلمة مرور قاعدة البيانات على الخادم |
 | `SSO_DEFAULT_CLIENT_SECRET` | نعم | إلزامي لعميل OAuth2 المدمج في الإنتاج |
-| `DEPLOY_HOST` / `DEPLOY_USER` / `DEPLOY_PORT` | لا | الافتراضي `nexus.gerege.mn` / `deploy` / `22` |
-| `PUBLIC_ORIGIN` | لا | الافتراضي `https://nexus.gerege.mn` |
+| `DEPLOY_HOST` / `DEPLOY_USER` / `DEPLOY_PORT` | لا | الافتراضي `open.gerege.mn` / `deploy` / `22` |
+| `PUBLIC_ORIGIN` | لا | الافتراضي `https://open.gerege.mn` |
 
 <div dir="rtl">
 
-> نطاق الإنتاج هو `nexus.gerege.mn`، الذي حلَّ محل `openerp.gerege.mn` عند
+> نطاق الإنتاج هو `open.gerege.mn`، الذي حلَّ محل `openerp.gerege.mn` عند
 > إعادة التسمية إلى Gerege Nexus. يحدِّد `PUBLIC_ORIGIN` في موضع واحد سياسة
 > CORS ومُصدِر OIDC وعنوان استدعاء eID، لذا فإن تغييره يستتبع معه DNS وشهادة
 > TLS وكل عميل ثبَّت المُصدِر لديه.

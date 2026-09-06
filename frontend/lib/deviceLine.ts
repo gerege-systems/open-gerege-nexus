@@ -3,11 +3,11 @@
  *
  * Backend цор ганц. Гэхдээ төхөөрөмж бүр өөрийн host-оор ханддаг:
  *
- *   nexus.gerege.mn          → хөтөч / PWA — web app өөрөө бүрэн апп
- *   desktop.nexus.gerege.mn  → macOS, Windows — ширээн дээрх ажлын муж
- *   mobile.nexus.gerege.mn   → iOS, Android — гарын алган дахь ажлын муж
- *   kiosk.nexus.gerege.mn    → Kiosk
- *   pos.nexus.gerege.mn      → POS
+ *   open.gerege.mn          → хөтөч / PWA — web app өөрөө бүрэн апп
+ *   desktop.open.gerege.mn  → macOS, Windows — ширээн дээрх ажлын муж
+ *   mobile.open.gerege.mn   → iOS, Android — гарын алган дахь ажлын муж
+ *   kiosk.open.gerege.mn    → Kiosk
+ *   pos.open.gerege.mn      → POS
  *
  * **Хаяг нь form factor-ыг нэрлэнэ, платформыг биш.** Ширээн дээрх Mac ба
  * ширээн дээрх Windows хоёр нэг шугам: хүн тэр хоёртой ижил байдлаар
@@ -48,7 +48,7 @@ export interface DeviceLine {
  * Host-ын хамгийн зүүн шошго → шугам.
  *
  * Домэйн бүтнээр нь биш зөвхөн эхний шошгоор тааруулж байгаа нь санаатай:
- * `desktop.nexus.gerege.mn`, `desktop.nexus.staging.gerege.mn`,
+ * `desktop.open.gerege.mn`, `desktop.nexus.staging.gerege.mn`,
  * `desktop.localhost` гурвуул ижил шугам. Ингэснээр staging/preview орчинд
  * энэ файлыг хөндөх шаардлагагүй.
  */

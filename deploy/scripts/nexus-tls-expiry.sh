@@ -4,7 +4,7 @@
 #
 # This lives here rather than in a document because a recipe that has to be
 # pasted onto every new host is a recipe every new host goes without: this one
-# was missing on nexus.gerege.mn for months, and a missing measurement looks
+# was missing on open.gerege.mn for months, and a missing measurement looks
 # exactly like a healthy one (NexusTLSExpiryUnknown says so, and is easy to
 # read as "a certificate problem").
 #

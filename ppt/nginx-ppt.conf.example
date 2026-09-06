@@ -1,22 +1,22 @@
-# ppt.nexus.gerege.mn — статик танилцуулга (нэг бие даасан index.html).
+# ppt.open.gerege.mn — статик танилцуулга (нэг бие даасан index.html).
 #
 # Энэ хостын конвенц: дэд домэйн бүр өөрийн certbot гэрчилгээтэй (wildcard биш).
 # Тиймээс энд ЗӨВХӨН 80 портын блокийг бичнэ — TLS-ийн мөрүүдийг certbot өөрөө
 # нэмнэ. Суулгах дараалал:
 #
-#   sudo install -m 0644 ppt.nexus.gerege.mn.conf \
-#        /etc/nginx/sites-available/ppt.nexus.gerege.mn
-#   sudo ln -sfn /etc/nginx/sites-available/ppt.nexus.gerege.mn \
-#                /etc/nginx/sites-enabled/ppt.nexus.gerege.mn
+#   sudo install -m 0644 ppt.open.gerege.mn.conf \
+#        /etc/nginx/sites-available/ppt.open.gerege.mn
+#   sudo ln -sfn /etc/nginx/sites-available/ppt.open.gerege.mn \
+#                /etc/nginx/sites-enabled/ppt.open.gerege.mn
 #   sudo nginx -t && sudo systemctl reload nginx
-#   sudo certbot --nginx -d ppt.nexus.gerege.mn --redirect
+#   sudo certbot --nginx -d ppt.open.gerege.mn --redirect
 #
 # certbot дараа нь 443 блок үүсгэж, 80-г 301 болгож өөрчилнө — js.nexus,
 # cp.nexus зэрэгтэй яг ижил хэлбэр гарна.
 
 server {
     listen 80;
-    server_name ppt.nexus.gerege.mn;
+    server_name ppt.open.gerege.mn;
 
     location /.well-known/acme-challenge/ { root /var/www/html; }
 

@@ -70,13 +70,13 @@ Android дээр нэг scene. Нэвтрэлт, ажлын муж, тохирг
 
 | Шугам | Хэн ашиглах | Төлөв |
 | --- | --- | --- |
-| `nexus.gerege.mn` | Хөтөч / PWA — web app өөрөө бүрэн апп | ✅ ажиллаж байна |
-| `desktop.nexus.gerege.mn` | macOS, Windows Desktop | ✅ ажиллаж байна |
-| `mobile.nexus.gerege.mn` | iOS / iPadOS, Android mobile / tablet | ✅ ажиллаж байна |
-| `kiosk.nexus.gerege.mn` | Kiosk (Windows, Android) | ✅ ажиллаж байна |
-| `pos.nexus.gerege.mn` | POS (Windows, Android) | ✅ ажиллаж байна |
+| `open.gerege.mn` | Хөтөч / PWA — web app өөрөө бүрэн апп | ✅ ажиллаж байна |
+| `desktop.open.gerege.mn` | macOS, Windows Desktop | ✅ ажиллаж байна |
+| `mobile.open.gerege.mn` | iOS / iPadOS, Android mobile / tablet | ✅ ажиллаж байна |
+| `kiosk.open.gerege.mn` | Kiosk (Windows, Android) | ✅ ажиллаж байна |
+| `pos.open.gerege.mn` | POS (Windows, Android) | ✅ ажиллаж байна |
 
-Бүх нэр `*.nexus.gerege.mn` wildcard-аар нэг IP руу очиж, дөрвүүлээ нэг
+Бүх нэр `*.open.gerege.mn` wildcard-аар нэг IP руу очиж, дөрвүүлээ нэг
 Let's Encrypt гэрчилгээнд багтана.
 
 **Хаяг нь form factor-ыг нэрлэнэ, платформыг биш** (2026-09-02-оос). Ширээн
@@ -104,14 +104,14 @@ host-only cookie-гийн тусгаарлалт хэрэгтэй хэвээр. 
 
 Шугам бүр өөрийн host дээрээ `/api/v1`-ээ **мөн** үйлчилнэ; nginx тэдгээрийг
 бүгдийг НЭГ ижил API upstream руу дамжуулна
-([`deploy/nginx/device-lines.nexus.gerege.mn.conf`](../deploy/nginx/device-lines.nexus.gerege.mn.conf)).
+([`deploy/nginx/device-lines.open.gerege.mn.conf`](../deploy/nginx/device-lines.open.gerege.mn.conf)).
 Шугам нь тусдаа origin өгөхийн тулд байгаа болохоос тусдаа сервис өгөхийн тулд
 биш.
 
-Тэр upstream нь `nexus.gerege.mn`-ийхтэй **яг нэг** — loopback 3000 (frontend)
+Тэр upstream нь `open.gerege.mn`-ийхтэй **яг нэг** — loopback 3000 (frontend)
 ба 8080 (API). Шугам нь тусдаа origin өгдөг болохоос тусдаа стек өгдөггүй.
 
-Хагас өдрийн турш тэдгээр нь **DS стек** (`ds.nexus.gerege.mn`, loopback
+Хагас өдрийн турш тэдгээр нь **DS стек** (`ds.open.gerege.mn`, loopback
 3012/8096) руу заасан байсан: native клиентүүд ба платформ тусдаа
 repository-д амьдарч, зөвхөн клиентүүдийн мод бүрхүүлийн гэрээг үүрч байв.
 Бүрхүүлийн гэрээгүй модноос баригдсан frontend шугамыг үйлчлэх үед яг тэр
@@ -129,7 +129,7 @@ session cookie нь `SameSite=Strict` хэвээр ажиллаж, CORS prefligh
 
 **API-гийн хаяг нь шугам дээр ҮРГЭЛЖ харьцангуй байх ёстой.**
 `NEXT_PUBLIC_API_URL` нь build үед шингэдэг ба production-д
-`https://nexus.gerege.mn/api/v1` гэж бичигддэг. Тэр утгыг төхөөрөмжийн шугам
+`https://open.gerege.mn/api/v1` гэж бичигддэг. Тэр утгыг төхөөрөмжийн шугам
 дээр ашиглавал дуудлага cross-origin болж, host-only session cookie ОГТ
 илгээгдэхгүй — API 401 буцааж, ажлын муж нэвтрэлт дууссан гэж үзээд web-ийн
 `/login` руу түлхэнэ. Native талд амжилттай нэвтэрсэн хэрнээ ажлын мужид
@@ -570,9 +570,9 @@ f.contentWindow.webkit?.messageHandlers?.geregeShell; // undefined байх ёс
    preflight огт байхгүй.
 3. `document.cookie`-д `session_token` харагдахгүй (HttpOnly) ч API дуудлага
    200 буцааж байна — cookie same-origin-оор явж байгаагийн шинж.
-4. Хөтчөөр `https://desktop.nexus.gerege.mn/login` руу орвол `/apps` руу
+4. Хөтчөөр `https://desktop.open.gerege.mn/login` руу орвол `/apps` руу
    шилжинэ — тэр шугам дээр нэвтрэлт нь native UI.
-5. `https://nexus.gerege.mn` хэвээр бүрэн web app: толгой хэсэг, хажуугийн цэс,
+5. `https://open.gerege.mn` хэвээр бүрэн web app: толгой хэсэг, хажуугийн цэс,
    `/login` бүгд урьдын адил.
 
 **I. Функциональ регресс байхгүй эсэх**

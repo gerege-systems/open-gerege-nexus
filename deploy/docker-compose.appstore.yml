@@ -76,11 +76,11 @@ services:
       APPSTORE_SIGNING_KEY: ${APPSTORE_SIGNING_KEY:?APPSTORE_SIGNING_KEY is required}
       APPSTORE_SIGNING_KEY_ID: ${APPSTORE_SIGNING_KEY_ID:-appstore-2026}
 
-      # Identity still belongs to nexus.gerege.mn: every OAuth2 client in the
+      # Identity still belongs to open.gerege.mn: every OAuth2 client in the
       # field is registered against that issuer, and moving it would be a change
       # every one of them has to make. A publisher signs in here with a session
       # this instance issues, which is a different thing from the issuer.
-      SSO_ISSUER: ${SSO_ISSUER:-https://nexus.gerege.mn}
+      SSO_ISSUER: ${SSO_ISSUER:-https://open.gerege.mn}
 
       # No demo tenant. A store is not a sandbox, and seeded data would end up
       # in a catalogue somebody's instance reads.

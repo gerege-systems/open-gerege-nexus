@@ -15,7 +15,7 @@ import (
 func federatedServer(t *testing.T, mutate ...func(*ssoclient.Config)) *Handlers {
 	t.Helper()
 	cfg := ssoclient.Config{
-		Issuer:      "https://nexus.gerege.mn",
+		Issuer:      "https://open.gerege.mn",
 		ClientID:    "aimag-office",
 		RedirectURI: "https://aimag.gerege.mn" + ssoclient.CallbackPath,
 	}

@@ -2,7 +2,7 @@
 //
 // What the landing page is allowed to download before it can paint.
 //
-// Measured on nexus.gerege.mn: the signed-out page pulled 441 KB (gzipped) of
+// Measured on open.gerege.mn: the signed-out page pulled 441 KB (gzipped) of
 // JavaScript, of which three things were read by almost nobody who paid for
 // them —
 //

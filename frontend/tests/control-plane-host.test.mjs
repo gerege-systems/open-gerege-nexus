@@ -34,7 +34,7 @@ test("tenant and look-alike hosts are not treated as the console", () => {
   for (const host of [
     "nexus.localhost:3000",
     "localhost:3000",
-    "nexus.gerege.mn",
+    "open.gerege.mn",
     "admin.localhost.attacker.example",
     "",
     null,

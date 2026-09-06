@@ -235,10 +235,10 @@ Secrets requis dans le dépôt :
 | `DEPLOY_SSH_KEY` | Oui | Clé privée de l'utilisateur de déploiement. Sans elle, le déploiement est ignoré |
 | `POSTGRES_PASSWORD` | Oui | Mot de passe de la base de données sur le serveur |
 | `SSO_DEFAULT_CLIENT_SECRET` | Oui | Obligatoire pour le client OAuth2 intégré en production |
-| `DEPLOY_HOST` / `DEPLOY_USER` / `DEPLOY_PORT` | Non | Par défaut `nexus.gerege.mn` / `deploy` / `22` |
-| `PUBLIC_ORIGIN` | Non | Par défaut `https://nexus.gerege.mn` |
+| `DEPLOY_HOST` / `DEPLOY_USER` / `DEPLOY_PORT` | Non | Par défaut `open.gerege.mn` / `deploy` / `22` |
+| `PUBLIC_ORIGIN` | Non | Par défaut `https://open.gerege.mn` |
 
-> Le domaine de production est `nexus.gerege.mn`, qui a remplacé
+> Le domaine de production est `open.gerege.mn`, qui a remplacé
 > `openerp.gerege.mn` lors du changement de nom vers Gerege Nexus.
 > `PUBLIC_ORIGIN` définit en un seul endroit le CORS, l'émetteur OIDC et le
 > callback eID : le déplacer entraîne donc le DNS, le certificat TLS et tout

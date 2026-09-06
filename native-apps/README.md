@@ -11,10 +11,10 @@
 
 | Шугам | Хаяг | Аппын нэр | Юу нь энэ нэрийг барих вэ |
 |---|---|---|---|
-| desktop | `desktop.nexus.gerege.mn` | **NexusGeregeDesktop** | Xcode target/scheme, .NET solution ба namespace |
-| mobile | `mobile.nexus.gerege.mn` | **NexusGeregeMobile** | Xcode target/scheme, Gradle `rootProject.name` |
-| kiosk | `kiosk.nexus.gerege.mn` | **NexusGeregeKiosk** | ЗАХИАЛГАТАЙ — клиент хараахан байхгүй |
-| pos | `pos.nexus.gerege.mn` | **NexusGeregePos** | ЗАХИАЛГАТАЙ — клиент хараахан байхгүй |
+| desktop | `desktop.open.gerege.mn` | **NexusGeregeDesktop** | Xcode target/scheme, .NET solution ба namespace |
+| mobile | `mobile.open.gerege.mn` | **NexusGeregeMobile** | Xcode target/scheme, Gradle `rootProject.name` |
+| kiosk | `kiosk.open.gerege.mn` | **NexusGeregeKiosk** | ЗАХИАЛГАТАЙ — клиент хараахан байхгүй |
+| pos | `pos.open.gerege.mn` | **NexusGeregePos** | ЗАХИАЛГАТАЙ — клиент хараахан байхгүй |
 
 Ширээний macOS ба Windows хоёр НЭГ нэртэй байгаа нь алдаа биш: хүн тэр
 хоёртой ижил байдлаар харьцдаг тул тэд нэг шугам, нэг апп. Иргэний харах нэр
@@ -123,8 +123,8 @@ python3 scripts/gen_from_swift.py                 # өнгө/орчуулгыг 
 
 | Клиент | Шугам | Төлөв |
 |---|---|---|
-| macOS | `desktop.nexus.gerege.mn` | ⏳ nginx/TLS шалгах |
-| iOS, Android | `mobile.nexus.gerege.mn` | ⏳ nginx/TLS шалгах |
+| macOS | `desktop.open.gerege.mn` | ⏳ nginx/TLS шалгах |
+| iOS, Android | `mobile.open.gerege.mn` | ⏳ nginx/TLS шалгах |
 
 Бүртгэл ба асаах дараалал: [`shared/device_lines.json`](shared/device_lines.json)
 → `$provisioning`. Клиентийн доторх хаягийг ХАМГИЙН СҮҮЛД солино — эсрэгээр

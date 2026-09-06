@@ -9,7 +9,7 @@
  * at the top of this file put the whole SDK — 246 KB, 77 KB over the wire —
  * into the first chunk of every page, and nothing has ever passed the build
  * argument that switches it on (Dockerfile `ARG NEXT_PUBLIC_SENTRY_DSN`, unset
- * in every workflow), so on nexus.gerege.mn each visitor downloaded an error
+ * in every workflow), so on open.gerege.mn each visitor downloaded an error
  * reporter that initialises nothing and sends nothing before the page could
  * paint. The value is inlined at build time, so a build without a DSN drops the
  * import as dead code rather than deferring it, and a build with one loads the

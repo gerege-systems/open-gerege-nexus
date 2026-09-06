@@ -34,7 +34,7 @@ import mn.gerege.nexus.ui.theme.LocalGw
 /**
  * Платформын ажлын муж — iOS-ийн `MobilePlatformPage`-ийн дүйцэл.
  *
- * Хаяг нь `AppConfig.baseUrl` — Android дээр `https://mobile.nexus.gerege.mn`,
+ * Хаяг нь `AppConfig.baseUrl` — Android дээр `https://mobile.open.gerege.mn`,
  * native дуудлагууд явдаг ЯГ ТЭР гарал. Ингэснээр WebView доторх `/api/v1`
  * дуудлага same-origin хэвээр үлдэж, `WorkAreaSession`-ий суулгасан session
  * cookie илгээгдэнэ.

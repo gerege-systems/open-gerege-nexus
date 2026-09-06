@@ -16,7 +16,7 @@
 | | Ажлын урсгал | Операторын урсгал | Хүний урсгал |
 | --- | --- | --- | --- |
 | Хэнд | Байгууллага доторх хүн | Суулгацыг удирдах оператор | Хүн өөрөө, аль ч байгууллагаас гадуур |
-| Origin | `nexus.gerege.mn` | `admin.nexus.gerege.mn` | `nexus.gerege.mn` |
+| Origin | `open.gerege.mn` | `admin.open.gerege.mn` | `open.gerege.mn` |
 | API угтвар | `/api/v1/*` | `/api/platform/v1/*` | `/api/v1/me/*` |
 | Cookie | `session_token` | `cp_session` | `session_token` |
 | Бүртгэл | `registry.users` + `workspace.memberships` | `operator.operator_accounts` | `registry.users` |

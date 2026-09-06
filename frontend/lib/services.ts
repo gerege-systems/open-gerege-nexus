@@ -16,7 +16,7 @@ import type {TranslationKey} from "@/lib/i18n";
  *
  * What is written here is what every deployment shares — the name of each
  * service, what it is for, and the drawing that goes with it. What is *not*
- * written here is where they live: `admin.nexus.gerege.mn` is this
+ * written here is where they live: `admin.open.gerege.mn` is this
  * installation's address and nobody else's, so the addresses come from the
  * deployment's own environment. A service with no address configured is not
  * drawn, which is the honest default: most installations have a console and

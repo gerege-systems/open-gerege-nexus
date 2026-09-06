@@ -3,7 +3,7 @@
     "Төхөөрөмжийн domain шугамуудын цорын ганц эх сурвалж.",
     "",
     "Дүрэм: backend ЦОР ГАНЦ. Шугам бүр өөрийн host-той ч /api/v1 нь бүгд",
-    "нэг ижил API upstream руу очно (nginx/device-lines.nexus.gerege.mn.conf).",
+    "нэг ижил API upstream руу очно (nginx/device-lines.open.gerege.mn.conf).",
     "Тиймээс webview доторх дуудлага үргэлж SAME-ORIGIN — session cookie нь",
     "SameSite=Strict хэвээр ажиллаж, CORS preflight огт үүсэхгүй.",
     "",
@@ -29,9 +29,9 @@
   ],
   "$provisioning": [
     "Шугамууд 2026-08-12-нд АСАВ, 2026-09-02-нд ДӨРӨВ БОЛОВ. Дөрвүүлэн бэлэн:",
-    "  1. DNS   *.nexus.gerege.mn → платформын хост (wildcard A-бичлэг)",
-    "  2. nginx deploy/nginx/device-lines.nexus.gerege.mn.conf",
-    "  3. TLS   /etc/letsencrypt/live/device-lines.nexus.gerege.mn (4 нэр)",
+    "  1. DNS   *.open.gerege.mn → платформын хост (wildcard A-бичлэг)",
+    "  2. nginx deploy/nginx/device-lines.open.gerege.mn.conf",
+    "  3. TLS   /etc/letsencrypt/live/device-lines.open.gerege.mn (4 нэр)",
     "  4. API   DEVICE_LINE_ORIGINS → ALLOWED_ORIGINS",
     "",
     "mac. / win. / ios. / android. нь 2026-09-02-нд server_name-ээс ХАСАГДСАН.",
@@ -45,12 +45,12 @@
   ],
   "browserLine": {
     "platform": "browser",
-    "prodOrigin": "https://nexus.gerege.mn",
+    "prodOrigin": "https://open.gerege.mn",
     "devOrigin": "http://localhost:3000"
   },
   "deviceLines": {
     "desktop": {
-      "line": "https://desktop.nexus.gerege.mn",
+      "line": "https://desktop.open.gerege.mn",
       "app": "NexusGeregeDesktop",
       "platforms": [
         "macos",
@@ -66,7 +66,7 @@
       "home": "/line/desktop"
     },
     "mobile": {
-      "line": "https://mobile.nexus.gerege.mn",
+      "line": "https://mobile.open.gerege.mn",
       "app": "NexusGeregeMobile",
       "platforms": [
         "ios",
@@ -82,7 +82,7 @@
       "home": "/line/mobile"
     },
     "kiosk": {
-      "line": "https://kiosk.nexus.gerege.mn",
+      "line": "https://kiosk.open.gerege.mn",
       "app": "NexusGeregeKiosk",
       "platforms": [
         "windows",
@@ -96,7 +96,7 @@
       "$note": "Шугам асаалттай, КЛИЕНТ нь хараахан байхгүй. Нэр нь захиалгатай."
     },
     "pos": {
-      "line": "https://pos.nexus.gerege.mn",
+      "line": "https://pos.open.gerege.mn",
       "app": "NexusGeregePos",
       "platforms": [
         "windows",

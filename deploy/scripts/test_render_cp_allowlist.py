@@ -20,7 +20,7 @@ class ControlPlaneAllowlistTests(unittest.TestCase):
             "999.999.999.999/999",
             "203.0.113.5/24",
             "203.0.113.10; allow all",
-            "cp.nexus.gerege.mn",
+            "cp.open.gerege.mn",
         ):
             with self.subTest(raw=raw), self.assertRaises(ValueError):
                 parse_networks(raw)

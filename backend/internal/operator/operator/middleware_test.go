@@ -21,22 +21,22 @@ func reached(hit *bool) http.Handler {
 }
 
 func TestHostGateAnswersOnTheConsolesHostnameOnly(t *testing.T) {
-	service := &Console{host: "cp.nexus.gerege.mn"}
+	service := &Console{host: "cp.open.gerege.mn"}
 
 	cases := []struct {
 		name   string
 		host   string
 		status int
 	}{
-		{"the console's hostname", "cp.nexus.gerege.mn", http.StatusOK},
-		{"with a port", "cp.nexus.gerege.mn:443", http.StatusOK},
-		{"in capitals", "CP.Nexus.Gerege.MN", http.StatusOK},
+		{"the console's hostname", "cp.open.gerege.mn", http.StatusOK},
+		{"with a port", "cp.open.gerege.mn:443", http.StatusOK},
+		{"in capitals", "CP.Open.Gerege.MN", http.StatusOK},
 		// The one that matters. The console and the platform are the same
 		// process listening on the same socket, so without this gate every
 		// /api/platform/v1 route would be served to anybody who found it on the public
 		// hostname.
-		{"the platform's hostname", "nexus.gerege.mn", http.StatusNotFound},
-		{"a look-alike", "cp.nexus.gerege.mn.attacker.example", http.StatusNotFound},
+		{"the platform's hostname", "open.gerege.mn", http.StatusNotFound},
+		{"a look-alike", "cp.open.gerege.mn.attacker.example", http.StatusNotFound},
 		{"nothing at all", "", http.StatusNotFound},
 	}
 
@@ -69,7 +69,7 @@ func TestHostGateIsClosedInProductionWithoutAHostname(t *testing.T) {
 
 	var hit bool
 	request := httptest.NewRequest(http.MethodGet, "/api/platform/v1/tenants", nil)
-	request.Host = "nexus.gerege.mn"
+	request.Host = "open.gerege.mn"
 	recorder := httptest.NewRecorder()
 
 	service.HostGate(reached(&hit)).ServeHTTP(recorder, request)

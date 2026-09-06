@@ -349,7 +349,7 @@ docker exec -i gerege_nexus_postgres psql -U postgres -d platform_db -c "
 **Устгаж болохгүй зүйлс:** `gerege_nexus_postgres_data` volume, шифрлэлтийн
 түлхүүр агуулсан `.env` файлууд, гарын үсэгтэй PDF-үүд.
 
-**Хамгийн сүүлд гарсан: 2026-08-30, nexus.gerege.mn — 81%.** Хэмжсэн зүйл:
+**Хамгийн сүүлд гарсан: 2026-08-30, open.gerege.mn — 81%.** Хэмжсэн зүйл:
 294 image / 42.7 GB, build cache 11.9 GB. Ихэнх нь өдөр бүрийн deploy-ийн
 хуучин tag байсан — backend 129, frontend 130. Build cache ба хуучин
 tag-уудыг цэвэрлэхэд **61 GB → 22 GB (81% → 29%)**. Зогссон контейнерууд
@@ -751,7 +751,7 @@ docker compose -f deploy/docker-compose.monitoring.yml \
 4. Байхгүй бол [`OPERATIONS.md`](OPERATIONS.md#нөөцлөлт)-ийн нөөцлөлтийн
    хэсгийг дагаж суулга.
 
-Хамгийн сүүлд гарсан: 2026-08-30, nexus.gerege.mn — гурвуулаа байхгүй байсан.
+Хамгийн сүүлд гарсан: 2026-08-30, open.gerege.mn — гурвуулаа байхгүй байсан.
 
 ### NexusBackupStale
 
@@ -786,7 +786,7 @@ docker compose -f deploy/docker-compose.monitoring.yml \
    эрт буцна — dump амжилттай, хуулбар хаана ч очихгүй. Энэ дохио яг
    үүнийг барьдаг.
 2. `age` суусан эсэх: `command -v age`
-3. Сан хүрэлцэхүйц эсэх: `curl -sI https://backups.nexus.gerege.mn/minio/health/live`
+3. Сан хүрэлцэхүйц эсэх: `curl -sI https://backups.open.gerege.mn/minio/health/live`
 4. Гараар ажиллуулж алдааг нь хар:
    `sudo sh -c '. /etc/default/nexus-backup && /usr/local/bin/nexus-backup.sh'`
 

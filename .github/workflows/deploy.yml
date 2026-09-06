@@ -1,4 +1,4 @@
-name: Deploy to Production (nexus.gerege.mn)
+name: Deploy to Production (open.gerege.mn)
 
 # Lint, tests and builds live in ci.yml. This workflow publishes images for an
 # already-green commit and rolls them out — and now actually waits for that to
@@ -49,7 +49,7 @@ name: Deploy to Production (nexus.gerege.mn)
 #   EID_SIGN_SIGNER_KEY_PEM     its ECDSA private key, PEM (optional)
 #
 # Repository variables:
-#   PUBLIC_ORIGIN               defaults to https://nexus.gerege.mn
+#   PUBLIC_ORIGIN               defaults to https://open.gerege.mn
 #   EID_APP_CALLBACKS           exact native return URIs; defaults to
 #                               gerege-nexus://auth
 #   DEVICE_LINE_ORIGINS         comma-separated origins of the device lines.
@@ -100,7 +100,7 @@ env:
   # Repository variables, not secrets: the `secrets` context is not available
   # in workflow-level env (or in a job name), which fails workflow validation
   # outright — the run never starts.
-  PUBLIC_ORIGIN: ${{ vars.PUBLIC_ORIGIN || 'https://nexus.gerege.mn' }}
+  PUBLIC_ORIGIN: ${{ vars.PUBLIC_ORIGIN || 'https://open.gerege.mn' }}
   # Repository variable (Settings → Variables), not a secret. "true" turns the
   # target into a public demo: seeded demo account plus mock E-ID/DAN/XYP.
   DEMO_MODE: ${{ vars.DEMO_MODE || 'false' }}
@@ -271,7 +271,7 @@ jobs:
           # was never meant to have would teach everybody to ignore this step.
           missing=""
           # PUBLIC_ORIGIN нь энд байхгүй: тэр нь secret биш, workflow-ийн
-          # `env:` дэх `vars.PUBLIC_ORIGIN || 'https://nexus.gerege.mn'` —
+          # `env:` дэх `vars.PUBLIC_ORIGIN || 'https://open.gerege.mn'` —
           # анхдагчтай тул хоосон байх боломжгүй. `secrets.PUBLIC_ORIGIN`-ээс
           # уншсан хувилбар нь бүх rollout-ыг унагаах байсан.
           for name in POSTGRES_PASSWORD SSO_DEFAULT_CLIENT_SECRET \
@@ -557,7 +557,7 @@ jobs:
               exit 0
             fi
 
-            LIVE=$(sudo grep -rl "server_name nexus.gerege.mn" /etc/nginx/sites-available /etc/nginx/conf.d 2>/dev/null | head -1)
+            LIVE=$(sudo grep -rl "server_name open.gerege.mn" /etc/nginx/sites-available /etc/nginx/conf.d 2>/dev/null | head -1)
             if [ -z "$LIVE" ]; then
               echo "::warning::Could not find the nexus vhost; OIDC endpoints stay unrouted."
               exit 0
@@ -599,7 +599,7 @@ jobs:
             sudo nginx -t && sudo systemctl reload nginx
             # Proof rather than hope: the discovery document is JSON from the
             # API, and HTML if this is still hitting the frontend.
-            if curl -fsS https://nexus.gerege.mn/.well-known/openid-configuration | head -c 1 | grep -q '{'; then
+            if curl -fsS https://open.gerege.mn/.well-known/openid-configuration | head -c 1 | grep -q '{'; then
               echo "OIDC discovery is served by the API"
             else
               echo "::error::/.well-known/openid-configuration is still not the API"

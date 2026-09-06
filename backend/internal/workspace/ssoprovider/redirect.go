@@ -38,7 +38,7 @@ func ValidateRedirectURI(raw string) error {
 	}
 	allowed := os.Getenv("OAUTH_REDIRECT_HOSTS")
 	if strings.TrimSpace(allowed) == "" {
-		allowed = "nexus.gerege.mn"
+		allowed = "open.gerege.mn"
 	}
 	for _, candidate := range strings.Split(allowed, ",") {
 		if strings.EqualFold(strings.TrimSpace(candidate), host) {

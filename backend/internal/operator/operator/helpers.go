@@ -36,7 +36,7 @@ import (
 func Scoped(ctx context.Context) context.Context { return dbguard.AsOperator(ctx) }
 
 // normaliseHost lowercases a hostname and drops any port, so that a value
-// written as "cp.nexus.gerege.mn:443" in an environment file compares equal to
+// written as "cp.open.gerege.mn:443" in an environment file compares equal to
 // what a browser sends.
 func normaliseHost(raw string) string {
 	host := strings.ToLower(strings.TrimSpace(raw))

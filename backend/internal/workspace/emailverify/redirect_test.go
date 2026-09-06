@@ -13,11 +13,11 @@ import (
 // phishing link wants to borrow, wearing a government hostname.
 func TestARedirectMustPointSomewhereTheOperatorNamed(t *testing.T) {
 	t.Setenv("ENVIRONMENT", "production")
-	t.Setenv("PUBLIC_ORIGIN", "https://nexus.gerege.mn")
+	t.Setenv("PUBLIC_ORIGIN", "https://open.gerege.mn")
 	t.Setenv("EMAIL_VERIFY_REDIRECT_HOSTS", "portal.example.mn, second.example.mn")
 
 	allowed := []string{
-		"https://nexus.gerege.mn/verified",
+		"https://open.gerege.mn/verified",
 		"https://portal.example.mn/done?ref=1",
 		"https://second.example.mn/",
 	}
@@ -31,9 +31,9 @@ func TestARedirectMustPointSomewhereTheOperatorNamed(t *testing.T) {
 		"https://phishing.example/login",
 		// A subdomain does not inherit trust: the neighbours under gerege.mn are
 		// other products, not this one.
-		"https://evil.nexus.gerege.mn/",
-		"https://nexus.gerege.mn.evil.example/",
-		"http://nexus.gerege.mn/verified", // HTTPS is still required
+		"https://evil.open.gerege.mn/",
+		"https://open.gerege.mn.evil.example/",
+		"http://open.gerege.mn/verified", // HTTPS is still required
 		"https://localhost/verified",      // loopback is a development-only allowance
 	}
 	for _, raw := range refused {
@@ -45,7 +45,7 @@ func TestARedirectMustPointSomewhereTheOperatorNamed(t *testing.T) {
 
 // An empty destination stays legitimate: the platform answers the click itself.
 func TestNoRedirectIsStillAllowed(t *testing.T) {
-	t.Setenv("PUBLIC_ORIGIN", "https://nexus.gerege.mn")
+	t.Setenv("PUBLIC_ORIGIN", "https://open.gerege.mn")
 	got, err := emailverify.ValidateRedirect("   ")
 	if err != nil || got != "" {
 		t.Fatalf("empty redirect: got %q, %v", got, err)
@@ -56,7 +56,7 @@ func TestNoRedirectIsStillAllowed(t *testing.T) {
 // are running, or the flow cannot be exercised locally at all.
 func TestLoopbackIsAllowedOutsideProduction(t *testing.T) {
 	t.Setenv("ENVIRONMENT", "development")
-	t.Setenv("PUBLIC_ORIGIN", "https://nexus.gerege.mn")
+	t.Setenv("PUBLIC_ORIGIN", "https://open.gerege.mn")
 	for _, raw := range []string{"http://localhost:3000/done", "https://127.0.0.1:3000/done"} {
 		if _, err := emailverify.ValidateRedirect(raw); err != nil {
 			t.Errorf("%s was refused in development: %v", raw, err)
@@ -68,7 +68,7 @@ func TestLoopbackIsAllowedOutsideProduction(t *testing.T) {
 // guessing why a link they configured does not work.
 func TestTheRefusalNamesTheVariableToChange(t *testing.T) {
 	t.Setenv("ENVIRONMENT", "production")
-	t.Setenv("PUBLIC_ORIGIN", "https://nexus.gerege.mn")
+	t.Setenv("PUBLIC_ORIGIN", "https://open.gerege.mn")
 	_, err := emailverify.ValidateRedirect("https://elsewhere.example/x")
 	if err == nil {
 		t.Fatal("an unlisted host was accepted")

@@ -16,7 +16,7 @@ func TestConfigFromEnvIsOffByDefault(t *testing.T) {
 }
 
 func TestConfigFromEnvDerivesTheCallbackFromThisDeployment(t *testing.T) {
-	t.Setenv("SSO_CLIENT_ISSUER", "https://nexus.gerege.mn/")
+	t.Setenv("SSO_CLIENT_ISSUER", "https://open.gerege.mn/")
 	t.Setenv("SSO_CLIENT_ID", "regional-office")
 	t.Setenv("SSO_ISSUER", "https://aimag.gerege.mn")
 
@@ -26,7 +26,7 @@ func TestConfigFromEnvDerivesTheCallbackFromThisDeployment(t *testing.T) {
 	}
 	// The trailing slash on the issuer must not survive into the URLs built
 	// from it, or discovery is fetched from a double-slashed path.
-	if cfg.Issuer != "https://nexus.gerege.mn" {
+	if cfg.Issuer != "https://open.gerege.mn" {
 		t.Errorf("issuer = %q", cfg.Issuer)
 	}
 	if want := "https://aimag.gerege.mn" + CallbackPath; cfg.RedirectURI != want {
@@ -41,7 +41,7 @@ func TestConfigFromEnvDerivesTheCallbackFromThisDeployment(t *testing.T) {
 }
 
 func TestConfigAlwaysAsksForOpenID(t *testing.T) {
-	t.Setenv("SSO_CLIENT_ISSUER", "https://nexus.gerege.mn")
+	t.Setenv("SSO_CLIENT_ISSUER", "https://open.gerege.mn")
 	t.Setenv("SSO_CLIENT_ID", "c")
 	t.Setenv("SSO_CLIENT_SCOPES", "profile email")
 
@@ -60,17 +60,17 @@ func TestValidateRejectsAHalfWrittenConfiguration(t *testing.T) {
 	}{
 		{
 			name: "a named provider with no client id",
-			cfg:  Config{Issuer: "https://nexus.gerege.mn", RedirectURI: "https://a.mn" + CallbackPath},
+			cfg:  Config{Issuer: "https://open.gerege.mn", RedirectURI: "https://a.mn" + CallbackPath},
 			want: "SSO_CLIENT_ID is required",
 		},
 		{
 			name: "a provider reached over plain HTTP",
-			cfg:  Config{Issuer: "http://nexus.gerege.mn", ClientID: "c", RedirectURI: "https://a.mn" + CallbackPath},
+			cfg:  Config{Issuer: "http://open.gerege.mn", ClientID: "c", RedirectURI: "https://a.mn" + CallbackPath},
 			want: "must use HTTPS",
 		},
 		{
 			name: "no callback and nothing to derive one from",
-			cfg:  Config{Issuer: "https://nexus.gerege.mn", ClientID: "c"},
+			cfg:  Config{Issuer: "https://open.gerege.mn", ClientID: "c"},
 			want: "SSO_CLIENT_REDIRECT_URI",
 		},
 	}
@@ -97,10 +97,10 @@ func TestValidateAllowsALoopbackProvider(t *testing.T) {
 }
 
 func TestDisplayNameFallsBackToTheHost(t *testing.T) {
-	if got := (Config{Issuer: "https://nexus.gerege.mn"}).DisplayName(); got != "nexus.gerege.mn" {
+	if got := (Config{Issuer: "https://open.gerege.mn"}).DisplayName(); got != "open.gerege.mn" {
 		t.Errorf("DisplayName = %q", got)
 	}
-	if got := (Config{Issuer: "https://nexus.gerege.mn", ProviderName: "Гэрэгэ"}).DisplayName(); got != "Гэрэгэ" {
+	if got := (Config{Issuer: "https://open.gerege.mn", ProviderName: "Гэрэгэ"}).DisplayName(); got != "Гэрэгэ" {
 		t.Errorf("DisplayName = %q", got)
 	}
 }

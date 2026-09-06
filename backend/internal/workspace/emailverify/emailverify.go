@@ -545,7 +545,7 @@ func ValidateRedirect(raw string) (string, error) {
 
 	// HTTPS was never the part that mattered. The link goes out in a mail, over
 	// this platform's name, and /verify/landed then forwards the person
-	// wherever it says — so an unchecked destination makes nexus.gerege.mn the
+	// wherever it says — so an unchecked destination makes open.gerege.mn the
 	// redirector a phishing link wants to borrow, and the recipient sees a
 	// government hostname in the mail they were told to trust.
 	//

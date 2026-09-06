@@ -13,7 +13,7 @@ import (
 func TestScrubEventRemovesCredentialsAndPII(t *testing.T) {
 	event := sentry.NewEvent()
 	event.Request = &sentry.Request{
-		URL:         "https://nexus.gerege.mn/api/v1/verify/landed",
+		URL:         "https://open.gerege.mn/api/v1/verify/landed",
 		QueryString: "ref=single-use-secret-reference",
 		Cookies:     "gerege_session=abc123",
 		Data:        `{"password":"hunter2","reg_number":"AA90010111"}`,

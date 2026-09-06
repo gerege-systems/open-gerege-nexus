@@ -20,9 +20,9 @@
 
 set -euo pipefail
 
-MONITOR_DOMAIN="${MONITOR_DOMAIN:-monitor.nexus.gerege.mn}"
-PLATFORM_HOST="${PLATFORM_HOST:-nexus.gerege.mn}"
-DOCS_HOST="${DOCS_HOST:-docs.nexus.gerege.mn}"
+MONITOR_DOMAIN="${MONITOR_DOMAIN:-monitor.open.gerege.mn}"
+PLATFORM_HOST="${PLATFORM_HOST:-open.gerege.mn}"
+DOCS_HOST="${DOCS_HOST:-docs.open.gerege.mn}"
 GRAFANA_CONTAINER="${GRAFANA_CONTAINER:-gerege_nexus_grafana}"
 WEBROOT="${WEBROOT:-/var/www/monitor}"
 SNIPPET="${SNIPPET:-/etc/nginx/snippets/monitor-grafana-overrides.conf}"

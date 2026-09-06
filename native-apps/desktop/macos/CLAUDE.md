@@ -14,8 +14,8 @@ secret/бүртгэл огт байхгүй: бүх дуудлага өөрий�
 route-уудаар (хөтөчтэй яг ижил зам) дамжина. RP-ийн secret-ийг зөвхөн
 сервер тал барина.
 
-Хаяг нь **төхөөрөмжийн шугам**: `https://desktop.nexus.gerege.mn`
-(iOS салаа нь `https://mobile.nexus.gerege.mn`). Шугам нь платформыг биш
+Хаяг нь **төхөөрөмжийн шугам**: `https://desktop.open.gerege.mn`
+(iOS салаа нь `https://mobile.open.gerege.mn`). Шугам нь платформыг биш
 form factor-ыг нэрлэдэг — `native-apps/shared/device_lines.json`.
 
 ## Tech Stack
@@ -29,7 +29,7 @@ form factor-ыг нэрлэдэг — `native-apps/shared/device_lines.json`.
 
 > ⚠ **Доорх `/api/*` бүлэг өнөөдөр 404 буцаана.** Тэдгээр нь eID Mongolia-гийн
 > вэб аппын route-ууд бөгөөд шугам дээр тэднийг тэр платформ руу дамжуулах
-> nginx блок ЭНЭ РЕПОД БАЙХГҮЙ: `device-lines.nexus.gerege.mn.conf`-ын
+> nginx блок ЭНЭ РЕПОД БАЙХГҮЙ: `device-lines.open.gerege.mn.conf`-ын
 > `location /api/` нь бүгдийг платформын Go backend руу явуулдаг, тэр нь
 > зөвхөн `/api/v1/auth/eid/{start,start-id,poll}`-ыг мэднэ.
 > Өөрөөр хэлбэл **нэвтрэлт ажиллана, түүний дараах самбар ажиллахгүй.**
@@ -65,7 +65,7 @@ Bearer session байхгүй — `documentNumber` нь identity handle (web liv
 
 | Утга | Эх сурвалж (дараалал) | Default |
 |---|---|---|
-| Сервер URL | `UserDefaults["API_BASE_URL_OVERRIDE"]` (Settings) → env `API_BASE_URL` | DEBUG ба Release НЭГ ижил: `https://desktop.nexus.gerege.mn` (iOS: `https://mobile.…`). DEBUG нь өмнө `localhost:3000` байсныг болиулсан — локал сервергүй хүн «Could not connect» дээр гацдаг байв. |
+| Сервер URL | `UserDefaults["API_BASE_URL_OVERRIDE"]` (Settings) → env `API_BASE_URL` | DEBUG ба Release НЭГ ижил: `https://desktop.open.gerege.mn` (iOS: `https://mobile.…`). DEBUG нь өмнө `localhost:3000` байсныг болиулсан — локал сервергүй хүн «Could not connect» дээр гацдаг байв. |
 
 Secret, RP UUID, RP name — **байхгүй** (first-party).
 

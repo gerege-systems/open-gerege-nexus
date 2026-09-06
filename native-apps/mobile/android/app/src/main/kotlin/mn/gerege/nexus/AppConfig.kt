@@ -24,7 +24,7 @@ object AppConfig {
     const val APP_TO_APP_CALLBACK = "gerege-nexus://auth"
 
     /** Гарын шугам — iOS-тэй ИЖИЛ хост (`shared/device_lines.json` → mobile). */
-    const val DEFAULT_BASE_URL = "https://mobile.nexus.gerege.mn"
+    const val DEFAULT_BASE_URL = "https://mobile.open.gerege.mn"
 
     private lateinit var prefs: SharedPreferences
 

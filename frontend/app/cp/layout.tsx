@@ -7,7 +7,7 @@ import Console from "@/components/cp/Console";
  * The operator console's routes exist only on the console's hostname.
  *
  * This is a server component so the decision is made before any of it is sent:
- * a request to nexus.gerege.mn/cp gets the 404 page, not the console's HTML
+ * a request to open.gerege.mn/cp gets the 404 page, not the console's HTML
  * with a client-side redirect after it. The same rule is enforced again by the
  * API (controlplane.HostGate) and again by nginx's address allowlist — three
  * layers, none of which is asked to trust another.

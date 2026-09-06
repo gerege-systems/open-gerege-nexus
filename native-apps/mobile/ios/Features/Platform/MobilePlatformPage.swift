@@ -8,7 +8,7 @@ import WebKit
 /// тул ажлын муж нь хоёр дахь цонх биш, нөгөө дөрөвтэйгээ ижил байдлаар
 /// солигддог дэлгэц.
 ///
-/// Хаяг нь `AppConfig.baseURL` — iOS дээр `https://mobile.nexus.gerege.mn`,
+/// Хаяг нь `AppConfig.baseURL` — iOS дээр `https://mobile.open.gerege.mn`,
 /// native дуудлагууд явдаг ЯГ ТЭР гарал. Ингэснээр webview доторх `/api/v1`
 /// дуудлага same-origin хэвээр үлдэж, `WorkAreaSession`-ий суулгасан
 /// session cookie илгээгдэнэ. Өөр гарал ашигласан бол тэр cookie хэзээ ч

@@ -18,7 +18,7 @@ import (
 
 // Which addresses may reach the console, and when that question is asked at all.
 //
-// It used to be nginx's, and only nginx's: cp.nexus.gerege.mn shipped with a
+// It used to be nginx's, and only nginx's: cp.open.gerege.mn shipped with a
 // snippet that allowed a list of CIDRs and denied everybody else, so an
 // attacker on the public internet never reached this process. That is a strong
 // boundary and it has one property that turned out to matter more: it cannot

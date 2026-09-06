@@ -13,7 +13,7 @@ site_name: Gerege Nexus
 site_description: >-
   Gerege Nexus нээлттэй эхийн платформын техникийн баримт — архитектур,
   модуль хөгжүүлэлт, ажиллагаа, native клиентүүд.
-site_url: https://docs.nexus.gerege.mn/
+site_url: https://docs.open.gerege.mn/
 repo_url: https://github.com/gerege-systems/open-gerege-nexus
 repo_name: gerege-systems/open-gerege-nexus
 copyright: © 2026 Gerege Systems ХХК · Apache 2.0
@@ -277,6 +277,6 @@ extra:
     - icon: material/book-open-variant
       link: https://docs.gerege.mn
     - icon: material/web
-      link: https://nexus.gerege.mn
+      link: https://open.gerege.mn
 
 # {{NAV}}

@@ -12,19 +12,19 @@
 
 | Нэр | Юу | Ард нь |
 | --- | --- | --- |
-| `nexus.gerege.mn` | Платформ өөрөө — frontend ба `/api/v1/*` | Next.js + Go |
-| `admin.nexus.gerege.mn` | Операторын консол — `/api/platform/v1/*` | Мөн тэр хоёр |
-| `dwh.nexus.gerege.mn` | Дата агуулахын зураглал | Статик, өөрийн контейнер |
-| `backups.nexus.gerege.mn` | Шифрлэгдсэн нөөцийн сан (MinIO) + тайлбар хуудас | MinIO + nginx |
-| `monitor.nexus.gerege.mn` | Grafana | Ажиглалтын стек |
-| `docs.nexus.gerege.mn` | Энэ баримт | Статик, MkDocs |
+| `open.gerege.mn` | Платформ өөрөө — frontend ба `/api/v1/*` | Next.js + Go |
+| `admin.open.gerege.mn` | Операторын консол — `/api/platform/v1/*` | Мөн тэр хоёр |
+| `dwh.open.gerege.mn` | Дата агуулахын зураглал | Статик, өөрийн контейнер |
+| `backups.open.gerege.mn` | Шифрлэгдсэн нөөцийн сан (MinIO) + тайлбар хуудас | MinIO + nginx |
+| `monitor.open.gerege.mn` | Grafana | Ажиглалтын стек |
+| `docs.open.gerege.mn` | Энэ баримт | Статик, MkDocs |
 
 Хоёр урсгал өөр origin дээр байгаа нь гоо зүйн биш: cookie нь hostname-аар
 хязгаарлагддаг тул тусдаа нэр нь тусдаа ambient authority гэсэн үг.
 
 Платформын нүүр хуудас эдгээрийг карт болгож харуулна. Хаягууд нь кодод биш,
 суулгацын орчинд (`SERVICE_URL_ADMIN`, `_DWH`, `_BACKUPS`, `_MONITOR`,
-`_DOCS`, мөн үндэсний `_EID`): `admin.nexus.gerege.mn` бол энэ суулгацынх,
+`_DOCS`, мөн үндэсний `_EID`): `admin.open.gerege.mn` бол энэ суулгацынх,
 өөр хэн ч биш. Тохируулаагүй үйлчилгээ зурагдахгүй, нэг ч тохируулаагүй бол
 хэсэг бүхэлдээ зурагдахгүй.
 
@@ -294,7 +294,7 @@ Prometheus нь бүх зүйл хэвийн байгаа мэт харагдд�
 Enterprise) тул бүгд nginx дээр хийгдэнэ:
 
 ```
-MONITOR_DOMAIN=monitor.nexus.gerege.mn deploy/scripts/setup_monitor_branding.sh
+MONITOR_DOMAIN=monitor.open.gerege.mn deploy/scripts/setup_monitor_branding.sh
 ```
 
 Скрипт нь ажиллаж буй Grafana-аас хоёр webpack chunk-ийн нэрийг уншиж

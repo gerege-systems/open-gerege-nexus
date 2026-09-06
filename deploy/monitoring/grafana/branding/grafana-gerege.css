@@ -2,7 +2,7 @@
  * Grafana-ийн нэвтрэх хуудсыг Gerege өнгөнд оруулна.
  *
  * Энэ файлыг nginx `sub_filter`-ээр Grafana-ийн HTML бүрийн `</head>`-д
- * оруулдаг (`monitor.nexus.gerege.mn.conf`). Grafana OSS-д загварын өөр
+ * оруулдаг (`monitor.open.gerege.mn.conf`). Grafana OSS-д загварын өөр
  * оруулах цэг байхгүй — Enterprise-ийн white labeling нь энд байхгүй.
  *
  * Тиймээс дүрэм бүр `.login-content-box`-оор хашигдана: тэр класс зөвхөн

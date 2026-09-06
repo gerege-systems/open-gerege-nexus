@@ -16,7 +16,7 @@ func googleServer(t *testing.T, mutate ...func(*ssoclient.Config)) *Handlers {
 		EnvClientID: "GOOGLE_LOGIN_CLIENT_ID",
 		Issuer:      ssoclient.GoogleIssuer,
 		ClientID:    "123.apps.googleusercontent.com",
-		RedirectURI: "https://nexus.gerege.mn" + ssoclient.GoogleCallbackPath,
+		RedirectURI: "https://open.gerege.mn" + ssoclient.GoogleCallbackPath,
 	}
 	for _, m := range mutate {
 		m(&cfg)
@@ -73,7 +73,7 @@ func TestGoogleIsOfferedWhenConfigured(t *testing.T) {
 func TestGoogleClosesWhenTheDeploymentFederates(t *testing.T) {
 	server := googleServer(t)
 	server.ssoClient = ssoclient.New(ssoclient.Config{
-		Issuer: "https://nexus.gerege.mn", ClientID: "aimag",
+		Issuer: "https://open.gerege.mn", ClientID: "aimag",
 		RedirectURI: "https://aimag.gerege.mn" + ssoclient.CallbackPath,
 	})
 
@@ -89,7 +89,7 @@ func TestGoogleClosesWhenTheDeploymentFederates(t *testing.T) {
 
 	// Unless the operator kept the local paths open on purpose.
 	server.ssoClient = ssoclient.New(ssoclient.Config{
-		Issuer: "https://nexus.gerege.mn", ClientID: "aimag", LocalLogin: true,
+		Issuer: "https://open.gerege.mn", ClientID: "aimag", LocalLogin: true,
 		RedirectURI: "https://aimag.gerege.mn" + ssoclient.CallbackPath,
 	})
 	if google, _ := ssoConfigOf(t, server)["google"].(map[string]any); google["enabled"] != true {

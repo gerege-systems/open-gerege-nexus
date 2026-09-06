@@ -1,6 +1,6 @@
-# docs.nexus.gerege.mn — MkDocs
+# docs.open.gerege.mn — MkDocs
 
-Энэ хавтас нь [docs.nexus.gerege.mn](https://docs.nexus.gerege.mn/) сайтыг
+Энэ хавтас нь [docs.open.gerege.mn](https://docs.open.gerege.mn/) сайтыг
 угсарна. Хэрэгсэл нь [docs.gerege.mn](https://docs.gerege.mn/)-тэй ижил:
 **MkDocs + Material for MkDocs**, ижил брэндийн өнгө. Хоёр сайт нь нэг
 экосистемийн баримт байх ёстой болохоос, нэг компанийг хуваалцдаг хоёр өөр
@@ -34,5 +34,5 @@ macOS дээр Docker Desktop нь `/private/tmp` доорх замыг хува
 sh deploy.sh <ssh-host>      # угсраад /var/www/docs руу хуулна
 ```
 
-nginx-ийн тохиргоо нь `deploy/nginx/docs.nexus.gerege.mn.conf`.
+nginx-ийн тохиргоо нь `deploy/nginx/docs.open.gerege.mn.conf`.
 

@@ -37,7 +37,7 @@
   хостын CA гинжтэй таарахгүй байж болзошгүй байв. Байрлуулалт бүр үүнийг асаах
   эсэхээ мэдэж шийдэх ёстой — асаагаагүй бол «pinning бий» гэж хэлэх үндэсгүй.
 - Pin багц (`Obfuscated.pins`): **Let's Encrypt E7 + E8 завсрын** БА
-  **ISRG Root X1 + X2**. Эхэндээ зөвхөн завсрынх байсан бөгөөд `nexus.gerege.mn`
+  **ISRG Root X1 + X2**. Эхэндээ зөвхөн завсрынх байсан бөгөөд `open.gerege.mn`
   YE2-оор гарын үсэг зурагдахад таарахаа больж, Release build нэвтрэх дэлгэц дээр
   «A TLS error caused the secure connection to fail» өгч байв — үндсийг нэмсэн
   шалтгаан нь тэр. Windows клиент (`appsettings.json` → `CertificateSpkiPins`)

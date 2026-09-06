@@ -20,7 +20,7 @@ for (const path of ["/login", "/settings", "/api/v1/auth/login", "/cpx", "/robot
   assert.equal(decide("admin.localhost", path), "not-found", `${path} leaked onto the console host`);
 }
 
-for (const host of ["nexus.localhost:3000", "localhost:3000", "nexus.gerege.mn"]) {
+for (const host of ["nexus.localhost:3000", "localhost:3000", "open.gerege.mn"]) {
   assert.equal(decide(host, "/"), "other-host", `${host} was treated as the console host`);
 }
 
