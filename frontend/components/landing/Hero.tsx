@@ -76,7 +76,7 @@ export default function Hero({
       <div className={`gp-hero__inner${localSignIn ? "" : " gp-hero__inner--solo"}`}>
         <div className="gp-copy">
           <span className="gp-eyebrow">
-            <i /> OPEN SOURCE · APACHE 2.0 · GO
+            <i /> {t("website.view.hero_eyebrow")}
           </span>
           <h1>
             {t("website.view.hero_title_lead")} <em>{t("website.view.hero_title_highlight")}</em>{" "}
