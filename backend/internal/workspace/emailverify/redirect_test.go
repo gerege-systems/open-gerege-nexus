@@ -34,7 +34,7 @@ func TestARedirectMustPointSomewhereTheOperatorNamed(t *testing.T) {
 		"https://evil.open.gerege.mn/",
 		"https://open.gerege.mn.evil.example/",
 		"http://open.gerege.mn/verified", // HTTPS is still required
-		"https://localhost/verified",      // loopback is a development-only allowance
+		"https://localhost/verified",     // loopback is a development-only allowance
 	}
 	for _, raw := range refused {
 		if _, err := emailverify.ValidateRedirect(raw); err == nil {
