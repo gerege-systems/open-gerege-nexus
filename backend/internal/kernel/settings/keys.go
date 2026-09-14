@@ -54,6 +54,15 @@ const (
 	// that disagree about which product somebody is standing in front of.
 	BrandName = "brand.name"
 
+	// ConsoleTOTPIssuer is the name an authenticator app shows beside the
+	// console's code. Empty means the brand followed by "Control Plane".
+	//
+	// Separate from BrandName because the two answer different people: the
+	// brand is what a citizen reads, while this is what an operator scans
+	// a phone for — and an operator with several consoles tells them apart by
+	// address rather than by product name.
+	ConsoleTOTPIssuer = "console.totp_issuer"
+
 	// The addresses of this deployment's own monitoring stack, which the
 	// console's front page links to and reads its numbers from.
 	//
@@ -156,6 +165,14 @@ func init() {
 		Description: "Энэ суулгац өөрийгөө юу гэж нэрлэх вэ. API нь хүний өмнө нэр тавьдаг " +
 			"хоёр газарт үйлчилнэ: eID-гийн зөвшөөрлийн цонх, мөн иргэний бүртгэл холбох амжилтгүй " +
 			"болсон үеийн мессеж. Хөтчийн апп өөрийн хуулбарыг уншина (BRAND_NAME).",
+	})
+	Register(Spec{
+		Key:  ConsoleTOTPIssuer,
+		Kind: KindString,
+		Env:  "CONTROL_PLANE_TOTP_ISSUER",
+		Description: "Консолын хоёр дахь хүчин зүйлийг authenticator апп дээр ямар нэрээр харуулах вэ " +
+			"(жишээ нь admin.example.mn). Хоосон бол «<брэнд> Control Plane». Зөвхөн ШИНЭЭР " +
+			"бүртгүүлэх операторт хамаарна — аль хэдийн бүртгэгдсэн утасны нэрийг апп дотор засна.",
 	})
 	Register(Spec{
 		Key:  PrometheusURL,

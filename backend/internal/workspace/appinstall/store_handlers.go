@@ -43,18 +43,28 @@ func (h *Handlers) HandleMenus(w http.ResponseWriter, r *http.Request) {
 			httpx.Error(w, http.StatusInternalServerError, "failed to resolve menu access")
 			return
 		}
-		visible := menus[:0]
-		for _, item := range menus {
-			permission := h.appReadPermission(item.AppID)
-			if permission == "" || permissions[permission] {
-				visible = append(visible, item)
-			}
-		}
-		menus = visible
+		menus = visibleMenus(menus, permissions, h.appReadPermission)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(menus)
+}
+
+// visibleMenus keeps the entries a non-administrator may open: the app's read
+// permission first, then the entry's own when it names one. Filters in place.
+func visibleMenus(menus []nexus.MenuDefinition, permissions map[string]bool,
+	appPermission func(appID string) string) []nexus.MenuDefinition {
+	visible := menus[:0]
+	for _, item := range menus {
+		if permission := appPermission(item.AppID); permission != "" && !permissions[permission] {
+			continue
+		}
+		if item.Permission != "" && !permissions[item.Permission] {
+			continue
+		}
+		visible = append(visible, item)
+	}
+	return visible
 }
 
 // appReadPermission decides which permission a menu entry is hidden behind.

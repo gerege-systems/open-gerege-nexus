@@ -90,6 +90,33 @@ func TestNewTOTPSecretProducesAUsableEnrolment(t *testing.T) {
 	}
 }
 
+// A deployment that names the entry outright gets exactly that name, and the
+// brand is not appended — the point is a label the operator chose.
+func TestTheEnrolmentUsesTheConfiguredIssuer(t *testing.T) {
+	t.Setenv("BRAND_NAME", "Gerege Salus")
+	t.Setenv("CONTROL_PLANE_TOTP_ISSUER", " admin.example.mn ")
+
+	_, uri, err := NewTOTPSecret("operator@example.mn")
+	if err != nil {
+		t.Fatalf("generate: %v", err)
+	}
+	if !strings.Contains(uri, "issuer=admin.example.mn&") && !strings.HasSuffix(uri, "issuer=admin.example.mn") {
+		t.Errorf("the configured issuer is not used: %s", uri)
+	}
+	if !strings.HasPrefix(uri, "otpauth://totp/admin.example.mn:operator@example.mn?") {
+		t.Errorf("the label does not start with the configured issuer: %s", uri)
+	}
+	if strings.Contains(uri, "Control%20Plane") {
+		t.Errorf("the brand suffix was appended to a configured issuer: %s", uri)
+	}
+
+	// A colon would split the label in the wrong place.
+	t.Setenv("CONTROL_PLANE_TOTP_ISSUER", "Petro:Net")
+	if issuer := totpIssuer(); issuer != "Petro Net" {
+		t.Errorf("a colon in the issuer was kept: %q", issuer)
+	}
+}
+
 // A host that runs several of these products gave every one of their consoles
 // the same authenticator entry, because the issuer was written into the image.
 // A phone showing four identical rows cannot tell you which code opens which
