@@ -10,10 +10,10 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Filter, RefreshCw, ScrollText } from "lucide-react";
+import { Filter, Inbox, RefreshCw, ScrollText, SearchX } from "lucide-react";
+import { Badge, Button, EmptyState, Input, Skeleton } from "@gerege-systems/ui";
 
-import { Badge, formatMoment } from "@/components/cp/ui";
-import { EmptyState, LoadingBlock } from "@/components/ui";
+import { formatMoment } from "@/lib/datetime";
 import { cp, type AuditEntry } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 import { useUrlState } from "@/lib/urlState";
@@ -71,7 +71,7 @@ export default function AuditTrail() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-start gap-3">
         <div className="flex-1">
-          <div className="flex items-center gap-2 text-amber-600">
+          <div className="flex items-center gap-2 text-warning">
             <ScrollText className="h-4 w-4" />
             <span className="text-xs font-semibold uppercase tracking-[0.18em]">
               {t("cp.audit.append_only")}
@@ -80,20 +80,14 @@ export default function AuditTrail() {
           <h1 className="mt-2 text-2xl font-semibold text-foreground">{t("cp.section.audit")}</h1>
           <p className="mt-1 max-w-2xl text-sm text-muted">{t("cp.audit.hint")}</p>
         </div>
-        <button
-          type="button"
-          onClick={() => void load()}
-          disabled={refreshing}
-          className="inline-flex items-center gap-2 rounded-lg border border-input bg-surface px-3 py-2 text-sm font-medium text-foreground transition hover:bg-surface-hover disabled:opacity-60"
-        >
-          <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+        <Button variant="outline" onClick={() => void load()} loading={refreshing} leadingIcon={<RefreshCw />}>
           {t("cp.action.refresh")}
-        </button>
+        </Button>
       </div>
 
       <form
         onSubmit={submit}
-        className="rounded-xl border border-line bg-surface p-4"
+        className="rounded-lg border border-line bg-surface p-4"
       >
         <div className="mb-3 flex items-center gap-2 text-sm font-medium text-foreground">
           <Filter className="h-4 w-4 text-muted" />
@@ -120,49 +114,48 @@ export default function AuditTrail() {
           />
         </div>
         <div className="mt-4 flex gap-2">
-          <button
-            type="submit"
-            className="rounded-lg bg-accent px-3 py-2 text-sm font-medium text-on-accent transition hover:brightness-105"
-          >
-            {t("cp.action.search")}
-          </button>
-          <button
-            type="button"
-            onClick={clear}
-            className="rounded-lg border border-input px-3 py-2 text-sm text-foreground transition hover:bg-surface-hover"
-          >
+          <Button type="submit">{t("cp.action.search")}</Button>
+          <Button variant="outline" onClick={clear}>
             {t("cp.action.clear")}
-          </button>
+          </Button>
         </div>
       </form>
 
       {failure && (
-        <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p role="alert" className="rounded-lg border border-danger-border bg-danger-soft px-3 py-2 text-sm text-danger">
           {t("cp.message.load_failed")} {failure}
         </p>
       )}
 
-      {entries === null && !failure && <LoadingBlock label={t("base.message.loading")} rows={6} />}
+      {entries === null && !failure && (
+        <div role="status" aria-busy="true" className="space-y-3 py-4">
+          <span className="sr-only">{t("base.message.loading")}</span>
+          {Array.from({ length: 6 }, (_, row) => (
+            <Skeleton key={row} className="h-12" />
+          ))}
+        </div>
+      )}
 
       {/* Хоосон байдлын хоёр шалтгаан хоёр өөр хариултай: бүртгэл хоосон бол
           хэлэх зүйл нь тэр л; шүүлтүүрийн улмаас 0 бол бичлэгүүд БАЙГАА бөгөөд
           уншигчид хэрэгтэй нь буцах зам. Хоёрдугаарт «Цэвэрлэх» товч байхгүй
           бол хэрэглэгч юу нуусныг нь мэдэхгүй хоосон дэлгэц рүү ширтэнэ. */}
       {entries?.length === 0 && (
-        <div className="rounded-xl border border-dashed border-input bg-surface px-4">
+        <div className="rounded-lg border border-dashed border-input bg-surface px-4">
           {/* Шүүлтүүрийн маягт дээрээ «Цэвэрлэх»-ээ аль хэдийн барьж байгаа
               бөгөөд хоосон үед ч алга болдоггүй — тиймээс энд түүнийг
               давхардуулахгүй. Ялгаа нь өгүүлбэрт: «одоогоор юу ч алга» гэдэг
               нь аль хэдийн байгаа бичлэгүүдийг нуусан хүнд худал хэлж байна. */}
           <EmptyState
-            filtered={filtered}
-            message={filtered ? t("cp.audit.empty_filtered") : t("cp.audit.empty")}
+            headingLevel={2}
+            icon={filtered ? <SearchX aria-hidden /> : <Inbox aria-hidden />}
+            title={filtered ? t("cp.audit.empty_filtered") : t("cp.audit.empty")}
           />
         </div>
       )}
 
       {entries && entries.length > 0 && (
-        <ol className="overflow-hidden rounded-xl border border-line bg-surface">
+        <ol className="overflow-hidden rounded-lg border border-line bg-surface">
           {entries.map((entry) => (
             <AuditRow key={entry.id} entry={entry} />
           ))}
@@ -184,15 +177,13 @@ function FilterField({
   onChange: (value: string) => void;
 }) {
   return (
-    <label className="block text-sm">
-      <span className="text-muted">{label}</span>
-      <input
-        value={value}
-        placeholder={placeholder}
-        onChange={(event) => onChange(event.target.value)}
-        className="mt-1 w-full rounded-lg border border-input px-3 py-2 font-mono text-sm"
-      />
-    </label>
+    <Input
+      label={label}
+      value={value}
+      placeholder={placeholder}
+      onChange={(event) => onChange(event.target.value)}
+      className="font-mono"
+    />
   );
 }
 
@@ -206,13 +197,13 @@ function AuditRow({ entry }: { entry: AuditEntry }) {
         <time dateTime={entry.created_at} className="tabular-nums">
           {formatMoment(entry.created_at)}
         </time>
-        <span className="mt-1 block font-mono text-[11px] text-muted">{entry.ip || "—"}</span>
+        <span className="mt-1 block font-mono text-xs text-muted">{entry.ip || "—"}</span>
       </div>
 
-      <div className="relative px-5 py-4 before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-amber-400">
+      <div className="relative px-5 py-4 before:absolute before:inset-y-0 before:inset-s-0 before:w-1 before:bg-warning-solid">
         <div className="flex flex-wrap items-center gap-2">
           <strong className="font-mono text-sm text-foreground">{entry.action}</strong>
-          <Badge tone="slate">{entry.target_type}</Badge>
+          <Badge tone="neutral">{entry.target_type}</Badge>
           <Target entry={entry} />
         </div>
 
@@ -225,10 +216,10 @@ function AuditRow({ entry }: { entry: AuditEntry }) {
 
         {changed && (
           <details className="mt-3 rounded-lg border border-line bg-surface-2 open:bg-surface">
-            <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-muted marker:text-amber-500">
+            <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-muted marker:text-warning">
               {t("cp.audit.change")}
             </summary>
-            <div className="grid gap-px border-t border-line bg-slate-200 lg:grid-cols-2">
+            <div className="grid gap-px border-t border-line bg-line lg:grid-cols-2">
               <Snapshot label={t("cp.audit.before")} value={entry.before} />
               <Snapshot label={t("cp.audit.after")} value={entry.after} />
             </div>
@@ -245,7 +236,7 @@ function Target({ entry }: { entry: AuditEntry }) {
     return (
       <Link
         href={`/cp/tenants/${encodeURIComponent(entry.target_id)}`}
-        className="max-w-full truncate font-mono text-xs text-muted underline decoration-slate-300 underline-offset-2 hover:text-foreground"
+        className="max-w-full truncate font-mono text-xs text-muted underline decoration-line-strong underline-offset-2 hover:text-foreground"
       >
         {value}
       </Link>
@@ -257,8 +248,8 @@ function Target({ entry }: { entry: AuditEntry }) {
 function Snapshot({ label, value }: { label: string; value: unknown }) {
   return (
     <div className="min-w-0 bg-surface p-3">
-      <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted">{label}</p>
-      <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-words text-xs leading-5 text-foreground">
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">{label}</p>
+      <pre className="max-h-64 overflow-auto whitespace-pre-wrap wrap-break-word text-xs leading-5 text-foreground">
         {hasValue(value) ? JSON.stringify(value, null, 2) : "—"}
       </pre>
     </div>

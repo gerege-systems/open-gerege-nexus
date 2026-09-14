@@ -1,9 +1,20 @@
 "use client";
 
-import { UserRound } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { ChevronDown, LogOut, Monitor, Moon, Settings, Sun } from "lucide-react";
+import { ChevronDown, LogOut, Monitor, Moon, Settings, Sun, UserRound } from "lucide-react";
+import {
+  Avatar,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  cn,
+} from "@gerege-systems/ui";
 import { LOCALES, TranslationKey, useI18n } from "@/lib/i18n";
 import { ColorMode, useTheme } from "@/lib/theme";
 import { TenantChoices, useTenants } from "@/components/TenantChoices";
@@ -20,11 +31,6 @@ function initialsOf(name: string): string {
   if (words.length >= 2) return (words[0].slice(0, 1) + words[1].slice(0, 1)).toUpperCase();
   return (words[0] || "?").slice(0, 2).toUpperCase();
 }
-
-/** Breathing room between the menu's last row and the bottom of the screen. */
-const MENU_GUTTER_PX = 12;
-/** Below this the menu is uselessly short; scroll the page instead. */
-const MENU_MIN_PX = 200;
 
 const MODES: { value: ColorMode; icon: typeof Sun; labelKey: TranslationKey }[] = [
   { value: "light", icon: Sun, labelKey: "appearance.mode.light" },
@@ -44,6 +50,14 @@ export interface UserMenuLink { href: string; label: string; icon: React.ReactNo
  * or /settings pages to reach. `showTenants={false}` also skips the fetch — an
  * unauthenticated call to the tenant API on every opening would be a 401 in
  * the console's network log and nothing else.
+ *
+ * A design-system DropdownMenu: outside click, Escape, focus return and arrow
+ * keys come from it. So does the height — the panel hangs off the button, and
+ * the room it has is what is left *below* that point, not the height of the
+ * screen. Capping it at `100dvh` minus a guess, which this once did, put the
+ * last rows (sign out among them) past the bottom edge on a phone. Radix
+ * measures the actual room from the visual viewport — the one iOS shrinks
+ * while its toolbars are up — and hands it over as a CSS variable.
  */
 export default function UserMenu({
   user,
@@ -64,219 +78,125 @@ export default function UserMenu({
   const offeredLocales = LOCALES.filter((option) => availableLocales.includes(option.code));
   const theme = useTheme();
   const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
   // The brand mark in the header offers the same list, but the mobile shell
-  // hides the brand — this is the only way to change organisation on a phone.
+  // hides the rail — this is the other way to change organisation on a phone.
   const { tenants, activeIDs, switching, failed, switchTo, toggleActive } = useTenants(open && showTenants);
-
-  // Close on an outside click or Escape, the way a menu is expected to behave.
-  useEffect(() => {
-    if (!open) return;
-    const onPointerDown = (event: MouseEvent) => {
-      if (!containerRef.current?.contains(event.target as Node)) setOpen(false);
-    };
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("mousedown", onPointerDown);
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", onPointerDown);
-      document.removeEventListener("keydown", onKeyDown);
-    };
-  }, [open]);
-
-  /**
-   * The panel hangs off the button, so the room it has is what is left *below*
-   * that point — not the height of the screen. Capping it at `100dvh` minus a
-   * guess measured from the top of the viewport instead, which is what this
-   * did, put the last rows (sign out among them) past the bottom edge on a
-   * phone: the list scrolled, the rows appeared while the finger dragged, and
-   * the page rubber-banded them back out of reach before they could be tapped.
-   *
-   * `visualViewport` rather than `innerHeight` because iOS shrinks the former
-   * when its toolbars are on screen and leaves the latter alone — the missing
-   * rows are exactly that band.
-   */
-  useEffect(() => {
-    if (!open) return;
-    const fit = () => {
-      const panel = panelRef.current;
-      if (!panel) return;
-      const view = window.visualViewport;
-      const bottom = view ? view.height + view.offsetTop : window.innerHeight;
-      const room = bottom - panel.getBoundingClientRect().top - MENU_GUTTER_PX;
-      panel.style.maxHeight = `${Math.max(MENU_MIN_PX, room)}px`;
-    };
-    fit();
-    const view = window.visualViewport;
-    window.addEventListener("resize", fit);
-    view?.addEventListener("resize", fit);
-    view?.addEventListener("scroll", fit);
-    return () => {
-      window.removeEventListener("resize", fit);
-      view?.removeEventListener("resize", fit);
-      view?.removeEventListener("scroll", fit);
-    };
-  }, [open, tenants]);
 
   const initials = initialsOf(user?.name || user?.email || "G");
   const rows = links ?? [
-    { href: "/profile", label: t("profile.title"), icon: <UserRound className="w-4 h-4" /> },
-    { href: "/settings/appearance", label: t("web.menu.settings"), icon: <Settings className="w-4 h-4" /> },
+    { href: "/profile", label: t("profile.title"), icon: <UserRound aria-hidden /> },
+    { href: "/settings/appearance", label: t("web.menu.settings"), icon: <Settings aria-hidden /> },
   ];
+  // A preference is something people set twice in a row — try one, compare
+  // the other — and a menu that shuts on the first pick makes the second a
+  // whole reopening.
+  const keepOpen = (event: Event) => event.preventDefault();
 
   return (
-    <div className="relative" ref={containerRef}>
-      <button
-        type="button"
-        onClick={() => setOpen((value) => !value)}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        className={`flex items-center gap-2.5 rounded-full border py-1 pl-1 pr-2.5 transition ${
-          open
-            ? "gerege-topbar-onlight border-accent bg-accent-soft"
-            : "border-line hover:bg-surface-hover"
-        }`}
-      >
-        <span className="w-8 h-8 rounded-full bg-accent-soft text-accent grid place-items-center text-xs font-semibold">
-          {initials}
-        </span>
-        {/* The whole name, not the first word of it: "Цэнддорж Эрдэнэбат" is
-            one name in two parts and cutting it at 9rem said the wrong one. */}
-        <span className="hidden md:block text-sm font-medium text-foreground truncate max-w-60">{user?.name}</span>
-        <ChevronDown className={`w-3.5 h-3.5 text-muted transition-transform ${open ? "rotate-180" : ""}`} />
-      </button>
-
-      {open && (
-        <div
-          role="menu"
-          ref={panelRef}
-          /* The class is only what the first paint uses; the effect above
-             replaces it with the room actually below the button. */
-          className="gerege-topbar-onlight absolute right-0 mt-2 w-[320px] rounded-xl border border-line bg-surface shadow-lg overflow-y-auto overscroll-contain max-h-[calc(100dvh-5rem)] z-dropdown"
-        >
-          <div className="px-4 py-3.5 border-b border-line flex items-start gap-3">
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-foreground truncate">{user?.name}</p>
-              <p className="text-xs text-muted truncate">{user?.email}</p>
-              {subtitle && <p className="mt-0.5 text-xs text-accent truncate">{subtitle}</p>}
-            </div>
-            {/* Signing out is also the last row of this menu, and on a phone
-                with several organisations that row is a whole scroll away.
-                The header is the one part of the menu that never moves, and
-                the space beside a truncated name was empty. */}
-            <button
-              type="button"
-              onClick={onLogout}
-              role="menuitem"
-              aria-label={t("web.action.logout")}
-              title={t("web.action.logout")}
-              className="shrink-0 grid place-items-center w-8 h-8 rounded-lg text-muted transition hover:bg-red-50 hover:text-red-600"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* Only when there is a choice to make. A list of one would be a
-              third line of chrome in a menu that already carries two, saying
-              nothing the header does not already show. */}
-          {showTenants && tenants && tenants.length > 1 && (
-            <div className="py-1.5 border-b border-line">
-              <p className="px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
-                {t("web.view.tenants")}
-              </p>
-              <TenantChoices
-          activeIDs={activeIDs}
-          onToggleActive={(id) => void toggleActive(id, user?.tenant_id || "")}
-                current={user?.tenant_id}
-                tenants={tenants}
-                switching={switching}
-                failed={failed}
-                onChoose={(id) => void switchTo(id)}
-                onStay={() => setOpen(false)}
-              />
-            </div>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          className={cn(
+            "group flex h-9 items-center gap-2 rounded-full border border-line py-0.5 ps-0.5 pe-2 outline-none",
+            "transition-colors hover:bg-surface-2",
+            "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+            "data-[state=open]:border-accent data-[state=open]:bg-accent-soft",
           )}
+        >
+          <Avatar size="md" fallback={initials} alt="" />
+          {/* The whole name, not the first word of it: "Цэнддорж Эрдэнэбат" is
+              one name in two parts and cutting it at 9rem said the wrong one. */}
+          <span className="hidden max-w-60 truncate text-sm font-medium text-foreground md:block">{user?.name}</span>
+          <ChevronDown className="size-3.5 text-subtle transition-transform group-data-[state=open]:rotate-180" aria-hidden />
+        </button>
+      </DropdownMenuTrigger>
 
-          {rows.length > 0 && (
-            <div className="py-1.5 border-b border-line">
-              {rows.map((row) => (
-                <Link
-                  key={row.href}
-                  href={row.href}
-                  onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-surface-hover"
-                  role="menuitem"
-                >
+      <DropdownMenuContent
+        align="end"
+        className="w-80 max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto overscroll-contain"
+      >
+        <div className="flex items-start gap-3 px-2 py-2">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold text-foreground">{user?.name}</p>
+            <p className="truncate text-xs text-muted">{user?.email}</p>
+            {subtitle && <p className="mt-0.5 truncate text-xs text-accent">{subtitle}</p>}
+          </div>
+          {/* Signing out is also the last row of this menu, and on a phone
+              with several organisations that row is a whole scroll away.
+              The header is the one part of the menu that never moves, and
+              the space beside a truncated name was empty. */}
+          <DropdownMenuItem
+            onSelect={onLogout}
+            aria-label={t("web.action.logout")}
+            title={t("web.action.logout")}
+            className="size-8 shrink-0 justify-center p-0 text-muted data-[highlighted]:bg-danger-soft data-[highlighted]:text-danger"
+          >
+            <LogOut aria-hidden />
+          </DropdownMenuItem>
+        </div>
+
+        {/* Only when there is a choice to make. A list of one would be a
+            third line of chrome in a menu that already carries two, saying
+            nothing the header does not already show. */}
+        {showTenants && tenants && tenants.length > 1 && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>{t("web.view.tenants")}</DropdownMenuLabel>
+            <TenantChoices
+              activeIDs={activeIDs}
+              onToggleActive={(id) => void toggleActive(id, user?.tenant_id || "")}
+              current={user?.tenant_id}
+              tenants={tenants}
+              switching={switching}
+              failed={failed}
+              onChoose={(id) => void switchTo(id)}
+              onStay={() => setOpen(false)}
+            />
+          </>
+        )}
+
+        {rows.length > 0 && (
+          <>
+            <DropdownMenuSeparator />
+            {rows.map((row) => (
+              <DropdownMenuItem key={row.href} asChild>
+                <Link href={row.href}>
                   <span className="text-muted">{row.icon}</span>
                   {row.label}
                 </Link>
-              ))}
-            </div>
-          )}
+              </DropdownMenuItem>
+            ))}
+          </>
+        )}
 
-          <div className="px-4 py-3 space-y-3 border-b border-line">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">
-              {t("web.menu.preferences")}
-            </p>
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel>{t("base.field.language")}</DropdownMenuLabel>
+        <DropdownMenuRadioGroup value={locale} onValueChange={(code) => setLocale(code as typeof locale)}>
+          {offeredLocales.map((option) => (
+            <DropdownMenuRadioItem key={option.code} value={option.code} onSelect={keepOpen}>
+              {option.label}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
 
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-sm text-muted">{t("base.field.language")}</span>
-              <div className="inline-flex rounded-lg border border-line p-0.5 bg-surface-2">
-                {offeredLocales.map((option) => (
-                  <button
-                    key={option.code}
-                    type="button"
-                    onClick={() => setLocale(option.code)}
-                    aria-pressed={locale === option.code}
-                    title={option.label}
-                    className={`px-2.5 py-1 rounded-md text-xs font-semibold uppercase transition ${
-                      locale === option.code ? "bg-surface text-accent shadow-sm" : "text-muted hover:text-foreground"
-                    }`}
-                  >
-                    {option.code}
-                  </button>
-                ))}
-              </div>
-            </div>
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel>{t("web.field.theme")}</DropdownMenuLabel>
+        <DropdownMenuRadioGroup value={theme.mode} onValueChange={(mode) => theme.updateTheme({ mode: mode as ColorMode })}>
+          {MODES.map(({ value, icon: Icon, labelKey }) => (
+            <DropdownMenuRadioItem key={value} value={value} onSelect={keepOpen}>
+              <Icon aria-hidden />
+              {t(labelKey)}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
 
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-sm text-muted">{t("web.field.theme")}</span>
-              <div className="inline-flex rounded-lg border border-line p-0.5 bg-surface-2">
-                {MODES.map(({ value, icon: Icon, labelKey }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => theme.updateTheme({ mode: value })}
-                    aria-pressed={theme.mode === value}
-                    title={t(labelKey)}
-                    className={`grid place-items-center w-8 h-7 rounded-md transition ${
-                      theme.mode === value ? "bg-surface text-accent shadow-sm" : "text-muted hover:text-foreground"
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => {
-              setOpen(false);
-              onLogout();
-            }}
-            className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50"
-            role="menuitem"
-          >
-            <LogOut className="w-4 h-4" />
-            {t("web.action.logout")}
-          </button>
-        </div>
-      )}
-    </div>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem destructive onSelect={onLogout}>
+          <LogOut aria-hidden />
+          {t("web.action.logout")}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

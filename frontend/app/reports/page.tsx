@@ -10,7 +10,7 @@
  * the point of a Report being a declaration.
  */
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useId, useMemo, useState } from "react";
 import {
   BarChart3,
   Building2,
@@ -31,6 +31,32 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Checkbox,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  EmptyState,
+  IconButton,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  Skeleton,
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@gerege-systems/ui";
 
 import {
   api,
@@ -42,16 +68,11 @@ import {
   type ReportSummary,
 } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
-import {
-  Banner,
-  EmptyState,
-  LoadingBlock,
-  Modal,
-  PageHeader,
-  cardClass,
-  fieldClass,
-  tableHeadClass,
-} from "@/components/ui";
+import { PageHeader } from "@/components/ui";
+
+// Radix Select refuses an empty-string item value, so "no choice" is carried
+// under a sentinel and written back to the form as "".
+const NO_CHOICE = "__none__";
 
 // The app ids the platform ships, so a group heading reads as a name rather
 // than as a reverse-domain string. An app not in this list falls back to its
@@ -192,115 +213,101 @@ export default function ReportsPage({ appFilter }: { appFilter?: string } = {}) 
   );
   const chart = useMemo(() => chartShape(displayed), [displayed]);
 
-  if (loading) return <LoadingBlock label={t("base.message.loading")} />;
+  if (loading) return <RowsPlaceholder label={t("base.message.loading")} />;
 
   const hasReports = groups.some((group) => group.reports.length > 0);
 
   return (
     <div className="space-y-6">
       <PageHeader
-        icon={<BarChart3 className="w-7 h-7 text-indigo-600" />}
+        icon={<BarChart3 className="w-7 h-7 text-accent" />}
         title={t("reports.view.title")}
         subtitle={t("reports.view.subtitle")}
         actions={
           selected ? (
             <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => run(false)}
-                disabled={running}
-                className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-semibold px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm transition"
-              >
-                <Play className="w-4 h-4" />
+              <Button size="sm" disabled={running} leadingIcon={<Play />} onClick={() => run(false)}>
                 {t("reports.action.run")}
-              </button>
+              </Button>
               {/* The consolidated run is a separate button rather than a
                   mode, because it answers a different question and a toggle
                   somebody left on would silently change what the numbers mean. */}
-              <button
-                onClick={() => run(true)}
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-accent-border text-accent hover:bg-accent-soft"
                 disabled={running}
-                className="bg-white border border-indigo-200 hover:bg-indigo-50 disabled:opacity-50 text-indigo-700 text-xs font-semibold px-4 py-2 rounded-lg flex items-center gap-2 transition"
+                leadingIcon={<Building2 />}
                 title={t("reports.hint.consolidated")}
+                onClick={() => run(true)}
               >
-                <Building2 className="w-4 h-4" />
                 {t("reports.action.run_consolidated")}
-              </button>
-              <button
-                onClick={() => download("xlsx")}
-                disabled={!result}
-                className="bg-white border border-slate-200 hover:bg-slate-50 disabled:opacity-50 text-slate-700 text-xs font-semibold px-4 py-2 rounded-lg flex items-center gap-2 transition"
-              >
-                <FileSpreadsheet className="w-4 h-4" />
+              </Button>
+              <Button size="sm" variant="outline" disabled={!result} leadingIcon={<FileSpreadsheet />} onClick={() => download("xlsx")}>
                 {t("reports.action.export_xlsx")}
-              </button>
-              <button
-                onClick={() => download("csv")}
-                disabled={!result}
-                className="bg-white border border-slate-200 hover:bg-slate-50 disabled:opacity-50 text-slate-700 text-xs font-semibold px-4 py-2 rounded-lg flex items-center gap-2 transition"
-              >
-                <Download className="w-4 h-4" />
+              </Button>
+              <Button size="sm" variant="outline" disabled={!result} leadingIcon={<Download />} onClick={() => download("csv")}>
                 {t("reports.action.export_csv")}
-              </button>
-              <button
-                onClick={() => setScheduleOpen(true)}
-                className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold px-4 py-2 rounded-lg flex items-center gap-2 transition"
-              >
-                <CalendarClock className="w-4 h-4" />
+              </Button>
+              <Button size="sm" variant="outline" leadingIcon={<CalendarClock />} onClick={() => setScheduleOpen(true)}>
                 {t("reports.action.schedule")}
-              </button>
+              </Button>
             </div>
           ) : undefined
         }
       />
 
-      {failure && <Banner tone="error" message={failure} onDismiss={() => setFailure("")} />}
-      {notice && <Banner tone="success" message={notice} onDismiss={() => setNotice("")} />}
+      {failure && <Alert variant="danger" live dismissible onDismiss={() => setFailure("")}>{failure}</Alert>}
+      {notice && <Alert variant="success" live dismissible onDismiss={() => setNotice("")}>{notice}</Alert>}
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* The list, grouped by app. The grouping is the app gate made
             visible: a section for an app this organisation does not have
             simply is not here. */}
-        <aside className={`${cardClass} p-4 lg:col-span-1 h-max`}>
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-3">
-            {t("reports.section.reports")}
-          </h2>
-          {!hasReports ? (
-            <p className="text-sm text-slate-500">{t("reports.message.no_reports")}</p>
-          ) : (
-            <div className="space-y-4">
-              {groups.map((group) => (
-                <div key={group.app}>
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500 mb-1">
-                    {APP_NAMES[group.app]?.[locale === "en" ? "en" : "mn"] || group.app}
-                  </p>
-                  <ul className="space-y-1">
-                    {group.reports.map((report) => (
-                      <li key={report.key}>
-                        <button
-                          onClick={() => choose(report)}
-                          className={`w-full text-left text-sm px-3 py-2 rounded-lg transition ${
-                            selected?.key === report.key
-                              ? "bg-indigo-50 text-indigo-700 font-semibold"
-                              : "text-slate-700 hover:bg-slate-50"
-                          }`}
-                        >
-                          {label(report.titles, report.key)}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          )}
-        </aside>
+        <Card asChild padding="sm" className="lg:col-span-1 h-max">
+          <aside>
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-subtle mb-3">
+              {t("reports.section.reports")}
+            </h2>
+            {!hasReports ? (
+              <EmptyState icon={<BarChart3 className="size-6" />} title={t("reports.message.no_reports")} className="py-6" />
+            ) : (
+              <div className="space-y-4">
+                {groups.map((group) => (
+                  <div key={group.app}>
+                    <p className="text-xs font-bold uppercase tracking-wide text-muted mb-1">
+                      {APP_NAMES[group.app]?.[locale === "en" ? "en" : "mn"] || group.app}
+                    </p>
+                    <ul className="space-y-1">
+                      {group.reports.map((report) => (
+                        <li key={report.key}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            aria-pressed={selected?.key === report.key}
+                            onClick={() => choose(report)}
+                            className={`w-full justify-start text-start font-normal ${
+                              selected?.key === report.key ? "bg-accent-soft text-accent font-semibold" : ""
+                            }`}
+                          >
+                            {label(report.titles, report.key)}
+                          </Button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
+          </aside>
+        </Card>
 
-        <section className="lg:col-span-3 space-y-6">
-          {!selected && <EmptyState message={t("reports.message.select")} />}
+        <section className="lg:col-span-3 min-w-0 space-y-6">
+          {!selected && <EmptyState title={t("reports.message.select")} className="py-10" />}
 
           {metadata && metadata.params.length > 0 && (
-            <div className={`${cardClass} p-4`}>
-              <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-3">
+            <Card padding="sm">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-subtle mb-3">
                 {t("reports.section.parameters")}
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -314,32 +321,30 @@ export default function ReportsPage({ appFilter }: { appFilter?: string } = {}) 
                   />
                 ))}
               </div>
-            </div>
+            </Card>
           )}
 
-          {running && <LoadingBlock label={t("reports.message.running")} />}
+          {running && <RowsPlaceholder label={t("reports.message.running")} />}
 
           {result && displayed && !running && (
             <>
               {result.notes?.map((note, index) => (
-                <Banner
-                  key={index}
-                  tone={note.level === "warning" ? "warning" : "info"}
-                  message={note.message}
-                />
+                <Alert key={index} variant={note.level === "warning" ? "warning" : "info"}>
+                  {note.message}
+                </Alert>
               ))}
 
               {chart && (
-                <div className={`${cardClass} p-4`}>
-                  <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-3">
+                <Card padding="sm">
+                  <h2 className="text-xs font-semibold uppercase tracking-wide text-subtle mb-3">
                     {t("reports.section.chart")}
                   </h2>
                   <div className="h-72">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={chart.data}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                        <XAxis dataKey="__category" tick={{ fontSize: 11 }} />
-                        <YAxis tick={{ fontSize: 11 }} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" />
+                        <XAxis dataKey="__category" tick={{ fontSize: 12 }} />
+                        <YAxis tick={{ fontSize: 12 }} />
                         <Tooltip />
                         <Legend wrapperStyle={{ fontSize: 12 }} />
                         {chart.series.map((series, index) => (
@@ -353,24 +358,19 @@ export default function ReportsPage({ appFilter }: { appFilter?: string } = {}) 
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
-                </div>
+                </Card>
               )}
 
               {consolidated && (
                 <div className="flex flex-wrap items-center gap-3">
-                  <span className="bg-indigo-50 text-indigo-700 text-[11px] font-semibold px-2.5 py-1 rounded-full border border-indigo-200 flex items-center gap-1">
-                    <Building2 className="w-3 h-3" />
+                  <Badge variant="outline" tone="accent" icon={<Building2 />}>
                     {t("reports.badge.consolidated")}
-                  </span>
-                  <label className="flex items-center gap-2 text-xs text-slate-600">
-                    <input
-                      type="checkbox"
-                      checked={byCompany}
-                      onChange={(e) => setByCompany(e.target.checked)}
-                      className="rounded border-slate-300"
-                    />
-                    {t("reports.toggle.by_company")}
-                  </label>
+                  </Badge>
+                  <Checkbox
+                    checked={byCompany}
+                    onCheckedChange={(checked) => setByCompany(checked === true)}
+                    label={<span className="text-xs text-muted">{t("reports.toggle.by_company")}</span>}
+                  />
                 </div>
               )}
 
@@ -406,9 +406,32 @@ export default function ReportsPage({ appFilter }: { appFilter?: string } = {}) 
   );
 }
 
-// Indigo through to amber: five hues that stay distinguishable in the order
-// they are handed out, which matters because a report decides its own series.
-const SERIES_COLOURS = ["#4f46e5", "#0ea5e9", "#10b981", "#f59e0b", "#ef4444"];
+// The theme's chart hues, handed out in order. Recharts takes a CSS variable as
+// a fill, so the chart follows the colour mode the way the table does.
+const SERIES_COLOURS = [
+  "var(--color-chart-1)",
+  "var(--color-chart-2)",
+  "var(--color-chart-3)",
+  "var(--color-chart-4)",
+  "var(--color-chart-5)",
+];
+
+/** Rows of the right shape while something is outstanding, with the label
+ *  announced — a skeleton says nothing to a screen reader. */
+function RowsPlaceholder({ label }: { label: string }) {
+  return (
+    <div className="space-y-3 py-4" role="status" aria-live="polite" aria-busy="true">
+      <span className="sr-only">{label}</span>
+      {Array.from({ length: 4 }, (_, row) => (
+        <div key={row} className="flex items-center gap-3">
+          <Skeleton variant="circle" className="size-4 shrink-0" />
+          <Skeleton className="h-4 flex-1" />
+          <Skeleton className="h-4 w-24 shrink-0" />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 /** defaultsFor seeds the form. Dates are left blank so the server's own
  *  default window applies — every report declares its own, and guessing one
@@ -437,75 +460,75 @@ function ParamField({
   onChange: (key: string, value: string) => void;
   label: (titles: Record<string, string> | undefined, fallback: string) => string;
 }) {
+  const fieldId = useId();
   const name = label(param.titles, param.key);
 
   if (param.kind === "date_range") {
     return (
-      <div className="sm:col-span-2">
-        <label className="block text-xs font-semibold text-slate-600 mb-1">{name}</label>
+      <fieldset className="sm:col-span-2">
+        <legend className="text-sm font-medium text-foreground mb-1.5">{name}</legend>
         <div className="flex items-center gap-2">
-          <input
+          <Input
             type="date"
-            className={fieldClass}
+            label={name}
+            hideLabel
+            className="flex-1"
             value={values[`${param.key}_from`] || ""}
             onChange={(e) => onChange(`${param.key}_from`, e.target.value)}
           />
-          <span className="text-slate-400">—</span>
-          <input
+          <span className="text-subtle" aria-hidden="true">—</span>
+          <Input
             type="date"
-            className={fieldClass}
+            label={name}
+            hideLabel
+            className="flex-1"
             value={values[`${param.key}_to`] || ""}
             onChange={(e) => onChange(`${param.key}_to`, e.target.value)}
           />
         </div>
-      </div>
+      </fieldset>
     );
   }
 
   if (param.kind === "select" || param.kind === "uuid") {
     return (
-      <div>
-        <label className="block text-xs font-semibold text-slate-600 mb-1">{name}</label>
-        <select
-          className={fieldClass}
-          value={values[param.key] || ""}
-          onChange={(e) => onChange(param.key, e.target.value)}
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor={fieldId} className="text-sm font-medium text-foreground">{name}</label>
+        <Select
+          value={values[param.key] || NO_CHOICE}
+          onValueChange={(next) => onChange(param.key, next === NO_CHOICE ? "" : next)}
         >
-          <option value="">—</option>
-          {(param.options || []).map((option) => (
-            <option key={option.value} value={option.value}>
-              {label(option.titles, option.value)}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger id={fieldId} />
+          <SelectContent>
+            <SelectItem value={NO_CHOICE}>—</SelectItem>
+            {(param.options || []).filter((option) => option.value !== "").map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {label(option.titles, option.value)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     );
   }
 
   if (param.kind === "bool") {
     return (
-      <label className="flex items-center gap-2 mt-6 text-sm text-slate-700">
-        <input
-          type="checkbox"
-          checked={values[param.key] === "true"}
-          onChange={(e) => onChange(param.key, String(e.target.checked))}
-          className="rounded border-slate-300"
-        />
-        {name}
-      </label>
+      <Checkbox
+        className="mt-6"
+        checked={values[param.key] === "true"}
+        onCheckedChange={(checked) => onChange(param.key, String(checked === true))}
+        label={name}
+      />
     );
   }
 
   return (
-    <div>
-      <label className="block text-xs font-semibold text-slate-600 mb-1">{name}</label>
-      <input
-        type="text"
-        className={fieldClass}
-        value={values[param.key] || ""}
-        onChange={(e) => onChange(param.key, e.target.value)}
-      />
-    </div>
+    <Input
+      label={name}
+      value={values[param.key] || ""}
+      onChange={(e) => onChange(param.key, e.target.value)}
+    />
   );
 }
 
@@ -584,70 +607,55 @@ function ResultTable({
   locale: string;
 }) {
   if (result.rows.length === 0) {
-    return <EmptyState message={emptyLabel} />;
+    return <EmptyState title={emptyLabel} className="py-10" />;
   }
 
   return (
-    <div className={`${cardClass} overflow-hidden`}>
-      <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-slate-800">{title}</h2>
-        <span className="text-xs text-slate-400">
+    <Card padding="none" className="overflow-hidden">
+      <div className="px-4 py-3 border-b border-line flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+        <span className="text-xs text-subtle">
           {result.rows.length} {rowsLabel}
         </span>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className={tableHeadClass}>
-            <tr>
-              {result.columns.map((column) => (
-                <th
-                  key={column.key}
-                  className={`px-4 py-3 ${isNumeric(column) ? "text-right" : "text-left"}`}
-                >
-                  {label(column.titles, column.key)}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {result.rows.map((row, index) => (
-              <tr key={index} className="hover:bg-slate-50">
-                {result.columns.map((column) => (
-                  <td
-                    key={column.key}
-                    className={`px-4 py-2.5 ${
-                      isNumeric(column) ? "text-right tabular-nums text-slate-800" : "text-slate-700"
-                    }`}
-                  >
-                    {formatCell(row[column.key], column, locale)}
-                  </td>
-                ))}
-              </tr>
+      <Table containerClassName="rounded-none border-0">
+        <TableHeader>
+          <TableRow>
+            {result.columns.map((column) => (
+              <TableHead key={column.key} align={isNumeric(column) ? "right" : "left"}>
+                {label(column.titles, column.key)}
+              </TableHead>
             ))}
-          </tbody>
-          {result.totals && Object.keys(result.totals).length > 0 && (
-            <tfoot className="bg-slate-50 border-t-2 border-slate-200">
-              <tr>
-                {result.columns.map((column, index) => (
-                  <td
-                    key={column.key}
-                    className={`px-4 py-2.5 font-semibold ${
-                      isNumeric(column) ? "text-right tabular-nums" : "text-left"
-                    }`}
-                  >
-                    {index === 0
-                      ? totalLabel
-                      : column.total
-                        ? formatCell(result.totals?.[column.key], column, locale)
-                        : ""}
-                  </td>
-                ))}
-              </tr>
-            </tfoot>
-          )}
-        </table>
-      </div>
-    </div>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {result.rows.map((row, index) => (
+            <TableRow key={index}>
+              {result.columns.map((column) => (
+                <TableCell key={column.key} align={isNumeric(column) ? "right" : "left"}>
+                  {formatCell(row[column.key], column, locale)}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+        {result.totals && Object.keys(result.totals).length > 0 && (
+          <TableFooter>
+            <TableRow>
+              {result.columns.map((column, index) => (
+                <TableCell key={column.key} align={isNumeric(column) ? "right" : "left"} className="font-semibold">
+                  {index === 0
+                    ? totalLabel
+                    : column.total
+                      ? formatCell(result.totals?.[column.key], column, locale)
+                      : ""}
+                </TableCell>
+              ))}
+            </TableRow>
+          </TableFooter>
+        )}
+      </Table>
+    </Card>
   );
 }
 
@@ -669,83 +677,75 @@ function SchedulesCard({
   const { t } = useI18n();
 
   return (
-    <div className={`${cardClass} p-4`}>
+    <Card padding="sm">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-subtle">
           {t("reports.section.schedules")}
         </h2>
         {canAdd && (
-          <button
-            onClick={onAdd}
-            className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
-          >
-            <Plus className="w-3.5 h-3.5" />
+          <Button variant="link" size="sm" leadingIcon={<Plus />} onClick={onAdd}>
             {t("reports.action.new_schedule")}
-          </button>
+          </Button>
         )}
       </div>
 
       {/* Said once, where it matters: a schedule created on a deployment with
           no mail transport looks active and delivers nothing. */}
       {!deliveryConfigured && schedules.length > 0 && (
-        <div className="mb-3">
-          <Banner tone="warning" message={t("reports.message.delivery_off")} />
-        </div>
+        <Alert variant="warning" className="mb-3">{t("reports.message.delivery_off")}</Alert>
       )}
 
       {schedules.length === 0 ? (
-        <p className="text-sm text-slate-500">{t("reports.message.no_schedules")}</p>
+        <p className="text-sm text-muted">{t("reports.message.no_schedules")}</p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className={tableHeadClass}>
-              <tr>
-                <th className="px-3 py-2 text-left">{t("reports.field.report")}</th>
-                <th className="px-3 py-2 text-left">{t("reports.field.cron")}</th>
-                <th className="px-3 py-2 text-left">{t("reports.field.recipients")}</th>
-                <th className="px-3 py-2 text-left">{t("reports.field.last_run")}</th>
-                <th className="px-3 py-2" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {schedules.map((schedule) => (
-                <tr key={schedule.id} className="hover:bg-slate-50">
-                  <td className="px-3 py-2 text-slate-800">
-                    {schedule.name || label(schedule.titles, schedule.report_key)}
-                  </td>
-                  <td className="px-3 py-2 font-mono text-xs text-slate-600">{schedule.cron}</td>
-                  <td className="px-3 py-2 text-slate-600">{schedule.recipients.join(", ")}</td>
-                  <td className="px-3 py-2 text-xs">
-                    {schedule.last_run_at ? (
-                      <span
-                        className={
-                          schedule.last_status === "FAILED" ? "text-red-600" : "text-slate-500"
-                        }
-                        title={schedule.last_error || undefined}
-                      >
-                        {new Date(schedule.last_run_at).toLocaleString()}
-                        {schedule.last_status === "FAILED" ? " ⚠" : ""}
-                      </span>
-                    ) : (
-                      <span className="text-slate-400">—</span>
-                    )}
-                  </td>
-                  <td className="px-3 py-2 text-right">
-                    <button
-                      onClick={() => onRemove(schedule.id)}
-                      className="text-slate-400 hover:text-red-600 transition"
-                      aria-label={t("base.action.delete")}
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("reports.field.report")}</TableHead>
+              <TableHead>{t("reports.field.cron")}</TableHead>
+              <TableHead>{t("reports.field.recipients")}</TableHead>
+              <TableHead>{t("reports.field.last_run")}</TableHead>
+              <TableHead />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {schedules.map((schedule) => (
+              <TableRow key={schedule.id}>
+                <TableCell>
+                  {schedule.name || label(schedule.titles, schedule.report_key)}
+                </TableCell>
+                <TableCell className="font-mono text-xs text-muted">{schedule.cron}</TableCell>
+                <TableCell className="text-muted">{schedule.recipients.join(", ")}</TableCell>
+                <TableCell className="text-xs">
+                  {schedule.last_run_at ? (
+                    <span
+                      className={
+                        schedule.last_status === "FAILED" ? "text-danger" : "text-muted"
+                      }
+                      title={schedule.last_error || undefined}
                     >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                      {new Date(schedule.last_run_at).toLocaleString()}
+                      {schedule.last_status === "FAILED" ? " ⚠" : ""}
+                    </span>
+                  ) : (
+                    <span className="text-subtle">—</span>
+                  )}
+                </TableCell>
+                <TableCell align="right">
+                  <IconButton
+                    size="sm"
+                    className="text-subtle hover:text-danger"
+                    aria-label={t("base.action.delete")}
+                    icon={<Trash2 />}
+                    onClick={() => onRemove(schedule.id)}
+                  />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -794,78 +794,67 @@ function ScheduleModal({
     }
   };
 
+  // Closed only by its own Cancel, as before: Escape and a click outside are
+  // held back so a half-typed schedule is not lost to a stray gesture.
   return (
-    <Modal label={t("reports.action.schedule")}>
-      <h2 className="text-xl font-bold text-slate-900 mb-4">{t("reports.action.schedule")}</h2>
-      <form onSubmit={save} className="space-y-4">
-        {failure && <Banner tone="error" message={failure} />}
+    <Dialog open>
+      <DialogContent
+        showClose={false}
+        aria-describedby={undefined}
+        onEscapeKeyDown={(event) => event.preventDefault()}
+        onPointerDownOutside={(event) => event.preventDefault()}
+        onInteractOutside={(event) => event.preventDefault()}
+      >
+        <DialogHeader>
+          <DialogTitle>{t("reports.action.schedule")}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={save} className="space-y-4">
+          {failure && <Alert variant="danger" live>{failure}</Alert>}
 
-        <div>
-          <label className="block text-xs font-semibold text-slate-600 mb-1">
-            {t("reports.field.schedule_name")}
-          </label>
-          <input className={fieldClass} value={name} onChange={(e) => setName(e.target.value)} />
-        </div>
+          <Input label={t("reports.field.schedule_name")} value={name} onChange={(e) => setName(e.target.value)} />
 
-        <div>
-          <label className="block text-xs font-semibold text-slate-600 mb-1">
-            {t("reports.field.cron")}
-          </label>
-          <input
-            className={`${fieldClass} font-mono`}
+          <Input
+            label={t("reports.field.cron")}
+            className="[&_input]:font-mono"
             value={cron}
             onChange={(e) => setCron(e.target.value)}
             required
+            helperText={t("reports.hint.cron")}
           />
-          <p className="text-[11px] text-slate-400 mt-1">{t("reports.hint.cron")}</p>
-        </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-slate-600 mb-1">
-            {t("reports.field.format")}
-          </label>
-          <select
-            className={fieldClass}
-            value={format}
-            onChange={(e) => setFormat(e.target.value as "xlsx" | "csv")}
-          >
-            <option value="xlsx">Excel (.xlsx)</option>
-            <option value="csv">CSV</option>
-          </select>
-        </div>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="report-schedule-format" className="text-sm font-medium text-foreground">
+              {t("reports.field.format")}
+            </label>
+            <Select value={format} onValueChange={(next) => setFormat(next as "xlsx" | "csv")}>
+              <SelectTrigger id="report-schedule-format" />
+              <SelectContent>
+                <SelectItem value="xlsx">Excel (.xlsx)</SelectItem>
+                <SelectItem value="csv">CSV</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-slate-600 mb-1">
-            {t("reports.field.recipients")}
-          </label>
-          <input
-            className={fieldClass}
+          <Input
+            label={t("reports.field.recipients")}
             value={recipients}
             onChange={(e) => setRecipients(e.target.value)}
             placeholder="a@example.mn, b@example.mn"
             required
+            helperText={t("reports.hint.recipients")}
           />
-          <p className="text-[11px] text-slate-400 mt-1">{t("reports.hint.recipients")}</p>
-        </div>
 
-        <div className="flex justify-end gap-2 pt-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800"
-          >
-            {t("base.action.cancel")}
-          </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-semibold px-4 py-2 rounded-lg"
-          >
-            {t("base.action.save")}
-          </button>
-        </div>
-      </form>
-    </Modal>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="ghost" onClick={onClose}>
+              {t("base.action.cancel")}
+            </Button>
+            <Button type="submit" loading={saving}>
+              {t("base.action.save")}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 

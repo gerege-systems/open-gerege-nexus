@@ -5,8 +5,22 @@ import { api } from "@/lib/api";
 import { useLoadOnMount } from "@/lib/useResource";
 import { useAccess } from "@/lib/access";
 import { useI18n } from "@/lib/i18n";
-import { Banner, LoadingBlock, PageHeader, TableCard, fieldClass, rowActionClass, selectClass } from "@/components/ui";
-import { ActionMessage } from "@/components/documents/shared";
+import { PageHeader } from "@/components/ui";
+import { ActionMessage, ListEmpty, ListSkeleton, SelectField, StaleNotice } from "@/components/documents/shared";
+import {
+  Alert,
+  Button,
+  Card,
+  Checkbox,
+  ConfirmationDialog,
+  Input,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@gerege-systems/ui";
 import { Files, Plus, Save, Trash2, Wand2 } from "lucide-react";
 
 interface Template {
@@ -19,6 +33,7 @@ interface Template {
 }
 
 const DOC_TYPES = ["CONTRACT", "REQUEST", "APPROVAL"] as const;
+const DOC_TYPE_OPTIONS = DOC_TYPES.map((type) => ({ value: type, label: type }));
 
 /**
  * Document templates: the presets a document is started from. A document is a
@@ -46,6 +61,7 @@ export default function DocumentTemplatesPage() {
       return next;
     });
   const [message, setMessage] = useState<ActionMessage | null>(null);
+  const [deleting, setDeleting] = useState<Template | null>(null);
   const [form, setForm] = useState({ name: "", doc_type: "CONTRACT", title_pattern: "" });
 
   // Rows with edits that have not been saved. The Use button acts on what the server
@@ -185,8 +201,8 @@ export default function DocumentTemplatesPage() {
     }
   };
 
+  // Asked in the confirmation dialog below, which calls this only on confirm.
   const handleDelete = async (tpl: Template) => {
-    if (!confirm(t("documents.message.template_delete_confirm", { name: tpl.name }))) return;
     setBusy(tpl.id, true);
     setMessage(null);
     try {
@@ -214,195 +230,203 @@ export default function DocumentTemplatesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        icon={<Files className="w-7 h-7 text-indigo-600" />}
+        icon={<Files className="w-7 h-7 text-accent" />}
         title={t("documents.menu.templates")}
         subtitle={t("documents.view.templates_hint")}
       />
 
-      {message && <Banner tone={message.type} message={message.text} onDismiss={() => setMessage(null)} />}
+      {message && (
+        <Alert
+          variant={message.type === "error" ? "danger" : message.type}
+          live
+          dismissible
+          onDismiss={() => setMessage(null)}
+        >
+          {message.text}
+        </Alert>
+      )}
 
       {mayManage && (
-        <form onSubmit={handleCreate} className="bg-surface border border-line rounded-xl p-4 grid gap-3 md:grid-cols-4">
-          <div className="md:col-span-1">
-            <label className="block text-xs font-semibold text-foreground mb-1">{t("documents.field.template_name")}</label>
-            <input
+        <Card padding="sm" asChild>
+          <form onSubmit={handleCreate} className="grid gap-3 md:grid-cols-4 items-end">
+            <Input
+              id="template-name"
               type="text"
+              label={t("documents.field.template_name")}
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className={fieldClass}
               required
             />
-          </div>
-          <div className="md:col-span-1">
-            <label className="block text-xs font-semibold text-foreground mb-1">{t("documents.field.category")}</label>
-            <select
+            <SelectField
+              id="template-type"
+              label={t("documents.field.category")}
               value={form.doc_type}
-              onChange={(e) => setForm({ ...form, doc_type: e.target.value })}
-              className={selectClass}
-            >
-              {DOC_TYPES.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="md:col-span-1">
-            <label className="block text-xs font-semibold text-foreground mb-1">
-              {t("documents.field.title_pattern")}
-            </label>
-            <input
+              onValueChange={(doc_type) => setForm({ ...form, doc_type })}
+              options={DOC_TYPE_OPTIONS}
+            />
+            <Input
+              id="template-pattern"
               type="text"
+              label={t("documents.field.title_pattern")}
               placeholder={t("documents.field.title_pattern_placeholder")}
               value={form.title_pattern}
               onChange={(e) => setForm({ ...form, title_pattern: e.target.value })}
-              className={fieldClass}
               required
             />
-          </div>
-          <div className="md:col-span-1 flex items-end">
-            <button
+            <Button
               type="submit"
-              disabled={isBusy("create") || !form.name.trim() || !form.title_pattern.trim()}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-lg flex items-center justify-center space-x-2 disabled:opacity-50"
+              loading={isBusy("create")}
+              disabled={!form.name.trim() || !form.title_pattern.trim()}
+              leadingIcon={<Plus />}
+              className="w-full"
             >
-              <Plus className="w-4 h-4" />
-              <span>{t("documents.action.add_template")}</span>
-            </button>
-          </div>
-          <p className="md:col-span-4 text-[11px] text-muted">{t("documents.message.title_pattern_hint")}</p>
-        </form>
+              {t("documents.action.add_template")}
+            </Button>
+            <p className="md:col-span-4 text-xs text-muted">{t("documents.message.title_pattern_hint")}</p>
+          </form>
+        </Card>
       )}
 
       {loading ? (
-        <LoadingBlock label={t("documents.message.loading")} />
+        <ListSkeleton label={t("documents.message.loading")} />
       ) : templates.length === 0 ? (
         // Only a load that succeeded may say the tenant has no templates; a failed one
         // says so in the banner instead, and an operator adding one to a list the page
         // called complete would be building on a claim it could not make.
-        loadFailed ? null : (
-          <div className="bg-surface border border-line rounded-xl p-8 text-center text-muted text-sm">
-            {t("documents.message.no_templates")}
-          </div>
-        )
+        loadFailed ? null : <ListEmpty icon={<Files />} title={t("documents.message.no_templates")} />
       ) : (
-        <TableCard
-          head={
-            <tr>
-              <th className="px-4 py-3">{t("documents.field.template_name")}</th>
-              <th className="px-4 py-3">{t("base.field.type")}</th>
-              <th className="px-4 py-3">{t("documents.field.title_pattern")}</th>
-              <th className="px-4 py-3">{t("base.state.active")}</th>
-              <th className="px-4 py-3 text-right">{t("base.field.actions")}</th>
-            </tr>
-          }
-          footer={
-            <>
-            {/* A stale list says so for as long as it is stale — the banner can be
-                dismissed, and a refresh that failed after an action must not be the only
-                thing that says the rows are old. */}
-            {loadFailed && (
-              <div className="flex items-center justify-between gap-3 px-4 py-3 border-t border-amber-200 bg-amber-50">
-                <p className="text-[11px] text-amber-800">{t("documents.message.stale_rows")}</p>
-                <button
-                  type="button"
-                  disabled={loading}
-                  onClick={() => loadData()}
-                  className="text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-surface border border-amber-300 text-amber-800 hover:bg-amber-100 disabled:opacity-50"
-                >
-                  {t("documents.action.retry")}
-                </button>
-              </div>
-            )}
-            </>
-          }
-        >
-          {templates.map((tpl) => (
-            <tr key={tpl.id} className={`hover:bg-surface-hover ${tpl.active ? "" : "opacity-60"}`}>
-              <td className="px-4 py-3">
-                <input
-                  type="text"
-                  value={tpl.name}
-                  disabled={!mayManage}
-                  onChange={(e) => edit(tpl.id, { name: e.target.value })}
-                  className="w-full px-2 py-1.5 text-xs font-semibold border border-input rounded-lg focus:ring-2 focus:ring-indigo-500 disabled:border-transparent disabled:bg-transparent"
-                />
-              </td>
-              <td className="px-4 py-3">
-                <select
-                  value={tpl.doc_type}
-                  disabled={!mayManage}
-                  onChange={(e) => edit(tpl.id, { doc_type: e.target.value })}
-                  className="h-[30px] px-2 py-1.5 text-xs font-mono border border-input rounded-lg bg-surface focus:ring-2 focus:ring-indigo-500 disabled:border-transparent disabled:bg-transparent"
-                >
-                  {DOC_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </td>
-              <td className="px-4 py-3">
-                <input
-                  type="text"
-                  value={tpl.title_pattern}
-                  disabled={!mayManage}
-                  onChange={(e) => edit(tpl.id, { title_pattern: e.target.value })}
-                  className="w-full px-2 py-1.5 text-xs font-mono border border-input rounded-lg focus:ring-2 focus:ring-indigo-500 disabled:border-transparent disabled:bg-transparent"
-                />
-              </td>
-              <td className="px-4 py-3">
-                <input
-                  type="checkbox"
-                  checked={tpl.active}
-                  disabled={!mayManage}
-                  onChange={(e) => edit(tpl.id, { active: e.target.checked })}
-                  title={t("documents.message.template_active_hint")}
-                  className="w-4 h-4 accent-indigo-600"
-                />
-              </td>
-              <td className="px-4 py-3 text-right">
-                {mayManage ? (
-                  <div className="flex items-center justify-end space-x-2">
-                    <button
-                      onClick={() => handleSave(tpl)}
-                      disabled={isBusy(tpl.id) || !tpl.name.trim() || !tpl.title_pattern.trim()}
-                      className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border border-input text-foreground hover:bg-surface-hover disabled:opacity-50"
-                    >
-                      <Save className="w-3.5 h-3.5" />
-                      <span>{t("base.action.save")}</span>
-                    </button>
-                    <button
-                      onClick={() => handleUse(tpl)}
-                      disabled={isBusy(tpl.id) || !tpl.active || dirty[tpl.id]}
-                      title={
-                        dirty[tpl.id]
-                          ? t("documents.message.template_unsaved")
-                          : tpl.active
-                            ? undefined
-                            : t("documents.message.template_inactive")
-                      }
-                      className={rowActionClass}
-                    >
-                      <Wand2 className="w-3.5 h-3.5" />
-                      <span>{t("documents.action.use_template")}</span>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(tpl)}
-                      disabled={isBusy(tpl.id)}
-                      className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span>{t("base.action.delete")}</span>
-                    </button>
-                  </div>
-                ) : (
-                  <span className="text-subtle text-[11px]">—</span>
-                )}
-              </td>
-            </tr>
-          ))}
-        </TableCard>
+        <Card padding="none" className="overflow-hidden">
+          <Table containerClassName="rounded-none border-0" className="text-xs" scrollLabel={t("documents.menu.templates")}>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("documents.field.template_name")}</TableHead>
+                <TableHead>{t("base.field.type")}</TableHead>
+                <TableHead>{t("documents.field.title_pattern")}</TableHead>
+                <TableHead>{t("base.state.active")}</TableHead>
+                <TableHead align="right">{t("base.field.actions")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {templates.map((tpl) => (
+                <TableRow key={tpl.id} className={tpl.active ? "" : "opacity-60"}>
+                  <TableCell>
+                    <Input
+                      type="text"
+                      size="sm"
+                      label={t("documents.field.template_name")}
+                      hideLabel
+                      value={tpl.name}
+                      disabled={!mayManage}
+                      onChange={(e) => edit(tpl.id, { name: e.target.value })}
+                      className="min-w-40 [&_input]:font-semibold"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <SelectField
+                      label={t("base.field.type")}
+                      hideLabel
+                      size="sm"
+                      value={tpl.doc_type}
+                      disabled={!mayManage}
+                      onValueChange={(doc_type) => edit(tpl.id, { doc_type })}
+                      options={DOC_TYPE_OPTIONS}
+                      className="min-w-[140px] font-mono"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      type="text"
+                      size="sm"
+                      label={t("documents.field.title_pattern")}
+                      hideLabel
+                      value={tpl.title_pattern}
+                      disabled={!mayManage}
+                      onChange={(e) => edit(tpl.id, { title_pattern: e.target.value })}
+                      className="min-w-50 [&_input]:font-mono"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Checkbox
+                      checked={tpl.active}
+                      disabled={!mayManage}
+                      onCheckedChange={(checked) => edit(tpl.id, { active: checked === true })}
+                      aria-label={`${t("base.state.active")} — ${tpl.name}`}
+                      title={t("documents.message.template_active_hint")}
+                    />
+                  </TableCell>
+                  <TableCell align="right">
+                    {mayManage ? (
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleSave(tpl)}
+                          disabled={isBusy(tpl.id) || !tpl.name.trim() || !tpl.title_pattern.trim()}
+                          leadingIcon={<Save />}
+                        >
+                          {t("base.action.save")}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-accent"
+                          onClick={() => handleUse(tpl)}
+                          disabled={isBusy(tpl.id) || !tpl.active || dirty[tpl.id]}
+                          title={
+                            dirty[tpl.id]
+                              ? t("documents.message.template_unsaved")
+                              : tpl.active
+                                ? undefined
+                                : t("documents.message.template_inactive")
+                          }
+                          leadingIcon={<Wand2 />}
+                        >
+                          {t("documents.action.use_template")}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-danger"
+                          onClick={() => setDeleting(tpl)}
+                          disabled={isBusy(tpl.id)}
+                          leadingIcon={<Trash2 />}
+                        >
+                          {t("base.action.delete")}
+                        </Button>
+                      </div>
+                    ) : (
+                      <span className="text-subtle text-xs">—</span>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+
+          {/* A stale list says so for as long as it is stale — the banner can be
+              dismissed, and a refresh that failed after an action must not be the only
+              thing that says the rows are old. */}
+          {loadFailed && <StaleNotice inset busy={loading} onRetry={() => loadData()} />}
+        </Card>
+      )}
+
+      {deleting && (
+        <ConfirmationDialog
+          open
+          onOpenChange={(open) => {
+            if (!open) setDeleting(null);
+          }}
+          title={deleting.name}
+          description={t("documents.message.template_delete_confirm", { name: deleting.name })}
+          confirmLabel={t("base.action.delete")}
+          cancelLabel={t("base.action.cancel")}
+          confirmVariant="destructive"
+          onConfirm={() => {
+            const tpl = deleting;
+            setDeleting(null);
+            void handleDelete(tpl);
+          }}
+        />
       )}
     </div>
   );

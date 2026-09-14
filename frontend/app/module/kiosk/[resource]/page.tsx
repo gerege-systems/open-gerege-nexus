@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 import ResourceScreen from "@/components/kiosk/ResourceScreen";
 import { KIOSK_BY_SLUG } from "@/lib/kiosk/resources";
-import { FileQuestion } from "lucide-react";
+import { ErrorState } from "@gerege-systems/ui";
 
 /**
  * One route for every kiosk screen.
@@ -26,12 +26,8 @@ export default function KioskResourcePage() {
 
   if (!resource || (resource.app ?? "kiosk") !== "kiosk") {
     return (
-      <div className="w-full min-h-[calc(100vh-12rem)] grid place-items-center">
-        <div className="text-center">
-          <FileQuestion className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-          <p className="text-muted font-medium">{t("kiosk.message.unknown_screen")}</p>
-          <p className="text-sm text-muted mt-1">{params.resource}</p>
-        </div>
+      <div className="w-full min-h-[calc(100dvh-12rem)] grid place-items-center">
+        <ErrorState variant="404" title={t("kiosk.message.unknown_screen")} description={params.resource} />
       </div>
     );
   }

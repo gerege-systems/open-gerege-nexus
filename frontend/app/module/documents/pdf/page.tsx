@@ -22,8 +22,35 @@ import {
 import { useI18n } from "@/lib/i18n";
 import EidSignView from "@/components/esign/EidSignView";
 import SignaturePad from "@/components/esign/SignaturePad";
-import { Banner, EmptyState, Loading, Modal, PageHeader, cardClass, fieldClass, tableHeadClass } from "@/components/ui";
-import { Badge, useErrorMessage, formatBytes } from "@/components/esign/shared";
+import { PageHeader } from "@/components/ui";
+import { ListEmpty, ListSkeleton, pinnedDialogProps } from "@/components/documents/shared";
+import { useErrorMessage, formatBytes } from "@/components/esign/shared";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  ConfirmationDialog,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  FileUpload,
+  IconButton,
+  Input,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@gerege-systems/ui";
 
 /**
  * The documents screen. Two things live here because they are two answers to
@@ -47,6 +74,7 @@ export default function EsignPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [showUpload, setShowUpload] = useState(false);
   const [signDoc, setSignDoc] = useState<EsignDocument | null>(null);
+  const [archiving, setArchiving] = useState<EsignDocument | null>(null);
 
   const report = useCallback((err: unknown) => setError(describe(err, t("base.message.error"))), [describe, t]);
 
@@ -79,10 +107,10 @@ export default function EsignPage() {
     }
   };
 
+  // Signed PDFs are evidence, so this archives rather than destroys — the
+  // confirmation dialog says so before asking, because "delete" reads as
+  // irreversible.
   const archive = async (doc: EsignDocument) => {
-    // Signed PDFs are evidence, so this archives rather than destroys — say so
-    // before asking, because "delete" reads as irreversible.
-    if (!window.confirm(t("esign.message.confirm_archive", { title: doc.title }))) return;
     try {
       await esign.remove(doc.id);
       setNotice(t("esign.message.archived"));
@@ -97,160 +125,149 @@ export default function EsignPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        icon={<PenTool className="w-7 h-7 text-indigo-600" />}
+        icon={<PenTool className="w-7 h-7 text-accent" />}
         title={t("esign.view.title")}
         subtitle={t("esign.view.subtitle")}
         actions={
           tab === "documents" ? (
-            <button
-              onClick={() => setShowUpload(true)}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm transition"
-            >
-              <Plus className="w-4 h-4" />
+            <Button onClick={() => setShowUpload(true)} leadingIcon={<Plus />}>
               {t("esign.action.upload")}
-            </button>
+            </Button>
           ) : undefined
         }
       />
 
-      {error && <Banner tone="error" message={error} onDismiss={() => setError(null)} />}
-      {notice && <Banner tone="success" message={notice} onDismiss={() => setNotice(null)} />}
+      {error && <Alert variant="danger" live dismissible onDismiss={() => setError(null)}>{error}</Alert>}
+      {notice && <Alert variant="success" live dismissible onDismiss={() => setNotice(null)}>{notice}</Alert>}
 
-      <nav className="flex gap-1 border-b border-line" role="tablist">
-        <TabButton active={tab === "sign"} onClick={() => setTab("sign")} icon={<Smartphone className="w-4 h-4" />}>
-          {t("esign.view.tab_sign")}
-        </TabButton>
-        <TabButton active={tab === "documents"} onClick={() => setTab("documents")} icon={<FileText className="w-4 h-4" />}>
-          {t("esign.view.tab_documents")}
-        </TabButton>
-      </nav>
+      <Tabs value={tab} onValueChange={(value) => setTab(value as Tab)}>
+        <TabsList>
+          <TabsTrigger value="sign">
+            <Smartphone className="w-4 h-4" aria-hidden />
+            {t("esign.view.tab_sign")}
+          </TabsTrigger>
+          <TabsTrigger value="documents">
+            <FileText className="w-4 h-4" aria-hidden />
+            {t("esign.view.tab_documents")}
+          </TabsTrigger>
+        </TabsList>
 
-      {tab === "sign" && <EidSignView onSigned={load} />}
+        <TabsContent value="sign">
+          <EidSignView onSigned={load} />
+        </TabsContent>
 
-      {tab === "documents" && (
-        <>
+        <TabsContent value="documents">
           {loading ? (
-            <Loading label={t("esign.message.loading")} />
+            <ListSkeleton label={t("esign.message.loading")} />
+          ) : documents.length === 0 ? (
+            <ListEmpty icon={<FileText />} title={t("esign.message.empty")} />
           ) : (
-            <div className={`${cardClass} overflow-x-auto`}>
-              <table className="w-full text-left text-xs text-muted">
-                <thead className={tableHeadClass}>
-                  <tr>
-                    <th className="px-4 py-3">{t("esign.field.document")}</th>
-                    <th className="px-4 py-3">{t("esign.field.pages")}</th>
-                    <th className="px-4 py-3">{t("base.field.status")}</th>
-                    <th className="px-4 py-3">{t("esign.field.signer")}</th>
-                    <th className="px-4 py-3">{t("base.field.date")}</th>
-                    <th className="px-4 py-3 text-right">{t("base.field.actions")}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-line">
-                  {documents.length === 0 && (
-                    <tr>
-                      <td colSpan={6}>
-                        <EmptyState message={t("esign.message.empty")} />
-                      </td>
-                    </tr>
-                  )}
+            <Card padding="none" className="overflow-hidden">
+              <Table containerClassName="rounded-none border-0" className="text-xs" scrollLabel={t("esign.view.tab_documents")}>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("esign.field.document")}</TableHead>
+                    <TableHead>{t("esign.field.pages")}</TableHead>
+                    <TableHead>{t("base.field.status")}</TableHead>
+                    <TableHead>{t("esign.field.signer")}</TableHead>
+                    <TableHead>{t("base.field.date")}</TableHead>
+                    <TableHead align="right">{t("base.field.actions")}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {documents.map((doc) => (
-                    <tr key={doc.id} className="hover:bg-surface-hover">
-                      <td className="px-4 py-3">
+                    <TableRow key={doc.id}>
+                      <TableCell>
                         <div className="font-semibold text-foreground flex items-center gap-1.5">
-                          <FileText className="w-3.5 h-3.5 text-muted" />
+                          <FileText className="w-3.5 h-3.5 text-muted" aria-hidden />
                           {doc.title}
                         </div>
                         <div className="text-muted font-mono mt-0.5">
                           {doc.file_name} · {formatBytes(doc.byte_size)}
                         </div>
-                      </td>
-                      <td className="px-4 py-3 font-mono">{doc.page_count}</td>
-                      <td className="px-4 py-3">
+                      </TableCell>
+                      <TableCell className="font-mono">{doc.page_count}</TableCell>
+                      <TableCell>
                         {doc.status === "SIGNED" ? (
-                          <Badge tone="bg-emerald-50 text-emerald-700 border-emerald-200">
-                            <CheckCircle className="w-3 h-3" />
-                            {t("esign.state.signed")}
-                          </Badge>
+                          <Badge tone="success" icon={<CheckCircle />}>{t("esign.state.signed")}</Badge>
                         ) : (
-                          <Badge tone="bg-amber-50 text-amber-700 border-amber-200">
-                            <Clock className="w-3 h-3" />
-                            {t("esign.state.pending")}
-                          </Badge>
+                          <Badge tone="warning" icon={<Clock />}>{t("esign.state.pending")}</Badge>
                         )}
-                      </td>
-                      <td className="px-4 py-3">
+                      </TableCell>
+                      <TableCell>
                         {doc.signer_name || doc.signer_reg_no ? (
                           <div className="space-y-0.5">
-                            <Badge tone="bg-blue-50 text-blue-700 border-blue-200">
-                              <ShieldCheck className="w-3 h-3" />
-                              {doc.signer_name || doc.signer_reg_no}
-                            </Badge>
+                            <Badge tone="info" icon={<ShieldCheck />}>{doc.signer_name || doc.signer_reg_no}</Badge>
                             {doc.on_behalf_of_name && (
-                              <div className="text-[11px] text-muted">{doc.on_behalf_of_name}</div>
+                              <div className="text-xs text-muted">{doc.on_behalf_of_name}</div>
                             )}
-                            <div className="text-[10px] text-muted font-mono">
+                            <div className="text-xs text-muted font-mono">
                               {doc.provider}
                               {doc.certificate_level ? ` · ${doc.certificate_level}` : ""}
                             </div>
                           </div>
                         ) : (
-                          <span className="text-muted italic">—</span>
+                          <span className="text-muted">—</span>
                         )}
-                      </td>
-                      <td className="px-4 py-3 text-muted">
+                      </TableCell>
+                      <TableCell className="text-muted">
                         {new Date(doc.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="px-4 py-3">
+                      </TableCell>
+                      <TableCell>
                         <div className="flex items-center justify-end gap-2 flex-wrap">
                           {doc.status !== "SIGNED" && (
                             <>
-                              <button
+                              <Button
+                                size="sm"
+                                variant="outline"
                                 onClick={() => setSignDoc(doc)}
                                 disabled={!hsmAvailable}
                                 title={hsmAvailable ? undefined : t("esign.message.hsm_disabled")}
-                                className="bg-surface-2 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed text-foreground text-[11px] font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1"
+                                leadingIcon={<PenTool />}
                               >
-                                <PenTool className="w-3 h-3" />
                                 {t("esign.action.sign_hsm")}
-                              </button>
+                              </Button>
                               <SignWithEidButton document={doc} onDone={load} onError={report} />
                             </>
                           )}
-                          <button
+                          <Button
+                            size="sm"
+                            variant="outline"
                             onClick={() => download(doc, "original")}
-                            className="bg-surface-2 hover:bg-slate-200 text-foreground text-[11px] font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1"
                             title={t("esign.action.download_original")}
+                            leadingIcon={<Download />}
                           >
-                            <Download className="w-3 h-3" />
                             {t("esign.action.original_short")}
-                          </button>
+                          </Button>
                           {doc.status === "SIGNED" && (
-                            <button
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-success"
                               onClick={() => download(doc, "signed")}
-                              className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-[11px] font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1"
                               title={t("esign.action.download_signed")}
+                              leadingIcon={<Download />}
                             >
-                              <Download className="w-3 h-3" />
                               {t("esign.action.signed_short")}
-                            </button>
+                            </Button>
                           )}
-                          <button
-                            onClick={() => archive(doc)}
-                            className="text-muted hover:text-red-600 p-1.5 rounded-lg"
+                          <IconButton
+                            size="sm"
+                            onClick={() => setArchiving(doc)}
                             title={t("esign.action.archive")}
                             aria-label={t("esign.action.archive")}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                            icon={<Trash2 />}
+                          />
                         </div>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </TableBody>
+              </Table>
+            </Card>
           )}
-        </>
-      )}
+        </TabsContent>
+      </Tabs>
 
       {showUpload && (
         <UploadModal
@@ -260,6 +277,24 @@ export default function EsignPage() {
             setShowUpload(false);
             setNotice(t("esign.message.uploaded"));
             await load();
+          }}
+        />
+      )}
+
+      {archiving && (
+        <ConfirmationDialog
+          open
+          onOpenChange={(open) => {
+            if (!open) setArchiving(null);
+          }}
+          title={archiving.title}
+          description={t("esign.message.confirm_archive", { title: archiving.title })}
+          confirmLabel={t("esign.action.archive")}
+          cancelLabel={t("base.action.cancel")}
+          onConfirm={() => {
+            const doc = archiving;
+            setArchiving(null);
+            void archive(doc);
           }}
         />
       )}
@@ -276,34 +311,6 @@ export default function EsignPage() {
         />
       )}
     </div>
-  );
-}
-
-function TabButton({
-  active,
-  onClick,
-  icon,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      role="tab"
-      aria-selected={active}
-      onClick={onClick}
-      className={`px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px flex items-center gap-2 transition ${
-        active
-          ? "border-indigo-600 text-indigo-700"
-          : "border-transparent text-muted hover:text-foreground"
-      }`}
-    >
-      {icon}
-      {children}
-    </button>
   );
 }
 
@@ -367,21 +374,16 @@ function SignWithEidButton({
 
   if (busy) {
     return (
-      <span className="bg-indigo-50 text-indigo-700 border border-indigo-200 text-[11px] font-semibold px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 font-mono">
-        <Smartphone className="w-3 h-3 animate-pulse" />
+      <Badge tone="accent" variant="outline" icon={<Smartphone className="animate-pulse" />} className="font-mono py-1.5">
         {code}
-      </span>
+      </Badge>
     );
   }
 
   return (
-    <button
-      onClick={start}
-      className="bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1"
-    >
-      <Smartphone className="w-3 h-3" />
+    <Button size="sm" onClick={start} leadingIcon={<Smartphone />}>
       {t("esign.action.sign_eid")}
-    </button>
+    </Button>
   );
 }
 
@@ -420,59 +422,46 @@ function UploadModal({
     }
   };
 
+  // Escape and the backdrop do not dismiss — Cancel does, as before.
   return (
-    <Modal label={t("esign.view.upload_title")}>
-      <h2 className="text-xl font-semibold text-foreground mb-4">{t("esign.view.upload_title")}</h2>
-      {error && <div className="mb-3"><Banner tone="error" message={error} onDismiss={() => setError(null)} /></div>}
-      <form onSubmit={submit} className="space-y-4">
-        <div>
-          <label htmlFor="esign-title" className="block text-xs font-semibold text-foreground mb-1">
-            {t("esign.field.title")}
-          </label>
-          <input
+    <Dialog open>
+      <DialogContent {...pinnedDialogProps} aria-describedby={undefined}
+      >
+        <DialogHeader>
+          <DialogTitle>{t("esign.view.upload_title")}</DialogTitle>
+        </DialogHeader>
+        {error && <Alert variant="danger" live dismissible onDismiss={() => setError(null)}>{error}</Alert>}
+        <form onSubmit={submit} className="space-y-4">
+          <Input
             id="esign-title"
             type="text"
+            label={t("esign.field.title")}
+            helperText={t("esign.message.title_optional")}
             placeholder={t("esign.field.title_placeholder")}
             value={title}
             onChange={(event) => setTitle(event.target.value)}
-            className={fieldClass}
           />
-          <p className="text-[11px] text-muted mt-1">{t("esign.message.title_optional")}</p>
-        </div>
 
-        <div>
-          <label htmlFor="esign-file" className="block text-xs font-semibold text-foreground mb-1">
-            {t("esign.field.file", { max: maxMB })} *
-          </label>
-          <input
-            id="esign-file"
-            type="file"
-            accept="application/pdf,.pdf"
-            onChange={(event) => setFile(event.target.files?.[0] || null)}
-            className="w-full text-xs text-muted file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-indigo-50 file:text-indigo-700 file:text-xs file:font-semibold hover:file:bg-indigo-100"
-            required
-          />
-        </div>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium text-foreground">{t("esign.field.file", { max: maxMB })} *</span>
+            <FileUpload
+              accept="application/pdf,.pdf"
+              value={file ? [file] : []}
+              onChange={(files) => setFile(files[0] ?? null)}
+            />
+          </div>
 
-        <div className="flex items-center gap-2 pt-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-1/2 bg-surface-2 hover:bg-slate-200 text-foreground font-medium py-2 rounded-lg text-xs"
-          >
-            {t("base.action.cancel")}
-          </button>
-          <button
-            type="submit"
-            disabled={busy || !file}
-            className="w-1/2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-medium py-2 rounded-lg text-xs inline-flex items-center justify-center gap-1.5"
-          >
-            <Upload className="w-3.5 h-3.5" />
-            {busy ? t("esign.message.uploading") : t("esign.action.submit_upload")}
-          </button>
-        </div>
-      </form>
-    </Modal>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>
+              {t("base.action.cancel")}
+            </Button>
+            <Button type="submit" loading={busy} disabled={!file} leadingIcon={<Upload />}>
+              {busy ? t("esign.message.uploading") : t("esign.action.submit_upload")}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -527,87 +516,73 @@ function HSMSignModal({
     }
   };
 
+  // Escape and the backdrop do not dismiss a signing conversation — Cancel does.
   return (
-    <Modal size="lg" scrollable className="my-8" label={t("esign.view.sign_title")}>
-      <h2 className="text-xl font-semibold text-foreground mb-1">{t("esign.view.sign_title")}</h2>
-      <p className="text-xs text-muted mb-4">
-        {t("esign.view.sign_placement", { title: doc.title, page: doc.page_count })}
-      </p>
+    <Dialog open>
+      <DialogContent
+        {...pinnedDialogProps}
+        size="lg"
+        className="max-h-[90dvh] overflow-y-auto"
+      >
+        <DialogHeader>
+          <DialogTitle>{t("esign.view.sign_title")}</DialogTitle>
+          <DialogDescription>
+            {t("esign.view.sign_placement", { title: doc.title, page: doc.page_count })}
+          </DialogDescription>
+        </DialogHeader>
 
-      {error && <div className="mb-3"><Banner tone="error" message={error} onDismiss={() => setError(null)} /></div>}
+        {error && <Alert variant="danger" live dismissible onDismiss={() => setError(null)}>{error}</Alert>}
 
-      <div className="space-y-4">
-        <div className="border border-line rounded-lg p-4 space-y-3">
-          <div className="text-xs font-semibold text-foreground uppercase tracking-wide">
-            {t("esign.view.step_certificate")}
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label htmlFor="hsm-phone" className="block text-xs font-semibold text-foreground mb-1">
-                {t("esign.field.phone")} *
-              </label>
-              <input
+        <div className="space-y-4">
+          <Card padding="sm" className="space-y-3">
+            <div className="text-xs font-semibold text-foreground uppercase tracking-wide">
+              {t("esign.view.step_certificate")}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Input
                 id="hsm-phone"
                 type="tel"
+                label={`${t("esign.field.phone")} *`}
                 placeholder="88001234"
                 value={phone}
                 onChange={(event) => setPhone(event.target.value)}
                 disabled={!!cert}
-                className={`${fieldClass} disabled:bg-surface-2`}
               />
-            </div>
-            <div>
-              <label htmlFor="hsm-reg" className="block text-xs font-semibold text-foreground mb-1">
-                {t("esign.field.civil_id")} *
-              </label>
-              <input
+              <Input
                 id="hsm-reg"
                 type="text"
+                label={`${t("esign.field.civil_id")} *`}
                 placeholder="УА00112233"
                 value={regNo}
                 onChange={(event) => setRegNo(event.target.value)}
                 disabled={!!cert}
-                className={`${fieldClass} disabled:bg-surface-2`}
               />
             </div>
-          </div>
-          {cert ? (
-            <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4" />
-              {t("esign.message.certificate_valid", { name: `${cert.surname} ${cert.given_name}` })}
-            </div>
-          ) : (
-            <button
-              onClick={check}
-              disabled={busy || !phone || !regNo}
-              className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-semibold px-4 py-2 rounded-lg"
-            >
-              {busy ? t("esign.message.checking") : t("esign.action.check_certificate")}
-            </button>
-          )}
-        </div>
+            {cert ? (
+              <Alert variant="success" icon={<ShieldCheck className="mt-0.5 size-4 shrink-0" aria-hidden />}>
+                {t("esign.message.certificate_valid", { name: `${cert.surname} ${cert.given_name}` })}
+              </Alert>
+            ) : (
+              <Button onClick={check} loading={busy} disabled={!phone || !regNo}>
+                {busy ? t("esign.message.checking") : t("esign.action.check_certificate")}
+              </Button>
+            )}
+          </Card>
 
-        <div className="border border-line rounded-lg p-4">
-          <SignaturePad onChange={setSignature} disabled={!cert} />
-        </div>
+          <Card padding="sm">
+            <SignaturePad onChange={setSignature} disabled={!cert} />
+          </Card>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onClose}
-            className="w-1/2 bg-surface-2 hover:bg-slate-200 text-foreground font-medium py-2 rounded-lg text-xs"
-          >
-            {t("base.action.cancel")}
-          </button>
-          <button
-            onClick={sign}
-            disabled={busy || !cert || !signature}
-            className="w-1/2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-medium py-2 rounded-lg text-xs flex items-center justify-center gap-1.5"
-          >
-            <PenTool className="w-3.5 h-3.5" />
-            {busy ? t("esign.message.signing") : t("esign.view.sign_title")}
-          </button>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>
+              {t("base.action.cancel")}
+            </Button>
+            <Button onClick={sign} loading={busy && !!cert} disabled={!cert || !signature} leadingIcon={<PenTool />}>
+              {busy && cert ? t("esign.message.signing") : t("esign.view.sign_title")}
+            </Button>
+          </DialogFooter>
         </div>
-      </div>
-    </Modal>
+      </DialogContent>
+    </Dialog>
   );
 }

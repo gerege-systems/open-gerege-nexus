@@ -12,8 +12,20 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { ExternalLink, Gauge as GaugeIcon, RefreshCw } from "lucide-react";
 
-import { Badge, Card, Table } from "@/components/cp/ui";
 import { cp, type Overview } from "@/lib/cp";
+import {
+  Badge,
+  Button,
+  Card,
+  CardHeader,
+  Skeleton,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@gerege-systems/ui";
 import { useI18n } from "@/lib/i18n";
 
 export default function Metrics() {
@@ -49,33 +61,24 @@ export default function Metrics() {
           <p className="mt-1 text-sm text-muted">{t("cp.hint.metrics")}</p>
         </div>
         {health?.grafana_url && (
-          <a
-            href={health.grafana_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-input px-3 py-2 text-sm text-foreground hover:bg-surface-hover"
-          >
-            Grafana
-            <ExternalLink className="w-3.5 h-3.5" />
-          </a>
+          <Button variant="outline" asChild>
+            <a href={health.grafana_url} target="_blank" rel="noopener noreferrer">
+              Grafana
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </Button>
         )}
-        <button
-          type="button"
-          onClick={() => void load()}
-          disabled={busy}
-          className="inline-flex items-center gap-2 rounded-lg border border-input px-3 py-2 text-sm text-foreground hover:bg-surface-hover disabled:opacity-50"
-        >
-          <RefreshCw className={`w-4 h-4 ${busy ? "animate-spin" : ""}`} />
+        <Button variant="outline" onClick={() => void load()} loading={busy} leadingIcon={<RefreshCw />}>
           {t("cp.action.refresh")}
-        </button>
+        </Button>
       </div>
 
       {failure && (
-        <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+        <p role="alert" className="text-sm rounded-lg bg-danger-soft text-danger border border-danger-border px-3 py-2">{failure}</p>
       )}
 
       {health && !health.monitoring && (
-        <p className="text-sm rounded-xl bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3">
+        <p className="text-sm rounded-lg bg-warning-soft border border-warning-border text-warning px-4 py-3">
           {t("cp.message.no_monitoring")}
         </p>
       )}
@@ -85,7 +88,7 @@ export default function Metrics() {
         <Stat
           label={t("cp.metric.error_rate")}
           value={health?.api.read ? `${(health.api.error_rate * 100).toFixed(2)}%` : "—"}
-          tone={health && health.api.error_rate > 0.01 ? "red" : undefined}
+          tone={health && health.api.error_rate > 0.01 ? "danger" : undefined}
         />
         <Stat
           label={t("cp.metric.p95")}
@@ -93,30 +96,110 @@ export default function Metrics() {
         />
       </div>
 
-      <Card title={t("cp.section.infrastructure")}>
-        <Table
-          head={[t("cp.field.gauge"), t("cp.field.value"), t("cp.field.warning_at"), t("cp.field.status")]}
-          rows={(health?.infra ?? []).map((gauge) => [
-            <span key="n" className="font-mono text-xs uppercase text-muted">{gauge.name}</span>,
-            gauge.measured ? `${gauge.value.toFixed(1)}${gauge.unit}` : <Unmeasured key="v" />,
-            `${gauge.warning}${gauge.unit}`,
-            <StateBadge key="s" state={gauge.state} />,
-          ])}
-          empty={t("cp.message.no_monitoring")}
-        />
+      <Card padding="none" className="overflow-hidden">
+        <CardHeader className="flex-row items-center gap-3 border-b border-line px-4 py-3">
+          <h2 className="flex-1 text-base leading-tight font-semibold text-foreground">{t("cp.section.infrastructure")}</h2>
+        </CardHeader>
+        <Table containerClassName="rounded-none border-0">
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("cp.field.gauge")}</TableHead>
+              <TableHead>{t("cp.field.value")}</TableHead>
+              <TableHead>{t("cp.field.warning_at")}</TableHead>
+              <TableHead>{t("cp.field.status")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {(health?.infra ?? []).map((gauge, index) => (
+              <TableRow key={index}>
+                <TableCell>
+                  <span className="font-mono text-xs uppercase text-muted">{gauge.name}</span>
+                </TableCell>
+                <TableCell>
+                  {gauge.measured ? `${gauge.value.toFixed(1)}${gauge.unit}` : <Unmeasured />}
+                </TableCell>
+                <TableCell>
+                  {`${gauge.warning}${gauge.unit}`}
+                </TableCell>
+                <TableCell>
+                  <StateBadge state={gauge.state} />
+                </TableCell>
+              </TableRow>
+            ))}
+            {!health && !failure && (
+              <TableRow>
+                <TableCell colSpan={4}>
+                  <div role="status" aria-busy="true" className="space-y-3 py-2">
+                    <span className="sr-only">{t("base.message.loading")}</span>
+                    <Skeleton className="h-4" />
+                    <Skeleton className="h-4" />
+                    <Skeleton className="h-4" />
+                  </div>
+                </TableCell>
+              </TableRow>
+            )}
+            {health && health.infra.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={4} className="py-8 text-center text-muted">
+                  {t("cp.message.no_monitoring")}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </Card>
 
-      <Card title={t("cp.section.external")}>
-        <Table
-          head={[t("cp.field.system"), t("cp.metric.error_rate"), t("cp.metric.p95"), t("cp.field.status")]}
-          rows={(health?.external ?? []).map((system) => [
-            <span key="n" className="font-medium text-foreground">{system.system}</span>,
-            system.measured ? `${(system.error_rate * 100).toFixed(1)}%` : <Unmeasured key="e" />,
-            system.measured ? `${Math.round(system.p95_seconds * 1000)} ms` : <Unmeasured key="p" />,
-            <StateBadge key="s" state={system.state} />,
-          ])}
-          empty={t("cp.message.no_monitoring")}
-        />
+      <Card padding="none" className="overflow-hidden">
+        <CardHeader className="flex-row items-center gap-3 border-b border-line px-4 py-3">
+          <h2 className="flex-1 text-base leading-tight font-semibold text-foreground">{t("cp.section.external")}</h2>
+        </CardHeader>
+        <Table containerClassName="rounded-none border-0">
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("cp.field.system")}</TableHead>
+              <TableHead>{t("cp.metric.error_rate")}</TableHead>
+              <TableHead>{t("cp.metric.p95")}</TableHead>
+              <TableHead>{t("cp.field.status")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {(health?.external ?? []).map((system, index) => (
+              <TableRow key={index}>
+                <TableCell>
+                  <span className="font-medium text-foreground">{system.system}</span>
+                </TableCell>
+                <TableCell>
+                  {system.measured ? `${(system.error_rate * 100).toFixed(1)}%` : <Unmeasured />}
+                </TableCell>
+                <TableCell>
+                  {system.measured ? `${Math.round(system.p95_seconds * 1000)} ms` : <Unmeasured />}
+                </TableCell>
+                <TableCell>
+                  <StateBadge state={system.state} />
+                </TableCell>
+              </TableRow>
+            ))}
+            {!health && !failure && (
+              <TableRow>
+                <TableCell colSpan={4}>
+                  <div role="status" aria-busy="true" className="space-y-3 py-2">
+                    <span className="sr-only">{t("base.message.loading")}</span>
+                    <Skeleton className="h-4" />
+                    <Skeleton className="h-4" />
+                    <Skeleton className="h-4" />
+                  </div>
+                </TableCell>
+              </TableRow>
+            )}
+            {health && health.external.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={4} className="py-8 text-center text-muted">
+                  {t("cp.message.no_monitoring")}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </Card>
     </div>
   );
@@ -131,7 +214,7 @@ export default function Metrics() {
  */
 function StateBadge({ state }: { state: string }) {
   const { t } = useI18n();
-  const tone = state === "green" ? "emerald" : state === "amber" ? "amber" : state === "red" ? "red" : "slate";
+  const tone = state === "green" ? "success" : state === "amber" ? "warning" : state === "red" ? "danger" : "neutral";
   return <Badge tone={tone}>{t(`cp.state.${state}` as "cp.state.green")}</Badge>;
 }
 
@@ -141,11 +224,11 @@ function Unmeasured() {
   return <span className="text-xs text-muted">{t("cp.state.unmeasured")}</span>;
 }
 
-function Stat({ label, value, tone }: { label: string; value: string; tone?: "red" }) {
+function Stat({ label, value, tone }: { label: string; value: string; tone?: "danger" }) {
   return (
-    <div className="rounded-xl border border-line bg-surface p-4">
+    <div className="rounded-lg border border-line bg-surface p-4">
       <p className="text-xs font-semibold uppercase tracking-wider text-muted">{label}</p>
-      <p className={`mt-1 text-2xl font-semibold ${tone === "red" ? "text-red-600" : "text-foreground"}`}>{value}</p>
+      <p className={`mt-1 text-2xl font-semibold ${tone === "danger" ? "text-danger" : "text-foreground"}`}>{value}</p>
     </div>
   );
 }

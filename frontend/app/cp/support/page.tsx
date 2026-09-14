@@ -15,10 +15,25 @@
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { KeyRound, LockOpen, LogOut, Search } from "lucide-react";
+import {
+  Badge,
+  Button,
+  Card,
+  CardHeader,
+  EmptyState,
+  Input,
+  Skeleton,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@gerege-systems/ui";
 
 import { useAction } from "@/components/cp/Action";
-import { Badge, Card, formatMoment, Table } from "@/components/cp/ui";
 import { cp, type Person } from "@/lib/cp";
+import { formatMoment } from "@/lib/datetime";
 import { useI18n } from "@/lib/i18n";
 import { useUrlState } from "@/lib/urlState";
 
@@ -31,6 +46,9 @@ export default function Support() {
   const [query, setQuery] = useState(urlState.q);
   const [people, setPeople] = useState<Person[]>([]);
   const [failure, setFailure] = useState("");
+  // Only the first answer is waited for with a placeholder; later searches
+  // keep the previous list on screen until the new one arrives.
+  const [loading, setLoading] = useState(true);
 
   const load = useCallback(async (search: string) => {
     try {
@@ -39,6 +57,8 @@ export default function Support() {
       setFailure("");
     } catch (error) {
       setFailure(error instanceof Error ? error.message : String(error));
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -57,51 +77,81 @@ export default function Support() {
         <p className="mt-1 max-w-2xl text-sm text-muted">{t("cp.hint.search_people")}</p>
       </div>
 
-      <div className="relative">
-        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-        <input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder={t("cp.field.email")}
-          className="w-full rounded-xl border border-input bg-surface pl-9 pr-3 py-2.5"
-        />
-      </div>
+      <Input
+        label={t("cp.field.email")}
+        hideLabel
+        prefix={<Search className="size-4" />}
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        placeholder={t("cp.field.email")}
+      />
+
+      {loading && !failure && (
+        <div role="status" aria-busy="true" className="space-y-3">
+          <span className="sr-only">{t("base.message.loading")}</span>
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+        </div>
+      )}
 
       {failure && (
-        <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+        <p role="alert" className="text-sm rounded-lg bg-danger-soft text-danger border border-danger-border px-3 py-2">{failure}</p>
       )}
 
       <div className="space-y-4">
         {people.map((person) => (
-          <Card key={person.id} title={person.email}>
+          <Card key={person.id} padding="none" className="overflow-hidden">
+            <CardHeader className="flex-row items-center gap-3 border-b border-line px-4 py-3">
+              <h2 className="flex-1 text-base leading-tight font-semibold text-foreground">{person.email}</h2>
+            </CardHeader>
             <div className="p-4 space-y-4">
               <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
                 <span>{person.name}</span>
                 {person.locked_until && (
-                  <Badge tone="amber">
+                  <Badge tone="warning">
                     {t("cp.state.locked")} · {formatMoment(person.locked_until)}
                   </Badge>
                 )}
-                <Badge tone="slate">
+                <Badge tone="neutral">
                   {person.sessions} · {t("cp.field.state")}
                 </Badge>
               </div>
 
-              <Table
-                head={[t("cp.field.organisation"), t("cp.field.roles"), t("cp.field.state")]}
-                rows={person.memberships.map((membership) => [
-                  <Link key={membership.tenant_id} href={`/cp/tenants/${membership.tenant_id}`} className="hover:underline">
-                    {membership.tenant_name}
-                  </Link>,
-                  membership.roles.length ? membership.roles.join(", ") : "—",
-                  membership.suspended ? (
-                    <Badge tone="amber">{t("cp.state.suspended")}</Badge>
-                  ) : (
-                    <Badge tone="emerald">{t("cp.state.active")}</Badge>
-                  ),
-                ])}
-                empty={t("cp.message.no_activity")}
-              />
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("cp.field.organisation")}</TableHead>
+                    <TableHead>{t("cp.field.roles")}</TableHead>
+                    <TableHead>{t("cp.field.state")}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {person.memberships.map((membership) => (
+                    <TableRow key={membership.tenant_id}>
+                      <TableCell>
+                        <Link href={`/cp/tenants/${membership.tenant_id}`} className="hover:underline">
+                          {membership.tenant_name}
+                        </Link>
+                      </TableCell>
+                      <TableCell>{membership.roles.length ? membership.roles.join(", ") : "—"}</TableCell>
+                      <TableCell>
+                        {membership.suspended ? (
+                          <Badge tone="warning">{t("cp.state.suspended")}</Badge>
+                        ) : (
+                          <Badge tone="success">{t("cp.state.active")}</Badge>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {person.memberships.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={3} className="py-8 text-center text-muted">
+                        {t("cp.message.no_activity")}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
 
               <div className="flex flex-wrap gap-2">
                 <SupportButton
@@ -156,7 +206,7 @@ export default function Support() {
         ))}
 
         {people.length === 0 && query.length >= 3 && (
-          <p className="text-center text-muted py-8">{t("cp.message.no_people")}</p>
+          <EmptyState icon={<Search className="size-6" />} title={t("cp.message.no_people")} />
         )}
       </div>
 
@@ -167,13 +217,8 @@ export default function Support() {
 
 function SupportButton({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="inline-flex items-center gap-2 rounded-lg border border-input px-3 py-2 text-sm text-foreground hover:bg-surface-hover"
-    >
-      {icon}
+    <Button type="button" variant="outline" leadingIcon={icon} onClick={onClick}>
       {label}
-    </button>
+    </Button>
   );
 }

@@ -161,7 +161,7 @@ test("a backup nobody has ever restored from is not shown as a backup that works
   const never = await screen.findByText("cp.state.never");
   // An untested backup is not a backup, so the tile says so in the colour the
   // rest of the console uses for "this needs attention".
-  expect(never.className).toContain("text-amber-700");
+  expect(never.className).toContain("text-warning");
   expect(screen.getAllByText("512.0 MB").length).toBeGreaterThan(0);
 });
 

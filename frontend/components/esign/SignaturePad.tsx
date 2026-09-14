@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { useI18n } from "@/lib/i18n";
+import { Button } from "@gerege-systems/ui";
 
 /**
  * A canvas the signer draws on, used by the HSM rail.
@@ -114,13 +115,9 @@ export default function SignaturePad({
         <span className="text-xs font-semibold text-foreground uppercase tracking-wide">
           {t("esign.view.step_signature")}
         </span>
-        <button
-          type="button"
-          onClick={clear}
-          className="text-xs text-muted hover:text-foreground underline"
-        >
+        <Button type="button" variant="link" size="sm" onClick={clear}>
           {t("esign.action.clear")}
-        </button>
+        </Button>
       </div>
       <canvas
         ref={canvasRef}

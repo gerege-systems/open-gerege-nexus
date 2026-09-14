@@ -56,7 +56,7 @@ test("an error rate over one percent is drawn as a problem", async () => {
   render(<Metrics />);
 
   const rate = await screen.findByText("4.20%");
-  expect(rate.className).toContain("text-red-600");
+  expect(rate.className).toContain("text-danger");
   expect(screen.getByText("8.0")).toBeTruthy();
   expect(screen.getByText("200 ms")).toBeTruthy();
 });

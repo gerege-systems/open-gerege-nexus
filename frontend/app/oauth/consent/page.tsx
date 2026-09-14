@@ -12,7 +12,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, Check, Loader2, ShieldCheck } from "lucide-react";
+import { Check, ShieldCheck } from "lucide-react";
+import { Alert, Badge, Button, Card, ErrorState, Spinner } from "@gerege-systems/ui";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { api, type ConsentPrompt } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
@@ -76,25 +77,27 @@ export default function ConsentPage() {
       </header>
 
       <div className="flex-1 flex items-start justify-center px-4 pb-16">
-        <div className="w-full max-w-lg bg-surface border border-line rounded-xl overflow-hidden">
+        <Card padding="none" className="w-full max-w-lg overflow-hidden">
           {loading ? (
-            <p className="p-12 text-center text-sm text-muted flex items-center justify-center gap-2">
-              <Loader2 className="w-4 h-4 animate-spin" /> {t("oauth.consent.loading")}
-            </p>
-          ) : !prompt ? (
-            <div className="p-10 text-center space-y-3">
-              <AlertTriangle className="w-8 h-8 text-amber-500 mx-auto" />
-              <h1 className="font-semibold text-foreground">{t("oauth.consent.invalid")}</h1>
-              {error && <p className="text-sm text-muted">{error}</p>}
+            <div className="p-12 flex items-center justify-center gap-2 text-sm text-muted" role="status">
+              <Spinner size="md" decorative /> {t("oauth.consent.loading")}
             </div>
+          ) : !prompt ? (
+            <ErrorState
+              variant="generic"
+              headingLevel={1}
+              title={t("oauth.consent.invalid")}
+              description={error || undefined}
+              className="border-0 rounded-none"
+            />
           ) : (
             <>
               <div className="p-6 border-b border-line flex items-start gap-4">
                 {prompt.logo_uri ? (
-                  <img src={prompt.logo_uri} alt="" className="w-12 h-12 rounded-xl object-cover border border-line" />
+                  <img src={prompt.logo_uri} alt="" className="w-12 h-12 rounded-lg object-cover border border-line" />
                 ) : (
-                  <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 grid place-content-center">
-                    <ShieldCheck className="w-6 h-6" />
+                  <div className="w-12 h-12 rounded-lg bg-accent-soft text-accent grid place-content-center">
+                    <ShieldCheck className="w-6 h-6" aria-hidden="true" />
                   </div>
                 )}
                 <div className="min-w-0">
@@ -105,7 +108,7 @@ export default function ConsentPage() {
                   {prompt.client_uri && (
                     <a
                       href={prompt.client_uri}
-                      className="text-xs text-indigo-600 hover:underline font-mono break-all"
+                      className="text-xs text-accent hover:underline font-mono break-all"
                       rel="noreferrer noopener"
                       target="_blank"
                     >
@@ -125,18 +128,19 @@ export default function ConsentPage() {
                     return (
                       <li key={scope.name} className="flex items-start gap-3 text-sm">
                         <Check
-                          className={`w-4 h-4 mt-0.5 shrink-0 ${scope.sensitive ? "text-amber-600" : "text-emerald-600"}`}
+                          aria-hidden="true"
+                          className={`w-4 h-4 mt-0.5 shrink-0 ${scope.sensitive ? "text-warning" : "text-success"}`}
                         />
                         <span className="flex-1 text-foreground">
                           {describe(scope)}
-                          <span className="ml-2 text-[11px] font-mono text-muted">{scope.name}</span>
+                          <span className="ms-2 text-xs font-mono text-muted">{scope.name}</span>
                           {scope.sensitive && (
-                            <span className="ml-2 text-[11px] bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded">
+                            <Badge variant="outline" tone="warning" className="ms-2">
                               {t("oauth.consent.sensitive")}
-                            </span>
+                            </Badge>
                           )}
                           {known && (
-                            <span className="ml-2 text-[11px] text-muted">
+                            <span className="ms-2 text-xs text-muted">
                               · {t("oauth.consent.already_granted")}
                             </span>
                           )}
@@ -148,38 +152,29 @@ export default function ConsentPage() {
               </div>
 
               <div className="px-6 pb-4">
-                <p className="text-[11px] text-muted">
+                <p className="text-xs text-muted">
                   {t("oauth.consent.redirect_note")}{" "}
                   <span className="font-mono break-all text-muted">{prompt.redirect_uri}</span>
                 </p>
               </div>
 
               {error && (
-                <p className="mx-6 mb-4 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
-                  {error}
-                </p>
+                <div className="px-6 pb-4">
+                  <Alert variant="danger" live>{error}</Alert>
+                </div>
               )}
 
               <div className="p-4 bg-surface-2 border-t border-line flex gap-2 justify-end">
-                <button
-                  onClick={() => decide(false)}
-                  disabled={busy !== null}
-                  className="px-4 py-2 text-sm font-semibold text-muted hover:bg-slate-200 rounded-lg disabled:opacity-50"
-                >
+                <Button variant="ghost" onClick={() => decide(false)} disabled={busy !== null}>
                   {t("oauth.consent.deny")}
-                </button>
-                <button
-                  onClick={() => decide(true)}
-                  disabled={busy !== null}
-                  className="px-5 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center gap-2 disabled:opacity-50"
-                >
-                  {busy === "allow" && <Loader2 className="w-4 h-4 animate-spin" />}
+                </Button>
+                <Button onClick={() => decide(true)} disabled={busy === "deny"} loading={busy === "allow"}>
                   {t("oauth.consent.allow")}
-                </button>
+                </Button>
               </div>
             </>
           )}
-        </div>
+        </Card>
       </div>
     </main>
   );

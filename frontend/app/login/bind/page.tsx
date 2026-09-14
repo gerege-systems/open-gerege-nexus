@@ -7,6 +7,7 @@ import {api} from "@/lib/api";
 import {useI18n} from "@/lib/i18n";
 import {useBrand} from "@/lib/brandContext";
 import {ShieldCheck} from "lucide-react";
+import {Alert,Button,Separator} from "@gerege-systems/ui";
 import {safeReturnPath} from "@/lib/safeReturnPath.mjs";
 
 /**
@@ -44,23 +45,23 @@ export default function BindPage(){const {t}=useI18n();const brand=useBrand();
           <strong>{t("auth.bind.title")}</strong>
           <span>{info?t("auth.bind.subtitle",{provider:info.provider}):t("auth.sso.checking")}</span>
         </div>
-        <hr className="signin-card__rule"/>
+        <Separator/>
 
-        {error&&<p className="signin-alert">{error}</p>}
+        {error&&<Alert variant="danger" live>{error}</Alert>}
 
         {info&&!consented&&<>
-          <div className="bind-block">
-            <h3>{t("auth.bind.from_provider",{provider:info.provider})}</h3>
-            <ul>{shared.map(([k,v])=><li key={k as string}><span>{k}</span><b>{v as string}</b></li>)}</ul>
-          </div>
-          <div className="bind-block">
-            <h3>{t("auth.bind.from_eid")}</h3>
-            <ul>{info.eid_claims.map(c=><li key={c}><span>{c}</span></li>)}</ul>
-          </div>
-          <p className="signin-note">{t("auth.bind.consent_body")}</p>
-          <button className="signin-btn signin-btn--eid" onClick={agree}>
-            <ShieldCheck size={18}/> {t("auth.bind.agree")}
-          </button>
+          <section className="rounded-md border border-line bg-surface-2 p-4">
+            <h3 className="m-0 mb-2 text-xs font-semibold uppercase tracking-wide text-muted">{t("auth.bind.from_provider",{provider:info.provider})}</h3>
+            <ul className="m-0 grid list-none gap-2 p-0">{shared.map(([k,v])=><li key={k as string} className="flex justify-between gap-3 text-sm"><span className="text-muted">{k}</span><b className="font-semibold">{v as string}</b></li>)}</ul>
+          </section>
+          <section className="rounded-md border border-line bg-surface-2 p-4">
+            <h3 className="m-0 mb-2 text-xs font-semibold uppercase tracking-wide text-muted">{t("auth.bind.from_eid")}</h3>
+            <ul className="m-0 grid list-none gap-2 p-0">{info.eid_claims.map(c=><li key={c} className="text-sm text-muted">{c}</li>)}</ul>
+          </section>
+          <p className="m-0 text-center text-sm text-muted">{t("auth.bind.consent_body")}</p>
+          <Button size="xl" className="w-full" leadingIcon={<ShieldCheck/>} onClick={agree}>
+            {t("auth.bind.agree")}
+          </Button>
         </>}
 
         {info&&consented&&<>

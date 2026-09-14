@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Building2, Check, House } from "lucide-react";
+import { DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, cn } from "@gerege-systems/ui";
 import { api } from "@/lib/api";
 import { resetAccess } from "@/lib/access";
 import { useI18n } from "@/lib/i18n";
@@ -121,6 +122,10 @@ export function useTenants(active: boolean) {
  * The rows themselves, so the header control and the account menu offer the
  * same list rather than two that drift. Each host supplies its own heading and
  * surrounding chrome.
+ *
+ * Rendered inside a design-system `DropdownMenuContent`: the rows are its
+ * items, so the host's menu gives them keyboard navigation, typeahead and the
+ * close-on-select every menu is expected to have.
  */
 export function TenantChoices({
   current,
@@ -148,69 +153,82 @@ export function TenantChoices({
 
   return (
     <>
-      {tenants === null && <p className="px-4 py-2 text-sm text-muted">{t("base.message.loading")}</p>}
-      {tenants?.map((option) => (
-        <button
-          key={option.id}
-          type="button"
-          role="menuitem"
-          disabled={switching}
-          onClick={() => (option.id === current ? onStay() : onChoose(option.id))}
-          className={`w-full flex items-center gap-3 rounded-lg px-4 py-2.5 text-left hover:bg-surface-2 disabled:opacity-60 ${
-            option.id === current ? "bg-accent-soft" : ""
-          }`}
-        >
-          {/* The home wears a different mark and says so in words. Its slug is
-              derived from a user id and means nothing to the person reading it,
-              so the second line says what the row is instead of repeating an
-              identifier — this is the one row where "which of these am I in"
-              cannot be answered by the name, because the name is their own. */}
-          <span className={option.id === current ? "text-accent" : "text-slate-400"}>
-            {isHome(option) ? <House className="w-4 h-4" /> : <Building2 className="w-4 h-4" />}
-          </span>
-          <span className="min-w-0 flex-1">
-            <strong className="block text-sm font-medium truncate">{option.name}</strong>
-            <small className="block text-xs text-muted truncate">
-              {isHome(option) ? t("web.label.my_home") : option.slug}
-            </small>
-          </span>
-          {option.id === current && <Check className="w-4 h-4 shrink-0 text-accent" />}
-        </button>
-      ))}
+      {tenants === null && <p className="px-2 py-1.5 text-sm text-muted">{t("base.message.loading")}</p>}
+      {tenants?.map((option) => {
+        const isCurrent = option.id === current;
+        return (
+          <DropdownMenuItem
+            key={option.id}
+            disabled={switching}
+            onSelect={() => (isCurrent ? onStay() : onChoose(option.id))}
+            className={cn("gap-3", isCurrent && "bg-accent-soft")}
+          >
+            {/* The home wears a different mark and says so in words. Its slug is
+                derived from a user id and means nothing to the person reading it,
+                so the second line says what the row is instead of repeating an
+                identifier — this is the one row where "which of these am I in"
+                cannot be answered by the name, because the name is their own. */}
+            <span className={isCurrent ? "text-accent" : "text-subtle"}>
+              {isHome(option) ? <House aria-hidden /> : <Building2 aria-hidden />}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-medium">{option.name}</span>
+              <span className="block truncate text-xs text-muted">
+                {isHome(option) ? t("web.label.my_home") : option.slug}
+              </span>
+            </span>
+            {isCurrent && <Check className="text-accent" aria-hidden />}
+          </DropdownMenuItem>
+        );
+      })}
       {/* Reading alongside is offered only to somebody who has somewhere to
           read from: with one membership the whole idea is empty. It is kept
           apart from the rows above because the two do different things —
           switching moves where new records are written, this does not. */}
       {onToggleActive && tenants && tenants.length > 1 && (
-        <div className="mt-1 border-t border-line pt-2">
-          <p className="px-4 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted">
-            {t("web.label.read_alongside")}
-          </p>
+        <>
+          <DropdownMenuSeparator />
+          <DropdownMenuLabel>{t("web.label.read_alongside")}</DropdownMenuLabel>
           {tenants
             .filter((option) => option.id !== current)
-            .map((option) => (
-              <label
-                key={option.id}
-                className="w-full flex items-center gap-3 rounded-lg px-4 py-2 text-left hover:bg-surface-2 cursor-pointer"
-              >
-                <input
-                  type="checkbox"
+            .map((option) => {
+              const checked = (activeIDs || []).includes(option.id);
+              return (
+                // A drawn box, not the menu's check-only indicator: an
+                // unchecked row there is bare text, and the old list drew a
+                // real checkbox, which is what says "you can tick this".
+                <DropdownMenuItem
+                  key={option.id}
+                  role="menuitemcheckbox"
+                  aria-checked={checked}
                   disabled={switching}
-                  checked={(activeIDs || []).includes(option.id)}
-                  onChange={() => onToggleActive(option.id)}
-                  className="w-4 h-4 rounded border-input text-accent"
-                />
-                <span className="min-w-0 flex-1 text-sm truncate">{option.name}</span>
-              </label>
-            ))}
-          <p className="px-4 pt-1 pb-1 text-[11px] text-muted">{t("web.message.read_alongside_hint")}</p>
-        </div>
+                  // The page reloads with the new set; the menu need not shut first.
+                  onSelect={(event) => {
+                    event.preventDefault();
+                    onToggleActive(option.id);
+                  }}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "me-2 grid size-4 shrink-0 place-items-center rounded-sm border",
+                      checked ? "border-accent bg-accent text-on-accent" : "border-input bg-background",
+                    )}
+                  >
+                    {checked && <Check className="size-3" />}
+                  </span>
+                  <span className="truncate text-sm">{option.name}</span>
+                </DropdownMenuItem>
+              );
+            })}
+          <p className="px-2 py-1.5 text-xs text-muted">{t("web.message.read_alongside_hint")}</p>
+        </>
       )}
       {tenants?.length === 1 && (
-        <p className="px-4 pb-2 pt-1 text-xs text-muted">{t("web.message.only_tenant")}</p>
+        <p className="px-2 py-1.5 text-xs text-muted">{t("web.message.only_tenant")}</p>
       )}
       {failed !== "" && (
-        <p role="alert" className="px-4 pb-2 pt-1 text-xs text-rose-600">
+        <p role="alert" className="px-2 py-1.5 text-xs text-danger">
           {failed === "unknown" ? t("web.message.tenant_switch_failed") : failed}
         </p>
       )}

@@ -174,9 +174,9 @@ test("walking between console screens does not rebuild the frame", async ({ page
   // an operator reaches them: from the menu.
   // Located by address rather than by label: these are the menu's own links,
   // and which words are on them is the translators' business.
-  await page.locator('aside a[href="/cp/operators"]').click();
+  await page.locator('[data-slot="sidebar"] a[href="/cp/operators"]').click();
   await expect(page).toHaveURL(/\/cp\/operators$/);
-  await page.locator('aside a[href="/cp/audit"]').click();
+  await page.locator('[data-slot="sidebar"] a[href="/cp/audit"]').click();
   await expect(page).toHaveURL(/\/cp\/audit$/);
 
   // The frame is a layout, so it survives every route beneath it: the session
@@ -216,7 +216,7 @@ test("an operator is added, and the handover is shown exactly once", async ({ pa
 
   // Closed, and not offered again: the new account is in the list, unable to
   // sign in until its enrolment is confirmed.
-  await page.getByRole("dialog").getByRole("button").last().click();
+  await page.getByRole("dialog").getByRole("button", { name: "Хаах" }).click();
   await expect(page.getByText(CREATED.password)).toHaveCount(0);
   await expect(page.getByText(CREATED.email)).toBeVisible();
 });

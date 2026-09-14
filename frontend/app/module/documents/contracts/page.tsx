@@ -6,8 +6,27 @@ import { contracts, ContractRow } from "@/lib/contracts";
 import { useResource, useLoadOnMount } from "@/lib/useResource";
 import { useAccess } from "@/lib/access";
 import { useI18n } from "@/lib/i18n";
-import { Banner, LoadingBlock, Modal, PageHeader, TableCard, EmptyState, fieldClass } from "@/components/ui";
+import { PageHeader } from "@/components/ui";
+import { ListEmpty, ListSkeleton } from "@/components/documents/shared";
 import { ContractBadge, fmtDate, fmtMoney } from "@/components/documents/contracts";
+import {
+  Alert,
+  Button,
+  Card,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  ErrorState,
+  Input,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@gerege-systems/ui";
 import { FileSignature, Plus } from "lucide-react";
 
 /**
@@ -76,103 +95,110 @@ export default function ContractsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        icon={<FileSignature className="w-6 h-6 text-indigo-600" />}
+        icon={<FileSignature className="w-6 h-6 text-accent" />}
         title={t("contracts.view.title")}
         subtitle={t("contracts.view.subtitle")}
         actions={
           mayManage ? (
-            <button
-              onClick={() => setCreating(true)}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2 rounded-lg flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
+            <Button onClick={() => setCreating(true)} leadingIcon={<Plus />}>
               {t("contracts.view.new")}
-            </button>
+            </Button>
           ) : undefined
         }
       />
 
-      {list.failed && <Banner tone="error" message={t("contracts.msg.load_failed")} />}
       {list.loading ? (
-        <LoadingBlock />
-      ) : list.data.length === 0 ? (
-        <EmptyState message={t("contracts.view.empty")} />
-      ) : (
-        <TableCard
-          head={
-            <tr>
-              <th className="px-4 py-3">{t("contracts.col.contract")}</th>
-              <th className="px-4 py-3">{t("contracts.col.parties")}</th>
-              <th className="px-4 py-3">{t("contracts.col.state")}</th>
-              <th className="px-4 py-3">{t("contracts.col.signatures")}</th>
-              <th className="px-4 py-3">{t("contracts.col.amount")}</th>
-              <th className="px-4 py-3">{t("contracts.col.date")}</th>
-            </tr>
+        <ListSkeleton />
+      ) : list.failed ? (
+        <ErrorState
+          title={t("contracts.msg.load_failed")}
+          description=""
+          live
+          action={
+            <Button variant="outline" onClick={() => void list.reload()}>
+              {t("base.action.retry")}
+            </Button>
           }
-        >
-          {orderByFamily(list.data).map((row) => (
-            <tr
-              key={row.id}
-              onClick={() => router.push(`/module/documents/contracts/${row.id}`)}
-              className="cursor-pointer hover:bg-surface-hover"
-            >
-              <td className="px-4 py-3">
-                <div className={`font-semibold text-foreground ${row.parent_document_id ? "pl-5 relative" : ""}`}>
-                  {row.parent_document_id && <span className="absolute left-0 text-subtle">↳</span>}
-                  {row.parent_document_id ? row.counterparties || row.title : row.title}
-                </div>
-                {!row.parent_document_id && row.contract_number && (
-                  <div className="text-[11px] text-muted">№ {row.contract_number}</div>
-                )}
-                {!row.parent_document_id && (row.issued_count ?? 0) > 0 && (
-                  <div className="text-[11px] text-indigo-600 font-semibold">
-                    {t("contracts.list.issued", { total: row.issued_count ?? 0, executed: row.issued_executed ?? 0 })}
-                  </div>
-                )}
-              </td>
-              <td className="px-4 py-3">{row.parent_document_id ? "" : row.counterparties || "—"}</td>
-              <td className="px-4 py-3"><ContractBadge state={row.contract_state} /></td>
-              <td className="px-4 py-3 font-mono">{row.signed_count} / {row.required_count}</td>
-              <td className="px-4 py-3">{fmtMoney(row.amount, row.currency)}</td>
-              <td className="px-4 py-3 text-muted">{fmtDate(row.sent_at || row.created_at)}</td>
-            </tr>
-          ))}
-        </TableCard>
+        />
+      ) : list.data.length === 0 ? (
+        <ListEmpty icon={<FileSignature />} title={t("contracts.view.empty")} />
+      ) : (
+        <Card padding="none" className="overflow-hidden">
+          <Table containerClassName="rounded-none border-0" className="text-xs" scrollLabel={t("contracts.view.title")}>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("contracts.col.contract")}</TableHead>
+                <TableHead>{t("contracts.col.parties")}</TableHead>
+                <TableHead>{t("contracts.col.state")}</TableHead>
+                <TableHead>{t("contracts.col.signatures")}</TableHead>
+                <TableHead>{t("contracts.col.amount")}</TableHead>
+                <TableHead>{t("contracts.col.date")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {orderByFamily(list.data).map((row) => (
+                <TableRow
+                  key={row.id}
+                  onClick={() => router.push(`/module/documents/contracts/${row.id}`)}
+                  className="cursor-pointer"
+                >
+                  <TableCell>
+                    <div className={`font-semibold text-foreground ${row.parent_document_id ? "ps-5 relative" : ""}`}>
+                      {row.parent_document_id && <span className="absolute inset-s-0 text-subtle">↳</span>}
+                      {row.parent_document_id ? row.counterparties || row.title : row.title}
+                    </div>
+                    {!row.parent_document_id && row.contract_number && (
+                      <div className="text-xs text-muted">№ {row.contract_number}</div>
+                    )}
+                    {!row.parent_document_id && (row.issued_count ?? 0) > 0 && (
+                      <div className="text-xs text-accent font-semibold">
+                        {t("contracts.list.issued", { total: row.issued_count ?? 0, executed: row.issued_executed ?? 0 })}
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-muted">{row.parent_document_id ? "" : row.counterparties || "—"}</TableCell>
+                  <TableCell><ContractBadge state={row.contract_state} /></TableCell>
+                  <TableCell className="font-mono text-muted">{row.signed_count} / {row.required_count}</TableCell>
+                  <TableCell className="text-muted">{fmtMoney(row.amount, row.currency)}</TableCell>
+                  <TableCell className="text-muted">{fmtDate(row.sent_at || row.created_at)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
       )}
 
       {creating && (
-        <Modal onClose={() => setCreating(false)} label={t("contracts.view.new")}>
-          <form onSubmit={create} className="space-y-4">
-            <h2 className="text-lg font-semibold text-foreground">{t("contracts.view.new")}</h2>
-            <div>
-              <label className="block text-xs font-medium text-muted mb-1">{t("contracts.field.title")}</label>
-              <input
+        <Dialog open onOpenChange={(open) => { if (!open) setCreating(false); }}>
+          <DialogContent
+            showClose={false}
+            aria-describedby={undefined}
+            // A stray click outside must not throw away a typed title.
+            onInteractOutside={(event) => { if (title.trim()) event.preventDefault(); }}
+          >
+            <form onSubmit={create} className="space-y-4">
+              <DialogHeader>
+                <DialogTitle>{t("contracts.view.new")}</DialogTitle>
+              </DialogHeader>
+              <Input
                 autoFocus
-                className={fieldClass}
+                label={t("contracts.field.title")}
+                helperText={t("contracts.field.title_hint")}
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
               />
-              <p className="text-[11px] text-muted mt-1">{t("contracts.field.title_hint")}</p>
-            </div>
-            {error && <Banner tone="error" message={error} />}
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setCreating(false)}
-                className="text-sm font-medium text-muted px-4 py-2 rounded-lg hover:bg-surface-hover"
-              >
-                {t("contracts.action.cancel")}
-              </button>
-              <button
-                type="submit"
-                disabled={busy || !title.trim()}
-                className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-semibold px-4 py-2 rounded-lg"
-              >
-                {t("contracts.action.create")}
-              </button>
-            </div>
-          </form>
-        </Modal>
+              {error && <Alert variant="danger" live>{error}</Alert>}
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setCreating(false)}>
+                  {t("contracts.action.cancel")}
+                </Button>
+                <Button type="submit" loading={busy} disabled={!title.trim()}>
+                  {t("contracts.action.create")}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

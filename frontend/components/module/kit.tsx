@@ -13,6 +13,7 @@ import { useState } from "react";
 import { AlertTriangle, Check, Copy, Loader2, X } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { Modal as UIModal } from "@/components/ui";
+import { ConfirmationDialog } from "@gerege-systems/ui";
 
 export { useAccess, ReadOnlyNote } from "@/lib/permissions";
 
@@ -111,7 +112,7 @@ export function CopyButton({ value, id, copied, onCopy }: {
 /**
  * The module dialogs' shell, now the same one every other dialog uses.
  *
- * It had its own copy: a dimmed backdrop with `backdrop-blur-sm`, no focus
+ * It had its own copy: a dimmed backdrop with `backdrop-blur-xs`, no focus
  * trap, no Escape, and a z-index picked by hand. The blur was the visible half
  * of the problem — glass surfaces are on the design system's forbidden list —
  * and the missing trap was the real one: Tab walked straight out of an open
@@ -140,27 +141,19 @@ export function ConfirmDialog({ title, body, confirmLabel, danger, onCancel, onC
   onCancel: () => void; onConfirm: () => void;
 }) {
   const { t } = useI18n();
+  // The design system's dialog: focus, Escape, the backdrop and the button
+  // order are its; the words stay the screen's.
   return (
-    <Modal onClose={onCancel}>
-      <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-          <AlertTriangle className={`w-5 h-5 ${danger ? "text-rose-600" : "text-amber-600"}`} />
-          {title}
-        </h2>
-        <p className="text-sm text-muted">{body}</p>
-        <div className="flex justify-end gap-2">
-          <button onClick={onCancel} className="px-4 py-2 text-sm text-muted hover:bg-surface-hover rounded-lg">
-            {t("base.action.cancel")}
-          </button>
-          <button
-            onClick={onConfirm}
-            className={`px-4 py-2 text-sm text-white rounded-lg font-semibold ${danger ? "bg-rose-600 hover:bg-rose-700" : "bg-amber-600 hover:bg-amber-700"}`}
-          >
-            {confirmLabel}
-          </button>
-        </div>
-      </div>
-    </Modal>
+    <ConfirmationDialog
+      open
+      onOpenChange={(open) => { if (!open) onCancel(); }}
+      title={title}
+      description={body}
+      confirmLabel={confirmLabel}
+      cancelLabel={t("base.action.cancel")}
+      confirmVariant={danger ? "destructive" : "primary"}
+      onConfirm={onConfirm}
+    />
   );
 }
 

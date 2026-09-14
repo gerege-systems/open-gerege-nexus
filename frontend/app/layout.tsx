@@ -8,6 +8,7 @@ import { Geist } from "next/font/google";
 import Providers from "./providers";
 import { brandFromEnv } from "@/lib/brandEnv";
 import { brandCopyFromEnv } from "@/lib/brandCopy";
+import { brandThemeFromEnv } from "@/lib/brandTheme";
 import { localizedBrand } from "@/lib/brand";
 import { DEFAULT_LOCALE, LOCALE_KEY } from "@/lib/locale";
 
@@ -96,13 +97,18 @@ export function generateViewport(): Viewport {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // The deployment's look — the theme editor's attributes and pasted tokens;
+  // see lib/brandTheme.ts. The default is this platform's own.
+  const theme = brandThemeFromEnv();
   return (
     // I18nProvider keeps <html lang> in step with the selected locale.
     // suppressHydrationWarning на <html>: public/theme-init.js нь React
     // ачаалахаас өмнө `dark` ангийг нэмдэг тул сервер илгээсэн className
     // болон бодит DOM-ынх нэг байхаа болино. Энэ бол яг тэр хүлээгдэж буй
     // зөрүү — өөр юуг ч нуухгүй: зөвхөн энэ элементийн атрибутад үйлчилнэ.
-    <html lang="mn" className={geist.variable} suppressHydrationWarning>
+    // data-style/data-depth (and data-radius/data-accent when a deployment
+    // sets them): the design system's attribute layers — see lib/brandTheme.ts.
+    <html lang="mn" {...theme.attributes} className={geist.variable} suppressHydrationWarning>
       <head>
         {/*
           Read before anything is painted, so a reader who chose dark never
@@ -124,6 +130,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers brand={brandFromEnv()} copy={brandCopyFromEnv()}>
           {children}
         </Providers>
+        {/* Last in the document on purpose: it must follow every stylesheet
+            link in <head> to win the cascade. The text is a token block, not
+            markup. */}
+        {theme.css && <style id="brand-theme">{theme.css}</style>}
       </body>
     </html>
   );

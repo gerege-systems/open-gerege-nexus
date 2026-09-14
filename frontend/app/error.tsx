@@ -16,6 +16,7 @@
 
 import React from "react";
 import { AlertTriangle } from "lucide-react";
+import { Button } from "@gerege-systems/ui";
 
 import { useI18n } from "@/lib/i18n";
 
@@ -30,18 +31,14 @@ export default function ErrorBoundary({
   return (
     <main
       role="alert"
-      className="mx-auto flex max-w-[46rem] flex-col items-start gap-4 py-16"
+      className="mx-auto flex max-w-184 flex-col items-start gap-4 py-16"
     >
-      <AlertTriangle className="h-8 w-8 text-red-600" aria-hidden="true" />
+      <AlertTriangle className="h-8 w-8 text-danger" aria-hidden="true" />
       <h1 className="text-2xl font-semibold text-foreground">{t("base.error.crash_title")}</h1>
       <p className="text-sm text-muted">{t("base.error.crash_body")}</p>
-      <button
-        type="button"
-        onClick={reset}
-        className="mt-2 inline-flex items-center rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:brightness-105"
-      >
+      <Button type="button" onClick={reset} className="mt-2">
         {t("base.action.retry")}
-      </button>
+      </Button>
       {error.digest && (
         <p className="font-mono text-xs text-muted">{error.digest}</p>
       )}

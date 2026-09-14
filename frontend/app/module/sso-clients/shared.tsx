@@ -1,17 +1,52 @@
 "use client";
 
 /**
- * The SSO-client screens re-export the shared module kit, and add the one
- * piece only they need.
+ * What only the SSO-client screens share: the copy button and the one-time
+ * secret dialog.
  *
  * Not a route: only page.tsx and route.ts are routable in the app router.
  */
 
-import { KeyRound } from "lucide-react";
-import { CopyButton, Modal, useCopy } from "@/components/module/kit";
+import { useState } from "react";
+import { Check, Copy, KeyRound } from "lucide-react";
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  IconButton,
+} from "@gerege-systems/ui";
 import { useI18n } from "@/lib/i18n";
 
-export * from "@/components/module/kit";
+/** useCopy tracks which value was last copied, so one button can show a tick. */
+export function useCopy() {
+  const [copied, setCopied] = useState("");
+  return {
+    copied,
+    copy(value: string, id: string) {
+      void navigator.clipboard.writeText(value);
+      setCopied(id);
+      setTimeout(() => setCopied(""), 2000);
+    },
+  };
+}
+
+export function CopyButton({ value, id, copied, onCopy }: {
+  value: string; id: string; copied: string; onCopy: (value: string, id: string) => void;
+}) {
+  return (
+    <IconButton
+      size="sm"
+      variant="ghost"
+      className="shrink-0 -m-1"
+      onClick={() => onCopy(value, id)}
+      aria-label="copy"
+      icon={copied === id ? <Check className="text-success" /> : <Copy />}
+    />
+  );
+}
 
 /**
  * SecretDialog is the only place a client secret is ever readable. The server
@@ -23,30 +58,31 @@ export function SecretDialog({ clientID, secret, onClose }: {
   const { t } = useI18n();
   const { copied, copy } = useCopy();
   return (
-    <Modal onClose={onClose}>
-      <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-          <KeyRound className="w-5 h-5 text-amber-600" />
-          {t("sso_clients.message.secret_once_title")}
-        </h2>
-        <p className="text-sm text-muted">{t("sso_clients.message.secret_once_body")}</p>
-        {[["client_id", clientID], ["client_secret", secret]].map(([label, value], index) => (
-          <div
-            key={label}
-            className={`flex items-center gap-2 p-3 rounded-lg border ${index === 1 ? "bg-amber-50 border-amber-200" : "bg-surface-2 border-line"}`}
-          >
-            <span className="text-[11px] font-semibold text-muted w-24 shrink-0">{label}</span>
-            <code className="text-xs font-mono text-foreground break-all flex-1">{value}</code>
-            <CopyButton value={value} id={label} copied={copied} onCopy={copy} />
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="max-h-[90dvh] overflow-y-auto">
+        <div className="space-y-4">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="size-5 text-warning" aria-hidden />
+              {t("sso_clients.message.secret_once_title")}
+            </DialogTitle>
+            <DialogDescription>{t("sso_clients.message.secret_once_body")}</DialogDescription>
+          </DialogHeader>
+          {[["client_id", clientID], ["client_secret", secret]].map(([label, value], index) => (
+            <div
+              key={label}
+              className={`flex items-center gap-2 p-3 rounded-lg border ${index === 1 ? "bg-warning-soft border-warning-border" : "bg-surface-2 border-line"}`}
+            >
+              <span className="text-xs font-semibold text-muted w-24 shrink-0">{label}</span>
+              <code className="text-xs font-mono text-foreground break-all flex-1">{value}</code>
+              <CopyButton value={value} id={label} copied={copied} onCopy={copy} />
+            </div>
+          ))}
+          <div className="flex justify-end">
+            <Button onClick={onClose}>{t("sso_clients.action.done")}</Button>
           </div>
-        ))}
-        <div className="flex justify-end">
-          <button onClick={onClose} className="px-4 py-2 text-sm bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-semibold">
-            {t("sso_clients.action.done")}
-          </button>
         </div>
-      </div>
-    </Modal>
+      </DialogContent>
+    </Dialog>
   );
 }
-

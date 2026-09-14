@@ -11,9 +11,11 @@
 
 import { useEffect, useState } from "react";
 import { KeySquare } from "lucide-react";
+import { Alert, Badge, Card, EmptyState, Spinner } from "@gerege-systems/ui";
 import { api, type SigningKey } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
-import { Chip, CopyButton, Empty, ErrorNote, Loading, Panel, Screen, useCopy } from "../shared";
+import { PageHeader } from "@/components/ui";
+import { CopyButton, useCopy } from "../shared";
 import { formatMoment } from "@/lib/datetime";
 
 export default function SigningKeysPage() {
@@ -39,53 +41,57 @@ export default function SigningKeysPage() {
   }, [t]);
 
   return (
-    <Screen
-      icon={<KeySquare className="w-5 h-5" />}
-      title={t("sso_clients.signing.title")}
-      subtitle={t("sso_clients.signing.subtitle")}
-    >
-      {error && <ErrorNote>{error}</ErrorNote>}
+    <div className="space-y-6">
+      <PageHeader
+        icon={<KeySquare className="w-5 h-5" />}
+        title={t("sso_clients.signing.title")}
+        subtitle={t("sso_clients.signing.subtitle")}
+      />
+      {error && <Alert variant="danger" live>{error}</Alert>}
 
-      <Panel className="p-4 bg-surface-2">
+      <Card padding="none" className="p-4 bg-surface-2">
         <p className="text-xs text-muted leading-relaxed">{t("sso_clients.signing.explainer")}</p>
         {jwksURI && (
           <div className="flex items-center gap-2 mt-3 bg-surface border border-line rounded-lg px-3 py-2">
-            <span className="text-[11px] font-semibold text-muted shrink-0">jwks_uri</span>
+            <span className="text-xs font-semibold text-muted shrink-0">jwks_uri</span>
             <code className="text-xs font-mono text-foreground break-all flex-1">{jwksURI}</code>
             <CopyButton value={jwksURI} id="jwks" copied={copied} onCopy={copy} />
           </div>
         )}
-      </Panel>
+      </Card>
 
       {loading ? (
-        <Loading label={t("sso_clients.message.loading")} />
+        <p className="flex items-center justify-center gap-2 p-12 text-center text-muted" role="status">
+          <Spinner size="md" decorative />
+          {t("sso_clients.message.loading")}
+        </p>
       ) : keys.length === 0 ? (
-        <Empty icon={<KeySquare className="w-9 h-9 mx-auto" />}>{t("sso_clients.signing.none")}</Empty>
+        <EmptyState icon={<KeySquare />} title={t("sso_clients.signing.none")} />
       ) : (
         <div className="space-y-3">
           {keys.map((key) => (
-            <Panel key={key.kid} className={`p-4 ${key.active ? "border-emerald-200" : ""}`}>
+            <Card padding="none" key={key.kid} className={`p-4 ${key.active ? "border-success-border" : ""}`}>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">
                   <code className="text-sm font-mono font-semibold text-foreground break-all">{key.kid}</code>
                   <CopyButton value={key.kid} id={key.kid} copied={copied} onCopy={copy} />
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <Chip mono>{key.algorithm}</Chip>
+                  <Badge className="break-all font-mono" tone="neutral">{key.algorithm}</Badge>
                   {key.active
-                    ? <Chip tone="emerald">{t("sso_clients.signing.active")}</Chip>
-                    : <Chip tone="slate">{t("sso_clients.signing.retired")}</Chip>}
+                    ? <Badge className="break-all" tone="success">{t("sso_clients.signing.active")}</Badge>
+                    : <Badge className="break-all" tone="neutral">{t("sso_clients.signing.retired")}</Badge>}
                 </div>
               </div>
-              <p className="text-[11px] text-muted mt-2">
+              <p className="text-xs text-muted mt-2">
                 {t("sso_clients.field.created")}: {formatMoment(key.created_at)}
                 {key.retired_at && ` · ${formatMoment(key.retired_at)}`}
               </p>
-            </Panel>
+            </Card>
           ))}
-          <p className="text-[11px] text-muted">{t("sso_clients.signing.retired_note")}</p>
+          <p className="text-xs text-muted">{t("sso_clients.signing.retired_note")}</p>
         </div>
       )}
-    </Screen>
+    </div>
   );
 }

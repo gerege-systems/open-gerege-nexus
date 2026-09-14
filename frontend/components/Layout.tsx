@@ -1,12 +1,34 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import {
+  Alert,
+  Button,
+  CommandDialog,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+  IconButton,
+  Input,
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  Sidebar,
+  SidebarItem,
+  Spinner,
+  Tooltip,
+  TopNav,
+  cn,
+} from "@gerege-systems/ui";
 import { api, APP_MENU_CHANGED_EVENT } from "@/lib/api";
 import { resetAccess } from "@/lib/access";
 import { useI18n } from "@/lib/i18n";
-import { useTheme } from "@/lib/theme";
 import { useBrand } from "@/lib/brandContext";
 import UserMenu from "@/components/UserMenu";
 import { TenantChoices, forgetTenants, useTenants } from "@/components/TenantChoices";
@@ -16,7 +38,7 @@ import { currentDeviceLine, type DeviceLine } from "@/lib/deviceLine";
 import { MenuIcon } from "@/lib/icons";
 import { isPublicPath } from "@/lib/publicRoutes";
 import { homeScreensVisible, organisationScreensVisible } from "@/lib/workspaceKind.mjs";
-import { LayoutGrid, Settings, Menu as HamburgerIcon, Palette, Building2, Megaphone, Search, Ellipsis, ShieldCheck, RefreshCw, MailCheck, ChevronDown, ChevronsDownUp, ChevronsUpDown, ExternalLink, Sparkles, Inbox} from "lucide-react";
+import { LayoutGrid, Settings, Menu as HamburgerIcon, Palette, Building2, Megaphone, Search, Ellipsis, ShieldCheck, RefreshCw, ChevronDown, ChevronsDownUp, ChevronsUpDown, ExternalLink, Inbox} from "lucide-react";
 
 // app_order and app_chrome describe the app rather than the entry: where its
 // tile sits in the rail, and whether it has a tile at all. Both come from the
@@ -60,10 +82,23 @@ function currentPath(pathname:string,paths:string[]){
 // their position and should not have to invent one.
 const UNORDERED=999;
 
+/**
+ * The workspace shell, in the design system's "rail + panel" arrangement.
+ *
+ * A column of app tiles (the rail), beside it the panel of the current app's
+ * groups (a library `Sidebar`), and over the content the `TopNav` with the
+ * search and the account menu. Below `lg` the panel folds into a `Sheet`
+ * drawer behind the hamburger, and the apps become a tab bar along the bottom
+ * of the screen. The console (components/cp/Console) draws the same
+ * arrangement from the same parts.
+ */
 export default function Layout({children}:{children:React.ReactNode}){
   const [menus,setMenus]=useState<MenuItem[]>([]),[user,setUser]=useState<any>(null),[loading,setLoading]=useState(true);
   const [mobileOpen,setMobileOpen]=useState(false),[mobileMoreOpen,setMobileMoreOpen]=useState(false),[panelOpen,setPanelOpen]=useState(true);
   const [query,setQuery]=useState("");
+  const searchListId=useId();
+  // The hamburger that opens the drawer — focus returns to it on close.
+  const drawerTrigger=useRef<HTMLButtonElement>(null);
   // Бүрхүүлийн доторх хайлт: толгой хэсэг зурагдахгүй тул хайлтын талбар нь
   // ажлын мужид түр нээгддэг давхарга болно.
   const [shellSearchOpen,setShellSearchOpen]=useState(false);
@@ -79,7 +114,7 @@ export default function Layout({children}:{children:React.ReactNode}){
   // with ids nobody has an opinion about yet, and the useful default for those
   // is the behaviour before this existed: open.
   const [closedGroups,setClosedGroups]=useState<string[]>([]);
-  const pathname=usePathname(),router=useRouter(),{t,locale}=useI18n(),theme=useTheme(),brand=useBrand();
+  const pathname=usePathname(),router=useRouter(),{t,locale}=useI18n(),brand=useBrand();
   const isPublic=isPublicPath(pathname);
 
   useEffect(()=>setPanelOpen(localStorage.getItem("gerege_sidebar_open")!=="false"),[]);
@@ -190,8 +225,9 @@ export default function Layout({children}:{children:React.ReactNode}){
     ...apps.flatMap(app=>app.menus.filter(m=>m.path).map(m=>({label:m.label,app:app.name,path:m.path!,icon:m.icon})))
   ],[apps,t]);
   const results=query.trim()?searchIndex.filter(x=>(x.label+" "+x.app).toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())).slice(0,8):[];
+  const go=(path:string)=>{router.push(path);setQuery("");setShellSearchOpen(false)};
 
-  function togglePanel(){if(window.matchMedia("(min-width:901px)").matches){setPanelOpen(v=>{localStorage.setItem("gerege_sidebar_open",String(!v));return !v})}else setMobileOpen(v=>!v)}
+  function togglePanel(){if(window.matchMedia("(min-width:1024px)").matches){setPanelOpen(v=>{localStorage.setItem("gerege_sidebar_open",String(!v));return !v})}else setMobileOpen(v=>!v)}
   function persistGroups(next:string[]){localStorage.setItem(GROUPS_KEY,JSON.stringify(next));setClosedGroups(next)}
   function toggleGroup(id:string){persistGroups(closedGroups.includes(id)?closedGroups.filter(x=>x!==id):[...closedGroups,id])}
   // Only the groups on screen. Expand-all on the Documents menu should not
@@ -227,29 +263,34 @@ export default function Layout({children}:{children:React.ReactNode}){
   // rather than as the same condition written out four times here.
   const company=organisationScreensVisible(user?.workspace_kind);
   const ownHome=homeScreensVisible(user?.workspace_kind);
-  const mobileAppTabs=[
+  // The rail: the platform first, then every app that has a tile.
+  const railTiles:Tile[]=[
+    {id:"platform",href:"/apps",external:false,active:platformActive,label:t("web.label.platform"),icon:<LayoutGrid/>},
+    ...railApps.map(app=>({id:app.id,href:app.path,external:!!app.externalUrl,active:selected?.id===app.id,label:app.name,icon:<MenuIcon name={app.icon} className="size-5"/>})),
+  ];
+  const mobileAppTabs:Tile[]=[
     // The platform tab is the way back out of an app on a phone, so it always
     // exists — it is where it goes that changes. The app store is the shelf a
     // company buys from; a home has nothing to buy, and the person's own record
     // is what they came back to the shell for.
-    {id:"platform",href:company?"/apps":"/profile",external:false,active:platformActive,label:t("web.label.platform"),icon:<LayoutGrid className="w-5 h-5"/>},
-    ...railApps.map(app=>({id:app.id,href:app.path,external:!!app.externalUrl,active:selected?.id===app.id,label:app.name,icon:<MenuIcon name={app.icon} className="w-5 h-5"/>})),
+    {...railTiles[0],href:company?"/apps":"/profile"},
+    ...railTiles.slice(1),
   ];
   const hasMobileMore=mobileAppTabs.length>5;
   const primaryMobileTabs=hasMobileMore?mobileAppTabs.slice(0,4):mobileAppTabs;
   const remainingMobileTabs=hasMobileMore?mobileAppTabs.slice(4):[];
 
   if(isPublic)return <>{children}</>;
-  if(loading)return <div className="min-h-dvh flex items-center justify-center bg-surface-2 text-muted font-medium">{t("web.message.loading_platform")}</div>;
+  if(loading)return <div role="status" className="flex min-h-dvh items-center justify-center gap-3 bg-surface-2 text-sm font-medium text-muted"><Spinner decorative/>{t("web.message.loading_platform")}</div>;
 
-  const platformMenus=<><MenuGroup id={PLATFORM_GROUPS.modules} title={t("web.group.modules")} closed={closedGroups.includes(PLATFORM_GROUPS.modules)} onToggle={toggleGroup}>
+  const platformMenus=(onNavigate?:()=>void)=><><MenuGroup id={PLATFORM_GROUPS.modules} title={t("web.group.modules")} closed={closedGroups.includes(PLATFORM_GROUPS.modules)} onToggle={toggleGroup}>
     {/* The mirror of the two lines below: an organisation's screens are hidden
         in a home, and the home's own screen is hidden in an organisation. A
         member of a company asks for things through the company, so this list
         would be permanently empty for them — and an empty entry in a rail is a
         promise the screen behind it cannot keep. */}
-    {ownHome&&<NavLink href="/me" active={pathname==="/me"} icon={<Inbox className="w-5 h-5"/>} label={t("web.menu.my_requests")}/>}
-    {company&&<NavLink href="/apps" active={pathname==="/apps"} icon={<LayoutGrid className="w-5 h-5"/>} label={t("web.menu.app_store")}/>}
+    {ownHome&&<NavLink href="/me" active={pathname==="/me"} icon={<Inbox/>} label={t("web.menu.my_requests")} onNavigate={onNavigate}/>}
+    {company&&<NavLink href="/apps" active={pathname==="/apps"} icon={<LayoutGrid/>} label={t("web.menu.app_store")} onNavigate={onNavigate}/>}
     {/* The organisation's own legal identity. A platform screen rather than a
         menu entry the organisation app contributes: it is read by the control
         plane, by the state registry rail and by an SSO consent screen, so it
@@ -257,14 +298,14 @@ export default function Layout({children}:{children:React.ReactNode}){
         Under Modules rather than Settings, because it is a thing you look at
         and edit — the organisation itself — not a switch that changes how the
         platform behaves. */}
-    {company&&<NavLink href="/organisation" active={pathname==="/organisation"} icon={<Building2 className="w-5 h-5"/>} label={t("web.menu.organisation")}/>}
+    {company&&<NavLink href="/organisation" active={pathname==="/organisation"} icon={<Building2/>} label={t("web.menu.organisation")} onNavigate={onNavigate}/>}
     {/* What the organisation offers the public, beside what it is. It was a
         card at the bottom of the organisation's own screen, which is where a
         thing goes when nobody has decided it is a thing: publishing a service
         is an outward promise — a stranger finds it in the directory and asks —
         and it deserves the same standing in the menu as the identity above
         it. */}
-    {company&&<NavLink href="/organisation/services" active={pathname==="/organisation/services"} icon={<Megaphone className="w-5 h-5"/>} label={t("core.view.services_title")}/>}
+    {company&&<NavLink href="/organisation/services" active={pathname==="/organisation/services"} icon={<Megaphone/>} label={t("core.view.services_title")} onNavigate={onNavigate}/>}
     {/* Its screens, next in the list rather than nested under it. They were
         indented for a while, which made them look like a second level this
         sidebar does not otherwise have — one entry with children, in a menu
@@ -275,120 +316,158 @@ export default function Layout({children}:{children:React.ReactNode}){
         and so the labels stay in the seven languages the module declares. */}
     {chromeEntries("modules").map(item=>
       <NavLink key={item.id} href={item.path!} active={item.path===pathname}
-        icon={<MenuIcon name={item.icon} className="w-5 h-5"/>} label={item.label}/>)}
+        icon={<MenuIcon name={item.icon} className="size-4"/>} label={item.label} onNavigate={onNavigate}/>)}
   </MenuGroup><MenuGroup id={PLATFORM_GROUPS.settings} title={t("web.group.settings")} closed={closedGroups.includes(PLATFORM_GROUPS.settings)} onToggle={toggleGroup}>
     {/* Under Settings, where its screen already lives: /settings/apps is what
         the address bar says, and a sidebar that files it under Modules asks
         somebody to hold two answers for where the same page is. */}
-    {company&&<NavLink href="/settings/apps" active={pathname==="/settings/apps"} icon={<Settings className="w-5 h-5"/>} label={t("web.menu.installed_apps")}/>}
-    <NavLink href="/settings/appearance" active={pathname==="/settings/appearance"} icon={<Palette className="w-5 h-5"/>} label={t("web.menu.appearance")}/>
+    {company&&<NavLink href="/settings/apps" active={pathname==="/settings/apps"} icon={<Settings/>} label={t("web.menu.installed_apps")} onNavigate={onNavigate}/>}
+    <NavLink href="/settings/appearance" active={pathname==="/settings/appearance"} icon={<Palette/>} label={t("web.menu.appearance")} onNavigate={onNavigate}/>
     {chromeEntries("settings").map(item=>
       <NavLink key={item.id} href={item.path!} active={item.path===pathname}
-        icon={<MenuIcon name={item.icon} className="w-5 h-5"/>} label={item.label}/>)}
+        icon={<MenuIcon name={item.icon} className="size-4"/>} label={item.label} onNavigate={onNavigate}/>)}
     {/* Issuing a key that sends mail in the tenant's name is administrative, and
         the API behind this screen is admin-only, so the link follows it. */}
-    {user?.is_admin&&<NavLink href="/settings/access" active={pathname==="/settings/access"} icon={<ShieldCheck className="w-5 h-5"/>} label={t("access.view.title")}/>}
+    {user?.is_admin&&<NavLink href="/settings/access" active={pathname==="/settings/access"} icon={<ShieldCheck/>} label={t("access.view.title")} onNavigate={onNavigate}/>}
   </MenuGroup></>;
+  const panel=(onNavigate?:()=>void)=>selected
+    ?<AppMenuGroups menus={selected.menus} pathname={pathname} closedGroups={closedGroups} onToggle={toggleGroup} onNavigate={onNavigate}/>
+    :platformMenus(onNavigate);
+  const panelIcon=selected?<MenuIcon name={selected.icon} className="size-5"/>:<LayoutGrid/>;
+  const panelHeader=<PanelHeader title={brandTitle} icon={panelIcon} allOpen={allGroupsOpen} onToggleAll={visibleGroups.length>1?toggleAllGroups:undefined}/>;
 
   // Бүрхүүл дотор ба төхөөрөмжийн domain шугам дээр: толгой хэсэг ба мобайл
   // навигаци зурагдахгүй — хайлт, хэрэглэгч, нэвтрэлт, цонхны үйлдлүүдийг
   // native тал эзэмшинэ. Хажуугийн цэс нь ЭНД үлдэнэ: тэр бол ажлын мужийн
   // доторх навигаци бөгөөд аль апп идэвхтэй, ямар эрхтэй, ямар хэлээр гэдгийг
   // web тал аль хэдийн мэддэг.
-  if(workAreaOnly)return <div className="gerege-shell gerege-workarea h-dvh flex flex-col overflow-hidden">
+  if(workAreaOnly)return <div className="flex h-dvh flex-col overflow-hidden bg-background text-foreground print:h-auto print:overflow-visible">
     <ImpersonationBanner active={!!user?.impersonated}/>
-    <RibbonBar selected={selected} brandTitle={brandTitle} user={user} setShellSearchOpen={setShellSearchOpen} t={t} onLogout={logout} />
-    <div className="flex flex-1 min-h-0 overflow-hidden">
-      <div className="gerege-sidebar bottom-0 left-0 z-modal flex overflow-hidden is-desktop-open">
-        <nav className="w-16 min-w-16 shrink-0 py-3 flex flex-col items-center gap-2 border-r border-line">
-          <AppRailLink href="/apps" active={platformActive} title={t("web.label.platform")} icon={<LayoutGrid className="w-5 h-5"/>}/>
-          {railApps.map(app=><AppRailLink key={app.id} href={app.path} external={!!app.externalUrl} active={selected?.id===app.id} title={app.name} icon={<MenuIcon name={app.icon} className="w-5 h-5"/>}/>) }
-        </nav>
-        <aside className="gerege-menu-panel overflow-hidden">
-          <div className="w-56 py-4"><nav className="space-y-1 px-2">
-            {selected?<AppMenuGroups menus={selected.menus} pathname={pathname} closedGroups={closedGroups} onToggle={toggleGroup}/>:platformMenus}
-          </nav></div>
-        </aside>
-      </div>
-      <main className="gerege-main flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto min-w-0">{children}</main>
+    <RibbonBar selected={selected} brandTitle={brandTitle} user={user} onSearch={()=>setShellSearchOpen(true)} onLogout={logout}/>
+    <div className="flex min-h-0 flex-1 overflow-hidden">
+      <AppRail tiles={railTiles} label={t("web.label.apps")} always/>
+      <Sidebar aria-label={brandTitle} header={panelHeader} className="flex h-auto bg-chrome print:hidden [&>button:last-child]:hidden">{panel()}</Sidebar>
+      <main className="relative min-h-0 min-w-0 flex-1 overflow-y-auto px-5 py-4 print:overflow-visible print:p-0">{children}</main>
     </div>
-    <WorkareaFooter />
-    {shellSearchOpen&&<div className="gerege-shell-search" role="dialog" aria-modal="true" aria-label={t("web.view.search_placeholder")}>
-      <button type="button" className="gerege-shell-search-backdrop" aria-label={t("base.action.close")} onClick={()=>{setShellSearchOpen(false);setQuery("")}}/>
-      <div className="gerege-shell-search-panel">
-        <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted"/>
-          <input autoFocus value={query} onChange={e=>setQuery(e.target.value)} onKeyDown={e=>{
-            if(e.key==="Escape"){setShellSearchOpen(false);setQuery("")}
-            if(e.key==="Enter"&&results[0]){router.push(results[0].path);setShellSearchOpen(false);setQuery("")}
-          }} placeholder={t("web.view.search_placeholder")} className="w-full h-11 rounded-xl border border-line bg-surface pl-10 pr-4 text-sm focus:border-accent"/>
-        </div>
-        {results.length>0&&<div className="mt-2 space-y-0.5">{results.map(item=><button key={item.path} onClick={()=>{router.push(item.path);setShellSearchOpen(false);setQuery("")}} className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-surface-2"><span className="text-accent">{<MenuIcon name={item.icon} className="w-4 h-4"/>}</span><span className="min-w-0"><strong className="block text-sm truncate">{item.label}</strong><small className="text-muted truncate">{item.app}</small></span></button>)}</div>}
-      </div>
-    </div>}
-    <AICopilot/>
+    <WorkareaFooter/>
+    {/* Native толгой хэсгээс ирсэн хайлтын query-г харуулах давхарга. */}
+    <CommandDialog open={shellSearchOpen} onOpenChange={open=>{setShellSearchOpen(open);if(!open)setQuery("")}} title={t("web.view.search_placeholder")}>
+      <CommandInput value={query} onValueChange={setQuery} placeholder={t("web.view.search_placeholder")}/>
+      <CommandList>
+        {results.map(item=><CommandItem key={item.path} value={`${item.label} ${item.app}`} onSelect={()=>go(item.path)}>
+          <span className="text-accent"><MenuIcon name={item.icon} className="size-4"/></span>
+          <span className="min-w-0 flex-1 truncate">{item.label}</span>
+          <span className="truncate text-xs text-muted">{item.app}</span>
+        </CommandItem>)}
+      </CommandList>
+    </CommandDialog>
+    <AICopilot className="top-10"/>
   </div>;
 
-  return <div className="gerege-shell min-h-dvh flex flex-col">
+  // The frame is exactly one screen tall and only <main> scrolls, so the rail
+  // stays where it is while a long page moves under the bar.
+  return <div className="flex h-dvh flex-col overflow-hidden bg-background text-foreground print:h-auto print:overflow-visible">
     <ImpersonationBanner active={!!user?.impersonated}/>
     <PlatformNotices notices={user?.notices}/>
-    <header className="gerege-topbar h-16 flex items-center border-b sticky top-0 z-sticky">
-      <TenantSwitcher current={user?.tenant_id} currentName={user?.tenant_name}>
-        {/* The mark used to arrive as a static import, which gave it a hashed,
-            permanently cacheable URL and made it part of the build. A logo the
-            build owns is a logo no deployment can change, so it is an address
-            now — see lib/brand.ts. */}
-        {theme.design==="gerege"?<img src={brand.logoUrl} width={36} height={36} alt={brand.name} className="w-9 h-9 rounded-lg shadow-sm"/>:<span className="original-brand-mark w-9 h-9 rounded-lg grid place-items-center"><Building2 className="w-6 h-6"/></span>}
-      </TenantSwitcher>
-      <div className={`gerege-header-context h-full flex items-center gap-3 overflow-hidden transition-all duration-200 ${panelOpen?"is-open":""}`}>
-        <span className="shrink-0 text-accent">{selected?(<MenuIcon name={selected.icon} className="w-5 h-5"/>):<LayoutGrid className="w-5 h-5"/>}</span>
-        <span className="min-w-0"><small className="block text-[11px] leading-4 text-muted truncate">{brand.name}</small><strong className="block text-[15px] leading-5 text-foreground truncate">{brandTitle}</strong></span>
+    <div className="flex min-h-0 flex-1">
+      {/* The design system's dual shell: rail and panel run the full height on
+          the left, the brand mark on the rail opening the organisation
+          switcher, the organisation in the panel's header level with the top
+          bar — and the top bar covers the content only. */}
+      <AppRail tiles={railTiles} label={t("web.label.apps")}
+        brand={<TenantSwitcher variant="mark" current={user?.tenant_id} currentName={user?.tenant_name}>
+          {/* The mark used to arrive as a static import, which gave it a hashed,
+              permanently cacheable URL and made it part of the build. A logo the
+              build owns is a logo no deployment can change, so it is an address
+              now — see lib/brand.ts. */}
+          <img src={brand.logoUrl} width={32} height={32} alt={brand.name} className="size-8 shrink-0 rounded-md"/>
+        </TenantSwitcher>}/>
+      {/* The library's panel is `hidden md:flex`; this shell promotes the
+          breakpoint to lg and serves a drawer below it. Beside a rail the
+          panel is fixed-width, so its own collapse control is hidden — the
+          rail already is the icon tier. */}
+      <Sidebar aria-label={brandTitle}
+        header={<TenantSwitcher variant="panel" current={user?.tenant_id} currentName={user?.tenant_name}><TenantMark/></TenantSwitcher>}
+        className={cn("h-auto bg-chrome md:hidden print:hidden [&>button:last-child]:hidden",panelOpen&&"lg:flex")}>
+        {panel()}
+      </Sidebar>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <TopNav
+          className="shrink-0 bg-chrome print:hidden"
+          logo={<div className="flex min-w-0 items-center gap-2">
+            {/* Two controls for one function: below lg the button opens the
+                drawer, from lg it folds the panel, and aria-expanded has to
+                report the state of the thing it actually acts on. */}
+            <IconButton ref={drawerTrigger} aria-label={t("web.action.toggle_menu")} aria-expanded={mobileOpen} icon={<HamburgerIcon/>} size="sm" className="lg:hidden" onClick={togglePanel}/>
+            <IconButton aria-label={t("web.action.toggle_menu")} aria-expanded={panelOpen} icon={<HamburgerIcon/>} size="sm" className="hidden lg:inline-flex" onClick={togglePanel}/>
+            {/* Below lg the panel — and the organisation in its header — is
+                off screen, so the switcher stands in the bar. */}
+            <span className="lg:hidden"><TenantSwitcher current={user?.tenant_id} currentName={user?.tenant_name}><TenantMark/></TenantSwitcher></span>
+            {/* Which app the panel shows, named once: the panel lists only the
+                screens. */}
+            <span className="ms-1 hidden min-w-0 items-center gap-2 sm:flex">
+              <span className="shrink-0 text-accent [&_svg]:size-5">{panelIcon}</span>
+              <strong className="truncate text-sm text-foreground">{brandTitle}</strong>
+            </span>
+            {/* Beside the control that opens the panel, because it acts on
+                what that panel contains. */}
+            {visibleGroups.length>1&&<IconButton size="sm" className="hidden lg:inline-flex" onClick={toggleAllGroups} aria-expanded={allGroupsOpen}
+              aria-label={allGroupsOpen?t("web.action.collapse_all"):t("web.action.expand_all")} title={allGroupsOpen?t("web.action.collapse_all"):t("web.action.expand_all")}
+              icon={allGroupsOpen?<ChevronsDownUp/>:<ChevronsUpDown/>}/>}
+          </div>}
+          search={<div className="relative hidden md:block">
+            {/* Enter picks the first row, so that row is the selected option and is drawn as such. */}
+            <Input type="search" size="sm" label={t("base.action.search")} hideLabel placeholder={t("web.view.search_placeholder")}
+              prefix={<Search className="size-4" aria-hidden/>}
+              value={query} onChange={e=>setQuery(e.target.value)}
+              onKeyDown={e=>{if(e.key==="Enter"&&results[0])go(results[0].path);if(e.key==="Escape")setQuery("")}}
+              role="combobox" aria-expanded={results.length>0} aria-controls={searchListId} aria-autocomplete="list"/>
+            {results.length>0&&<div id={searchListId} role="listbox" className="absolute inset-x-0 top-full z-dropdown mt-1 rounded-lg border border-line bg-surface p-1 shadow-md">
+              {results.map((item,i)=><button key={item.path} type="button" role="option" aria-selected={i===0} onClick={()=>go(item.path)}
+                className={cn("flex w-full items-center gap-3 rounded-md px-3 py-2 text-start outline-none hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-ring",i===0&&"bg-surface-2")}>
+                <span className="shrink-0 text-accent"><MenuIcon name={item.icon} className="size-4"/></span>
+                <span className="min-w-0"><strong className="block truncate text-sm font-medium text-foreground">{item.label}</strong><small className="block truncate text-xs text-muted">{item.app}</small></span>
+              </button>)}
+            </div>}
+          </div>}
+          actions={<>
+            {/* Профайл нь аватарын цэсэн дотор. Толгой хэсэгт тусдаа товч байсныг
+                авав: нэвтэрсний дараа хүн профайл дээрээ бууж ирдэг болсон тул тэр
+                нь өөрөө хаана байгааг заасан хэрэг — хажууд нь бас байнга шахагдаж
+                зогсох товч илүү. */}
+            <AICopilot/>
+            <UserMenu user={user} onLogout={logout}/>
+          </>}
+        />
+        {/* `relative`, so an sr-only label deep in a long page resolves against
+            this pane and not the document. Below lg the 4rem tab bar is fixed
+            over the page, and the padding keeps the last row above it. */}
+        <main className="relative min-h-0 min-w-0 flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 max-lg:pb-[calc(4rem+env(safe-area-inset-bottom)+1.5rem)] print:overflow-visible print:p-0">{children}</main>
       </div>
-      <div className="gerege-menu-toggle h-full shrink-0 flex items-center justify-center gap-1">
-        <button onClick={togglePanel} className="grid place-items-center w-10 h-10 rounded-lg text-muted hover:bg-surface-hover" aria-label={t("web.action.toggle_menu")} aria-expanded={mobileOpen}><HamburgerIcon className="w-5 h-5"/></button>
-        {/* Beside the control that opens the panel, because it acts on what
-            that panel contains. Icon-only: the words fit in a 14rem column,
-            not in a header cell next to the menu button. */}
-        {visibleGroups.length>1&&<button type="button" onClick={toggleAllGroups} aria-expanded={allGroupsOpen}
-          aria-label={allGroupsOpen?t("web.action.collapse_all"):t("web.action.expand_all")}
-          title={allGroupsOpen?t("web.action.collapse_all"):t("web.action.expand_all")}
-          className="grid place-items-center w-10 h-10 rounded-lg text-muted hover:bg-surface-hover">
-          {allGroupsOpen?<ChevronsDownUp className="w-5 h-5"/>:<ChevronsUpDown className="w-5 h-5"/>}
-        </button>}
-      </div>
-      <div className="hidden lg:flex items-center gap-2 px-4 min-w-0"><span className="gerege-session-dot w-2 h-2 rounded-full shrink-0"/><strong className="text-base text-foreground font-semibold truncate max-w-56">{user?.tenant_name||"Demo Tenant"}</strong></div>
-      <div className="gerege-header-search hidden md:flex flex-1 items-center justify-center min-w-0 px-5 relative">
-        <div className="relative w-full max-w-md"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted"/><input value={query} onChange={e=>setQuery(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&results[0]){router.push(results[0].path);setQuery("")}}} placeholder={t("web.view.search_placeholder")} className="w-full h-10 rounded-full border border-line bg-surface-2 pl-10 pr-4 text-sm focus:border-accent focus:ring-2 focus:ring-[color-mix(in_srgb,var(--gerege-blue)_15%,transparent)]"/>
-          {results.length>0&&<div className="gerege-topbar-onlight absolute top-12 inset-x-0 bg-surface border border-line rounded-xl shadow-lg p-1.5 z-dropdown">{results.map(item=><button key={item.path} onClick={()=>{router.push(item.path);setQuery("")}} className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-surface-2"><span className="text-accent">{<MenuIcon name={item.icon} className="w-4 h-4"/>}</span><span className="min-w-0"><strong className="block text-sm truncate">{item.label}</strong><small className="text-muted truncate">{item.app}</small></span></button>)}</div>}
-        </div>
-      </div>
-      {/* Профайл нь аватарын цэсэн дотор. Толгой хэсэгт тусдаа товч байсныг
-          авав: нэвтэрсний дараа хүн профайл дээрээ бууж ирдэг болсон тул тэр
-          нь өөрөө хаана байгааг заасан хэрэг — хажууд нь бас байнга шахагдаж
-          зогсох товч илүү. */}
-      <div className="gerege-header-user flex items-center gap-2 pr-2 sm:pr-4 lg:pr-6"><AICopilot/><UserMenu user={user} onLogout={logout}/></div>
-    </header>
-
-    <div className="flex flex-1 min-h-0">
-      {mobileOpen&&<button className="gerege-mobile-backdrop fixed inset-0 top-16 bg-slate-950/40 z-overlay" aria-label={t("web.action.close_menu")} onClick={()=>setMobileOpen(false)}/>}
-      <div className={`gerege-sidebar top-16 bottom-0 left-0 z-modal flex overflow-hidden ${mobileOpen?"is-mobile-open":""} ${panelOpen?"is-desktop-open":""}`}>
-        <nav className="w-16 min-w-16 shrink-0 py-3 flex flex-col items-center gap-2 border-r border-line">
-          <AppRailLink href="/apps" active={platformActive} title={t("web.label.platform")} icon={<LayoutGrid className="w-5 h-5"/>}/>
-          {railApps.map(app=><AppRailLink key={app.id} href={app.path} external={!!app.externalUrl} active={selected?.id===app.id} title={app.name} icon={<MenuIcon name={app.icon} className="w-5 h-5"/>}/>) }
-        </nav>
-        <aside className="gerege-menu-panel overflow-hidden">
-          <div className="w-56 py-4">
-            <nav className="space-y-1 px-2">
-              {selected?<AppMenuGroups menus={selected.menus} pathname={pathname} closedGroups={closedGroups} onToggle={toggleGroup}/>:platformMenus}
-            </nav>
-          </div>
-        </aside>
-      </div>
-      <main className="gerege-main flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto min-w-0">{children}</main>
     </div>
-    {mobileMoreOpen&&<><button className="gerege-mobile-more-backdrop" aria-label={t("web.action.close_more")} onClick={()=>setMobileMoreOpen(false)}/><section className="gerege-mobile-more-sheet" role="dialog" aria-modal="true" aria-label={t("web.view.more_apps")}><div className="gerege-mobile-more-handle"/><h2>{t("web.view.more_apps")}</h2><div className="gerege-mobile-more-grid">{remainingMobileTabs.map(tab=><MobileMoreApp key={tab.id} {...tab}/>)}</div></section></>}
-    <nav className="gerege-mobile-tabs" aria-label={t("web.label.apps")}>
+
+    {/* Below lg the panel slides in as a drawer. Escape, the backdrop and the
+        focus trap are the Sheet's; a destination chosen inside it closes it.
+        The tab bar switches apps, so the drawer carries only the panel. */}
+    <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+      <SheetContent side="left" showClose={false} aria-describedby={undefined} returnFocusTo={drawerTrigger} className="w-72 p-0">
+        <SheetTitle className="sr-only">{brandTitle}</SheetTitle>
+        <Sidebar aria-label={brandTitle} header={panelHeader} className="flex h-full w-full border-r-0 [&>button:last-child]:hidden">
+          {panel(()=>setMobileOpen(false))}
+        </Sidebar>
+      </SheetContent>
+    </Sheet>
+
+    {/* The apps as a tab bar, at most four and a "more" that opens the rest. */}
+    <Sheet open={mobileMoreOpen} onOpenChange={setMobileMoreOpen}>
+      <SheetContent side="bottom" aria-describedby={undefined} className="max-h-[70dvh] overflow-y-auto pb-[calc(4rem+env(safe-area-inset-bottom)+1rem)]">
+        <SheetTitle className="text-base">{t("web.view.more_apps")}</SheetTitle>
+        <div className="grid grid-cols-2 gap-2">{remainingMobileTabs.map(tab=><MobileMoreApp key={tab.id} {...tab}/>)}</div>
+      </SheetContent>
+    </Sheet>
+    <nav aria-label={t("web.label.apps")} className="fixed inset-x-0 bottom-0 z-sticky flex h-[calc(4rem+env(safe-area-inset-bottom))] border-t border-line bg-chrome pb-[env(safe-area-inset-bottom)] lg:hidden print:hidden">
       {primaryMobileTabs.map(tab=><MobileAppTab key={tab.id} {...tab}/>)}
-      {hasMobileMore&&<button type="button" onClick={()=>setMobileMoreOpen(v=>!v)} aria-expanded={mobileMoreOpen} className={`gerege-mobile-tab ${remainingMobileTabs.some(tab=>tab.active)||mobileMoreOpen?"is-active":""}`}><span><Ellipsis className="w-5 h-5"/></span><small>{t("web.action.more")}</small></button>}
+      {hasMobileMore&&<button type="button" onClick={()=>setMobileMoreOpen(v=>!v)} aria-expanded={mobileMoreOpen} className={mobileTabClass(remainingMobileTabs.some(tab=>tab.active)||mobileMoreOpen)}><Ellipsis aria-hidden/><small>{t("web.action.more")}</small></button>}
     </nav>
   </div>;
 }
@@ -396,123 +475,87 @@ export default function Layout({children}:{children:React.ReactNode}){
 /**
  * Ажлын мужийн толгойн мөр — зөвхөн бүрхүүл ба төхөөрөмжийн шугам дээр.
  *
- * Хөтчийн 4rem өндөртэй толгой хэсгийг орлоно: тэнд байсан брэнд, tenant,
- * хайлт, хэрэглэгч дөрвүүлээ энэ 2.5rem мөрөнд багтана. Native тал цонхны
- * үйлдлүүд болон нэвтрэлтийг өөрөө эзэмшдэг тул давхардуулах шаардлагагүй.
+ * Хөтчийн толгой хэсгийг орлоно: тэнд байсан брэнд, tenant, хайлт, хэрэглэгч
+ * дөрвүүлээ энэ 2.5rem мөрөнд багтана. Native тал цонхны үйлдлүүд болон
+ * нэвтрэлтийг өөрөө эзэмшдэг тул давхардуулах шаардлагагүй.
  */
-function RibbonBar({
-  selected,
-  brandTitle,
-  user,
-  setShellSearchOpen,
-  t,
-  onLogout,
-}: {
-  selected: AppNav | null;
-  brandTitle: string;
-  user: any;
-  setShellSearchOpen: (open: boolean) => void;
-  t: (key: any) => string;
-  onLogout: () => void;
-}) {
-  const brand = useBrand();
-  return (
-    <div className="gerege-ribbon h-10 shrink-0 border-b border-line bg-chrome px-4 flex items-center justify-between text-xs z-sticky select-none">
-      <div className="flex items-center gap-2.5 min-w-0">
-        <span className="text-accent shrink-0">
-          {selected ? (<MenuIcon name={selected.icon} className="w-4 h-4"/>) : <LayoutGrid className="w-4 h-4" />}
-        </span>
-        <div className="flex items-center gap-1.5 text-xs min-w-0">
-          <span className="font-semibold text-foreground dark:text-slate-100">{brand.name}</span>
-          <span className="text-slate-300 dark:text-muted">/</span>
-          <span className="font-semibold text-accent truncate">{brandTitle}</span>
-        </div>
-        {user?.tenant_name && (
-          <div className="hidden md:flex items-center pl-3 border-l border-line dark:border-slate-800">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              <span className="truncate max-w-36">{user.tenant_name}</span>
-            </span>
-          </div>
-        )}
+function RibbonBar({selected,brandTitle,user,onSearch,onLogout}:{selected:AppNav|null;brandTitle:string;user:any;onSearch:()=>void;onLogout:()=>void}){
+  const {t}=useI18n();
+  const brand=useBrand();
+  return <div className="z-sticky flex h-10 shrink-0 select-none items-center justify-between gap-3 border-b border-line bg-chrome px-4 text-xs print:hidden">
+    <div className="flex min-w-0 items-center gap-2.5">
+      <span className="shrink-0 text-accent [&_svg]:size-4">{selected?<MenuIcon name={selected.icon} className="size-4"/>:<LayoutGrid/>}</span>
+      <div className="flex min-w-0 items-center gap-1.5">
+        <span className="font-semibold text-foreground">{brand.name}</span>
+        <span className="text-subtle">/</span>
+        <span className="truncate font-semibold text-accent">{brandTitle}</span>
       </div>
-      <div className="flex items-center gap-2.5 shrink-0 text-xs">
-        <button
-          onClick={() => setShellSearchOpen(true)}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium text-muted dark:text-slate-400 bg-surface-2 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
-        >
-          <Search className="w-3.5 h-3.5 text-muted" />
-          <span>{t("web.view.search_placeholder")}</span>
-        </button>
-        <button
-          onClick={() => window.location.reload()}
-          title={t("web.action.reload")}
-          className="p-1.5 text-muted hover:text-foreground dark:hover:text-slate-200 rounded-md hover:bg-surface-hover dark:hover:bg-slate-800 transition"
-        >
-          <RefreshCw className="w-3.5 h-3.5" />
-        </button>
-        <UserMenu user={user} onLogout={onLogout} />
-      </div>
+      {user?.tenant_name&&<span className="hidden items-center gap-1.5 border-s border-line ps-3 md:inline-flex">
+        <span aria-hidden className="size-1.5 rounded-full bg-success-solid"/>
+        <span className="max-w-36 truncate font-medium text-muted">{user.tenant_name}</span>
+      </span>}
     </div>
-  );
+    <div className="flex shrink-0 items-center gap-1">
+      <Button variant="ghost" size="sm" onClick={onSearch} className="text-muted"><Search aria-hidden/>{t("web.view.search_placeholder")}</Button>
+      <IconButton aria-label={t("web.action.reload")} title={t("web.action.reload")} icon={<RefreshCw/>} size="sm" onClick={()=>window.location.reload()}/>
+      <UserMenu user={user} onLogout={onLogout}/>
+    </div>
+  </div>;
 }
 
 /** Ажлын мужийн хөл. Native footer нь цонхны мөр — энэ нь ажлын мужийнх. */
-function WorkareaFooter() {
-  const brand = useBrand();
-  return (
-    <footer className="gerege-footer h-7 shrink-0 border-t border-line bg-chrome px-4 flex items-center justify-between text-[11px] text-muted dark:text-slate-400 select-none z-sticky">
-      <span className="flex items-center gap-1.5 font-medium text-foreground dark:text-slate-300">
-        <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-        <span>{brand.name}</span>
-      </span>
-      <span className="hidden sm:inline-flex items-center gap-1 text-muted">
-        <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-        <span>TLS</span>
-      </span>
-    </footer>
-  );
+function WorkareaFooter(){
+  const brand=useBrand();
+  return <footer className="z-sticky flex h-7 shrink-0 select-none items-center justify-between border-t border-line bg-chrome px-4 text-xs text-muted print:hidden">
+    <span className="flex items-center gap-1.5 font-medium text-foreground">
+      <span aria-hidden className="size-2 rounded-full bg-success-solid"/>
+      <span>{brand.name}</span>
+    </span>
+    <span className="hidden items-center gap-1 sm:inline-flex">
+      <ShieldCheck className="size-3.5 text-success" aria-hidden/>
+      <span>TLS</span>
+    </span>
+  </footer>;
+}
+
+function TenantMark(){
+  return <span className="grid size-8 shrink-0 place-items-center rounded-md bg-accent-soft text-accent"><Building2 className="size-4" aria-hidden/></span>;
 }
 
 /**
- * The brand mark, and now the way to change which organisation you are working
- * in.
+ * Which organisation this is, and the menu that changes it.
  *
- * The mark used to link to /apps; the Platform tile directly beneath it in the
- * rail still does, so nothing is lost. What was missing had no home at all:
- * which tenant a session belonged to was decided once, by whichever membership
- * was oldest, and somebody who works for two organisations could reach only the
- * first — signing out and back in landed them in the same one again.
- *
- * Below 900px the header brand is hidden by the mobile shell, so this control
- * is not reachable there yet.
+ * Which tenant a session belonged to used to be decided once, by whichever
+ * membership was oldest, and somebody who works for two organisations could
+ * reach only the first — signing out and back in landed them in the same one
+ * again. `mark` is the brand mark on the rail; `panel` fills the sidebar's
+ * header, level with the top bar; `bar` is the compact trigger the top bar
+ * shows below lg, where the panel is off screen. The account menu offers the
+ * same list.
  */
-function TenantSwitcher({current,currentName,children}:{current?:string;currentName?:string;children:React.ReactNode}){
+function TenantSwitcher({current,currentName,variant="bar",children}:{current?:string;currentName?:string;variant?:"panel"|"bar"|"mark";children:React.ReactNode}){
   const {t}=useI18n();
   const [open,setOpen]=useState(false);
   const {tenants,activeIDs,switching,failed,switchTo,toggleActive}=useTenants(open);
-  const box=useRef<HTMLDivElement>(null);
   const label=currentName?`${currentName} — ${t("web.action.switch_tenant")}`:t("web.action.switch_tenant");
-
-  useEffect(()=>{
-    if(!open)return;
-    const onPointerDown=(event:MouseEvent)=>{if(!box.current?.contains(event.target as Node))setOpen(false)};
-    const onKeyDown=(event:KeyboardEvent)=>{if(event.key==="Escape")setOpen(false)};
-    document.addEventListener("mousedown",onPointerDown);
-    document.addEventListener("keydown",onKeyDown);
-    return()=>{document.removeEventListener("mousedown",onPointerDown);document.removeEventListener("keydown",onKeyDown)};
-  },[open]);
-
-  return <div ref={box} className="gerege-header-brand relative w-16 h-full shrink-0 grid place-items-center border-r border-[var(--gerege-chrome-border)]">
-    <button type="button" onClick={()=>setOpen(v=>!v)} aria-haspopup="menu" aria-expanded={open} aria-label={label} title={label}
-      className="grid place-items-center rounded-lg focus-visible:ring-2 focus-visible:ring-accent">
-      {children}
-    </button>
-    {open&&<div role="menu" aria-label={t("web.view.tenants")} className="gerege-topbar-onlight absolute left-2 top-14 w-64 bg-surface border border-line rounded-xl shadow-lg p-1.5 z-dropdown">
-      <p className="px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted">{t("web.view.tenants")}</p>
+  const panel=variant==="panel",mark=variant==="mark";
+  return <DropdownMenu open={open} onOpenChange={setOpen}>
+    <DropdownMenuTrigger asChild>
+      <button type="button" aria-label={label} title={label}
+        className={cn("flex min-w-0 items-center gap-2 rounded-md text-start outline-none",
+          panel?"h-10 w-full px-1.5":mark?"size-10 justify-center":"h-9 px-1.5",
+          "transition-colors hover:bg-surface-2 data-[state=open]:bg-surface-2",
+          "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background")}>
+        {children}
+        {!mark&&<span className={cn("truncate text-sm font-semibold text-foreground",panel?"min-w-0 flex-1":"hidden max-w-56 md:block")}>{currentName||"Demo Tenant"}</span>}
+        {!mark&&<ChevronsUpDown className={cn("size-4 shrink-0 text-subtle",!panel&&"hidden md:block")} aria-hidden/>}
+      </button>
+    </DropdownMenuTrigger>
+    <DropdownMenuContent align="start" className="w-72">
+      <DropdownMenuLabel>{t("web.view.tenants")}</DropdownMenuLabel>
       <TenantChoices current={current} tenants={tenants} activeIDs={activeIDs} switching={switching} failed={failed} onChoose={id=>void switchTo(id)} onStay={()=>setOpen(false)} onToggleActive={id=>void toggleActive(id,current||"")}/>
-    </div>}
-  </div>;
+    </DropdownMenuContent>
+  </DropdownMenu>;
 }
 // Leaving this product is stated, not implied: an external destination gets a
 // new tab, an icon that says so, and rel="noopener" — the page it opens is
@@ -520,47 +563,123 @@ function TenantSwitcher({current,currentName,children}:{current?:string;currentN
 function ExternalAnchor({href,className,children,...rest}:{href:string;className?:string;children:React.ReactNode}&React.AnchorHTMLAttributes<HTMLAnchorElement>){
   return <a href={href} target="_blank" rel="noopener noreferrer" className={className} {...rest}>{children}</a>;
 }
-function AppRailLink({href,external,active,title,icon}:{href:string;external?:boolean;active:boolean;title:string;icon:React.ReactNode}){
-  const className=`w-11 h-11 rounded-xl grid place-items-center transition ${active?"bg-accent-soft text-accent shadow-sm":"text-muted hover:bg-[var(--gerege-surface-2)] hover:text-foreground"}`;
-  if(external)return <ExternalAnchor href={href} title={title} aria-label={title} className={className}>{icon}</ExternalAnchor>;
-  return <Link href={href} title={title} aria-label={title} className={className}>{icon}</Link>;
+
+interface Tile { id:string; href:string; external:boolean; active:boolean; label:string; icon:React.ReactNode }
+
+/** One app's tile: an icon, named by its tooltip and for assistive tech. */
+function RailTile({href,external,active,label,icon}:Tile){
+  const classes=cn(
+    "relative inline-flex size-10 shrink-0 items-center justify-center rounded-md outline-none [&_svg]:size-5",
+    "transition-colors",
+    "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+    // Current = accent bar on the rail's edge + background + accent icon,
+    // never colour alone.
+    "before:absolute before:top-2 before:bottom-2 before:-left-2 before:w-0.5 before:rounded-r-full before:bg-accent before:opacity-0",
+    active?"bg-accent-soft text-accent before:opacity-100":"text-muted hover:bg-surface-2 hover:text-foreground",
+  );
+  return <Tooltip label={label} side="right">
+    {external
+      ?<ExternalAnchor href={href} aria-label={label} className={classes}>{icon}</ExternalAnchor>
+      :<Link href={href} aria-label={label} aria-current={active?"page":undefined} className={classes}>{icon}</Link>}
+  </Tooltip>;
 }
-function MobileAppTab({href,external,active,label,icon}:{href:string;external?:boolean;active:boolean;label:string;icon:React.ReactNode}){
-  const className=`gerege-mobile-tab ${active?"is-active":""}`;
-  if(external)return <ExternalAnchor href={href} aria-label={label} className={className}><span>{icon}</span><small>{label}</small></ExternalAnchor>;
-  return <Link href={href} aria-label={label} aria-current={active?"page":undefined} className={className}><span>{icon}</span><small>{label}</small></Link>;
+
+/**
+ * Division one of the shell: the rail, a tile per app. The tiles scroll on
+ * their own when there are more than fit a short laptop. `always` is the
+ * workarea, which has no drawer to fold the rail into.
+ */
+function AppRail({tiles,label,always,brand}:{tiles:Tile[];label:string;always?:boolean;brand?:React.ReactNode}){
+  return <nav aria-label={label} className={cn("w-14 shrink-0 flex-col items-center gap-1 border-r border-line bg-chrome py-2 print:hidden",always?"flex":"hidden lg:flex")}>
+    {brand&&<div className="mb-1 flex h-10 shrink-0 items-center">{brand}</div>}
+    <div className="flex min-h-0 w-full flex-1 flex-col items-center gap-1 overflow-y-auto py-0.5 [scrollbar-width:none]">
+      {tiles.map(tile=><RailTile key={tile.id} {...tile}/>)}
+    </div>
+  </nav>;
 }
-function MobileMoreApp({href,external,active,label,icon}:{href:string;external?:boolean;active:boolean;label:string;icon:React.ReactNode}){
-  const className=`gerege-mobile-more-app ${active?"is-active":""}`;
-  if(external)return <ExternalAnchor href={href} className={className}><span>{icon}</span><strong>{label}</strong></ExternalAnchor>;
-  return <Link href={href} aria-current={active?"page":undefined} className={className}><span>{icon}</span><strong>{label}</strong></Link>;
+
+/**
+ * The drawer's heading: which app this is, and the control that folds or
+ * opens every group in it.
+ */
+function PanelHeader({title,icon,allOpen,onToggleAll}:{title:string;icon:React.ReactNode;allOpen:boolean;onToggleAll?:()=>void}){
+  const {t}=useI18n();
+  return <div className="flex w-full min-w-0 items-center gap-2">
+    <span className="shrink-0 text-accent [&_svg]:size-5">{icon}</span>
+    <h2 className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">{title}</h2>
+    {onToggleAll&&<IconButton size="sm" onClick={onToggleAll} aria-expanded={allOpen}
+      aria-label={allOpen?t("web.action.collapse_all"):t("web.action.expand_all")} title={allOpen?t("web.action.collapse_all"):t("web.action.expand_all")}
+      icon={allOpen?<ChevronsDownUp/>:<ChevronsUpDown/>}/>}
+  </div>;
 }
-function NavLink({href,active,icon,label}:{href:string;active:boolean;icon:React.ReactNode;label:string}){return <Link href={href} className={`gerege-nav-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition ${active?"gerege-nav-link-active font-semibold":""}`}><span className="gerege-nav-icon">{icon}</span><span>{label}</span></Link>}
+
+function mobileTabClass(active:boolean){
+  return cn("flex min-w-0 flex-1 flex-col items-center justify-center gap-1 border-t-2 px-1 text-xs outline-none [&_svg]:size-5 [&_small]:max-w-full [&_small]:truncate [&_small]:text-xs",
+    "transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
+    active?"border-accent font-medium text-accent":"border-transparent text-muted hover:text-foreground");
+}
+function MobileAppTab({href,external,active,label,icon}:Tile){
+  const className=mobileTabClass(active);
+  if(external)return <ExternalAnchor href={href} aria-label={label} className={className}>{icon}<small>{label}</small></ExternalAnchor>;
+  return <Link href={href} aria-label={label} aria-current={active?"page":undefined} className={className}>{icon}<small>{label}</small></Link>;
+}
+function MobileMoreApp({href,external,active,label,icon}:Tile){
+  const className=cn("flex min-w-0 items-center gap-2 rounded-md border px-3 py-2.5 text-sm outline-none [&_svg]:size-5",
+    "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+    active?"border-accent bg-accent-soft text-accent":"border-line text-foreground hover:bg-surface-2");
+  const body=<><span className={cn("shrink-0",!active&&"text-muted")}>{icon}</span><strong className="truncate font-medium">{label}</strong></>;
+  if(external)return <ExternalAnchor href={href} className={className}>{body}</ExternalAnchor>;
+  return <Link href={href} aria-current={active?"page":undefined} className={className}>{body}</Link>;
+}
+/**
+ * One destination. The library item wraps the router's Link so a click stays
+ * a client-side navigation — the frame is a layout and must survive it.
+ * Active = accent bar + background, never colour alone.
+ */
+function NavLink({href,active,icon,label,onNavigate}:{href:string;active:boolean;icon:React.ReactNode;label:string;onNavigate?:()=>void}){
+  // The icon goes through the item's prop: with asChild the Link's own
+  // children become the label, wrapped in an inline truncating span, so an
+  // icon passed as a child breaks onto its own line.
+  return <SidebarItem asChild active={active} tooltip={label} icon={icon}>
+    <Link href={href} onClick={onNavigate} className={cn("relative before:absolute before:top-1.5 before:bottom-1.5 before:left-0 before:w-0.5 before:rounded-full before:bg-accent before:opacity-0",active&&"bg-accent-soft text-accent before:opacity-100")}>
+      {label}
+    </Link>
+  </SidebarItem>;
+}
 // The same row as a NavLink, minus the highlight: an external destination has
 // no path under this application, so nothing it opens can ever be "the page
 // you are on".
-function ExternalNavLink({href,icon,label}:{href:string;icon:React.ReactNode;label:string}){return <ExternalAnchor href={href} className="gerege-nav-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition"><span className="gerege-nav-icon">{icon}</span><span className="flex-1">{label}</span><ExternalLink className="w-3.5 h-3.5 shrink-0 opacity-60"/></ExternalAnchor>}
+function ExternalNavLink({href,icon,label}:{href:string;icon:React.ReactNode;label:string}){
+  return <SidebarItem asChild tooltip={label} icon={icon} trailing={<ExternalLink className="size-3.5 shrink-0 opacity-60" aria-hidden/>}>
+    <ExternalAnchor href={href}>{label}</ExternalAnchor>
+  </SidebarItem>;
+}
 function MenuGroup({id,title,closed,onToggle,children}:{id:string;title:string;closed:boolean;onToggle:(id:string)=>void;children:React.ReactNode}){
   const bodyId=`menu-group-${id}`;
-  return <section className="gerege-menu-group mb-6">
+  return <section className="mb-3">
     {/* Still a heading, so the panel keeps its outline for a screen reader;
         the button inside is what the heading names, which is the pairing
         aria-expanded/aria-controls expects. */}
-    <h3 className="mb-2">
-      <button type="button" onClick={()=>onToggle(id)} aria-expanded={!closed} aria-controls={bodyId} className="w-full flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-semibold uppercase tracking-wider text-muted hover:text-muted hover:bg-surface-2 transition">
-        <span className="min-w-0 truncate text-left">{title}</span>
-        <ChevronDown className={`w-3.5 h-3.5 ml-auto shrink-0 transition-transform duration-200 ${closed?"":"rotate-180"}`}/>
+    <h3 className="mb-0.5 px-2">
+      <button type="button" onClick={()=>onToggle(id)} aria-expanded={!closed} aria-controls={bodyId}
+        className={cn("flex h-8 w-full items-center gap-1.5 rounded-md px-2 text-xs font-medium text-subtle outline-none",
+          "transition-colors hover:bg-surface-2 hover:text-foreground",
+          "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background")}>
+        <span className="min-w-0 flex-1 truncate text-start">{title}</span>
+        <ChevronDown className={cn("size-3.5 shrink-0 transition-transform duration-200",!closed&&"rotate-180")} aria-hidden/>
       </button>
     </h3>
     {/* inert and not just hidden by overflow: a link folded away is still a
         link, and without this Tab would walk into a group the operator can
-        see is shut and land focus somewhere off-screen. */}
-    <div id={bodyId} data-collapsed={closed} inert={closed} className="gerege-menu-group-body">
-      <div className="space-y-1">{children}</div>
+        see is shut and land focus somewhere off-screen. A 1fr → 0fr grid row
+        rather than an animated height: the list is of unknown length and a
+        height transition needs a number to travel to. */}
+    <div id={bodyId} data-collapsed={closed} inert={closed} className="grid [grid-template-rows:1fr] transition-[grid-template-rows] duration-200 ease-out data-[collapsed=true]:[grid-template-rows:0fr] motion-reduce:transition-none">
+      <ul className="flex min-h-0 flex-col gap-px overflow-hidden">{children}</ul>
     </div>
   </section>;
 }
-function AppMenuGroups({menus,pathname,closedGroups,onToggle}:{menus:MenuItem[];pathname:string;closedGroups:string[];onToggle:(id:string)=>void}){const roots=menus.filter(item=>!item.parent_id).sort((a,b)=>a.order-b.order);
+function AppMenuGroups({menus,pathname,closedGroups,onToggle,onNavigate}:{menus:MenuItem[];pathname:string;closedGroups:string[];onToggle:(id:string)=>void;onNavigate?:()=>void}){const roots=menus.filter(item=>!item.parent_id).sort((a,b)=>a.order-b.order);
   // Decided once across the whole menu, not per link: the answer depends on
   // what the other entries claim.
   const here=currentPath(pathname,menus.map(item=>item.path||""));
@@ -581,8 +700,8 @@ function AppMenuGroups({menus,pathname,closedGroups,onToggle}:{menus:MenuItem[];
   // A group with nothing in it is a heading over silence — the Settings group
   // of every extracted app, until that app declares configuration screens.
   return <>{roots.filter(root=>childrenOf(root.id).length>0).map(root=><MenuGroup key={root.id} id={root.id} title={root.label} closed={closedGroups.includes(root.id)} onToggle={onToggle}>{childrenOf(root.id).map(item=>item.path
-  ?<NavLink key={item.id} href={item.path} active={item.path===here} icon={<MenuIcon name={item.icon} className="w-5 h-5"/>} label={item.label}/>
-  :<ExternalNavLink key={item.id} href={item.external_url!} icon={<MenuIcon name={item.icon} className="w-5 h-5"/>} label={item.label}/>)}</MenuGroup>)}</>}
+  ?<NavLink key={item.id} href={item.path} active={item.path===here} icon={<MenuIcon name={item.icon} className="size-4"/>} label={item.label} onNavigate={onNavigate}/>
+  :<ExternalNavLink key={item.id} href={item.external_url!} icon={<MenuIcon name={item.icon} className="size-4"/>} label={item.label}/>)}</MenuGroup>)}</>}
 
 /**
  * The banner an operator's borrowed session wears.
@@ -600,10 +719,7 @@ function ImpersonationBanner({active}:{active:boolean}){
   // every call site into a cast.
   const {t}=useI18n();
   if(!active) return null;
-  return <div role="status" className="w-full bg-amber-500 text-amber-950 text-sm font-medium px-4 py-2 flex items-center gap-2 shadow-inner">
-    <ShieldCheck className="w-4 h-4 shrink-0"/>
-    <span>{t("web.message.impersonated")}</span>
-  </div>;
+  return <Alert variant="warning" icon={<ShieldCheck className="mt-0.5 size-4 shrink-0" aria-hidden/>} role="status" className="shrink-0 rounded-none border-x-0 border-t-0 px-4 py-2 font-medium">{t("web.message.impersonated")}</Alert>;
 }
 
 /**
@@ -617,12 +733,10 @@ function ImpersonationBanner({active}:{active:boolean}){
  */
 function PlatformNotices({notices}:{notices?:Array<{kind:string;title:string;body:string}>}){
   if(!notices?.length) return null;
-  const tone=(kind:string)=>kind==="maintenance"?"bg-slate-800 text-slate-100"
-    :kind==="warning"?"bg-amber-100 text-amber-900 border-b border-amber-200"
-    :"bg-blue-50 text-blue-900 border-b border-blue-100";
   return <>{notices.map((notice,index)=>
-    <div key={index} role="status" className={`w-full text-sm px-4 py-2 ${tone(notice.kind)}`}>
+    <Alert key={index} role="status" icon={false} variant={notice.kind==="warning"?"warning":notice.kind==="maintenance"?"default":"info"}
+      className={cn("shrink-0 rounded-none border-x-0 border-t-0 px-4 py-2",notice.kind==="maintenance"&&"border-transparent bg-foreground text-background")}>
       <strong className="font-medium">{notice.title}</strong>
-      {notice.body&&<span className="ml-2 opacity-90">{notice.body}</span>}
-    </div>)}</>;
+      {notice.body&&<span className="ms-2 opacity-90">{notice.body}</span>}
+    </Alert>)}</>;
 }

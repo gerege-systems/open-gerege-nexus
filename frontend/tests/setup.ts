@@ -27,7 +27,10 @@ if (hasDocument) {
   // A Map behind the Storage interface makes both Nodes behave like the
   // browser. It is not jsdom's implementation, but the only things asked of it
   // here are get, set, remove and clear.
-  if (typeof localStorage === "undefined") {
+  // Node 25 answers `typeof localStorage` with "object" and gives a stub that
+  // has no clear()/setItem() unless --localstorage-file was passed — the same
+  // shadowing, one version on. So ask for the method, not the name.
+  if (typeof localStorage === "undefined" || typeof (localStorage as Partial<Storage> | undefined)?.clear !== "function") {
     const entries = new Map<string, string>();
     const storage: Storage = {
       get length() {
@@ -99,3 +102,26 @@ afterEach(() => {
 globalThis.fetch = vi.fn(() => {
   throw new Error("a test reached the network: stub fetch, or mock the module that calls it");
 }) as unknown as typeof fetch;
+
+if (hasDocument) {
+  // Radix positions every menu, popover and tooltip with floating-ui, which
+  // asks each ancestor whether it is in the browser's top layer —
+  // `matches(':modal')`. jsdom's selector engine (nwsapi 2.2) answers that one
+  // pseudo-class by walking the whole document, about eight seconds per
+  // opening. Nothing in a test is in the top layer, so the answer is no, given
+  // quickly. And jsdom has no layout: the viewport it reports is 0px tall
+  // whatever `innerHeight` says, so the document's height is the window's.
+  const realMatches = Element.prototype.matches;
+  Element.prototype.matches = function (selector: string) {
+    return /:(modal|popover-open|fullscreen)\b/.test(selector) ? false : realMatches.call(this, selector);
+  };
+  Object.defineProperty(document.documentElement, "clientHeight", {
+    configurable: true,
+    get: () => window.innerHeight,
+  });
+
+  // Radix Select captures the pointer when it opens; jsdom implements neither
+  // method, and the open throws before any option renders.
+  Element.prototype.hasPointerCapture ??= () => false;
+  Element.prototype.releasePointerCapture ??= () => {};
+}

@@ -2,10 +2,24 @@
 
 import { useEffect, useState } from "react";
 import { Inbox, Search, Send } from "lucide-react";
+import {
+  Alert,
+  Button,
+  Card,
+  EmptyState,
+  Input,
+  Spinner,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@gerege-systems/ui";
 
 import { api } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
-import { Banner, EmptyState, fieldClass, Loading, PageHeader, TableCard, tableHeadClass } from "@/components/ui";
+import { PageHeader } from "@/components/ui";
 import { formatDay } from "@/lib/datetime";
 
 /**
@@ -74,44 +88,52 @@ export default function MyRequestsPage() {
 
       <AskToJoin onAsked={reload} />
 
-      {error && <Banner tone="error" message={error} />}
-      {!items && !error && <Loading />}
+      {error && <Alert variant="danger" live>{error}</Alert>}
+      {!items && !error && (
+        <div className="flex items-center gap-2 text-muted text-sm" role="status">
+          <Spinner size="md" decorative />
+          {t("base.message.loading")}
+        </div>
+      )}
 
       {items && items.length === 0 && (
         // Хоосон байх нь энэ дэлгэцийн ердийн байдал, алдаа биш: хүсэлт
         // гаргаагүй хүн хоосон жагсаалттай байх ёстой бөгөөд суулгац
         // нийтэлдэг модульгүй бол бас хоосон. Хоёрын аль нь ч гэдгийг энэ
         // дэлгэц ялгаж мэдэхгүй тул амласан зүйлээ болиулж хэлэхгүй.
-        <div className="bg-surface rounded-xl border border-line">
-          <EmptyState message={t("me.message.no_requests")} />
-        </div>
+        <Card padding="none">
+          <EmptyState icon={<Inbox className="size-6" />} title={t("me.message.no_requests")} className="py-8" />
+        </Card>
       )}
 
       {items && items.length > 0 && (
-        <TableCard
-          head={
-            <tr className={tableHeadClass}>
-              <th className="px-4 py-2">{t("me.field.code")}</th>
-              <th className="px-4 py-2">{t("me.field.provider")}</th>
-              <th className="px-4 py-2">{t("me.field.status")}</th>
-              <th className="px-4 py-2">{t("me.field.answer")}</th>
-              <th className="px-4 py-2">{t("me.field.updated")}</th>
-            </tr>
-          }
-        >
-          {items.map((item) => (
-            <tr key={item.id} className="hover:bg-surface-2">
-              <td className="px-4 py-2 font-medium text-foreground">{item.code}</td>
-              {/* Хоосон байж болно: хэн ч аваагүй хүсэлт хаана ч заахгүй. */}
-              <td className="px-4 py-2">{item.provider || "—"}</td>
-              <td className="px-4 py-2">{item.status}</td>
-              <td className="px-4 py-2 max-w-md truncate" title={item.answer}>
-                {item.answer || "—"}
-              </td>
-              <td className="px-4 py-2 whitespace-nowrap">{when(item.updated_at)}</td>
-            </tr>
-          ))}
-        </TableCard>
+        <Card padding="none" className="overflow-hidden">
+          <Table containerClassName="rounded-none border-0">
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("me.field.code")}</TableHead>
+                <TableHead>{t("me.field.provider")}</TableHead>
+                <TableHead>{t("me.field.status")}</TableHead>
+                <TableHead>{t("me.field.answer")}</TableHead>
+                <TableHead>{t("me.field.updated")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {items.map((item) => (
+                <TableRow key={item.id}>
+                  <TableCell className="font-medium text-foreground">{item.code}</TableCell>
+                  {/* Хоосон байж болно: хэн ч аваагүй хүсэлт хаана ч заахгүй. */}
+                  <TableCell>{item.provider || "—"}</TableCell>
+                  <TableCell>{item.status}</TableCell>
+                  <TableCell className="max-w-md truncate" title={item.answer}>
+                    {item.answer || "—"}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">{when(item.updated_at)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
       )}
     </main>
   );
@@ -173,95 +195,100 @@ function AskToJoin({ onAsked }: { onAsked: () => void }) {
   }
 
   return (
-    <form onSubmit={submit} className="bg-surface rounded-xl border border-line p-4 space-y-3">
-      <div>
-        <h2 className="text-sm font-semibold text-foreground">{t("me.view.ask_title")}</h2>
-        <p className="text-xs text-muted mt-0.5">{t("me.view.ask_subtitle")}</p>
-      </div>
-
-      {/* Шилжих товч нь чимэглэл биш: хүн энэ агшинд гишүүн болсон бөгөөд
-          дараагийн зүйл нь тэр байгууллага руугаа орох явдал. Бүрхүүл өөрийн
-          мужийн жагсаалтыг ачаалах үедээ уншсан тул хуудсыг дахин ачаалж
-          байж шинэ бичлэг харагдана. */}
-      {joined && (
-        <div className="rounded-lg border border-accent bg-accent-soft px-3 py-2.5 flex items-center gap-3">
-          <p className="flex-1 text-sm text-accent">
-            {t("me.message.joined", { name: joined.name })}
-          </p>
-          <button
-            type="button"
-            className="rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-on-accent"
-            onClick={() => {
-              void api.switchTenant(joined.id).then(() => window.location.assign("/"));
-            }}
-          >
-            {t("me.action.open_workspace")}
-          </button>
+    <Card asChild padding="sm" className="space-y-3">
+      <form onSubmit={submit}>
+        <div>
+          <h2 className="text-sm font-semibold text-foreground">{t("me.view.ask_title")}</h2>
+          <p className="text-xs text-muted mt-0.5">{t("me.view.ask_subtitle")}</p>
         </div>
-      )}
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <input
-          required
-          value={slug}
-          onChange={(e) => setSlug(e.target.value)}
-          placeholder={t("me.field.slug_placeholder")}
-          className={`${fieldClass} sm:w-64`}
-        />
-        <input
-          value={message}
-          maxLength={500}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder={t("me.field.message_placeholder")}
-          className={`${fieldClass} flex-1`}
-        />
-        <button
-          disabled={busy || slug.trim() === ""}
-          className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-on-accent disabled:opacity-50"
-        >
-          <Send className="inline w-4 h-4 mr-1" />
-          {t("me.action.ask")}
-        </button>
-      </div>
-      {failed && <Banner tone="error" message={failed} />}
 
-      {/* Хэнд хандахаа мэдэхгүй хүнд зориулсан хайлт. Тусдаа form: Enter
-          дарахад хайх ёстой болохоос хүсэлт илгээх ёсгүй. */}
-      <div className="border-t border-line pt-3">
-        <p className="text-xs text-muted mb-2">{t("me.view.lookup_hint")}</p>
-        <div className="flex gap-2">
-          <input
-            value={lookingFor}
-            onChange={(e) => setLookingFor(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && void search(e)}
-            placeholder={t("me.field.lookup_placeholder")}
-            className={`${fieldClass} flex-1`}
-          />
-          <button type="button" onClick={(e) => void search(e)} className="rounded-lg border border-line px-3 py-2 text-sm font-semibold text-muted">
-            <Search className="inline w-4 h-4 mr-1" />
-            {t("me.action.lookup")}
-          </button>
-        </div>
-        {found?.length === 0 && <p className="mt-2 text-xs text-muted italic">{t("me.message.no_providers")}</p>}
-        {found && found.length > 0 && (
-          <ul className="mt-2 divide-y divide-line rounded-lg border border-line">
-            {found.map((one) => (
-              <li key={one.slug + one.code} className="flex items-center justify-between gap-3 px-3 py-2">
-                <span className="min-w-0">
-                  <strong className="block text-sm truncate">{one.name}</strong>
-                  <small className="text-xs text-muted">{one.title || one.code}</small>
-                </span>
-                <button
-                  type="button"
-                  onClick={() => { setSlug(one.slug); setFound(null); }}
-                  className="shrink-0 rounded-lg border border-line px-3 py-1.5 text-xs font-semibold text-accent"
-                >
-                  {t("me.action.choose")}
-                </button>
-              </li>
-            ))}
-          </ul>
+        {/* Шилжих товч нь чимэглэл биш: хүн энэ агшинд гишүүн болсон бөгөөд
+            дараагийн зүйл нь тэр байгууллага руугаа орох явдал. Бүрхүүл өөрийн
+            мужийн жагсаалтыг ачаалах үедээ уншсан тул хуудсыг дахин ачаалж
+            байж шинэ бичлэг харагдана. */}
+        {joined && (
+          <div className="rounded-md border border-accent bg-accent-soft px-3 py-2.5 flex items-center gap-3">
+            <p className="flex-1 text-sm text-accent">
+              {t("me.message.joined", { name: joined.name })}
+            </p>
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => {
+                void api.switchTenant(joined.id).then(() => window.location.assign("/"));
+              }}
+            >
+              {t("me.action.open_workspace")}
+            </Button>
+          </div>
         )}
-      </div>
-    </form>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Input
+            required
+            label={t("me.field.slug_placeholder")}
+            hideLabel
+            value={slug}
+            onChange={(e) => setSlug(e.target.value)}
+            placeholder={t("me.field.slug_placeholder")}
+            className="sm:w-64"
+          />
+          <Input
+            label={t("me.field.message_placeholder")}
+            hideLabel
+            value={message}
+            maxLength={500}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder={t("me.field.message_placeholder")}
+            className="flex-1"
+          />
+          <Button type="submit" disabled={busy || slug.trim() === ""} leadingIcon={<Send />}>
+            {t("me.action.ask")}
+          </Button>
+        </div>
+        {failed && <Alert variant="danger" live>{failed}</Alert>}
+
+        {/* Хэнд хандахаа мэдэхгүй хүнд зориулсан хайлт. Тусдаа form: Enter
+            дарахад хайх ёстой болохоос хүсэлт илгээх ёсгүй. */}
+        <div className="border-t border-line pt-3">
+          <p className="text-xs text-muted mb-2">{t("me.view.lookup_hint")}</p>
+          <div className="flex gap-2">
+            <Input
+              label={t("me.field.lookup_placeholder")}
+              hideLabel
+              value={lookingFor}
+              onChange={(e) => setLookingFor(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && void search(e)}
+              placeholder={t("me.field.lookup_placeholder")}
+              className="flex-1"
+            />
+            <Button type="button" variant="outline" leadingIcon={<Search />} onClick={(e) => void search(e)}>
+              {t("me.action.lookup")}
+            </Button>
+          </div>
+          {found?.length === 0 && <p className="mt-2 text-xs text-muted">{t("me.message.no_providers")}</p>}
+          {found && found.length > 0 && (
+            <ul className="mt-2 divide-y divide-line rounded-md border border-line">
+              {found.map((one) => (
+                <li key={one.slug + one.code} className="flex items-center justify-between gap-3 px-3 py-2">
+                  <span className="min-w-0">
+                    <strong className="block text-sm truncate">{one.name}</strong>
+                    <small className="text-xs text-muted">{one.title || one.code}</small>
+                  </span>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="shrink-0"
+                    onClick={() => { setSlug(one.slug); setFound(null); }}
+                  >
+                    {t("me.action.choose")}
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </form>
+    </Card>
   );
 }

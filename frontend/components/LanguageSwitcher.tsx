@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@gerege-systems/ui";
 import { LOCALES, useI18n } from "@/lib/i18n";
 
 /**
@@ -29,18 +30,23 @@ export default function LanguageSwitcher({ variant = "light" }: { variant?: "lig
   // brand hue in the header of every screen; the raised surface says the same
   // thing without spending an accent on it, and keeps working when the
   // deployment picks a different one.
+  //
+  // The dark variant sits on the landing header's navy (`--gerege-navy`),
+  // which is the same in both colour modes and under every accent. The theme's
+  // text tokens flip with the mode, so on that fixed surface they cannot be
+  // relied on; `on-navy` (white) at an alpha is what reads.
   const base =
     variant === "dark"
-      ? "border-slate-700 bg-slate-900/70"
+      ? "border-on-navy/20 bg-overlay"
       : "border-line bg-surface-2";
   const activeStyle =
     variant === "dark"
-      ? "bg-slate-800 text-white"
-      : "bg-surface text-accent shadow-sm";
+      ? "bg-on-navy/15 text-on-navy hover:bg-on-navy/15 hover:text-on-navy"
+      : "bg-surface text-accent shadow-sm hover:bg-surface hover:text-accent";
   const idleStyle =
     variant === "dark"
-      ? "text-slate-400 hover:text-slate-200"
-      : "text-muted hover:text-foreground";
+      ? "text-on-navy/80 hover:bg-transparent hover:text-on-navy"
+      : "text-muted hover:bg-transparent hover:text-foreground";
 
   return (
     <div
@@ -49,18 +55,17 @@ export default function LanguageSwitcher({ variant = "light" }: { variant?: "lig
       aria-label={t("base.field.language")}
     >
       {offered.map((option) => (
-        <button
+        <Button
           key={option.code}
-          type="button"
+          variant="ghost"
+          size="sm"
           onClick={() => setLocale(option.code)}
           aria-pressed={locale === option.code}
-          className={`flex items-center rounded px-2 py-1 text-xs font-semibold transition ${
-            locale === option.code ? activeStyle : idleStyle
-          }`}
+          className={`h-7 rounded px-2 text-xs font-semibold ${locale === option.code ? activeStyle : idleStyle}`}
         >
           <span className="uppercase">{option.code}</span>
           <span className="sr-only"> {option.label}</span>
-        </button>
+        </Button>
       ))}
     </div>
   );

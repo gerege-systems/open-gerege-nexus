@@ -31,6 +31,7 @@ vi.mock("@/lib/api", async (importOriginal) => ({
   api,
 }));
 
+import { TooltipProvider } from "@gerege-systems/ui";
 import { ThemeProvider } from "@/lib/theme";
 import Layout from "@/components/Layout";
 
@@ -38,11 +39,15 @@ function shellAt(pathname: string) {
   route.pathname = pathname;
   api.getMe.mockClear();
   route.push.mockClear();
+  // The same providers app/providers.tsx puts around the shell: the rail's
+  // tooltips need one, and refuse to render without it.
   return render(
     <ThemeProvider>
-      <Layout>
-        <p>дэлгэцийн агуулга</p>
-      </Layout>
+      <TooltipProvider>
+        <Layout>
+          <p>дэлгэцийн агуулга</p>
+        </Layout>
+      </TooltipProvider>
     </ThemeProvider>,
   );
 }

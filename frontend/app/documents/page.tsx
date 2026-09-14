@@ -5,8 +5,47 @@ import { api } from "@/lib/api";
 import { useLoadOnMount } from "@/lib/useResource";
 import { useAccess } from "@/lib/access";
 import { useI18n } from "@/lib/i18n";
-import { Banner, LoadingBlock, Modal, TableCard, fieldClass, selectClass } from "@/components/ui";
-import { DocumentRecord, PENDING, RowActions, SignatureCell, SignatureDialog, SignatureHistoryButton, SignatureHistoryDialog, SignatureProgress, StatusBadge, useDocumentActions } from "@/components/documents/shared";
+import { PageHeader } from "@/components/ui";
+import {
+  DocumentRecord,
+  ListEmpty,
+  ListSkeleton,
+  LoadMoreFooter,
+  PENDING,
+  RowActions,
+  SELECT_NONE,
+  SignatureCell,
+  SignatureDialog,
+  SignatureHistoryButton,
+  SignatureHistoryDialog,
+  SignatureProgress,
+  StaleNotice,
+  StatusBadge,
+  pinnedDialogProps,
+  useDocumentActions,
+} from "@/components/documents/shared";
+import {
+  Alert,
+  Button,
+  Card,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  IconButton,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@gerege-systems/ui";
 import { FileText, Pencil, Plus } from "lucide-react";
 
 export default function DocumentsPage() {
@@ -194,55 +233,45 @@ export default function DocumentsPage() {
     }
   };
 
+  const filtered = Boolean(loadedFilter.current.q || loadedFilter.current.doc_type || loadedFilter.current.status);
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground flex items-center space-x-2">
-            <FileText className="w-7 h-7 text-indigo-600" />
-            <span>{t("documents.view.title")}</span>
-          </h1>
-          <p className="text-sm text-muted mt-1">{t("documents.view.subtitle")}</p>
-        </div>
-        {can("documents.manage") && (
-          <button
-            onClick={() => setShowModal(true)}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-lg flex items-center space-x-2 shadow-sm transition"
-          >
-            <Plus className="w-4 h-4" />
-            <span>{t("documents.action.create")}</span>
-          </button>
-        )}
-      </div>
+      <PageHeader
+        icon={<FileText className="w-7 h-7 text-accent" />}
+        title={t("documents.view.title")}
+        subtitle={t("documents.view.subtitle")}
+        actions={
+          can("documents.manage") ? (
+            <Button onClick={() => setShowModal(true)} leadingIcon={<Plus />}>
+              {t("documents.action.create")}
+            </Button>
+          ) : undefined
+        }
+      />
 
-      {message && <Banner tone={message.type} message={message.text} onDismiss={() => setMessage(null)} />}
+      {message && (
+        <Alert variant={message.type === "error" ? "danger" : message.type} live dismissible onDismiss={() => setMessage(null)}>
+          {message.text}
+        </Alert>
+      )}
 
       {/* With no rows there is no table footer to carry this, and a refresh that failed
           after an action is exactly when there are none: the news that the list is stale
           — and the way to try again — must not live only inside the table. */}
-      {loadFailed && documents.length === 0 && (
-        <div className="flex items-center justify-between gap-3 px-4 py-3 border border-amber-200 rounded-xl bg-amber-50">
-          <p className="text-[11px] text-amber-800">{t("documents.message.stale_rows")}</p>
-          <button
-            type="button"
-            disabled={loading}
-            onClick={() => loadData()}
-            className="text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-surface border border-amber-300 text-amber-800 hover:bg-amber-100 disabled:opacity-50"
-          >
-            {t("documents.action.retry")}
-          </button>
-        </div>
-      )}
+      {loadFailed && documents.length === 0 && <StaleNotice busy={loading} onRetry={() => loadData()} />}
 
       {/* Paging reads the list; this is how a particular document is found. Each change
           starts again from the first page, because the rows below have to be the answer
           to what is in these controls and nothing else. */}
       <section className="flex flex-wrap items-center gap-2">
-        <input
+        <Input
           type="text"
           value={search}
           placeholder={t("documents.field.search_placeholder")}
+          aria-label={t("documents.field.search_placeholder")}
           maxLength={255}
+          className="flex-1 min-w-48"
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") loadSpan(PAGE, filterRef.current);
@@ -254,236 +283,216 @@ export default function DocumentsPage() {
             // was swallowed with it and the action never happened.
             if (search.trim() !== loadedFilter.current.q) loadSpan(PAGE, filterRef.current);
           }}
-          className="flex-1 min-w-[12rem] px-3 py-2 text-sm border border-input rounded-lg focus:ring-2 focus:ring-indigo-500"
         />
-        <select
-          value={docType}
-          onChange={(e) => {
-            setDocType(e.target.value);
-            filterRef.current = { ...filterRef.current, doc_type: e.target.value };
+        <Select
+          value={docType || SELECT_NONE}
+          onValueChange={(value) => {
+            const next = value === SELECT_NONE ? "" : value;
+            setDocType(next);
+            filterRef.current = { ...filterRef.current, doc_type: next };
             loadSpan(PAGE, filterRef.current);
           }}
-          className={selectClass}
         >
-          <option value="">{t("documents.field.any_type")}</option>
-          <option value="CONTRACT">{t("documents.category.legal_contract")}</option>
-          <option value="REQUEST">{t("documents.category.official_request")}</option>
-          <option value="APPROVAL">{t("documents.category.internal_approval")}</option>
-        </select>
-        <select
-          value={status}
-          onChange={(e) => {
-            setStatus(e.target.value);
-            filterRef.current = { ...filterRef.current, status: e.target.value };
+          <SelectTrigger className="w-auto min-w-44" aria-label={t("base.field.type")} />
+          <SelectContent>
+            <SelectItem value={SELECT_NONE}>{t("documents.field.any_type")}</SelectItem>
+            <SelectItem value="CONTRACT">{t("documents.category.legal_contract")}</SelectItem>
+            <SelectItem value="REQUEST">{t("documents.category.official_request")}</SelectItem>
+            <SelectItem value="APPROVAL">{t("documents.category.internal_approval")}</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select
+          value={status || SELECT_NONE}
+          onValueChange={(value) => {
+            const next = value === SELECT_NONE ? "" : value;
+            setStatus(next);
+            filterRef.current = { ...filterRef.current, status: next };
             loadSpan(PAGE, filterRef.current);
           }}
-          className={selectClass}
         >
-          <option value="">{t("documents.field.any_status")}</option>
-          <option value="DRAFT">{t("documents.state.draft")}</option>
-          <option value="PENDING_APPROVAL">{t("documents.state.pending")}</option>
-          <option value="APPROVED">{t("documents.state.approved")}</option>
-          <option value="REJECTED">{t("documents.state.rejected")}</option>
-        </select>
+          <SelectTrigger className="w-auto min-w-44" aria-label={t("base.field.status")} />
+          <SelectContent>
+            <SelectItem value={SELECT_NONE}>{t("documents.field.any_status")}</SelectItem>
+            <SelectItem value="DRAFT">{t("documents.state.draft")}</SelectItem>
+            <SelectItem value="PENDING_APPROVAL">{t("documents.state.pending")}</SelectItem>
+            <SelectItem value="APPROVED">{t("documents.state.approved")}</SelectItem>
+            <SelectItem value="REJECTED">{t("documents.state.rejected")}</SelectItem>
+          </SelectContent>
+        </Select>
       </section>
 
       {loading && documents.length === 0 ? (
-        <LoadingBlock label={t("documents.message.loading")} />
+        <ListSkeleton label={t("documents.message.loading")} />
       ) : documents.length === 0 ? (
         // Only a load that succeeded may claim the tenant has no documents; a
         // failed one says so in the banner and shows whatever it already had.
         loadFailed ? null : (
-          <div className="bg-surface border border-line rounded-xl p-8 text-center text-muted text-sm">
-            {/* With a filter on, an empty answer says nothing about the tenant — and the
-                filter that matters is the one these rows were fetched under. Reading the
-                live boxes instead let clearing the search box turn "nothing matches"
-                into "no documents yet", about a tenant holding hundreds. */}
-            {loadedFilter.current.q || loadedFilter.current.doc_type || loadedFilter.current.status
-              ? t("documents.message.no_matches")
-              : t("documents.message.empty")}
-          </div>
+          // With a filter on, an empty answer says nothing about the tenant — and the
+          // filter that matters is the one these rows were fetched under. Reading the
+          // live boxes instead let clearing the search box turn "nothing matches"
+          // into "no documents yet", about a tenant holding hundreds.
+          <ListEmpty
+            icon={<FileText />}
+            title={filtered ? t("documents.message.no_matches") : t("documents.message.empty")}
+          />
         )
       ) : (
-        <TableCard
-          head={
-            <tr>
-              <th className="px-4 py-3">{t("documents.field.title")}</th>
-              <th className="px-4 py-3">{t("base.field.type")}</th>
-              <th className="px-4 py-3">{t("base.field.status")}</th>
-              <th className="px-4 py-3">{t("documents.field.signature")}</th>
-              <th className="px-4 py-3">{t("documents.field.created")}</th>
-              <th className="px-4 py-3 text-right">{t("base.field.actions")}</th>
-            </tr>
-          }
-          footer={
-            <>
-            {/* A stale list says so for as long as it is stale — the banner can be
-                dismissed, and a refresh that failed after an action must not be the only
-                thing that says the rows are old. */}
-            {loadFailed && (
-              <div className="flex items-center justify-between gap-3 px-4 py-3 border-t border-amber-200 bg-amber-50">
-                <p className="text-[11px] text-amber-800">{t("documents.message.stale_rows")}</p>
-                <button
-                  type="button"
-                  disabled={loading}
-                  onClick={() => loadData()}
-                  className="text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-surface border border-amber-300 text-amber-800 hover:bg-amber-100 disabled:opacity-50"
-                >
-                  {t("documents.action.retry")}
-                </button>
-              </div>
-            )}
+        <Card padding="none" className="overflow-hidden">
+          <Table containerClassName="rounded-none border-0" className="text-xs" scrollLabel={t("documents.view.title")}>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("documents.field.title")}</TableHead>
+                <TableHead>{t("base.field.type")}</TableHead>
+                <TableHead>{t("base.field.status")}</TableHead>
+                <TableHead>{t("documents.field.signature")}</TableHead>
+                <TableHead>{t("documents.field.created")}</TableHead>
+                <TableHead align="right">{t("base.field.actions")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {documents.map((doc) => (
+                <TableRow key={doc.id}>
+                  <TableCell className="font-semibold text-foreground">
+                    {renaming?.id === doc.id ? (
+                      <Input
+                        autoFocus
+                        size="sm"
+                        value={renaming.title}
+                        maxLength={255}
+                        aria-label={t("documents.action.rename")}
+                        onChange={(e) => setRenaming({ id: doc.id, title: e.target.value })}
+                        onBlur={commitRename}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") commitRename();
+                          if (e.key === "Escape") setRenaming(null);
+                        }}
+                      />
+                    ) : (
+                      <span className="flex items-center gap-1.5">
+                        <span>{doc.title}</span>
+                        {/* Offered only while it can actually be changed: nobody has signed,
+                            the document is still open, and this operator may author. */}
+                        {can("documents.manage") &&
+                          doc.signature_count === 0 &&
+                          (doc.status === PENDING || doc.status === "DRAFT") && (
+                            <IconButton
+                              size="sm"
+                              className="shrink-0 -my-2"
+                              title={t("documents.action.rename")}
+                              aria-label={t("documents.action.rename")}
+                              onClick={() => setRenaming({ id: doc.id, title: doc.title })}
+                              icon={<Pencil />}
+                            />
+                          )}
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell className="font-mono text-muted">{doc.doc_type}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <StatusBadge status={doc.status} />
+                      <SignatureProgress doc={doc} />
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-start gap-2">
+                      <SignatureCell doc={doc} />
+                      <SignatureHistoryButton doc={doc} onOpen={setHistoryTarget} />
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-muted">{new Date(doc.created_at).toLocaleDateString()}</TableCell>
+                  <TableCell align="right">
+                    <RowActions
+                      doc={doc}
+                      busy={isBusy(doc.id)}
+                      canSign={can("documents.sign")}
+                      canManage={can("documents.manage")}
+                      onSign={setSignTarget}
+                      onReject={reject}
+                      onRoute={route}
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
 
+          {/* A stale list says so for as long as it is stale — the banner can be
+              dismissed, and a refresh that failed after an action must not be the only
+              thing that says the rows are old. */}
+          {loadFailed && <StaleNotice inset busy={loading} onRetry={() => loadData()} />}
 
-            {/* A partial list says so. Silence here is what makes an operator search for
-                a contract that is simply on the next page. */}
-            {hasMore && (
-              <div className="flex items-center justify-between gap-3 px-4 py-3 border-t border-line bg-surface-2">
-                <p className="text-[11px] text-muted">
-                  {t("documents.message.showing_some", { shown: documents.length, total })}
-                </p>
-                <button
-                  type="button"
-                  disabled={loading}
-                  onClick={loadMore}
-                  className="text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-surface border border-input text-foreground hover:bg-surface-hover disabled:opacity-50"
-                >
-                  {t("documents.action.load_more")}
-                </button>
-              </div>
-            )}
-            </>
-          }
-        >
-          {documents.map((doc) => (
-            <tr key={doc.id} className="hover:bg-surface-hover">
-              <td className="px-4 py-3 font-semibold text-foreground">
-                {renaming?.id === doc.id ? (
-                  <input
-                    autoFocus
-                    value={renaming.title}
-                    maxLength={255}
-                    onChange={(e) => setRenaming({ id: doc.id, title: e.target.value })}
-                    onBlur={commitRename}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") commitRename();
-                      if (e.key === "Escape") setRenaming(null);
-                    }}
-                    className="w-full px-2 py-1 text-xs font-semibold border border-indigo-300 rounded focus:ring-2 focus:ring-indigo-500"
-                  />
-                ) : (
-                  <span className="flex items-center gap-1.5">
-                    <span>{doc.title}</span>
-                    {/* Offered only while it can actually be changed: nobody has signed,
-                        the document is still open, and this operator may author. */}
-                    {can("documents.manage") &&
-                      doc.signature_count === 0 &&
-                      (doc.status === PENDING || doc.status === "DRAFT") && (
-                        <button
-                          type="button"
-                          title={t("documents.action.rename")}
-                          aria-label={t("documents.action.rename")}
-                          onClick={() => setRenaming({ id: doc.id, title: doc.title })}
-                          className="shrink-0 text-subtle hover:text-indigo-600"
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                  </span>
-                )}
-              </td>
-              <td className="px-4 py-3 font-mono text-muted">{doc.doc_type}</td>
-              <td className="px-4 py-3">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <StatusBadge status={doc.status} />
-                  <SignatureProgress doc={doc} />
-                </div>
-              </td>
-              <td className="px-4 py-3">
-                <div className="flex items-start gap-2">
-                  <SignatureCell doc={doc} />
-                  <SignatureHistoryButton doc={doc} onOpen={setHistoryTarget} />
-                </div>
-              </td>
-              <td className="px-4 py-3 text-muted">{new Date(doc.created_at).toLocaleDateString()}</td>
-              <td className="px-4 py-3 text-right">
-                <RowActions
-                  doc={doc}
-                  busy={isBusy(doc.id)}
-                  canSign={can("documents.sign")}
-                  canManage={can("documents.manage")}
-                  onSign={setSignTarget}
-                  onReject={reject}
-                  onRoute={route}
-                />
-              </td>
-            </tr>
-          ))}
-        </TableCard>
+          {/* A partial list says so. Silence here is what makes an operator search for
+              a contract that is simply on the next page. */}
+          {hasMore && (
+            <LoadMoreFooter
+              text={t("documents.message.showing_some", { shown: documents.length, total })}
+              busy={loading}
+              onMore={loadMore}
+            />
+          )}
+        </Card>
       )}
 
-      {/* Modal */}
       {showModal && (
-        <Modal label={t("documents.view.create_title")}>
-          <h2 className="text-xl font-semibold text-foreground mb-4">{t("documents.view.create_title")}</h2>
+        <Dialog open>
+          <DialogContent {...pinnedDialogProps} aria-describedby={undefined}>
+            <DialogHeader>
+              <DialogTitle>{t("documents.view.create_title")}</DialogTitle>
+            </DialogHeader>
 
-          {createFailure && (
-            <p className="mb-4 text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg p-3">
-              {createFailure}
-            </p>
-          )}
+            {createFailure && (
+              <div className="mb-4">
+                <Alert variant="danger" live>{createFailure}</Alert>
+              </div>
+            )}
 
-          <form onSubmit={handleCreate} className="space-y-4">
-            {/* maxLength is what document_records.title holds, in the characters
-                Postgres counts. The server refuses more, so there is no reason to
-                let it be typed and then refused. */}
-            <div>
-              <label className="block text-xs font-semibold text-foreground mb-1">
-                {t("documents.field.title")} *
-              </label>
-              <input
+            <form onSubmit={handleCreate} className="space-y-4">
+              {/* maxLength is what document_records.title holds, in the characters
+                  Postgres counts. The server refuses more, so there is no reason to
+                  let it be typed and then refused. */}
+              <Input
                 type="text"
+                label={`${t("documents.field.title")} *`}
                 placeholder={t("documents.field.title_placeholder")}
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
-                className={fieldClass}
                 maxLength={255}
                 required
               />
-            </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-foreground mb-1">{t("documents.field.category")}</label>
-              <select
-                value={form.doc_type}
-                onChange={(e) => setForm({ ...form, doc_type: e.target.value })}
-                className={selectClass}
-              >
-                <option value="CONTRACT">{t("documents.category.legal_contract")}</option>
-                <option value="REQUEST">{t("documents.category.official_request")}</option>
-                <option value="APPROVAL">{t("documents.category.internal_approval")}</option>
-              </select>
-            </div>
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="create-doc-type" className="text-sm font-medium text-foreground">
+                  {t("documents.field.category")}
+                </label>
+                <Select value={form.doc_type} onValueChange={(value) => setForm({ ...form, doc_type: value })}>
+                  <SelectTrigger id="create-doc-type" />
+                  <SelectContent>
+                    <SelectItem value="CONTRACT">{t("documents.category.legal_contract")}</SelectItem>
+                    <SelectItem value="REQUEST">{t("documents.category.official_request")}</SelectItem>
+                    <SelectItem value="APPROVAL">{t("documents.category.internal_approval")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="flex items-center space-x-2 pt-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowModal(false);
-                  setCreateFailure(null);
-                }}
-                className="w-1/2 bg-surface-2 hover:bg-slate-200 text-foreground font-medium py-2 rounded-lg text-xs"
-              >
-                {t("base.action.cancel")}
-              </button>
-              <button
-                type="submit"
-                disabled={creating || !form.title.trim()}
-                className="w-1/2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-lg text-xs disabled:opacity-50"
-              >{t("documents.action.create")}</button>
-            </div>
-          </form>
-        </Modal>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setShowModal(false);
+                    setCreateFailure(null);
+                  }}
+                >
+                  {t("base.action.cancel")}
+                </Button>
+                <Button type="submit" loading={creating} disabled={!form.title.trim()}>
+                  {t("documents.action.create")}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       )}
 
       {signTarget && (

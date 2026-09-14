@@ -17,10 +17,22 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { BarChart3, RefreshCw } from "lucide-react";
 import Link from "next/link";
 
-import { Badge, Card, formatMoment, Table } from "@/components/cp/ui";
 import { cp, type PlatformUsage } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
-import { formatNumber } from "@/lib/datetime";
+import {
+  Badge,
+  Button,
+  Card,
+  CardHeader,
+  Skeleton,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@gerege-systems/ui";
+import { formatNumber, formatMoment } from "@/lib/datetime";
 
 export default function Usage() {
   const { t } = useI18n();
@@ -53,6 +65,8 @@ export default function Usage() {
     return [...report.tenants].sort((one, two) => weight(two.metrics) - weight(one.metrics));
   }, [report]);
 
+  const metrics = report?.metrics ?? [];
+
   return (
     <div className="space-y-6">
       <div className="flex items-start gap-3">
@@ -65,24 +79,18 @@ export default function Usage() {
             {t("cp.hint.usage")} {report?.month && <span className="font-mono">{report.month}</span>}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => void load()}
-          disabled={busy}
-          className="inline-flex items-center gap-2 rounded-lg border border-input px-3 py-2 text-sm text-foreground hover:bg-surface-hover disabled:opacity-50"
-        >
-          <RefreshCw className={`w-4 h-4 ${busy ? "animate-spin" : ""}`} />
+        <Button variant="outline" onClick={() => void load()} loading={busy} leadingIcon={<RefreshCw />}>
           {t("cp.action.refresh")}
-        </button>
+        </Button>
       </div>
 
       {failure && (
-        <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+        <p role="alert" className="text-sm rounded-lg bg-danger-soft text-danger border border-danger-border px-3 py-2">{failure}</p>
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {(report?.metrics ?? []).map((metric) => (
-          <div key={metric} className="rounded-xl border border-line bg-surface p-4">
+        {metrics.map((metric) => (
+          <div key={metric} className="rounded-lg border border-line bg-surface p-4">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted">
               {t(`cp.metric.${metric}` as "cp.metric.storage_mb")}
             </p>
@@ -93,32 +101,65 @@ export default function Usage() {
         ))}
       </div>
 
-      <Card title={t("cp.section.by_organisation")}>
-        <Table
-          head={[
-            t("cp.field.organisation"),
-            ...(report?.metrics ?? []).map((metric) => t(`cp.metric.${metric}` as "cp.metric.storage_mb")),
-            t("cp.field.collected"),
-          ]}
-          rows={lines.map((line) => [
-            <span key="n" className="min-w-0">
-              <Link href={`/cp/tenants/${line.tenant_id}`} className="font-medium text-accent hover:underline">
-                {line.tenant_name}
-              </Link>
-              <span className="block text-xs text-muted font-mono">{line.slug}</span>
-              {line.suspended && <Badge tone="red">{t("cp.state.suspended")}</Badge>}
-            </span>,
-            ...(report?.metrics ?? []).map((metric) => (
-              <span key={metric} className="tabular-nums">
-                {formatNumber(line.metrics[metric] ?? 0)}
-              </span>
-            )),
-            line.collected ? formatMoment(line.collected) : (
-              <span key="c" className="text-xs text-muted">{t("cp.state.never_counted")}</span>
-            ),
-          ])}
-          empty={t("cp.message.no_usage")}
-        />
+      <Card padding="none" className="overflow-hidden">
+        <CardHeader className="flex-row items-center gap-3 border-b border-line px-4 py-3">
+          <h2 className="flex-1 text-base leading-tight font-semibold text-foreground">{t("cp.section.by_organisation")}</h2>
+        </CardHeader>
+        <Table containerClassName="rounded-none border-0">
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("cp.field.organisation")}</TableHead>
+              {metrics.map((metric) => (
+                <TableHead key={metric}>{t(`cp.metric.${metric}` as "cp.metric.storage_mb")}</TableHead>
+              ))}
+              <TableHead>{t("cp.field.collected")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {lines.map((line) => (
+              <TableRow key={line.tenant_id}>
+                <TableCell>
+                  <span className="min-w-0">
+                    <Link href={`/cp/tenants/${line.tenant_id}`} className="font-medium text-accent hover:underline">
+                      {line.tenant_name}
+                    </Link>
+                    <span className="block text-xs text-muted font-mono">{line.slug}</span>
+                    {line.suspended && <Badge tone="danger">{t("cp.state.suspended")}</Badge>}
+                  </span>
+                </TableCell>
+                {metrics.map((metric) => (
+                  <TableCell key={metric} className="tabular-nums">
+                    {formatNumber(line.metrics[metric] ?? 0)}
+                  </TableCell>
+                ))}
+                <TableCell>
+                  {line.collected ? formatMoment(line.collected) : (
+                    <span className="text-xs text-muted">{t("cp.state.never_counted")}</span>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+            {!report && !failure && (
+              <TableRow>
+                <TableCell colSpan={metrics.length + 2}>
+                  <div role="status" aria-busy="true" className="space-y-3 py-2">
+                    <span className="sr-only">{t("base.message.loading")}</span>
+                    <Skeleton className="h-4" />
+                    <Skeleton className="h-4" />
+                    <Skeleton className="h-4" />
+                  </div>
+                </TableCell>
+              </TableRow>
+            )}
+            {report && lines.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={metrics.length + 2} className="py-8 text-center text-muted">
+                  {t("cp.message.no_usage")}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </Card>
     </div>
   );

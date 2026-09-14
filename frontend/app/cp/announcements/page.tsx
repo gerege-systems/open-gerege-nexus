@@ -12,12 +12,34 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { Megaphone } from "lucide-react";
+import {
+  Badge,
+  Button,
+  Card,
+  CardHeader,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  Spinner,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  Textarea,
+} from "@gerege-systems/ui";
 
 import { useAction } from "@/components/cp/Action";
-import { Badge, Card, formatMoment, Table } from "@/components/cp/ui";
 import { cp, type Announcement } from "@/lib/cp";
+import { formatMoment } from "@/lib/datetime";
 import { useI18n } from "@/lib/i18n";
-import { Modal } from "@/components/ui";
 
 export default function Announcements() {
   const { t } = useI18n();
@@ -25,6 +47,7 @@ export default function Announcements() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [writing, setWriting] = useState(false);
   const [failure, setFailure] = useState("");
+  const [loaded, setLoaded] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -32,6 +55,8 @@ export default function Announcements() {
       setFailure("");
     } catch (error) {
       setFailure(error instanceof Error ? error.message : String(error));
+    } finally {
+      setLoaded(true);
     }
   }, []);
 
@@ -45,51 +70,77 @@ export default function Announcements() {
         <div className="flex-1">
           <h1 className="text-2xl font-semibold text-foreground">{t("cp.section.announcements")}</h1>
         </div>
-        <button
-          type="button"
-          onClick={() => setWriting(true)}
-          className="inline-flex items-center gap-2 rounded-lg bg-accent px-3 py-2 text-sm font-medium text-on-accent hover:brightness-105"
-        >
-          <Megaphone className="w-4 h-4" />
+        <Button onClick={() => setWriting(true)} leadingIcon={<Megaphone />}>
           {t("cp.action.announce")}
-        </button>
+        </Button>
       </div>
 
       {failure && (
-        <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+        <p role="alert" className="text-sm rounded-lg bg-danger-soft text-danger border border-danger-border px-3 py-2">{failure}</p>
       )}
 
-      <Card title={t("cp.section.announcements")}>
-        <Table
-          head={[t("cp.field.title"), t("cp.field.kind"), t("cp.field.organisation"), t("cp.field.until"), ""]}
-          rows={announcements.map((announcement) => [
-            <span key="t">
-              <strong className="text-foreground">{announcement.title}</strong>
-              {announcement.body && <span className="block text-xs text-muted">{announcement.body}</span>}
-            </span>,
-            <Badge key="k" tone={announcement.kind === "maintenance" ? "red" : announcement.kind === "warning" ? "amber" : "slate"}>
-              {t(`cp.kind.${announcement.kind}`)}
-            </Badge>,
-            announcement.tenant_id ?? t("cp.state.everyone"),
-            formatMoment(announcement.ends_at) || "—",
-            <button
-              key="w"
-              type="button"
-              onClick={() =>
-                action.run({
-                  title: t("cp.action.withdraw"),
-                  detail: announcement.title,
-                  perform: (reason) => cp.withdraw(announcement.id, reason),
-                  onDone: load,
-                })
-              }
-              className="text-xs rounded-lg border border-input px-2 py-1 hover:bg-surface-hover"
-            >
-              {t("cp.action.withdraw")}
-            </button>,
-          ])}
-          empty={t("cp.message.no_announcements")}
-        />
+      <Card padding="none" className="overflow-hidden">
+        <CardHeader className="flex-row items-center gap-3 border-b border-line px-4 py-3">
+          <h2 className="flex-1 text-base leading-tight font-semibold text-foreground">{t("cp.section.announcements")}</h2>
+        </CardHeader>
+        <Table containerClassName="rounded-none border-0">
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("cp.field.title")}</TableHead>
+              <TableHead>{t("cp.field.kind")}</TableHead>
+              <TableHead>{t("cp.field.organisation")}</TableHead>
+              <TableHead>{t("cp.field.until")}</TableHead>
+              <TableHead />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {announcements.map((announcement) => (
+              <TableRow key={announcement.id}>
+                <TableCell>
+                  <strong className="text-foreground">{announcement.title}</strong>
+                  {announcement.body && <span className="block text-xs text-muted">{announcement.body}</span>}
+                </TableCell>
+                <TableCell>
+                  <Badge tone={announcement.kind === "maintenance" ? "danger" : announcement.kind === "warning" ? "warning" : "neutral"}>
+                    {t(`cp.kind.${announcement.kind}`)}
+                  </Badge>
+                </TableCell>
+                <TableCell>{announcement.tenant_id ?? t("cp.state.everyone")}</TableCell>
+                <TableCell>{formatMoment(announcement.ends_at) || "—"}</TableCell>
+                <TableCell>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      action.run({
+                        title: t("cp.action.withdraw"),
+                        detail: announcement.title,
+                        perform: (reason) => cp.withdraw(announcement.id, reason),
+                        onDone: load,
+                      })
+                    }
+                  >
+                    {t("cp.action.withdraw")}
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+            {announcements.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5} className="py-8 text-center text-muted">
+                  {!loaded ? (
+                    <span role="status" className="inline-flex items-center gap-2">
+                      <Spinner size="sm" decorative />
+                      {t("base.message.loading")}
+                    </span>
+                  ) : (
+                    t("cp.message.no_announcements")
+                  )}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </Card>
 
       {writing && (
@@ -142,90 +193,61 @@ function WriteDialog({ onClose, onPublished }: { onClose: () => void; onPublishe
   }
 
   return (
-    <Modal onClose={onClose} label={t("cp.action.announce")}>
-      <form onSubmit={submit} className="p-5 space-y-3">
-        <h2 className="text-lg font-semibold text-foreground">{t("cp.action.announce")}</h2>
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent aria-describedby={undefined} className="max-h-[90dvh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{t("cp.action.announce")}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={submit} className="space-y-3">
+          {failure && (
+            <p role="alert" className="text-sm rounded-lg bg-danger-soft text-danger border border-danger-border px-3 py-2">{failure}</p>
+          )}
 
-        {failure && (
-          <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
-        )}
+          <Input label={t("cp.field.title")} required value={title} onChange={(event) => setTitle(event.target.value)} />
 
-        <label className="block text-sm">
-          <span className="text-muted">{t("cp.field.title")}</span>
-          <input
-            required
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            className="mt-1 w-full rounded-lg border border-input px-3 py-2"
-          />
-        </label>
+          <Textarea label={t("cp.field.body")} rows={3} value={body} onChange={(event) => setBody(event.target.value)} />
 
-        <label className="block text-sm">
-          <span className="text-muted">{t("cp.field.body")}</span>
-          <textarea
-            rows={3}
-            value={body}
-            onChange={(event) => setBody(event.target.value)}
-            className="mt-1 w-full rounded-lg border border-input px-3 py-2"
-          />
-        </label>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="announcement-kind" className="text-sm font-medium text-foreground">
+              {t("cp.field.kind")}
+            </label>
+            <Select value={kind} onValueChange={(value) => setKind(value as typeof kind)}>
+              <SelectTrigger id="announcement-kind" />
+              <SelectContent>
+                <SelectItem value="info">{t("cp.kind.info")}</SelectItem>
+                <SelectItem value="warning">{t("cp.kind.warning")}</SelectItem>
+                <SelectItem value="maintenance">{t("cp.kind.maintenance")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-        <label className="block text-sm">
-          <span className="text-muted">{t("cp.field.kind")}</span>
-          <select
-            value={kind}
-            onChange={(event) => setKind(event.target.value as typeof kind)}
-            className="mt-1 w-full rounded-lg border border-input px-3 py-2"
-          >
-            <option value="info">{t("cp.kind.info")}</option>
-            <option value="warning">{t("cp.kind.warning")}</option>
-            <option value="maintenance">{t("cp.kind.maintenance")}</option>
-          </select>
-        </label>
-
-        <label className="block text-sm">
-          <span className="text-muted">{t("cp.field.organisation")}</span>
-          <input
+          <Input
+            label={t("cp.field.organisation")}
             value={tenantID}
             onChange={(event) => setTenantID(event.target.value)}
             placeholder={t("cp.state.everyone")}
-            className="mt-1 w-full rounded-lg border border-input px-3 py-2 font-mono text-xs"
+            className="[&_input]:font-mono [&_input]:text-xs"
           />
-        </label>
 
-        <label className="block text-sm">
-          <span className="text-muted">{t("cp.field.until")}</span>
-          <input
+          <Input
             type="datetime-local"
+            label={t("cp.field.until")}
             value={endsAt}
             onChange={(event) => setEndsAt(event.target.value)}
-            className="mt-1 w-full rounded-lg border border-input px-3 py-2"
           />
-        </label>
 
-        <label className="block text-sm">
-          <span className="text-muted">{t("cp.field.reason")}</span>
-          <input
-            required
-            value={reason}
-            onChange={(event) => setReason(event.target.value)}
-            className="mt-1 w-full rounded-lg border border-input px-3 py-2"
-          />
-        </label>
+          <Input label={t("cp.field.reason")} required value={reason} onChange={(event) => setReason(event.target.value)} />
 
-        <div className="flex justify-end gap-2 pt-1">
-          <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-muted hover:bg-surface-hover">
-            {t("cp.action.cancel")}
-          </button>
-          <button
-            type="submit"
-            disabled={busy}
-            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:brightness-105 disabled:opacity-60"
-          >
-            {t("cp.action.announce")}
-          </button>
-        </div>
-      </form>
-    </Modal>
+          <div className="flex justify-end gap-2 pt-1">
+            <Button type="button" variant="ghost" onClick={onClose}>
+              {t("cp.action.cancel")}
+            </Button>
+            <Button type="submit" loading={busy}>
+              {t("cp.action.announce")}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

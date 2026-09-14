@@ -4,8 +4,28 @@ import React, { useCallback, useEffect, useState } from "react";
 import { ChevronLeft, FileText, Layers, Play, Plus, Smartphone, XCircle } from "lucide-react";
 import { esign, type Batch, type EsignDocument } from "@/lib/esign";
 import { useI18n } from "@/lib/i18n";
-import { Banner, EmptyState, Loading, Modal, PageHeader, cardClass, fieldClass, tableHeadClass } from "@/components/ui";
+import { PageHeader } from "@/components/ui";
+import { ListEmpty, ListSkeleton, pinnedDialogProps } from "@/components/documents/shared";
 import { BatchBadge, Card, ItemBadge, useErrorMessage } from "@/components/esign/shared";
+import {
+  Alert,
+  Button,
+  Card as UICard,
+  Checkbox,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  EmptyState,
+  Input,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@gerege-systems/ui";
 
 /**
  * Batch signing.
@@ -65,72 +85,58 @@ export default function EsignBatchPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        icon={<Layers className="w-7 h-7 text-indigo-600" />}
+        icon={<Layers className="w-7 h-7 text-accent" />}
         title={t("esign.view.batch_title")}
         subtitle={t("esign.view.batch_subtitle")}
         actions={
-          <button
-            onClick={() => setCreating(true)}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm"
-          >
-            <Plus className="w-4 h-4" />
+          <Button onClick={() => setCreating(true)} leadingIcon={<Plus />}>
             {t("esign.action.new_batch")}
-          </button>
+          </Button>
         }
       />
 
-      {error && <Banner tone="error" message={error} onDismiss={() => setError(null)} />}
+      {error && <Alert variant="danger" live dismissible onDismiss={() => setError(null)}>{error}</Alert>}
 
-      <div className={`${cardClass} overflow-x-auto`}>
-        {loading ? (
-          <div className="p-6">
-            <Loading />
-          </div>
-        ) : (
-          <table className="w-full text-left text-xs text-muted">
-            <thead className={tableHeadClass}>
-              <tr>
-                <th className="px-4 py-3">{t("esign.field.batch_name")}</th>
-                <th className="px-4 py-3">{t("base.field.status")}</th>
-                <th className="px-4 py-3">{t("esign.field.progress")}</th>
-                <th className="px-4 py-3">{t("esign.field.provider")}</th>
-                <th className="px-4 py-3">{t("base.field.date")}</th>
-                <th className="px-4 py-3 text-right">{t("base.field.actions")}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line">
-              {batches.length === 0 && (
-                <tr>
-                  <td colSpan={6}>
-                    <EmptyState message={t("esign.message.batch_empty")} />
-                  </td>
-                </tr>
-              )}
+      {loading ? (
+        <ListSkeleton />
+      ) : batches.length === 0 ? (
+        <ListEmpty icon={<Layers />} title={t("esign.message.batch_empty")} />
+      ) : (
+        <UICard padding="none" className="overflow-hidden">
+          <Table containerClassName="rounded-none border-0" className="text-xs" scrollLabel={t("esign.view.batch_title")}>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("esign.field.batch_name")}</TableHead>
+                <TableHead>{t("base.field.status")}</TableHead>
+                <TableHead>{t("esign.field.progress")}</TableHead>
+                <TableHead>{t("esign.field.provider")}</TableHead>
+                <TableHead>{t("base.field.date")}</TableHead>
+                <TableHead align="right">{t("base.field.actions")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {batches.map((batch) => (
-                <tr key={batch.id} className="hover:bg-surface-hover">
-                  <td className="px-4 py-3 font-semibold text-foreground">{batch.name}</td>
-                  <td className="px-4 py-3">
+                <TableRow key={batch.id}>
+                  <TableCell className="font-semibold text-foreground">{batch.name}</TableCell>
+                  <TableCell>
                     <BatchBadge status={batch.status} />
-                  </td>
-                  <td className="px-4 py-3">
+                  </TableCell>
+                  <TableCell>
                     <Progress signed={batch.signed} failed={batch.failed} total={batch.total} />
-                  </td>
-                  <td className="px-4 py-3 font-mono text-[11px]">{batch.provider}</td>
-                  <td className="px-4 py-3 text-muted">{new Date(batch.created_at).toLocaleDateString()}</td>
-                  <td className="px-4 py-3 text-right">
-                    <button
-                      onClick={() => open(batch)}
-                      className="bg-surface-2 hover:bg-slate-200 text-foreground text-[11px] font-semibold px-3 py-1.5 rounded-lg"
-                    >
+                  </TableCell>
+                  <TableCell className="font-mono">{batch.provider}</TableCell>
+                  <TableCell className="text-muted">{new Date(batch.created_at).toLocaleDateString()}</TableCell>
+                  <TableCell align="right">
+                    <Button size="sm" variant="outline" onClick={() => open(batch)}>
                       {t("base.action.open")}
-                    </button>
-                  </td>
-                </tr>
+                    </Button>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+            </TableBody>
+          </Table>
+        </UICard>
+      )}
 
       {creating && (
         <CreateBatchModal
@@ -146,15 +152,26 @@ export default function EsignBatchPage() {
   );
 }
 
+/**
+ * Two colours in one bar — what signed and what failed — which the library's
+ * single-tone Progress cannot draw, so the track is drawn here from the same
+ * tokens.
+ */
 function Progress({ signed, failed, total }: { signed: number; failed: number; total: number }) {
   const done = total ? Math.round(((signed + failed) / total) * 100) : 0;
   return (
     <div className="min-w-[120px]">
-      <div className="h-1.5 bg-surface-2 rounded-full overflow-hidden flex">
-        <div className="bg-emerald-500 h-full" style={{ width: `${total ? (signed / total) * 100 : 0}%` }} />
-        <div className="bg-red-400 h-full" style={{ width: `${total ? (failed / total) * 100 : 0}%` }} />
+      <div
+        className="h-1.5 bg-surface-2 rounded-full overflow-hidden flex"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={done}
+      >
+        <div className="bg-success-solid h-full" style={{ width: `${total ? (signed / total) * 100 : 0}%` }} />
+        <div className="bg-danger-solid h-full" style={{ width: `${total ? (failed / total) * 100 : 0}%` }} />
       </div>
-      <div className="text-[10px] text-muted mt-1 font-mono">
+      <div className="text-xs text-muted mt-1 font-mono">
         {signed}/{total} · {done}%
       </div>
     </div>
@@ -241,13 +258,12 @@ function BatchDetail({
 
   return (
     <div className="space-y-6">
-      <button onClick={onBack} className="text-xs text-muted hover:text-foreground flex items-center gap-1">
-        <ChevronLeft className="w-4 h-4" />
+      <Button variant="ghost" size="sm" onClick={onBack} leadingIcon={<ChevronLeft />} className="-ms-2">
         {t("esign.action.back_to_batches")}
-      </button>
+      </Button>
 
       <PageHeader
-        icon={<Layers className="w-7 h-7 text-indigo-600" />}
+        icon={<Layers className="w-7 h-7 text-accent" />}
         title={batch.name}
         subtitle={t("esign.view.batch_detail_subtitle", {
           signed: batch.signed,
@@ -256,78 +272,68 @@ function BatchDetail({
         actions={
           <div className="flex gap-2">
             {pending && batch.status !== "CANCELLED" && (
-              <button
-                onClick={run}
-                disabled={running}
-                className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-semibold px-4 py-2 rounded-lg flex items-center gap-2"
-              >
-                <Play className="w-4 h-4" />
+              <Button onClick={run} loading={running} leadingIcon={<Play />}>
                 {running ? t("esign.message.batch_running") : t("esign.action.run_batch")}
-              </button>
+              </Button>
             )}
             {batch.status !== "CANCELLED" && batch.status !== "COMPLETED" && (
-              <button
-                onClick={cancelBatch}
-                className="bg-surface-2 hover:bg-slate-200 text-foreground text-xs font-semibold px-4 py-2 rounded-lg flex items-center gap-2"
-              >
-                <XCircle className="w-4 h-4" />
+              <Button variant="outline" onClick={cancelBatch} leadingIcon={<XCircle />}>
                 {t("base.action.cancel")}
-              </button>
+              </Button>
             )}
           </div>
         }
       />
 
-      {error && <Banner tone="error" message={error} onDismiss={() => setError(null)} />}
+      {error && <Alert variant="danger" live dismissible onDismiss={() => setError(null)}>{error}</Alert>}
 
       {code && (
-        <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-5 text-center">
-          <div className="inline-flex items-center gap-2 text-indigo-700 font-semibold text-sm">
-            <Smartphone className="w-4 h-4 animate-pulse" />
-            {t("esign.message.pin2_instruction")}
+        <Alert variant="info" icon={<Smartphone className="mt-0.5 size-4 shrink-0 animate-pulse" aria-hidden />} live>
+          <div className="text-center">
+            <p className="font-semibold text-sm">{t("esign.message.pin2_instruction")}</p>
+            <div className="flex justify-center gap-2 mt-3">
+              {code.split("").map((digit, index) => (
+                <span
+                  key={index}
+                  className="w-10 h-12 inline-flex items-center justify-center text-xl font-semibold font-mono text-accent bg-surface rounded-lg border border-accent-border"
+                >
+                  {digit}
+                </span>
+              ))}
+            </div>
           </div>
-          <div className="flex justify-center gap-2 mt-3">
-            {code.split("").map((digit, index) => (
-              <span
-                key={index}
-                className="w-10 h-12 inline-flex items-center justify-center text-xl font-semibold font-mono text-indigo-700 bg-surface rounded-lg border border-indigo-200"
-              >
-                {digit}
-              </span>
-            ))}
-          </div>
-        </div>
+        </Alert>
       )}
 
       <Card title={t("esign.view.batch_documents")}>
-        <table className="w-full text-left text-xs text-muted">
-          <thead className={tableHeadClass}>
-            <tr>
-              <th className="px-4 py-3 w-10">#</th>
-              <th className="px-4 py-3">{t("esign.field.document")}</th>
-              <th className="px-4 py-3">{t("base.field.status")}</th>
-              <th className="px-4 py-3">{t("esign.field.detail")}</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-line">
+        <Table containerClassName="rounded-none border-0" className="text-xs" scrollLabel={t("esign.view.batch_documents")}>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-10">#</TableHead>
+              <TableHead>{t("esign.field.document")}</TableHead>
+              <TableHead>{t("base.field.status")}</TableHead>
+              <TableHead>{t("esign.field.detail")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {(batch.items ?? []).map((item, index) => (
-              <tr key={item.id} className="hover:bg-surface-hover">
-                <td className="px-4 py-3 text-muted font-mono">{index + 1}</td>
-                <td className="px-4 py-3">
+              <TableRow key={item.id}>
+                <TableCell className="text-muted font-mono">{index + 1}</TableCell>
+                <TableCell>
                   <div className="font-semibold text-foreground flex items-center gap-1.5">
-                    <FileText className="w-3.5 h-3.5 text-muted" />
+                    <FileText className="w-3.5 h-3.5 text-muted" aria-hidden />
                     {item.document_title}
                   </div>
                   <div className="text-muted font-mono mt-0.5">{item.file_name}</div>
-                </td>
-                <td className="px-4 py-3">
+                </TableCell>
+                <TableCell>
                   <ItemBadge status={item.status} />
-                </td>
-                <td className="px-4 py-3 text-muted">{item.error || "—"}</td>
-              </tr>
+                </TableCell>
+                <TableCell className="text-muted">{item.error || "—"}</TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </Card>
     </div>
   );
@@ -384,73 +390,67 @@ function CreateBatchModal({
     }
   };
 
+  // Escape and the backdrop do not dismiss: the picked set and the name would
+  // go with it. Cancel is the way out, as before.
   return (
-    <Modal size="lg" className="max-h-[90vh] flex flex-col" label={t("esign.view.new_batch_title")}>
-      <h2 className="text-xl font-semibold text-foreground mb-4">{t("esign.view.new_batch_title")}</h2>
-      {error && <div className="mb-3"><Banner tone="error" message={error} onDismiss={() => setError(null)} /></div>}
+    <Dialog open>
+      <DialogContent
+        {...pinnedDialogProps}
+        size="lg"
+        aria-describedby={undefined}
+        className="max-h-[90dvh] flex flex-col"
+      >
+        <DialogHeader>
+          <DialogTitle>{t("esign.view.new_batch_title")}</DialogTitle>
+        </DialogHeader>
+        {error && <Alert variant="danger" live dismissible onDismiss={() => setError(null)}>{error}</Alert>}
 
-      <form onSubmit={submit} className="flex-1 flex flex-col min-h-0 space-y-4">
-        <div>
-          <label htmlFor="batch-name" className="block text-xs font-semibold text-foreground mb-1">
-            {t("esign.field.batch_name")} *
-          </label>
-          <input
+        <form onSubmit={submit} className="flex-1 flex flex-col min-h-0 space-y-4">
+          <Input
             id="batch-name"
+            label={`${t("esign.field.batch_name")} *`}
             value={name}
             onChange={(event) => setName(event.target.value)}
             placeholder={t("esign.field.batch_name_placeholder")}
-            className={fieldClass}
             required
           />
-        </div>
 
-        <div className="flex-1 min-h-0 flex flex-col">
-          <span className="block text-xs font-semibold text-foreground mb-1">
-            {t("esign.field.batch_documents", { count: picked.size })}
-          </span>
-          <div className="flex-1 overflow-y-auto border border-line rounded-lg divide-y divide-line">
-            {loading ? (
-              <div className="p-4">
-                <Loading />
-              </div>
-            ) : documents.length === 0 ? (
-              <EmptyState message={t("esign.message.no_pending_documents")} />
-            ) : (
-              documents.map((doc) => (
-                <label key={doc.id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-surface-hover cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={picked.has(doc.id)}
-                    onChange={() => toggle(doc.id)}
-                    className="rounded border-input text-indigo-600 focus:ring-indigo-500"
-                  />
-                  <span className="min-w-0">
-                    <span className="block text-sm font-medium text-foreground truncate">{doc.title}</span>
-                    <span className="block text-[11px] text-muted font-mono truncate">{doc.file_name}</span>
-                  </span>
-                </label>
-              ))
-            )}
+          <div className="flex-1 min-h-0 flex flex-col">
+            <span className="block text-sm font-medium text-foreground mb-1.5">
+              {t("esign.field.batch_documents", { count: picked.size })}
+            </span>
+            <div className="flex-1 overflow-y-auto border border-line rounded-lg divide-y divide-line">
+              {loading ? (
+                <div className="px-4">
+                  <ListSkeleton rows={3} />
+                </div>
+              ) : documents.length === 0 ? (
+                <EmptyState icon={<FileText />} title={t("esign.message.no_pending_documents")} className="border-0 rounded-none" />
+              ) : (
+                documents.map((doc) => (
+                  <div key={doc.id} className="px-3 py-2.5 hover:bg-surface-hover">
+                    <Checkbox
+                      checked={picked.has(doc.id)}
+                      onCheckedChange={() => toggle(doc.id)}
+                      label={<span className="block font-medium truncate">{doc.title}</span>}
+                      description={<span className="font-mono truncate">{doc.file_name}</span>}
+                    />
+                  </div>
+                ))
+              )}
+            </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-1/2 bg-surface-2 hover:bg-slate-200 text-foreground font-medium py-2 rounded-lg text-xs"
-          >
-            {t("base.action.cancel")}
-          </button>
-          <button
-            type="submit"
-            disabled={busy || picked.size === 0 || !name.trim()}
-            className="w-1/2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-medium py-2 rounded-lg text-xs"
-          >
-            {t("esign.action.create_batch")}
-          </button>
-        </div>
-      </form>
-    </Modal>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>
+              {t("base.action.cancel")}
+            </Button>
+            <Button type="submit" loading={busy} disabled={picked.size === 0 || !name.trim()}>
+              {t("esign.action.create_batch")}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -10,6 +10,7 @@
  */
 
 import React from "react";
+import { Badge as UIBadge, Table as UITable } from "@gerege-systems/ui";
 
 export function Card({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) {
   return (
@@ -25,8 +26,7 @@ export function Card({ title, action, children }: { title: string; action?: Reac
 
 export function Table({ head, rows, empty }: { head: string[]; rows: React.ReactNode[][]; empty: string }) {
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+    <UITable containerClassName="rounded-none border-0" className="text-sm">
         <thead className="bg-surface-2 text-muted">
           <tr>
             {head.map((cell, index) => (
@@ -54,22 +54,21 @@ export function Table({ head, rows, empty }: { head: string[]; rows: React.React
             </tr>
           )}
         </tbody>
-      </table>
-    </div>
+    </UITable>
   );
 }
 
 export type Tone = "red" | "amber" | "emerald" | "slate" | "green";
 
 export function Badge({ tone, children }: { tone: Tone; children: React.ReactNode }) {
-  const tones: Record<Tone, string> = {
-    red: "bg-red-100 text-red-800",
-    amber: "bg-amber-100 text-amber-900",
-    emerald: "bg-emerald-100 text-emerald-800",
-    green: "bg-emerald-100 text-emerald-800",
-    slate: "bg-surface-2 text-foreground",
+  const library: Record<Tone, "danger" | "warning" | "success" | "neutral"> = {
+    red: "danger",
+    amber: "warning",
+    emerald: "success",
+    green: "success",
+    slate: "neutral",
   };
-  return <span className={`text-xs font-medium rounded-full px-2 py-0.5 ${tones[tone]}`}>{children}</span>;
+  return <UIBadge variant="subtle" tone={library[tone]}>{children}</UIBadge>;
 }
 
 /**

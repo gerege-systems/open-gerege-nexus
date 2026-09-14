@@ -4,6 +4,21 @@ import React, { useEffect, useState } from "react";
 import { api, type StoreOverviewApp } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { Settings, Clock, ArrowUpCircle, ShieldAlert, Pin, GitCompareArrows } from "lucide-react";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  Spinner,
+  Switch,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@gerege-systems/ui";
 import { formatDay, formatMoment } from "@/lib/datetime";
 
 interface InstalledApp {
@@ -122,8 +137,8 @@ export default function InstalledAppsSettingsPage() {
   return (
     <div className="space-y-6">
       <div className="border-b border-line pb-4">
-        <h1 className="text-2xl font-semibold text-foreground flex items-center space-x-2">
-          <Settings className="w-6 h-6 text-muted" />
+        <h1 className="text-2xl font-semibold text-foreground flex items-center gap-2">
+          <Settings className="w-6 h-6 text-muted" aria-hidden="true" />
           <span>{t("app_store.view.installed_title")}</span>
         </h1>
         <p className="text-sm text-muted">
@@ -132,7 +147,7 @@ export default function InstalledAppsSettingsPage() {
       </div>
 
       {status && (
-        <div className="bg-surface border border-line rounded-xl px-4 py-3 text-sm flex flex-wrap items-center gap-x-4 gap-y-1">
+        <Card padding="none" className="px-4 py-3 text-sm flex flex-wrap items-center gap-x-4 gap-y-1">
           <span className="font-semibold text-foreground">
             {status.source === "registry"
               ? t("app_store.state.source_registry")
@@ -147,91 +162,93 @@ export default function InstalledAppsSettingsPage() {
           {/* A failing registry is the thing nobody notices: the store keeps
               serving the catalogue it already has, so nothing looks wrong. */}
           {status.last_sync_error && (
-            <span className="text-red-600">
+            <span className="text-danger">
               {t("app_store.message.sync_failed")}: {status.last_sync_error}
             </span>
           )}
-        </div>
+        </Card>
       )}
 
       {drifted.length > 0 && (
-        <div className="bg-rose-50 border border-rose-200 rounded-xl px-4 py-3 text-sm">
-          <p className="font-semibold text-rose-800 flex items-center gap-2">
-            <GitCompareArrows className="w-4 h-4" />
-            {t("app_store.overview.drifted")}
-          </p>
-          <p className="text-rose-700 mt-0.5">{t("app_store.overview.drift_note")}</p>
+        <Alert variant="danger" icon={<GitCompareArrows />} title={t("app_store.overview.drifted")}>
+          <p>{t("app_store.overview.drift_note")}</p>
           <ul className="mt-2 space-y-0.5">
             {drifted.map((row) => (
-              <li key={row.app_id} className="text-rose-800 font-mono text-xs">
+              <li key={row.app_id} className="font-mono text-xs">
                 {row.name}: {t("app_store.overview.binary")} v{row.binary_version} ≠{" "}
                 {t("app_store.overview.catalog")} v{row.catalog_version}
               </li>
             ))}
           </ul>
-        </div>
+        </Alert>
       )}
 
       {loading ? (
-        <div className="py-8 text-muted text-sm">{t("app_store.message.loading_installed")}</div>
-      ) : apps.length === 0 ? (
-        <div className="bg-surface border border-line rounded-xl p-8 text-center text-muted text-sm">
-          {t("app_store.message.none_installed")}{" "}
-          <a href="/apps" className="text-indigo-600 font-semibold underline">
-            {t("app_store.action.browse_store")}
-          </a>
+        <div className="py-8 flex items-center gap-2 text-muted text-sm" role="status">
+          <Spinner size="md" decorative /> {t("app_store.message.loading_installed")}
         </div>
+      ) : apps.length === 0 ? (
+        <Card padding="none">
+          <EmptyState
+            title={t("app_store.message.none_installed")}
+            action={
+              <Button asChild variant="outline">
+                <a href="/apps">{t("app_store.action.browse_store")}</a>
+              </Button>
+            }
+            className="py-10"
+          />
+        </Card>
       ) : (
-        <div className="bg-surface border border-line rounded-xl overflow-hidden">
-          <table className="w-full text-left border-collapse text-sm">
-            <thead>
-              <tr className="bg-surface-2 border-b border-line text-muted font-semibold text-xs uppercase tracking-wider">
-                <th className="py-3 px-4">{t("app_store.field.application_name")}</th>
-                <th className="py-3 px-4">{t("app_store.field.module_id")}</th>
-                <th className="py-3 px-4">{t("app_store.field.installed_version")}</th>
-                <th className="py-3 px-4">{t("app_store.field.updates")}</th>
-                <th className="py-3 px-4">{t("base.field.status")}</th>
-                <th className="py-3 px-4">{t("app_store.field.installed_date")}</th>
-                <th className="py-3 px-4 text-right">{t("base.field.actions")}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line">
+        <Card padding="none" className="overflow-hidden">
+          <Table containerClassName="rounded-none border-0">
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("app_store.field.application_name")}</TableHead>
+                <TableHead>{t("app_store.field.module_id")}</TableHead>
+                <TableHead>{t("app_store.field.installed_version")}</TableHead>
+                <TableHead>{t("app_store.field.updates")}</TableHead>
+                <TableHead>{t("base.field.status")}</TableHead>
+                <TableHead>{t("app_store.field.installed_date")}</TableHead>
+                <TableHead align="right">{t("base.field.actions")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {apps.map((app) => (
-                <tr key={app.id} className="hover:bg-surface-hover">
-                  <td className="py-3.5 px-4 font-semibold text-foreground">{app.name}</td>
-                  <td className="py-3.5 px-4 font-mono text-xs text-muted">{app.app_id}</td>
-                  <td className="py-3.5 px-4 font-semibold text-foreground">
+                <TableRow key={app.id}>
+                  <TableCell className="font-semibold text-foreground">{app.name}</TableCell>
+                  <TableCell className="font-mono text-xs text-muted">{app.app_id}</TableCell>
+                  <TableCell className="font-semibold text-foreground whitespace-nowrap">
                     v{app.installed_version}
                     {app.update_available && app.latest_version && (
-                      <span className="ml-1.5 text-xs font-normal text-indigo-600">→ v{app.latest_version}</span>
+                      <span className="ms-1.5 text-xs font-normal text-accent">→ v{app.latest_version}</span>
                     )}
-                  </td>
-                  <td className="py-3.5 px-4">
+                  </TableCell>
+                  <TableCell>
                     <div className="flex flex-col gap-1.5 items-start">
                       {/* The switch, said in words rather than as a bare toggle:
                           this decides whether somebody else's release reaches
                           this organisation without anybody looking at it. */}
-                      <button
-                        onClick={() => handleAutoUpdate(app)}
+                      <Switch
+                        size="sm"
+                        checked={app.auto_update}
                         disabled={actionLoading === app.slug}
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition ${
-                          app.auto_update
-                            ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                            : "border-line bg-surface-2 text-muted hover:bg-surface-hover"
-                        }`}
-                      >
-                        <span className={`w-1.5 h-1.5 rounded-full ${app.auto_update ? "bg-emerald-500" : "bg-slate-400"}`} />
-                        <span>{app.auto_update ? t("app_store.state.auto_update_on") : t("app_store.state.auto_update_off")}</span>
-                      </button>
+                        onCheckedChange={() => handleAutoUpdate(app)}
+                        label={
+                          <span className="text-xs font-semibold">
+                            {app.auto_update ? t("app_store.state.auto_update_on") : t("app_store.state.auto_update_off")}
+                          </span>
+                        }
+                      />
                       {app.pinned_version && (
-                        <span className="inline-flex items-center gap-1 text-xs text-amber-700">
-                          <Pin className="w-3 h-3" />
+                        <span className="inline-flex items-center gap-1 text-xs text-warning">
+                          <Pin className="w-3 h-3" aria-hidden="true" />
                           {t("app_store.state.pinned", { version: app.pinned_version })}
                         </span>
                       )}
                       {(app.held_reason || (app.held_for && app.held_for.length > 0)) && (
-                        <span className="inline-flex items-start gap-1 text-xs text-amber-700 max-w-56">
-                          <ShieldAlert className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                        <span className="inline-flex items-start gap-1 text-xs text-warning max-w-56">
+                          <ShieldAlert className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />
                           <span>
                             {app.held_for && app.held_for.length > 0 ? (
                               <>
@@ -249,60 +266,55 @@ export default function InstalledAppsSettingsPage() {
                         </span>
                       )}
                     </div>
-                  </td>
-                  <td className="py-3.5 px-4">
-                    <span
-                      className={`inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
-                        app.enabled
-                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                          : "bg-surface-2 text-muted border border-line"
-                      }`}
-                    >
-                      <span className={`w-1.5 h-1.5 rounded-full ${app.enabled ? "bg-emerald-500" : "bg-slate-400"}`}></span>
-                      <span>{app.enabled ? t("base.state.active") : t("app_store.state.disabled")}</span>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="subtle" tone={app.enabled ? "success" : "neutral"} dot>
+                      {app.enabled ? t("base.state.active") : t("app_store.state.disabled")}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-xs text-muted">
+                    <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                      <Clock className="w-3.5 h-3.5" aria-hidden="true" />
+                      <span>{formatDay(app.installed_at)}</span>
                     </span>
-                  </td>
-                  <td className="py-3.5 px-4 text-xs text-muted flex items-center space-x-1 pt-4">
-                    <Clock className="w-3.5 h-3.5" />
-                    <span>{formatDay(app.installed_at)}</span>
-                  </td>
-                  <td className="py-3.5 px-4 text-right">
-                    {app.update_available && (
-                      <button
-                        onClick={() => handleUpdate(app)}
+                  </TableCell>
+                  <TableCell align="right">
+                    <div className="inline-flex items-center justify-end gap-2">
+                      {app.update_available && (
+                        <Button
+                          size="sm"
+                          disabled={actionLoading === app.slug}
+                          leadingIcon={<ArrowUpCircle />}
+                          onClick={() => handleUpdate(app)}
+                        >
+                          {/* Approving a held version and updating an ordinary
+                              one are the same request; only the wording differs,
+                              because only one of them is a decision. */}
+                          {app.held_for && app.held_for.length > 0
+                            ? t("app_store.action.approve_update")
+                            : t("app_store.action.update")}
+                        </Button>
+                      )}
+                      {/* Every app can be turned off, including the ones a new
+                          organisation starts with: the platform underneath —
+                          sign-in, the organisation's own profile, settings —
+                          is not an app and does not appear in this list. */}
+                      <Button
+                        size="sm"
+                        variant="outline"
                         disabled={actionLoading === app.slug}
-                        className="mr-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition border border-indigo-600 bg-indigo-600 text-white hover:bg-indigo-700 inline-flex items-center gap-1.5"
-                      >
-                        <ArrowUpCircle className="w-3.5 h-3.5" />
-                        {/* Approving a held version and updating an ordinary
-                            one are the same request; only the wording differs,
-                            because only one of them is a decision. */}
-                        {app.held_for && app.held_for.length > 0
-                          ? t("app_store.action.approve_update")
-                          : t("app_store.action.update")}
-                      </button>
-                    )}
-                    {/* Every app can be turned off, including the ones a new
-                        organisation starts with: the platform underneath —
-                        sign-in, the organisation's own profile, settings —
-                        is not an app and does not appear in this list. */}
-                    <button
+                        className={app.enabled ? "border-danger-border text-danger hover:bg-danger-soft" : "border-success-border text-success hover:bg-success-soft"}
                         onClick={() => handleToggle(app)}
-                        disabled={actionLoading === app.slug}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${
-                          app.enabled
-                            ? "border-red-200 text-red-600 hover:bg-red-50"
-                            : "border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700"
-                        }`}
                       >
                         {app.enabled ? t("app_store.action.disable") : t("app_store.action.enable")}
-                    </button>
-                  </td>
-                </tr>
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        </Card>
       )}
     </div>
   );

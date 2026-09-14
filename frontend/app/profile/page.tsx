@@ -3,6 +3,7 @@ import {useEffect,useState} from "react";
 import {api,apiBase} from "@/lib/api";
 import {useI18n} from "@/lib/i18n";
 import {Building2,House,KeyRound,MonitorSmartphone,ShieldCheck,Unlink} from "lucide-react";
+import {Alert,Badge,Button,Card,Spinner} from "@gerege-systems/ui";
 import {ProviderMark,GoogleMark} from "@/components/ProviderMark";
 import EIDLogin from "@/components/EIDLogin";
 import { formatDay } from "@/lib/datetime";
@@ -56,8 +57,8 @@ function verified(id: Identity) {
  */
 function Avatar({ identity, person }: { identity: Identity; person: string }) {
   const src = typeof identity.claims?.picture === "string" ? identity.claims.picture : "";
-  if (src) return <img className="profile__photo" src={src} alt="" referrerPolicy="no-referrer"/>;
-  return <span className="profile__photo profile__photo--letter">{person.trim().charAt(0).toUpperCase()}</span>;
+  if (src) return <img className="size-10 shrink-0 rounded-full object-cover" src={src} alt="" referrerPolicy="no-referrer"/>;
+  return <span className="grid size-10 shrink-0 place-items-center rounded-full bg-surface-2 text-sm font-semibold text-muted">{person.trim().charAt(0).toUpperCase()}</span>;
 }
 
 /**
@@ -119,86 +120,92 @@ export default function ProfilePage(){const {t}=useI18n();
   const hasEID=profile?.identities.some(i=>i.kind==="eid")??false;
   const [linking,setLinking]=useState(false);
 
-  if(error)return <main className="profile"><p className="profile__error">{error}</p></main>;
-  if(!profile)return <main className="profile"><p className="profile__muted">{t("profile.loading")}</p></main>;
+  const page="mx-auto w-full max-w-3xl space-y-6";
+  if(error)return <main className={page}><Alert variant="danger" live>{error}</Alert></main>;
+  if(!profile)return <main className={page}><p className="flex items-center gap-2 text-sm text-muted" role="status"><Spinner size="sm" decorative/>{t("profile.loading")}</p></main>;
 
-  return <main className="profile">
-    <header className="profile__head">
-      <div className="profile__avatar">{(profile.name||profile.email||"?").trim().charAt(0).toUpperCase()}</div>
-      <div>
-        <h1>{profile.name||profile.email}</h1>
-        <p>{profile.email}</p>
+  return <main className={page}>
+    <header className="flex items-center gap-4">
+      <div className="grid size-14 shrink-0 place-items-center rounded-full bg-accent-soft text-xl font-semibold text-accent" aria-hidden="true">{(profile.name||profile.email||"?").trim().charAt(0).toUpperCase()}</div>
+      <div className="min-w-0">
+        <h1 className="truncate text-2xl font-semibold text-foreground">{profile.name||profile.email}</h1>
+        <p className="truncate text-sm text-muted">{profile.email}</p>
       </div>
     </header>
 
     {/* Тойм: тоо биш, хариулт. Хэдэн байгууллагад, хэдэн аргаар нэвтэрдэг,
         хаана нээлттэй байна. */}
-    <section className="profile__stats">
-      <div><Building2/><b>{profile.organisations.length}</b><span>{t("profile.stat.organisations")}</span></div>
-      <div><KeyRound/><b>{profile.identities.length}</b><span>{t("profile.stat.identities")}</span></div>
-      <div><MonitorSmartphone/><b>{profile.active_sessions}</b><span>{t("profile.stat.sessions")}</span></div>
-      <div><ShieldCheck/><b>{when(profile.created_at)}</b><span>{t("profile.stat.since")}</span></div>
+    <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <Stat icon={<Building2/>} value={profile.organisations.length} label={t("profile.stat.organisations")}/>
+      <Stat icon={<KeyRound/>} value={profile.identities.length} label={t("profile.stat.identities")}/>
+      <Stat icon={<MonitorSmartphone/>} value={profile.active_sessions} label={t("profile.stat.sessions")}/>
+      <Stat icon={<ShieldCheck/>} value={when(profile.created_at)} label={t("profile.stat.since")}/>
     </section>
 
-    <section className="profile__section">
-      <h2>{t("profile.identities")}</h2>
-      <p className="profile__muted">{t("profile.identities_lede")}</p>
-      <ul className="profile__list">
+    <Card asChild padding="lg" className="space-y-4">
+      <section>
+      <div>
+        <h2 className="text-lg font-semibold text-foreground">{t("profile.identities")}</h2>
+        <p className="text-sm text-muted">{t("profile.identities_lede")}</p>
+      </div>
+      <ul className="m-0 list-none space-y-3 p-0">
         {profile.identities.map(id=>{
           const key=id.kind+id.subject;
           const claims=Object.entries(id.claims||{});
           const person=[id.surname,id.name].filter(Boolean).join(" ")||id.name||id.email||id.subject;
-          return <li key={key} className="profile__id">
+          return <li key={key} className="space-y-3 rounded-md border border-line p-4">
             {/* Толгой мөр нь провайдерыг нэрлэнэ, доод мөр нь тэнд байгаа
                 хүнийг. Хоёр өөр зүйл — аль Google гэдэг нь нэг асуулт,
                 тэр Google дотор хэн байгаа нь өөр асуулт. */}
-            <div className="profile__id-head">
-              <span className="profile__mark"><ProviderMark kind={id.kind} issuer={id.issuer}/></span>
-              <div className="profile__grow">
-                <b>{t("profile.linked_provider",{provider:id.provider})}</b>
-                <span>{id.issuer||id.provider}</span>
+            <div className="flex items-center gap-3">
+              <span className="grid size-9 shrink-0 place-items-center rounded-md border border-line bg-surface-2"><ProviderMark kind={id.kind} issuer={id.issuer}/></span>
+              <div className="min-w-0 flex-1">
+                <b className="block text-sm font-semibold text-foreground">{t("profile.linked_provider",{provider:id.provider})}</b>
+                <span className="block truncate text-xs text-muted">{id.issuer||id.provider}</span>
               </div>
-              {id.removable&&<button type="button" className="profile__unlink"
-                disabled={busy===key}
+              {id.removable&&<Button type="button" size="sm" variant="outline"
+                className="border-danger-border text-danger hover:bg-danger-soft"
+                loading={busy===key}
+                leadingIcon={<Unlink/>}
                 onClick={()=>void unlink(id,key)}>
-                <Unlink/> {busy===key?t("profile.unlinking"):t("profile.unlink")}
-              </button>}
+                {busy===key?t("profile.unlinking"):t("profile.unlink")}
+              </Button>}
             </div>
 
-            <div className="profile__id-person">
+            <div className="flex flex-wrap items-center gap-3">
               <Avatar identity={id} person={person}/>
-              <div className="profile__grow">
-                <b>{person}{verified(id)&&<em className="profile__badge">{t("profile.verified")}</em>}</b>
-                <span>
+              <div className="min-w-0 flex-1">
+                <b className="flex flex-wrap items-center gap-2 text-sm font-semibold text-foreground">{person}{verified(id)&&<Badge variant="subtle" tone="success">{t("profile.verified")}</Badge>}</b>
+                <span className="block text-xs text-muted">
                   {id.email&&<code>{id.email}</code>}
                   {id.email&&" · "}
                   {t("profile.linked_at")} {when(id.linked_at)}
                 </span>
               </div>
-              <span className="profile__meta">{t("profile.last_seen")} {when(id.last_seen_at)}</span>
+              <span className="text-xs text-muted">{t("profile.last_seen")} {when(id.last_seen_at)}</span>
             </div>
 
             {claims.length>0&&<>
-              <button className="profile__toggle" onClick={()=>setOpen(open===key?"":key)}>
+              <Button type="button" variant="link" size="sm" className="px-0" aria-expanded={open===key} onClick={()=>setOpen(open===key?"":key)}>
                 {open===key?t("profile.hide_claims"):t("profile.show_claims",{count:String(claims.length)})}
-              </button>
-              {open===key&&<dl className="profile__claims">
-                {claims.map(([k,v])=><div key={k}><dt>{k}</dt><dd>{typeof v==="object"?JSON.stringify(v):String(v)}</dd></div>)}
+              </Button>
+              {open===key&&<dl className="m-0 grid gap-1 rounded-md bg-surface-2 p-3 text-xs">
+                {claims.map(([k,v])=><div key={k} className="grid grid-cols-[minmax(0,10rem)_minmax(0,1fr)] gap-3"><dt className="truncate font-mono text-muted">{k}</dt><dd className="m-0 break-all text-foreground">{typeof v==="object"?JSON.stringify(v):String(v)}</dd></div>)}
               </dl>}
             </>}
           </li>;
         })}
-        {profile.identities.length===0&&<li className="profile__muted">{t("profile.no_identities")}</li>}
+        {profile.identities.length===0&&<li className="text-sm text-muted">{t("profile.no_identities")}</li>}
       </ul>
 
       {/* Холбох нь навигаци, fetch биш — Google дээр очиж, зөвшөөрөл асууж,
           буцаж ирдэг. Аль хэдийн холбогдсон бол харагдахгүй: энэ товч нэг л
           зүйл хийдэг бөгөөд түүнийг хийчихсэн байна. */}
-      {linkError&&<p className="profile__error profile__link-error">{linkErrorText(t,linkError)}</p>}
-      {canLinkGoogle&&!hasGoogle&&<a className="profile__link-provider" href={`${apiBase()}/auth/google/link`}>
-        <GoogleMark/> {t("profile.link_google")}
-      </a>}
-      {canLinkGoogle&&!hasGoogle&&<p className="profile__muted profile__link-note">{t("profile.link_google_note")}</p>}
+      {linkError&&<Alert variant="danger">{linkErrorText(t,linkError)}</Alert>}
+      {canLinkGoogle&&!hasGoogle&&<Button asChild variant="outline">
+        <a href={`${apiBase()}/auth/google/link`}><GoogleMark/> {t("profile.link_google")}</a>
+      </Button>}
+      {canLinkGoogle&&!hasGoogle&&<p className="text-xs text-muted">{t("profile.link_google_note")}</p>}
 
       {/* eID нь Google-ээс өөр байрлалтай.
           Google бол нэвтрэх нэмэлт зам; eID бол хүн хэн болохын **нотолгоо**,
@@ -206,31 +213,43 @@ export default function ProfilePage(){const {t}=useI18n();
           хүнийг нэрлэх цорын ганц үг (pkg/nexus.PersonFeed, 00086) — нууц
           үгээр нээсэн дансанд огт байхгүй. Тиймээс энэ товч нь чимэглэл биш:
           үүнгүйгээр иргэн хүсэлт гаргаад хариуг нь хүлээж авах аргагүй. */}
-      {!hasEID&&<div className="profile__eid-link">
+      {!hasEID&&<div className="space-y-2">
         {!linking
-          ? <button className="profile__link-provider" onClick={()=>setLinking(true)}>
-              <ShieldCheck/> {t("profile.link_eid")}
-            </button>
+          ? <Button type="button" variant="outline" leadingIcon={<ShieldCheck/>} onClick={()=>setLinking(true)}>
+              {t("profile.link_eid")}
+            </Button>
           : <EIDLogin link variant="signin" onLinked={()=>{setLinking(false);setRound(n=>n+1)}}/>}
-        <p className="profile__muted profile__link-note">{t("profile.link_eid_note")}</p>
+        <p className="text-xs text-muted">{t("profile.link_eid_note")}</p>
       </div>}
-    </section>
+      </section>
+    </Card>
 
-    <section className="profile__section">
-      <h2>{t("profile.organisations")}</h2>
-      <ul className="profile__list">
+    <Card asChild padding="lg" className="space-y-4">
+      <section>
+      <h2 className="text-lg font-semibold text-foreground">{t("profile.organisations")}</h2>
+      <ul className="m-0 list-none divide-y divide-line p-0">
         {/* Гэр эхэнд, тусдаа тэмдэгтэйгээ. Slug нь хэрэглэгчийн id-аас гардаг
             тул уншигчид юу ч хэлэхгүй — доод мөрөнд юу болохыг нь бичнэ. */}
-        {profile.home&&<li key={profile.home.id}><div className="profile__row">
-          <span className="profile__icon"><House/></span>
-          <div className="profile__grow"><b>{profile.home.name}</b><span>{t("web.label.my_home")}</span></div>
-        </div></li>}
-        {profile.organisations.map(o=><li key={o.id}><div className="profile__row">
-          <span className="profile__icon"><Building2/></span>
-          <div className="profile__grow"><b>{o.name}</b><span>{o.slug}</span></div>
-        </div></li>)}
-        {profile.organisations.length===0&&<li className="profile__muted">{t("profile.message.no_organisations")}</li>}
+        {profile.home&&<li key={profile.home.id}><OrgRow icon={<House/>} name={profile.home.name} note={t("web.label.my_home")}/></li>}
+        {profile.organisations.map(o=><li key={o.id}><OrgRow icon={<Building2/>} name={o.name} note={o.slug}/></li>)}
+        {profile.organisations.length===0&&<li className="py-3 text-sm text-muted">{t("profile.message.no_organisations")}</li>}
       </ul>
-    </section>
+      </section>
+    </Card>
   </main>
+}
+
+function Stat({icon,value,label}:{icon:React.ReactNode;value:React.ReactNode;label:string}){
+  return <Card padding="none" className="flex flex-col gap-1 px-4 py-3">
+    <span className="text-muted [&>svg]:size-4" aria-hidden="true">{icon}</span>
+    <b className="text-lg font-semibold tabular-nums text-foreground">{value}</b>
+    <span className="text-xs text-muted">{label}</span>
+  </Card>
+}
+
+function OrgRow({icon,name,note}:{icon:React.ReactNode;name:string;note:string}){
+  return <div className="flex items-center gap-3 py-3">
+    <span className="grid size-9 shrink-0 place-items-center rounded-md bg-surface-2 text-muted [&>svg]:size-4" aria-hidden="true">{icon}</span>
+    <div className="min-w-0"><b className="block truncate text-sm font-semibold text-foreground">{name}</b><span className="block truncate text-xs text-muted">{note}</span></div>
+  </div>
 }

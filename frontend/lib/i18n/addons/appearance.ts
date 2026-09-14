@@ -4,9 +4,6 @@
 export const appearance = {
   "appearance.view.title": { mn: "Харагдац", en: "Appearance" },
   "appearance.view.subtitle": { mn: "Энэ төхөөрөмж дээр {brand} хэрхэн харагдахыг тохируулна.", en: "Choose how {brand} looks on this device." },
-  "appearance.view.theme_style_hint": { mn: "Сонгодог харагдац эсвэл Gerege дизайн системийг сонгоно.", en: "Pick the classic look or the Gerege design system." },
-  "appearance.view.original_hint": { mn: "Сонгодог интерфэйс", en: "The classic interface" },
-  "appearance.view.gerege_hint": { mn: "Gerege-ийн cobalt дизайн систем", en: "The Gerege cobalt design system" },
   "appearance.view.color_mode_hint": { mn: "Гэгээн, харанхуй эсвэл төхөөрөмжийн тохиргоог дагана.", en: "Light, dark, or follow the device setting." },
   "appearance.view.accent_hint": { mn: "Cobalt нь Gerege-ийн үндсэн брэнд өнгө.", en: "Cobalt is the primary Gerege brand colour." },
 
@@ -24,18 +21,16 @@ export const appearance = {
   },
   "appearance.state.language_always": { mn: "Үндсэн", en: "Default" },
 
-  "appearance.field.theme_style": { mn: "Theme загвар", en: "Theme style" },
   "appearance.field.color_mode": { mn: "Өнгөний горим", en: "Colour mode" },
   "appearance.field.accent": { mn: "Онцлох өнгө", en: "Accent colour" },
   "appearance.field.density": { mn: "Дэлгэцийн нягтрал", en: "Display density" },
 
-  "appearance.style.original": { mn: "Анхны загвар", en: "Original theme" },
-  "appearance.style.gerege": { mn: "Gerege загвар", en: "Gerege theme" },
 
   "appearance.mode.light": { mn: "Гэгээн", en: "Light" },
   "appearance.mode.dark": { mn: "Харанхуй", en: "Dark" },
   "appearance.mode.system": { mn: "Системийн", en: "System" },
 
+  "appearance.accent.default": { mn: "Суулгацын өнгө", en: "This deployment's" },
   "appearance.accent.neutral": { mn: "Цагаан саарал", en: "White and grey" },
   "appearance.accent.cobalt": { mn: "Gerege cobalt", en: "Gerege cobalt" },
   "appearance.accent.teal": { mn: "Хөх ногоон", en: "Teal" },
