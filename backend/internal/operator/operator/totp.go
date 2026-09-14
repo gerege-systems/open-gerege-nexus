@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gerege-systems/open-gerege-nexus/backend/internal/kernel/config"
+	"github.com/gerege-systems/open-gerege-nexus/backend/internal/kernel/settings"
 
 	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/totp"
@@ -61,7 +62,18 @@ func NewTOTPSecret(email string) (secret, uri string, err error) {
 //
 // The suffix stays: the console is the only thing here that asks for a second
 // factor, and naming it says which door the code opens.
-func totpIssuer() string { return config.BrandName() + " Control Plane" }
+//
+// A deployment may name it outright instead (settings.ConsoleTOTPIssuer, from
+// the console or CONTROL_PLANE_TOTP_ISSUER) — an operator juggling several
+// consoles recognises "admin.example.mn" faster than a product name. A colon is
+// dropped: in the otpauth label it separates issuer from account, and one inside
+// the issuer makes the app show the wrong account name.
+func totpIssuer() string {
+	if name := strings.TrimSpace(settings.Get(settings.ConsoleTOTPIssuer)); name != "" {
+		return strings.TrimSpace(strings.ReplaceAll(name, ":", " "))
+	}
+	return config.BrandName() + " Control Plane"
+}
 
 // otpauthURI renders the enrolment URI by hand rather than through
 // otp.Key.URL(), so that the issuer and account label are escaped once, here,
