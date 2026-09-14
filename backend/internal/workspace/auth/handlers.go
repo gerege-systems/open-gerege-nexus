@@ -17,6 +17,7 @@ import (
 	"net/http"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -423,7 +424,29 @@ const (
 )
 
 func NewLoginLimiter() *security.IPRateLimiter {
-	return security.NewIPRateLimiter(rate.Limit(float64(LoginRatePerMinute)/60.0), LoginBurst)
+	perMinute, burst := LoginBudget()
+	return security.NewIPRateLimiter(rate.Limit(float64(perMinute)/60.0), burst)
+}
+
+// LoginBudget is the sign-in budget per client address: the constants above,
+// unless the deployment says otherwise with LOGIN_RATE_PER_MINUTE / LOGIN_BURST.
+//
+// The override exists for a deployment behind a TLS-passthrough proxy that does
+// not speak PROXY protocol. There every request arrives from the proxy's one
+// address, so "five a minute per address" becomes five a minute for the whole
+// country, and anybody sending one request every twelve seconds locks everybody
+// out. Such a deployment raises the budget to a flood ceiling and leaves the
+// guessing defence to the per-account lockout (maxLoginFailures). A value that is
+// not a positive whole number is ignored rather than trusted.
+func LoginBudget() (perMinute, burst int) {
+	return positiveEnv("LOGIN_RATE_PER_MINUTE", LoginRatePerMinute), positiveEnv("LOGIN_BURST", LoginBurst)
+}
+
+func positiveEnv(name string, fallback int) int {
+	if value, err := strconv.Atoi(strings.TrimSpace(os.Getenv(name))); err == nil && value > 0 {
+		return value
+	}
+	return fallback
 }
 
 func NewPollLimiter() *security.IPRateLimiter {
