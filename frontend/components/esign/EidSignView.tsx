@@ -14,13 +14,25 @@ import {
   UserRound,
 } from "lucide-react";
 import {
+  Alert,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@gerege-systems/ui";
+import {
   esign,
   saveBlob,
   type Representation,
   type SignSession,
 } from "@/lib/esign";
 import { useI18n } from "@/lib/i18n";
-import { fieldClass } from "@/components/ui";
 import { errorCode, useErrorMessage } from "./shared";
 
 /**
@@ -64,6 +76,12 @@ const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
  * answered, and this is the pause between them.
  */
 const POLL_PAUSE_MS = 1500;
+
+/**
+ * The select's value for "sign as myself". The picker cannot carry an empty
+ * value, and the empty string is what the rest of this screen means by it.
+ */
+const SIGN_AS_SELF = "__self__";
 
 export default function EidSignView({ onSigned }: { onSigned?: () => void }) {
   const { t, locale } = useI18n();
@@ -215,6 +233,14 @@ export default function EidSignView({ onSigned }: { onSigned?: () => void }) {
     }
   }
 
+  const orgLine = (orgName?: string) =>
+    orgName ? (
+      <p className="text-sm text-accent mt-1 flex items-center justify-center gap-1.5">
+        <Building2 className="w-3.5 h-3.5" aria-hidden />
+        {t("esign.message.on_behalf_of", { org: orgName })}
+      </p>
+    ) : null;
+
   return (
     <>
       <input
@@ -227,36 +253,37 @@ export default function EidSignView({ onSigned }: { onSigned?: () => void }) {
       />
 
       {phase.kind === "idle" && (
-        <section className="bg-surface border border-line rounded-xl shadow-sm">
-          <header className="px-4 py-3 border-b border-line flex items-center gap-2">
-            <PenLine className="w-4 h-4 text-indigo-600" />
-            <h2 className="text-sm font-semibold text-foreground">{t("esign.view.pick_document")}</h2>
-          </header>
+        <Card padding="none" className="overflow-hidden">
+          <CardHeader className="flex-row items-center gap-2 px-4 py-3 border-b border-line">
+            <PenLine className="w-4 h-4 text-accent" aria-hidden />
+            <CardTitle className="text-sm">{t("esign.view.pick_document")}</CardTitle>
+          </CardHeader>
 
-          <div className="px-4 py-8 text-center">
-            <div className="max-w-sm mx-auto mb-6 text-left">
+          <CardContent className="px-4 py-8 text-center">
+            <div className="max-w-sm mx-auto mb-6 text-start">
               <label
                 htmlFor="esign-onbehalf"
-                className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted"
+                className="flex items-center gap-1.5 text-sm font-medium text-foreground mb-1.5"
               >
-                <Building2 className="w-3.5 h-3.5" />
+                <Building2 className="w-3.5 h-3.5" aria-hidden />
                 {t("esign.field.sign_as")}
               </label>
-              <select
-                id="esign-onbehalf"
-                value={orgEtsi}
-                onChange={(event) => setOrgEtsi(event.target.value)}
+              <Select
+                value={orgEtsi || SIGN_AS_SELF}
+                onValueChange={(value) => setOrgEtsi(value === SIGN_AS_SELF ? "" : value)}
                 disabled={orgsLoading}
-                className="mt-1.5 w-full h-[38px] px-3 py-2 text-sm border border-input rounded-lg bg-surface focus:ring-2 focus:ring-indigo-500 disabled:bg-surface-2"
               >
-                <option value="">{t("esign.field.sign_as_self")}</option>
-                {orgs.map((org) => (
-                  <option key={org.org_etsi} value={org.org_etsi}>
-                    {orgLabel(org)}
-                    {org.right_type ? ` (${org.right_type})` : ""}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger id="esign-onbehalf" />
+                <SelectContent>
+                  <SelectItem value={SIGN_AS_SELF}>{t("esign.field.sign_as_self")}</SelectItem>
+                  {orgs.map((org) => (
+                    <SelectItem key={org.org_etsi} value={org.org_etsi}>
+                      {orgLabel(org)}
+                      {org.right_type ? ` (${org.right_type})` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <p className="text-xs text-muted mt-1.5">
                 {orgEtsi
                   ? t("esign.message.on_behalf_hint")
@@ -266,25 +293,20 @@ export default function EidSignView({ onSigned }: { onSigned?: () => void }) {
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg inline-flex items-center gap-2 shadow-sm transition"
-            >
-              <Upload className="w-4 h-4" />
+            <Button type="button" size="lg" onClick={() => fileRef.current?.click()} leadingIcon={<Upload />}>
               {t("esign.action.pick_pdf")}
-            </button>
+            </Button>
             <p className="text-xs text-muted mt-3">{t("esign.message.pdf_only")}</p>
-          </div>
-        </section>
+          </CardContent>
+        </Card>
       )}
 
       {phase.kind === "identity" && (
-        <section className="bg-surface border border-line rounded-xl shadow-sm">
-          <header className="px-4 py-3 border-b border-line flex items-center gap-2">
-            <UserRound className="w-4 h-4 text-indigo-600" />
-            <h2 className="text-sm font-semibold text-foreground">{t("esign.view.signer_identity")}</h2>
-          </header>
+        <Card padding="none" className="overflow-hidden">
+          <CardHeader className="flex-row items-center gap-2 px-4 py-3 border-b border-line">
+            <UserRound className="w-4 h-4 text-accent" aria-hidden />
+            <CardTitle className="text-sm">{t("esign.view.signer_identity")}</CardTitle>
+          </CardHeader>
 
           <form
             className="px-4 py-6"
@@ -296,85 +318,68 @@ export default function EidSignView({ onSigned }: { onSigned?: () => void }) {
             <p className="text-sm text-muted max-w-md mx-auto text-center">{phase.message}</p>
 
             <div className="max-w-sm mx-auto mt-5">
-              <label htmlFor="esign-signer-id" className="block text-xs font-semibold text-foreground mb-1">
-                {t("esign.field.signer_id")} *
-              </label>
-              <input
+              <Input
                 id="esign-signer-id"
+                label={`${t("esign.field.signer_id")} *`}
                 value={signerId}
                 onChange={(event) => setSignerId(event.target.value.toUpperCase())}
                 placeholder={t("esign.field.signer_id_placeholder")}
                 autoFocus
-                className={fieldClass}
+                helperText={t("esign.message.signer_id_hint")}
               />
-              <p className="text-xs text-muted mt-2">{t("esign.message.signer_id_hint")}</p>
               <p className="text-xs text-muted mt-1">{t("esign.message.signer_id_link_hint")}</p>
 
               <p className="text-xs text-muted mt-4 inline-flex items-center gap-1.5">
-                <FileText className="w-3.5 h-3.5" />
+                <FileText className="w-3.5 h-3.5" aria-hidden />
                 {phase.file.name}
               </p>
             </div>
 
             <div className="mt-5 flex gap-2.5 justify-center flex-wrap">
-              <button
-                type="submit"
-                disabled={!signerId.trim()}
-                className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-semibold px-5 py-2.5 rounded-lg"
-              >
+              <Button type="submit" disabled={!signerId.trim()}>
                 {t("esign.action.continue_signing")}
-              </button>
-              <button
-                type="button"
-                onClick={reset}
-                className="bg-surface-2 hover:bg-slate-200 text-foreground text-sm font-medium px-4 py-2 rounded-lg inline-flex items-center gap-1.5"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
+              </Button>
+              <Button type="button" variant="outline" onClick={reset} leadingIcon={<RotateCcw />}>
                 {t("base.action.cancel")}
-              </button>
+              </Button>
             </div>
           </form>
-        </section>
+        </Card>
       )}
 
       {phase.kind === "uploading" && (
-        <section className="bg-surface border border-line rounded-xl shadow-sm p-8 text-center">
-          <Clock className="w-7 h-7 text-indigo-600 mx-auto animate-pulse" />
+        <Card className="text-center" role="status" aria-live="polite">
+          <Clock className="w-7 h-7 text-accent mx-auto animate-pulse" aria-hidden />
           <p className="font-semibold text-foreground mt-3">{t("esign.message.uploading")}</p>
           <p className="text-sm text-muted mt-1 inline-flex items-center gap-1.5">
-            <FileText className="w-3.5 h-3.5" />
+            <FileText className="w-3.5 h-3.5" aria-hidden />
             {phase.filename}
           </p>
-        </section>
+        </Card>
       )}
 
       {phase.kind === "waiting" && (
-        <section className="bg-surface border border-line rounded-xl shadow-sm p-8 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 inline-flex items-center justify-center">
-            <Smartphone className="w-7 h-7" />
+        <Card className="text-center">
+          <div className="w-14 h-14 rounded-lg bg-accent-soft text-accent inline-flex items-center justify-center">
+            <Smartphone className="w-7 h-7" aria-hidden />
           </div>
           <h2 className="text-lg font-semibold text-foreground mt-3.5">{t("esign.view.confirm_on_phone")}</h2>
           <p className="text-sm text-muted mt-1 inline-flex items-center gap-1.5">
-            <FileText className="w-3.5 h-3.5" />
+            <FileText className="w-3.5 h-3.5" aria-hidden />
             {phase.session.filename}
           </p>
-          {phase.orgName && (
-            <p className="text-sm text-indigo-600 mt-1 flex items-center justify-center gap-1.5">
-              <Building2 className="w-3.5 h-3.5" />
-              {t("esign.message.on_behalf_of", { org: phase.orgName })}
-            </p>
-          )}
+          {orgLine(phase.orgName)}
 
           {phase.session.verification_code && (
             <>
-              <p className="text-[11px] uppercase tracking-[0.18em] text-muted mt-5">
+              <p className="text-xs uppercase tracking-[0.18em] text-muted mt-5">
                 {t("esign.field.verification_code")}
               </p>
               <div className="flex justify-center gap-2.5 mt-2">
                 {phase.session.verification_code.split("").map((digit, index) => (
                   <span
                     key={index}
-                    className="w-11 h-14 inline-flex items-center justify-center text-2xl font-semibold font-mono text-indigo-600 bg-surface-2 rounded-xl"
+                    className="w-11 h-14 inline-flex items-center justify-center text-2xl font-semibold font-mono text-accent bg-surface-2 rounded-lg"
                   >
                     {digit}
                   </span>
@@ -387,67 +392,42 @@ export default function EidSignView({ onSigned }: { onSigned?: () => void }) {
             {t("esign.message.pin2_instruction")}
           </p>
 
-          <button
-            type="button"
-            onClick={() => cancel(phase.session)}
-            className="mt-5 bg-surface-2 hover:bg-slate-200 text-foreground text-sm font-medium px-4 py-2 rounded-lg inline-flex items-center gap-1.5"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
+          <Button type="button" variant="outline" className="mt-5" onClick={() => cancel(phase.session)} leadingIcon={<RotateCcw />}>
             {t("base.action.cancel")}
-          </button>
-        </section>
+          </Button>
+        </Card>
       )}
 
       {phase.kind === "completed" && (
-        <section className="bg-surface border border-line rounded-xl shadow-sm p-8 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 inline-flex items-center justify-center">
-            <ShieldCheck className="w-7 h-7" />
+        <Card className="text-center">
+          <div className="w-14 h-14 rounded-lg bg-success-soft text-success inline-flex items-center justify-center">
+            <ShieldCheck className="w-7 h-7" aria-hidden />
           </div>
           <h2 className="text-lg font-semibold text-foreground mt-3.5">{t("esign.message.sign_success")}</h2>
           <p className="text-sm text-muted mt-1">{phase.session.filename}</p>
-          {phase.orgName && (
-            <p className="text-sm text-indigo-600 mt-1 flex items-center justify-center gap-1.5">
-              <Building2 className="w-3.5 h-3.5" />
-              {t("esign.message.on_behalf_of", { org: phase.orgName })}
-            </p>
-          )}
+          {orgLine(phase.orgName)}
           {phase.session.certificate_level && (
             <p className="text-xs text-muted mt-2 font-mono">{phase.session.certificate_level}</p>
           )}
 
           <div className="mt-5 flex gap-2.5 justify-center flex-wrap">
-            <button
-              type="button"
-              onClick={() => downloadSigned(phase.session)}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2 rounded-lg inline-flex items-center gap-2"
-            >
-              <Download className="w-4 h-4" />
+            <Button type="button" onClick={() => downloadSigned(phase.session)} leadingIcon={<Download />}>
               {t("base.action.download")}
-            </button>
-            <button
-              type="button"
-              onClick={reset}
-              className="bg-surface-2 hover:bg-slate-200 text-foreground text-sm font-medium px-4 py-2 rounded-lg inline-flex items-center gap-1.5"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
+            </Button>
+            <Button type="button" variant="outline" onClick={reset} leadingIcon={<RotateCcw />}>
               {t("esign.action.sign_another")}
-            </button>
+            </Button>
           </div>
-        </section>
+        </Card>
       )}
 
       {phase.kind === "error" && (
-        <section className="bg-surface border border-line rounded-xl shadow-sm p-8 text-center">
-          <p className="font-semibold text-red-600">{phase.message}</p>
-          <button
-            type="button"
-            onClick={reset}
-            className="mt-4 bg-surface-2 hover:bg-slate-200 text-foreground text-sm font-medium px-4 py-2 rounded-lg inline-flex items-center gap-1.5"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
+        <Card className="space-y-4">
+          <Alert variant="danger" live>{phase.message}</Alert>
+          <Button type="button" variant="outline" onClick={reset} leadingIcon={<RotateCcw />}>
             {t("base.action.retry")}
-          </button>
-        </section>
+          </Button>
+        </Card>
       )}
     </>
   );

@@ -4,15 +4,53 @@ import React, { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { Sparkles, X, Send, Bot, User, Mic, Square, Volume2, Languages, Wrench } from "lucide-react";
+import {
+  Button,
+  IconButton,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+  cn,
+} from "@gerege-systems/ui";
 
 interface Message { role: "user" | "model"; text: string; tools?: string[]; degraded?: boolean }
+
+const TARGETS = [
+  ["mn", "Монгол"],
+  ["en", "English"],
+  ["ru", "Русский"],
+  ["zh", "中文"],
+  ["ko", "한국어"],
+  ["ja", "日本語"],
+] as const;
 
 function toBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => { const r = new FileReader(); r.onerror=()=>reject(r.error); r.onload=()=>resolve(String(r.result).split(",")[1] || ""); r.readAsDataURL(blob); });
 }
 function play(audio: { mime: string; data: string }) { new Audio(`data:${audio.mime};base64,${audio.data}`).play().catch(() => undefined); }
 
-export default function AICopilot() {
+/**
+ * The copilot: a trigger for the header, and the drawer it opens.
+ *
+ * The drawer is a design-system Sheet, non-modal on purpose. It sits under the
+ * header rather than over it, so the control that opened it stays visible and
+ * can close it again, and it does not cover the page or take its pointer: this
+ * is a copilot, and the work it is asked about has to stay readable — and
+ * clickable — behind it. Escape still closes it, as it does every other layer
+ * in this shell. The conversation is state of this component, not of the
+ * sheet, so shutting the drawer does not lose it.
+ *
+ * `className` reaches the panel: the workarea's ribbon is shorter than the
+ * browser header, and the panel starts where the chrome above it ends.
+ */
+export default function AICopilot({ className }: { className?: string }) {
   const { t, locale } = useI18n();
   const [open,setOpen]=useState(false), [prompt,setPrompt]=useState(""), [loading,setLoading]=useState(false);
   const [mode,setMode]=useState<"chat"|"translate">("chat"), [target,setTarget]=useState("en"), [recording,setRecording]=useState(false);
@@ -48,29 +86,111 @@ export default function AICopilot() {
 
   async function speak(text:string){try{play(await api.speakAI(text.slice(0,2000)))}catch{/* response remains readable */}}
 
-  // Escape closes it, as it does every other layer in this shell. A drawer that
-  // can only be dismissed by finding its own close button is one people leave
-  // open and then work around.
-  useEffect(()=>{
-    if(!open) return;
-    const onKey=(e:KeyboardEvent)=>{if(e.key==="Escape")setOpen(false)};
-    window.addEventListener("keydown",onKey);
-    return ()=>window.removeEventListener("keydown",onKey);
-  },[open]);
+  return (
+    <Sheet open={open} onOpenChange={setOpen} modal={false}>
+      <SheetTrigger asChild>
+        <IconButton
+          aria-label={t("ai.view.title")}
+          title={t("ai.view.title")}
+          icon={<Sparkles />}
+          className="data-[state=open]:bg-accent-soft data-[state=open]:text-accent"
+        />
+      </SheetTrigger>
+      <SheetContent
+        side="right"
+        showClose={false}
+        aria-describedby={undefined}
+        // Non-modal: a click on the page is work, not a request to close.
+        onInteractOutside={(event) => event.preventDefault()}
+        className={cn("top-14 h-auto w-[420px] max-w-full gap-0 p-0 max-lg:bottom-16", className)}
+      >
+        <header className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-line px-4">
+          <div className="flex min-w-0 items-center gap-2">
+            <Bot className="size-5 shrink-0 text-accent" aria-hidden />
+            <div className="min-w-0">
+              <SheetTitle className="truncate text-sm">{t("ai.view.subtitle")}</SheetTitle>
+              <p className="truncate text-xs text-muted">{t("ai.view.engine_note")}</p>
+            </div>
+          </div>
+          <SheetClose asChild>
+            <IconButton aria-label={t("base.action.close")} icon={<X />} size="sm" />
+          </SheetClose>
+        </header>
 
-  return <>
-    <button onClick={()=>setOpen(v=>!v)} aria-label={t("ai.view.title")} title={t("ai.view.title")} aria-expanded={open} aria-controls="gerege-copilot"
-      className={`gerege-copilot-trigger w-10 h-10 rounded-full grid place-items-center border transition shrink-0 ${open?"border-white/40 bg-white/25 text-white":"border-white/25 bg-white/10 text-white hover:bg-white/20"}`}><Sparkles className="w-5 h-5"/></button>
-    {/* Always mounted, moved rather than removed: a conversation that
-        disappears when the drawer is shut is one nobody trusts to leave, and a
-        panel that is only rendered while open cannot animate out. */}
-    <section id="gerege-copilot" aria-hidden={!open} aria-label={t("ai.view.subtitle")}
-      className={`gerege-copilot-drawer bg-surface border-s border-line shadow-lg flex flex-col ${open?"is-open":""}`}>
-      <header className="bg-slate-900 p-4 text-white flex items-center justify-between shrink-0"><div className="flex items-center gap-2"><Bot className="w-5 h-5 text-indigo-300"/><div><h3 className="font-semibold text-sm text-white">{t("ai.view.subtitle")}</h3><p className="text-[11px] text-muted">{t("ai.view.engine_note")}</p></div></div><button onClick={()=>setOpen(false)}><X className="w-5 h-5"/></button></header>
-      <div className="flex border-b bg-surface-2 p-1 gap-1">{(["chat","translate"] as const).map(v=><button key={v} onClick={()=>setMode(v)} className={`flex-1 rounded-lg px-3 py-2 text-xs font-semibold ${mode===v?"bg-surface text-indigo-700 shadow-sm":"text-muted"}`}>{v==="chat"?<Bot className="inline w-4 h-4 mr-1"/>:<Languages className="inline w-4 h-4 mr-1"/>}{v==="chat"?t("ai.view.tab_chat"):t("ai.view.tab_translate")}</button>)}</div>
-      {mode==="translate"&&<div className="px-3 py-2 border-b text-xs flex items-center gap-2"><span>{t("ai.field.target_language")}</span><select value={target} onChange={e=>setTarget(e.target.value)} className="border rounded px-2 py-1"><option value="mn">Монгол</option><option value="en">English</option><option value="ru">Русский</option><option value="zh">中文</option><option value="ko">한국어</option><option value="ja">日本語</option></select></div>}
-      <div className="flex-1 p-4 overflow-y-auto space-y-4 text-xs" aria-live="polite">{messages.map((m,i)=><div key={i} className={`flex gap-2 ${m.role==="user"?"justify-end":"justify-start"}`}>{m.role==="model"&&<Bot className="w-4 h-4 mt-2 text-indigo-500 shrink-0"/>}<div className={`max-w-[85%] rounded-xl p-3 ${m.role==="user"?"bg-indigo-600 text-white":"bg-surface-2 text-foreground border"}`}><p className="leading-relaxed whitespace-pre-wrap">{m.text}</p>{m.role==="model"&&!m.degraded&&<button onClick={()=>speak(m.text)} className="mt-2 text-indigo-600" title={t("ai.action.listen")}><Volume2 className="w-4 h-4"/></button>}{m.tools?.length?<p className="mt-2 text-[10px] text-muted flex gap-1"><Wrench className="w-3 h-3"/>{m.tools.join(", ")}</p>:null}</div>{m.role==="user"&&<User className="w-4 h-4 mt-2 text-muted shrink-0"/>}</div>)}{loading&&<div className="text-muted animate-pulse">{t("ai.message.processing")}</div>}<div ref={end}/></div>
-      <form onSubmit={e=>{e.preventDefault();void dispatch()}} className="p-3 border-t bg-surface-2 flex items-center gap-2"><button type="button" onClick={()=>void toggleRecord()} disabled={loading} className={`p-2 rounded-lg ${recording?"bg-red-600 text-white":"border bg-surface text-muted"}`}>{recording?<Square className="w-4 h-4"/>:<Mic className="w-4 h-4"/>}</button><input value={prompt} onChange={e=>setPrompt(e.target.value)} maxLength={4000} placeholder={mode==="chat"?t("ai.view.placeholder"):t("ai.view.translate_placeholder")} className="flex-1 px-3 py-2 text-xs border rounded-lg"/><button disabled={loading||(!prompt.trim()&&!recording)} className="bg-indigo-600 text-white p-2 rounded-lg disabled:opacity-50"><Send className="w-4 h-4"/></button></form>
-    </section>
-  </>;
+        <div className="flex shrink-0 gap-1 border-b border-line bg-surface-2 p-1">
+          {(["chat","translate"] as const).map((value) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={mode===value}
+              onClick={()=>setMode(value)}
+              className={cn(
+                "flex h-8 flex-1 items-center justify-center gap-1.5 rounded-md px-3 text-xs font-medium outline-none",
+                "transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+                mode===value ? "bg-surface text-foreground shadow-sm" : "text-muted hover:text-foreground",
+              )}
+            >
+              {value==="chat" ? <Bot className="size-4" aria-hidden /> : <Languages className="size-4" aria-hidden />}
+              {value==="chat" ? t("ai.view.tab_chat") : t("ai.view.tab_translate")}
+            </button>
+          ))}
+        </div>
+
+        {mode==="translate" && (
+          <div className="flex shrink-0 items-center gap-2 border-b border-line px-3 py-2 text-xs">
+            <span className="text-muted">{t("ai.field.target_language")}</span>
+            <Select value={target} onValueChange={setTarget}>
+              <SelectTrigger size="sm" aria-label={t("ai.field.target_language")} className="w-36" />
+              <SelectContent>
+                {TARGETS.map(([code, label]) => <SelectItem key={code} value={code}>{label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        <div className="flex-1 space-y-4 overflow-y-auto p-4 text-xs" aria-live="polite">
+          {messages.map((m,i) => (
+            <div key={i} className={cn("flex gap-2", m.role==="user" ? "justify-end" : "justify-start")}>
+              {m.role==="model" && <Bot className="mt-2 size-4 shrink-0 text-accent" aria-hidden />}
+              <div className={cn("max-w-[85%] rounded-md p-3", m.role==="user" ? "bg-accent text-on-accent" : "bg-surface-2 text-foreground")}>
+                <p className="whitespace-pre-wrap leading-relaxed">{m.text}</p>
+                {m.role==="model" && !m.degraded && (
+                  <IconButton aria-label={t("ai.action.listen")} title={t("ai.action.listen")} icon={<Volume2 />} size="sm" className="mt-1 text-accent" onClick={()=>void speak(m.text)} />
+                )}
+                {m.tools?.length ? <p className="mt-2 flex items-center gap-1 text-xs text-muted"><Wrench className="size-3" aria-hidden />{m.tools.join(", ")}</p> : null}
+              </div>
+              {m.role==="user" && <User className="mt-2 size-4 shrink-0 text-muted" aria-hidden />}
+            </div>
+          ))}
+          {loading && <div className="animate-pulse text-muted">{t("ai.message.processing")}</div>}
+          <div ref={end} />
+        </div>
+
+        <form onSubmit={e=>{e.preventDefault();void dispatch()}} className="flex shrink-0 items-center gap-2 border-t border-line bg-surface-2 p-3">
+          <IconButton
+            aria-label={t(recording ? "ai.action.stop_recording" : "ai.action.record")}
+            aria-pressed={recording}
+            icon={recording ? <Square /> : <Mic />}
+            variant={recording ? "destructive" : "outline"}
+            size="sm"
+            disabled={loading}
+            onClick={()=>void toggleRecord()}
+          />
+          <Input
+            label={mode==="chat" ? t("ai.view.placeholder") : t("ai.view.translate_placeholder")}
+            hideLabel
+            size="sm"
+            value={prompt}
+            onChange={e=>setPrompt(e.target.value)}
+            maxLength={4000}
+            placeholder={mode==="chat" ? t("ai.view.placeholder") : t("ai.view.translate_placeholder")}
+            className="flex-1"
+          />
+          <Button type="submit" size="sm" aria-label={t("ai.action.send")} disabled={loading||(!prompt.trim()&&!recording)} className="px-2.5">
+            <Send aria-hidden />
+          </Button>
+        </form>
+      </SheetContent>
+    </Sheet>
+  );
 }

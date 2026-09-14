@@ -1,8 +1,24 @@
 "use client";
 
 import React from "react";
-import { AlertTriangle, CheckCircle2, Loader2, X } from "lucide-react";
+import {
+  Alert as UIAlert,
+  Dialog,
+  DialogContent,
+  Skeleton as UISkeleton,
+  Spinner,
+  Table as UITable,
+} from "@gerege-systems/ui";
 import { useI18n } from "@/lib/i18n";
+
+/*
+ * These are adapters now. Every primitive below keeps the signature the ~100
+ * screens call it with and renders the design system's component underneath
+ * (@gerege-systems/ui, styled by `data-style="nexus"` on <html>). A screen
+ * written against the library directly needs none of this; a screen written
+ * before the library arrived keeps working. Migrate call sites as they are
+ * touched, then delete the adapter.
+ */
 
 /**
  * The chrome every module screen is built from.
@@ -45,15 +61,6 @@ export function PageHeader({
 
 export type BannerTone = "error" | "success" | "info" | "warning";
 
-const BANNER_STYLE: Record<BannerTone, string> = {
-  error: "bg-red-50 border-red-200 text-red-700",
-  success: "bg-emerald-50 border-emerald-200 text-emerald-700",
-  info: "bg-blue-50 border-blue-200 text-blue-700",
-  // Not an outcome but a standing condition the screen cannot fix: no service
-  // key, no encryption key. The settings screens had this in amber already.
-  warning: "bg-amber-50 border-amber-200 text-amber-800",
-};
-
 /**
  * What a screen says after an action, good or bad.
  *
@@ -72,36 +79,12 @@ export function Banner({
   message: string;
   onDismiss?: () => void;
 }) {
-  const { t } = useI18n();
+  // `live`: the outcome of an action is announced — role="alert" for a
+  // failure, role="status" otherwise — which is what the screens relied on.
   return (
-    // A role so a screen reader announces the outcome of an action the user
-    // cannot see the result of. The settings screens already did this; the rest
-    // did not, and the answer to that disagreement is the accessible one.
-    //
-    // Failures get "alert" rather than "status" because the two are not the
-    // same urgency: "status" is polite, so it waits for whatever the region is
-    // already saying to finish. A failed create on /documents renders its
-    // banner just as the loading text changes, and queued behind that the
-    // operator hears nothing and believes the document was created.
-    <div
-      role={tone === "error" ? "alert" : "status"}
-      className={`p-3 border text-sm rounded-lg flex items-start gap-2 ${BANNER_STYLE[tone]}`}
-    >
-      {tone === "error" || tone === "warning" ? (
-        <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
-      ) : (
-        <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" />
-      )}
-      <span className="flex-1">{message}</span>
-      {onDismiss && (
-        // type="button" because the default is "submit": every call site today
-        // happens to sit outside a <form>, and the first one that does not
-        // would otherwise submit the form on its way to dismissing the banner.
-        <button type="button" onClick={onDismiss} aria-label={t("base.action.close")}>
-          <X className="w-4 h-4" />
-        </button>
-      )}
-    </div>
+    <UIAlert variant={tone === "error" ? "danger" : tone} live dismissible={!!onDismiss} onDismiss={onDismiss}>
+      {message}
+    </UIAlert>
   );
 }
 
@@ -109,7 +92,7 @@ export function Loading({ label }: { label?: string }) {
   const { t } = useI18n();
   return (
     <div className="flex items-center gap-2 text-muted text-sm" role="status">
-      <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+      <Spinner size="md" decorative />
       {label || t("base.message.loading")}
     </div>
   );
@@ -158,12 +141,7 @@ export function useSettledWait(waiting: boolean): boolean {
  * middle of the page, so nothing moves when the real thing lands.
  */
 export function Skeleton({ className }: { className?: string }) {
-  return (
-    <span
-      aria-hidden="true"
-      className={`block animate-pulse rounded bg-surface-2${className ? ` ${className}` : ""}`}
-    />
-  );
+  return <UISkeleton aria-hidden="true" className={className} />;
 }
 
 /**
@@ -242,23 +220,6 @@ export const rowActionClass =
   "inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold " +
   "border border-indigo-200 text-indigo-600 hover:bg-indigo-50 disabled:opacity-50";
 
-const FOCUSABLE = [
-  "a[href]",
-  "button:not([disabled])",
-  "input:not([disabled])",
-  "select:not([disabled])",
-  "textarea:not([disabled])",
-  '[tabindex]:not([tabindex="-1"])',
-].join(",");
-
-/** The tabbable elements of an open dialog, in tab order, skipping hidden ones. */
-function focusableWithin(panel: HTMLElement | null): HTMLElement[] {
-  if (!panel) return [];
-  return Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
-    (el) => el.offsetParent !== null || el === document.activeElement,
-  );
-}
-
 /**
  * A centred dialog over a dimmed page.
  *
@@ -294,11 +255,10 @@ export function Modal({
 }: {
   size?: "md" | "lg";
   /**
-   * Let the backdrop scroll instead of the panel. The signing dialog needs it:
-   * it grows with the number of steps, and a panel taller than the window
+   * Let the panel scroll inside the viewport. The signing dialog needs it: it
+   * grows with the number of steps, and a panel taller than the window
    * otherwise puts its own buttons past the bottom edge with no way to reach
-   * them. Pair it with a vertical margin on the panel, or the top of a tall
-   * dialog is clipped by the centring.
+   * them.
    */
   scrollable?: boolean;
   /** Extra panel classes. Height and scrolling genuinely differ per dialog. */
@@ -317,114 +277,31 @@ export function Modal({
   onClose?: () => void;
   children: React.ReactNode;
 }) {
+  // The library's Dialog owns focus (trap, return on close), Escape and the
+  // backdrop. Callers render their own heading, so the close button stays
+  // theirs too. The backdrop keeps one rule of the old component: it dismisses
+  // only while nothing has been typed — a stray click must not throw away a
+  // half-filled form.
   const panelRef = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect(() => {
-    const panel = panelRef.current;
-    // Test against the panel rather than focusing it unconditionally, because
-    // by the time this runs something inside may already hold focus: React
-    // does not render autoFocus as an attribute, it calls focus() during
-    // commit, which is before any effect here. A caller that asks for a field
-    // gets that field; the rest get the panel.
-    if (panel?.contains(document.activeElement)) return;
-    // The panel and not its first field: focusing an input would skip past the
-    // heading a screen reader announces on entry, and these dialogs open on a
-    // title, not on a cursor.
-    const opener = document.activeElement as HTMLElement | null;
-    panel?.focus();
-    // Back to whatever opened the dialog, so closing one from a table row does
-    // not drop the operator at the top of the page. A no-op if that row has
-    // since been re-rendered away.
-    return () => opener?.focus?.();
-  }, []);
-
-  function handleKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
-    if (event.key === "Escape" && onClose) {
-      // stopPropagation so a dialog opened from inside another overlay does not
-      // close both on one press.
-      event.stopPropagation();
-      onClose();
-      return;
-    }
-    if (event.key !== "Tab") return;
-    const items = focusableWithin(panelRef.current);
-    if (items.length === 0) {
-      // Nothing to move to, so the only correct move is to stay put rather
-      // than let the browser send focus out to the page behind.
-      event.preventDefault();
-      return;
-    }
-    const first = items[0];
-    const last = items[items.length - 1];
-    const active = document.activeElement;
-    if (event.shiftKey && (active === first || active === panelRef.current)) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && active === last) {
-      event.preventDefault();
-      first.focus();
-    }
-  }
-
-  /**
-   * Whether anything inside has been typed into since the dialog opened.
-   *
-   * The comparison is against `defaultValue`, so a field the dialog prefilled
-   * does not count and a field the operator edited does. Checkboxes and radios
-   * are compared the same way through `defaultChecked`. It is what decides
-   * whether a click on the backdrop throws work away or is ignored.
-   */
-  function holdsTypedInput() {
-    const panel = panelRef.current;
-    if (!panel) return false;
-    const fields = panel.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
-      "input, textarea, select",
-    );
-    for (const field of fields) {
-      if (field instanceof HTMLInputElement && (field.type === "checkbox" || field.type === "radio")) {
-        if (field.checked !== field.defaultChecked) return true;
-      } else if (field instanceof HTMLSelectElement) {
-        // A <select> has no defaultValue; the option marked selected in the
-        // markup is the one it opened on.
-        const opened = Array.from(field.options).find((option) => option.defaultSelected);
-        if (field.value !== (opened?.value ?? field.options[0]?.value ?? "")) return true;
-      } else if (field.value !== field.defaultValue) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  function handleBackdrop(event: React.MouseEvent<HTMLDivElement>) {
-    if (!onClose) return;
-    // Only the backdrop itself — a click that started inside the panel and
-    // ended on it (a drag out of a text selection) must not close anything.
-    if (event.target !== event.currentTarget) return;
-    if (holdsTypedInput()) return;
-    onClose();
-  }
-
+  const holdsInput = () =>
+    Array.from(panelRef.current?.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>("input, textarea, select") ?? [])
+      .some((field) => field.type !== "checkbox" && field.type !== "radio" && field.type !== "hidden" && field.value.trim() !== "");
   return (
-    <div
-      onMouseDown={handleBackdrop}
-      className={`fixed inset-0 bg-overlay flex items-center justify-center z-modal p-4${
-        scrollable ? " overflow-y-auto" : ""
-      }`}
-    >
-      <div
+    <Dialog open onOpenChange={(open) => { if (!open) onClose?.(); }}>
+      <DialogContent
         ref={panelRef}
-        role="dialog"
-        aria-modal="true"
+        size={size}
+        showClose={false}
         aria-label={label}
-        tabIndex={-1}
-        onKeyDown={handleKeyDown}
-        className={`bg-surface rounded-xl ${size === "lg" ? "max-w-lg" : "max-w-md"} w-full p-6 shadow-lg border border-line${
-          className ? ` ${className}` : ""
-        }`}
+        aria-describedby={undefined}
+        onEscapeKeyDown={onClose ? undefined : (event) => event.preventDefault()}
+        onPointerDownOutside={(event) => { if (!onClose || holdsInput()) event.preventDefault(); }}
+        onInteractOutside={(event) => { if (!onClose || holdsInput()) event.preventDefault(); }}
+        className={[scrollable ? "max-h-[90dvh] overflow-y-auto" : "", className ?? ""].join(" ").trim() || undefined}
       >
         {children}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -476,10 +353,10 @@ export function TableCard({
 }) {
   return (
     <div className={`${cardClass} overflow-hidden`}>
-      <table className="w-full text-left text-xs text-muted">
+      <UITable containerClassName="rounded-none border-0" className="text-xs text-muted">
         <thead className={tableHeadClass}>{head}</thead>
         <tbody className="divide-y divide-line">{children}</tbody>
-      </table>
+      </UITable>
       {footer}
     </div>
   );

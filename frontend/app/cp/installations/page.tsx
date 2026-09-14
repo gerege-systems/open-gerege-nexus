@@ -14,15 +14,34 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { PackageCheck } from "lucide-react";
 import Link from "next/link";
 
-import { Badge, Card, formatMoment, Table } from "@/components/cp/ui";
 import { cp, type Installation } from "@/lib/cp";
+import {
+  Badge,
+  Card,
+  CardHeader,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  Skeleton,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@gerege-systems/ui";
+import { formatMoment } from "@/lib/datetime";
 import { useI18n } from "@/lib/i18n";
+
+const EVERY_APP = "__none__";
 
 export default function Installations() {
   const { t } = useI18n();
   const [installations, setInstallations] = useState<Installation[]>([]);
   const [app, setApp] = useState("");
   const [failure, setFailure] = useState("");
+  const [loaded, setLoaded] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -30,6 +49,8 @@ export default function Installations() {
       setFailure("");
     } catch (error) {
       setFailure(error instanceof Error ? error.message : String(error));
+    } finally {
+      setLoaded(true);
     }
   }, []);
 
@@ -65,59 +86,95 @@ export default function Installations() {
           </h1>
           <p className="mt-1 text-sm text-muted">{t("cp.hint.installations")}</p>
         </div>
-        <select
-          value={app}
-          onChange={(event) => setApp(event.target.value)}
-          aria-label={t("cp.field.app")}
-          className="rounded-lg border border-input px-3 py-2 text-sm"
-        >
-          <option value="">{t("cp.state.every_app")}</option>
-          {apps.map(([id, name]) => (
-            <option key={id} value={id}>{name}</option>
-          ))}
-        </select>
+        {/* Radix refuses an empty value, so "every app" is a marker. */}
+        <Select value={app || EVERY_APP} onValueChange={(value) => setApp(value === EVERY_APP ? "" : value)}>
+          <SelectTrigger aria-label={t("cp.field.app")} className="w-auto min-w-48" />
+          <SelectContent>
+            <SelectItem value={EVERY_APP}>{t("cp.state.every_app")}</SelectItem>
+            {apps.map(([id, name]) => (
+              <SelectItem key={id} value={id}>{name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {failure && (
-        <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+        <p role="alert" className="text-sm rounded-lg bg-danger-soft text-danger border border-danger-border px-3 py-2">{failure}</p>
       )}
 
       {versions.length > 1 && (
-        <p className="text-sm rounded-xl bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3">
+        <p className="text-sm rounded-lg bg-warning-soft border border-warning-border text-warning px-4 py-3">
           {t("cp.message.versions_in_the_field", {
             versions: versions.map(([version, count]) => `${version} × ${count}`).join(", "),
           })}
         </p>
       )}
 
-      <Card title={t("cp.section.installations")}>
-        <Table
-          head={[
-            t("cp.field.organisation"),
-            t("cp.field.app"),
-            t("cp.field.version"),
-            t("cp.field.status"),
-            t("cp.field.when"),
-          ]}
-          rows={shown.map((item) => [
-            <span key="n" className="min-w-0">
-              <Link href={`/cp/tenants/${item.tenant_id}`} className="font-medium text-accent hover:underline">
-                {item.tenant_name}
-              </Link>
-              <span className="block text-xs text-muted font-mono">{item.slug}</span>
-            </span>,
-            <span key="a" className="min-w-0">
-              <strong className="text-foreground">{item.app_name}</strong>
-              <span className="block text-xs text-muted font-mono">{item.app_id}</span>
-            </span>,
-            <span key="v" className="font-mono text-xs">{item.installed_version}</span>,
-            <Badge key="s" tone={!item.enabled ? "slate" : item.status === "installed" ? "emerald" : "amber"}>
-              {item.enabled ? item.status : t("cp.state.off")}
-            </Badge>,
-            formatMoment(item.updated_at),
-          ])}
-          empty={t("cp.message.no_installations")}
-        />
+      <Card padding="none" className="overflow-hidden">
+        <CardHeader className="flex-row items-center gap-3 border-b border-line px-4 py-3">
+          <h2 className="flex-1 text-base leading-tight font-semibold text-foreground">{t("cp.section.installations")}</h2>
+        </CardHeader>
+        <Table containerClassName="rounded-none border-0">
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("cp.field.organisation")}</TableHead>
+              <TableHead>{t("cp.field.app")}</TableHead>
+              <TableHead>{t("cp.field.version")}</TableHead>
+              <TableHead>{t("cp.field.status")}</TableHead>
+              <TableHead>{t("cp.field.when")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {shown.map((item, index) => (
+              <TableRow key={index}>
+                <TableCell>
+                  <span className="min-w-0">
+                    <Link href={`/cp/tenants/${item.tenant_id}`} className="font-medium text-accent hover:underline">
+                      {item.tenant_name}
+                    </Link>
+                    <span className="block text-xs text-muted font-mono">{item.slug}</span>
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <span className="min-w-0">
+                    <strong className="text-foreground">{item.app_name}</strong>
+                    <span className="block text-xs text-muted font-mono">{item.app_id}</span>
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <span className="font-mono text-xs">{item.installed_version}</span>
+                </TableCell>
+                <TableCell>
+                  <Badge tone={!item.enabled ? "neutral" : item.status === "installed" ? "success" : "warning"}>
+                    {item.enabled ? item.status : t("cp.state.off")}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  {formatMoment(item.updated_at)}
+                </TableCell>
+              </TableRow>
+            ))}
+            {!loaded && (
+              <TableRow>
+                <TableCell colSpan={5}>
+                  <div role="status" aria-busy="true" className="space-y-3 py-2">
+                    <span className="sr-only">{t("base.message.loading")}</span>
+                    <Skeleton className="h-4" />
+                    <Skeleton className="h-4" />
+                    <Skeleton className="h-4" />
+                  </div>
+                </TableCell>
+              </TableRow>
+            )}
+            {loaded && shown.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5} className="py-8 text-center text-muted">
+                  {t("cp.message.no_installations")}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </Card>
     </div>
   );

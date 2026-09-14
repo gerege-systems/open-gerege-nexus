@@ -5,8 +5,9 @@ import { api } from "@/lib/api";
 import { useResource } from "@/lib/useResource";
 import { useAccess } from "@/lib/access";
 import { useI18n } from "@/lib/i18n";
-import { Banner, LoadingBlock, PageHeader, rowActionClass } from "@/components/ui";
-import { ActionMessage } from "@/components/documents/shared";
+import { PageHeader } from "@/components/ui";
+import { Alert, Button, Card, CardContent, CardHeader, CardTitle, ErrorState, IconButton, Input } from "@gerege-systems/ui";
+import { ActionMessage, ListSkeleton } from "@/components/documents/shared";
 import { Plus, Save, Trash2, Workflow as WorkflowIcon } from "lucide-react";
 
 interface Step {
@@ -41,6 +42,7 @@ export default function DocumentWorkflowsPage() {
     data: chains,
     loading,
     failed: loadFailed,
+    reload,
     setData: setChains,
   } = useResource(async () => (await api.getDocumentWorkflows()) || [], {
     initial: [] as Chain[],
@@ -104,107 +106,117 @@ export default function DocumentWorkflowsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        icon={<WorkflowIcon className="w-7 h-7 text-indigo-600" />}
+        icon={<WorkflowIcon className="w-7 h-7 text-accent" />}
         title={t("documents.menu.workflows")}
         subtitle={t("documents.view.workflows_hint")}
       />
 
-      {message && <Banner tone={message.type} message={message.text} onDismiss={() => setMessage(null)} />}
+      {message && (
+        <Alert variant={message.type === "error" ? "danger" : message.type} live dismissible onDismiss={() => setMessage(null)}>
+          {message.text}
+        </Alert>
+      )}
 
       {loading ? (
-        <LoadingBlock label={t("documents.message.loading")} />
+        <ListSkeleton label={t("documents.message.loading")} />
       ) : loadFailed ? (
-        <div className="bg-surface border border-line rounded-xl p-8 text-center text-muted text-sm">
-          {t("documents.message.workflows_failed")}
-        </div>
+        <Card>
+          <ErrorState
+            title={t("documents.message.workflows_failed")}
+            description=""
+            action={
+              <Button variant="outline" onClick={() => void reload()}>
+                {t("base.action.retry")}
+              </Button>
+            }
+          />
+        </Card>
       ) : (
         <div className="space-y-4">
-          {chains.map((chain) => (
-            <section key={chain.doc_type} className="bg-surface border border-line rounded-xl overflow-hidden">
-              <header className="flex items-center justify-between px-4 py-3 bg-surface-2 border-b border-line">
-                <div className="flex items-center gap-3">
-                  <span className="font-mono font-semibold text-foreground text-sm">{chain.doc_type}</span>
-                  <span className="text-[11px] text-muted">
-                    {chain.steps.length === 0
-                      ? t("documents.message.chain_single_signature")
-                      : t("documents.message.chain_signature_count", { count: chain.steps.length })}
-                  </span>
-                </div>
-                {mayManage && (
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => addStep(chain)}
-                      className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border border-input text-foreground hover:bg-surface"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>{t("documents.action.add_step")}</span>
-                    </button>
-                    <button
-                      onClick={() => save(chain)}
-                      disabled={busy === chain.doc_type || chain.steps.some((s) => !s.name.trim())}
-                      title={chain.steps.some((s) => !s.name.trim()) ? t("documents.message.step_needs_name") : undefined}
-                      className={rowActionClass}
-                    >
-                      <Save className="w-3.5 h-3.5" />
-                      <span>{t("base.action.save")}</span>
-                    </button>
+          {chains.map((chain) => {
+            const unnamed = chain.steps.some((s) => !s.name.trim());
+            return (
+              <Card key={chain.doc_type} padding="none" className="overflow-hidden">
+                <CardHeader className="flex-row flex-wrap items-center justify-between gap-3 px-4 py-3 bg-surface-2 border-b border-line">
+                  <div className="flex items-center gap-3">
+                    <CardTitle className="font-mono text-sm">{chain.doc_type}</CardTitle>
+                    <span className="text-xs text-muted">
+                      {chain.steps.length === 0
+                        ? t("documents.message.chain_single_signature")
+                        : t("documents.message.chain_signature_count", { count: chain.steps.length })}
+                    </span>
                   </div>
-                )}
-              </header>
+                  {mayManage && (
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" variant="outline" onClick={() => addStep(chain)} leadingIcon={<Plus />}>
+                        {t("documents.action.add_step")}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => save(chain)}
+                        loading={busy === chain.doc_type}
+                        disabled={unnamed}
+                        title={unnamed ? t("documents.message.step_needs_name") : undefined}
+                        leadingIcon={<Save />}
+                      >
+                        {t("base.action.save")}
+                      </Button>
+                    </div>
+                  )}
+                </CardHeader>
 
-              {chain.steps.length === 0 ? (
-                <p className="px-4 py-5 text-xs text-muted">{t("documents.message.no_steps")}</p>
-              ) : (
-                <ul className="divide-y divide-line">
-                  {chain.steps.map((step, index) => (
-                    <li key={index} className="px-4 py-3 flex flex-wrap items-end gap-3">
-                      <span className="w-6 h-6 shrink-0 rounded-full bg-indigo-50 text-indigo-700 text-[11px] font-semibold grid place-items-center">
-                        {index + 1}
-                      </span>
-                      <div className="flex-1 min-w-[180px]">
-                        <label className="block text-[11px] font-semibold text-muted mb-1">
-                          {t("documents.field.step_name")}
-                        </label>
-                        <input
-                          type="text"
-                          value={step.name}
-                          disabled={!mayManage}
-                          onChange={(e) => editStep(chain, index, { name: e.target.value })}
-                          className="w-full px-3 py-1.5 text-xs border border-input rounded-lg focus:ring-2 focus:ring-indigo-500"
-                        />
-                      </div>
-                      <div className="flex-1 min-w-[180px]">
-                        <label className="block text-[11px] font-semibold text-muted mb-1">
-                          {t("documents.field.step_signer")}
-                        </label>
-                        {/* The placeholder is the Cyrillic form, because that is what
-                            eID vouches for and what the step is compared against: an
-                            example in Latin letters guides an operator into a step no
-                            live signature can ever fill. Same example as the dialog. */}
-                        <input
-                          type="text"
-                          placeholder="УБ99010111"
-                          value={step.signer_reg_number}
-                          disabled={!mayManage}
-                          onChange={(e) => editStep(chain, index, { signer_reg_number: e.target.value })}
-                          className="w-full px-3 py-1.5 text-xs border border-input rounded-lg focus:ring-2 focus:ring-indigo-500 font-mono"
-                        />
-                      </div>
-                      {mayManage && (
-                        <button
-                          onClick={() => removeStep(chain, index)}
-                          className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50"
-                          aria-label={t("base.action.delete")}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          ))}
+                <CardContent>
+                  {chain.steps.length === 0 ? (
+                    <p className="px-4 py-5 text-xs text-muted">{t("documents.message.no_steps")}</p>
+                  ) : (
+                    <ul className="divide-y divide-line">
+                      {chain.steps.map((step, index) => (
+                        <li key={index} className="px-4 py-3 flex flex-wrap items-end gap-3">
+                          <span className="w-6 h-6 mb-1 shrink-0 rounded-full bg-accent-soft text-accent text-xs font-semibold grid place-items-center">
+                            {index + 1}
+                          </span>
+                          <Input
+                            type="text"
+                            size="sm"
+                            label={t("documents.field.step_name")}
+                            value={step.name}
+                            disabled={!mayManage}
+                            onChange={(e) => editStep(chain, index, { name: e.target.value })}
+                            className="flex-1 min-w-44"
+                          />
+                          {/* The placeholder is the Cyrillic form, because that is what
+                              eID vouches for and what the step is compared against: an
+                              example in Latin letters guides an operator into a step no
+                              live signature can ever fill. Same example as the dialog. */}
+                          <Input
+                            type="text"
+                            size="sm"
+                            label={t("documents.field.step_signer")}
+                            placeholder="УБ99010111"
+                            value={step.signer_reg_number}
+                            disabled={!mayManage}
+                            onChange={(e) => editStep(chain, index, { signer_reg_number: e.target.value })}
+                            className="flex-1 min-w-44 [&_input]:font-mono"
+                          />
+                          {mayManage && (
+                            <IconButton
+                              size="sm"
+                              variant="outline"
+                              className="text-danger"
+                              onClick={() => removeStep(chain, index)}
+                              aria-label={t("base.action.delete")}
+                              icon={<Trash2 />}
+                            />
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 

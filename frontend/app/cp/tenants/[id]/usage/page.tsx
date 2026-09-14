@@ -30,7 +30,9 @@ import {
   YAxis,
 } from "recharts";
 
-import { Badge, Card, formatMoment } from "@/components/cp/ui";
+import { Badge, Button, Card, CardHeader, Spinner } from "@gerege-systems/ui";
+
+import { formatMoment } from "@/lib/datetime";
 import { cp, type Usage, type UsageSeries } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 
@@ -55,9 +57,16 @@ export default function UsageScreen() {
   }, [id, load]);
 
   if (failure) {
-    return <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>;
+    return <p role="alert" className="text-sm rounded-lg bg-danger-soft text-danger border border-danger-border px-3 py-2">{failure}</p>;
   }
-  if (!usage) return <div className="text-muted">…</div>;
+  if (!usage) {
+    return (
+      <p role="status" className="flex items-center gap-2 text-sm text-muted">
+        <Spinner size="md" decorative />
+        {t("base.message.loading")}
+      </p>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -78,13 +87,12 @@ export default function UsageScreen() {
               : t("cp.message.never_counted")}
           </p>
         </div>
-        <a
-          href={cp.usageCSVURL(id)}
-          className="inline-flex items-center gap-2 rounded-lg border border-input px-3 py-2 text-sm hover:bg-surface-hover"
-        >
-          <Download className="w-4 h-4" />
-          CSV
-        </a>
+        <Button variant="outline" asChild>
+          <a href={cp.usageCSVURL(id)}>
+            <Download className="w-4 h-4" />
+            CSV
+          </a>
+        </Button>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -105,19 +113,18 @@ function MetricCard({ series }: { series: UsageSeries }) {
   const asLine = series.metric === "storage_mb";
 
   return (
-    <Card
-      title={metricName(series.metric, t)}
-      action={
-        series.limit !== null ? (
-          <Badge tone={over ? "red" : "slate"}>
+    <Card padding="none" className="overflow-hidden">
+      <CardHeader className="flex-row items-center gap-3 border-b border-line px-4 py-3">
+        <h2 className="flex-1 text-base leading-tight font-semibold text-foreground">{metricName(series.metric, t)}</h2>
+        {series.limit !== null ? (
+          <Badge tone={over ? "danger" : "neutral"}>
             {series.month_to_date} / {series.limit}
             {series.enforced ? "" : ` · ${t("cp.state.not_enforced")}`}
           </Badge>
         ) : (
           <span className="text-xs text-muted">{series.total}</span>
-        )
-      }
-    >
+        )}
+      </CardHeader>
       <div className="p-4 h-48">
         {series.points.length === 0 ? (
           <p className="text-sm text-muted">{t("cp.message.no_usage")}</p>
@@ -125,19 +132,19 @@ function MetricCard({ series }: { series: UsageSeries }) {
           <ResponsiveContainer width="100%" height="100%">
             {asLine ? (
               <LineChart data={series.points}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="day" tick={{ fontSize: 10 }} minTickGap={24} />
-                <YAxis tick={{ fontSize: 10 }} width={40} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" />
+                <XAxis dataKey="day" tick={{ fontSize: 12, fill: "var(--color-muted)" }} minTickGap={24} />
+                <YAxis tick={{ fontSize: 12, fill: "var(--color-muted)" }} width={40} />
                 <Tooltip />
-                <Line type="monotone" dataKey="value" stroke="#0f172a" dot={false} strokeWidth={2} />
+                <Line type="monotone" dataKey="value" stroke="var(--color-accent)" dot={false} strokeWidth={2} />
               </LineChart>
             ) : (
               <BarChart data={series.points}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="day" tick={{ fontSize: 10 }} minTickGap={24} />
-                <YAxis tick={{ fontSize: 10 }} width={40} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" />
+                <XAxis dataKey="day" tick={{ fontSize: 12, fill: "var(--color-muted)" }} minTickGap={24} />
+                <YAxis tick={{ fontSize: 12, fill: "var(--color-muted)" }} width={40} />
                 <Tooltip />
-                <Bar dataKey="value" fill="#0f172a" radius={[2, 2, 0, 0]} />
+                <Bar dataKey="value" fill="var(--color-accent)" radius={[2, 2, 0, 0]} />
               </BarChart>
             )}
           </ResponsiveContainer>

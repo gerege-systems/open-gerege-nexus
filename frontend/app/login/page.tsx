@@ -10,6 +10,7 @@ import {useI18n} from "@/lib/i18n";
 import {useBrand} from "@/lib/brandContext";
 import type {TranslationKey} from "@/lib/i18n";
 import {ChevronDown,HelpCircle,Lock,Mail,ShieldCheck} from "lucide-react";
+import {Alert,Button,Input,Separator,Spinner} from "@gerege-systems/ui";
 import { GoogleMark } from "@/components/ProviderMark";
 import {safeReturnPath} from "@/lib/safeReturnPath.mjs";
 
@@ -92,9 +93,9 @@ export default function LoginPage(){const router=useRouter();const {t}=useI18n()
           <strong>{asker?.client_name||t("auth.view.platform_name")}</strong>
           <span>{t("auth.signin.asker_note")}</span>
         </div>
-        <hr className="signin-card__rule"/>
+        <Separator/>
 
-        {sso===undefined&&<p className="admin-login__pending">{t("auth.sso.checking")}</p>}
+        {sso===undefined&&<p className="flex items-center justify-center gap-2 py-6 text-sm text-muted" role="status"><Spinner size="sm" decorative/>{t("auth.sso.checking")}</p>}
 
         {redirecting&&<>
           <div><h1 className="signin-card__title">{t("auth.signin.title")}</h1><p className="signin-card__lede">{t("auth.sso.redirecting",{provider})}</p></div>
@@ -102,8 +103,8 @@ export default function LoginPage(){const router=useRouter();const {t}=useI18n()
 
         {federated&&!redirecting&&<>
           <div><h1 className="signin-card__title">{t("auth.signin.title")}</h1><p className="signin-card__lede">{t("auth.sso.card_body",{provider})}</p></div>
-          {error&&<p className="signin-alert">{error}</p>}
-          <button className="signin-btn signin-btn--eid" onClick={startSSO}><ShieldCheck size={18}/> {t("auth.sso.sign_in",{provider})}</button>
+          {error&&<Alert variant="danger" live>{error}</Alert>}
+          <Button size="xl" className="w-full" leadingIcon={<ShieldCheck/>} onClick={startSSO}>{t("auth.sso.sign_in",{provider})}</Button>
         </>}
 
         {showLocal&&<>
@@ -113,26 +114,26 @@ export default function LoginPage(){const router=useRouter();const {t}=useI18n()
               nowhere and somebody trying it four more times: the server refuses
               the same way whatever this screen shows, and this is the sentence
               that makes the refusal make sense. */}
-          {sso?.access_mode==="private"&&<p className="signin-note">{t("auth.message.platform_private")}</p>}
-          {error&&!federated&&<p className="signin-alert">{error}</p>}
+          {sso?.access_mode==="private"&&<p className="m-0 text-center text-sm text-muted">{t("auth.message.platform_private")}</p>}
+          {error&&!federated&&<Alert variant="danger" live>{error}</Alert>}
           <EIDLogin next={next} variant="signin"/>
 
           {/* Google. Сервер тохируулсан үед л гарна: тохируулаагүй байхад
               дарж болох мөртлөө юу ч болдоггүй товч харуулах нь амлалт биш,
               эвдрэл. */}
           {sso?.google?.enabled&&<>
-            <div className="signin-or">{t("auth.signin.or")}</div>
-            <button className="signin-btn signin-btn--google" onClick={startGoogle}><GoogleMark/> {t("auth.signin.google")}</button>
+            <div className="flex items-center gap-2 text-xs text-muted before:flex-1 before:border-t before:border-line after:flex-1 after:border-t after:border-line">{t("auth.signin.or")}</div>
+            <Button variant="outline" size="xl" className="w-full" leadingIcon={<GoogleMark/>} onClick={startGoogle}>{t("auth.signin.google")}</Button>
           </>}
 
-          <div className="signin-footer">
-            <hr/>
-            <button className="admin-disclosure" onClick={()=>setAdmin(v=>!v)}><Lock/> {t("auth.action.admin_disclosure")} <ChevronDown className={admin?"rotate-180":""}/></button>
-            {admin&&<form className="admin-login" onSubmit={passwordLogin}>{error&&<p>{error}</p>}<label><Mail/> <input type="email" autoComplete="username" placeholder={t("auth.field.email")} value={email} onChange={e=>setEmail(e.target.value)} required/></label><label><Lock/> <input type="password" autoComplete="current-password" placeholder={t("auth.field.password")} value={password} onChange={e=>setPassword(e.target.value)} required/></label><button>{t("auth.action.admin_sign_in")}</button></form>}
+          <div className="flex flex-col gap-3">
+            <Separator/>
+            <Button variant="ghost" className="w-full text-muted" aria-expanded={admin} leadingIcon={<Lock/>} trailingIcon={<ChevronDown className={admin?"rotate-180":""}/>} onClick={()=>setAdmin(v=>!v)}>{t("auth.action.admin_disclosure")}</Button>
+            {admin&&<form className="grid gap-3" onSubmit={passwordLogin}>{error&&<Alert variant="danger" live>{error}</Alert>}<Input type="email" label={t("auth.field.email")} hideLabel prefix={<Mail aria-hidden="true"/>} autoComplete="username" placeholder={t("auth.field.email")} value={email} onChange={e=>setEmail(e.target.value)} required/><Input type="password" label={t("auth.field.password")} hideLabel prefix={<Lock aria-hidden="true"/>} autoComplete="current-password" placeholder={t("auth.field.password")} value={password} onChange={e=>setPassword(e.target.value)} required/><Button type="submit" className="w-full">{t("auth.action.admin_sign_in")}</Button></form>}
             {/* Link rather than an anchor: this points at a page of this
                 application, and a full page load here throws away the sign-in
                 state the screen is holding. */}
-            <Link className="signin-footer__help" href="/"><HelpCircle size={15}/> {t("auth.signin.help")}</Link>
+            <Link className="inline-flex items-center justify-center gap-2 text-sm text-muted no-underline hover:text-foreground" href="/"><HelpCircle className="size-4" aria-hidden="true"/> {t("auth.signin.help")}</Link>
           </div>
         </>}
       </div>

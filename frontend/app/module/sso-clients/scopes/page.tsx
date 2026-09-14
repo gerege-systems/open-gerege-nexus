@@ -10,9 +10,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ShieldCheck } from "lucide-react";
+import { Alert, Badge, Card, EmptyState, Spinner } from "@gerege-systems/ui";
 import { api, type OAuth2Client, type OAuth2Scope } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
-import { Chip, Empty, ErrorNote, Loading, Panel, Screen } from "../shared";
+import { PageHeader } from "@/components/ui";
 
 export default function OAuthScopesPage() {
   const { t, locale } = useI18n();
@@ -46,56 +47,60 @@ export default function OAuthScopesPage() {
   }, [clients]);
 
   return (
-    <Screen
-      icon={<ShieldCheck className="w-5 h-5" />}
-      title={t("sso_clients.scopes.title")}
-      subtitle={t("sso_clients.scopes.subtitle")}
-    >
-      {error && <ErrorNote>{error}</ErrorNote>}
+    <div className="space-y-6">
+      <PageHeader
+        icon={<ShieldCheck className="w-5 h-5" />}
+        title={t("sso_clients.scopes.title")}
+        subtitle={t("sso_clients.scopes.subtitle")}
+      />
+      {error && <Alert variant="danger" live>{error}</Alert>}
 
-      <Panel className="p-4 bg-surface-2">
+      <Card padding="none" className="p-4 bg-surface-2">
         <p className="text-xs text-muted">{t("sso_clients.scopes.sensitive_note")}</p>
-      </Panel>
+      </Card>
 
       {loading ? (
-        <Loading label={t("sso_clients.message.loading")} />
+        <p className="flex items-center justify-center gap-2 p-12 text-center text-muted" role="status">
+          <Spinner size="md" decorative />
+          {t("sso_clients.message.loading")}
+        </p>
       ) : scopes.length === 0 ? (
-        <Empty icon={<ShieldCheck className="w-9 h-9 mx-auto" />}>{t("base.message.error")}</Empty>
+        <EmptyState icon={<ShieldCheck />} title={t("base.message.error")} />
       ) : (
         <div className="grid gap-3 lg:grid-cols-2">
           {scopes.map((scope) => {
             const users = usage.get(scope.name) || [];
             return (
-              <Panel key={scope.name} className={`p-4 ${scope.sensitive ? "border-amber-200" : ""}`}>
+              <Card padding="none" key={scope.name} className={`p-4 ${scope.sensitive ? "border-warning-border" : ""}`}>
                 <div className="flex items-start justify-between gap-2">
                   <code className="text-sm font-mono font-semibold text-foreground">{scope.name}</code>
-                  {scope.sensitive && <Chip tone="amber">{t("oauth.consent.sensitive")}</Chip>}
+                  {scope.sensitive && <Badge className="break-all" tone="warning">{t("oauth.consent.sensitive")}</Badge>}
                 </div>
 
                 <p className="text-xs text-muted mt-2">{t("sso_clients.scopes.consent_preview")}</p>
-                <p className="text-sm text-foreground border-l-2 border-line pl-3 mt-1">
+                <p className="text-sm text-foreground border-s-2 border-line ps-3 mt-1">
                   {locale === "mn" ? scope.description_mn : scope.description}
                 </p>
 
                 <div className="mt-3 pt-3 border-t border-line">
-                  <span className="text-[11px] font-semibold text-muted">
+                  <span className="text-xs font-semibold text-muted">
                     {t("sso_clients.scopes.used_by")}
                   </span>
                   {users.length === 0 ? (
-                    <p className="text-[11px] text-muted italic mt-1">{t("sso_clients.scopes.unused")}</p>
+                    <p className="text-xs text-muted mt-1">{t("sso_clients.scopes.unused")}</p>
                   ) : (
                     <div className="flex flex-wrap gap-1 mt-1">
                       {users.map((client) => (
-                        <Chip key={client.client_id} tone="slate">{client.client_name}</Chip>
+                        <Badge className="break-all" key={client.client_id} tone="neutral">{client.client_name}</Badge>
                       ))}
                     </div>
                   )}
                 </div>
-              </Panel>
+              </Card>
             );
           })}
         </div>
       )}
-    </Screen>
+    </div>
   );
 }

@@ -64,7 +64,7 @@ test("every tone a screen asks for is a tone the badge has", () => {
   }
 });
 
-test("the avatar is two letters, and the name is not cut in half", () => {
+test("the avatar is two letters, and the name is not cut in half", async () => {
   render(
     <ThemeProvider>
       <UserMenu
@@ -79,11 +79,12 @@ test("the avatar is two letters, and the name is not cut in half", () => {
 
   // One initial is the same letter for most of a Mongolian directory.
   const button = screen.getByRole("button");
-  expect(within(button).getByText("МО")).toBeTruthy();
+  // The library's Avatar draws its fallback after an effect, not on first paint.
+  expect(await within(button).findByText("МО")).toBeTruthy();
   expect(within(button).getByText("Мөнх Оператор")).toBeTruthy();
 });
 
-test("a one-word name still fills both letters", () => {
+test("a one-word name still fills both letters", async () => {
   render(
     <ThemeProvider>
       <UserMenu
@@ -95,7 +96,7 @@ test("a one-word name still fills both letters", () => {
     </ThemeProvider>,
   );
 
-  expect(within(screen.getByRole("button")).getByText("БО")).toBeTruthy();
+  expect(await within(screen.getByRole("button")).findByText("БО")).toBeTruthy();
 });
 
 test("a dialog closes on Escape", async () => {
@@ -121,12 +122,13 @@ test("a click outside dismisses an empty dialog and spares one being filled in",
   // there is nothing to lose.
   const close = vi.fn();
   const person = userEvent.setup();
-  const { container } = render(
+  render(
     <Modal onClose={close} label="cp.action.new_tenant">
       <input aria-label="cp.field.name" defaultValue="" />
     </Modal>,
   );
-  const backdrop = container.firstElementChild as HTMLElement;
+  // The design system's dialog is portalled: its overlay is the backdrop.
+  const backdrop = document.querySelector('[data-slot="dialog-overlay"]') as HTMLElement;
 
   await person.click(backdrop);
   expect(close).toHaveBeenCalledTimes(1);

@@ -12,31 +12,34 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import { Smartphone } from "lucide-react";
+import { Badge, Button, type BadgeProps, type ButtonProps } from "@gerege-systems/ui";
 import type { CeremonyProgress, CeremonySession, ContractState, PartyState } from "@/lib/contracts";
 import { formatDay, formatMoment, formatMoney } from "@/lib/datetime";
 
 // ─────────────────────────────────────────────────────────────────── labels
 
-const CONTRACT_BADGE: Record<ContractState, string> = {
-  NONE: "bg-surface-2 text-muted",
-  DRAFT: "bg-surface-2 text-muted",
-  SENT: "bg-amber-50 text-amber-700",
-  PARTIALLY_SIGNED: "bg-indigo-50 text-indigo-700",
-  EXECUTED: "bg-emerald-50 text-emerald-700",
-  DECLINED: "bg-red-50 text-red-700",
-  WITHDRAWN: "bg-surface-2 text-muted",
-  EXPIRED: "bg-surface-2 text-muted",
-  TERMINATED: "bg-surface-2 text-muted",
+type Tone = NonNullable<BadgeProps["tone"]>;
+
+const CONTRACT_TONE: Record<ContractState, Tone> = {
+  NONE: "neutral",
+  DRAFT: "neutral",
+  SENT: "warning",
+  PARTIALLY_SIGNED: "accent",
+  EXECUTED: "success",
+  DECLINED: "danger",
+  WITHDRAWN: "neutral",
+  EXPIRED: "neutral",
+  TERMINATED: "neutral",
 };
 
-const PARTY_BADGE: Record<PartyState, string> = {
-  draft: "bg-surface-2 text-muted",
-  invited: "bg-amber-50 text-amber-700",
-  viewed: "bg-indigo-50 text-indigo-700",
-  signed: "bg-emerald-50 text-emerald-700",
-  declined: "bg-red-50 text-red-700",
-  withdrawn: "bg-surface-2 text-muted",
-  expired: "bg-surface-2 text-muted",
+const PARTY_TONE: Record<PartyState, Tone> = {
+  draft: "neutral",
+  invited: "warning",
+  viewed: "accent",
+  signed: "success",
+  declined: "danger",
+  withdrawn: "neutral",
+  expired: "neutral",
 };
 
 export function useContractLabels() {
@@ -90,18 +93,18 @@ export function useContractLabels() {
 export function ContractBadge({ state }: { state: ContractState }) {
   const { contractState } = useContractLabels();
   return (
-    <span className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-semibold whitespace-nowrap ${CONTRACT_BADGE[state] ?? "bg-surface-2 text-muted"}`}>
+    <Badge tone={CONTRACT_TONE[state] ?? "neutral"} className="whitespace-nowrap">
       {contractState(state)}
-    </span>
+    </Badge>
   );
 }
 
 export function PartyBadge({ state }: { state: PartyState }) {
   const { partyState } = useContractLabels();
   return (
-    <span className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-semibold whitespace-nowrap ${PARTY_BADGE[state] ?? "bg-surface-2 text-muted"}`}>
+    <Badge tone={PARTY_TONE[state] ?? "neutral"} className="whitespace-nowrap">
       {partyState(state)}
-    </span>
+    </Badge>
   );
 }
 
@@ -130,6 +133,8 @@ export function CeremonyButton({
   poll,
   onDone,
   onError,
+  variant = "primary",
+  size = "sm",
   className,
 }: {
   label: string;
@@ -138,6 +143,8 @@ export function CeremonyButton({
   poll: (session: CeremonySession) => Promise<CeremonyProgress>;
   onDone: () => void | Promise<void>;
   onError: (message: string) => void;
+  variant?: ButtonProps["variant"];
+  size?: ButtonProps["size"];
   className?: string;
 }) {
   const { t } = useI18n();
@@ -190,20 +197,15 @@ export function CeremonyButton({
 
   if (code) {
     return (
-      <span className="bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-semibold px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 font-mono">
-        <Smartphone className="w-3.5 h-3.5 animate-pulse" />
+      <Badge tone="accent" variant="outline" icon={<Smartphone className="animate-pulse" />} className="font-mono py-1.5">
         {code}
-        <span className="font-sans font-medium text-indigo-500">{t("contracts.msg.check_phone")}</span>
-      </span>
+        <span className="font-sans font-medium">{t("contracts.msg.check_phone")}</span>
+      </Badge>
     );
   }
   return (
-    <button
-      onClick={() => void run()}
-      className={className ?? "bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5"}
-    >
-      <Smartphone className="w-3.5 h-3.5" />
+    <Button variant={variant} size={size} onClick={() => void run()} leadingIcon={<Smartphone />} className={className}>
       {label}
-    </button>
+    </Button>
   );
 }

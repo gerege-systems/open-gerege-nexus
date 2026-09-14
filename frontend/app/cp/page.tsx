@@ -26,11 +26,25 @@ import {
   Rocket,
   Server,
 } from "lucide-react";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  CardHeader,
+  Spinner,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@gerege-systems/ui";
 
 import { useConsole } from "@/components/cp/Console";
 import { useAction } from "@/components/cp/Action";
-import { Badge, Card, formatMoment, Table, type Tone } from "@/components/cp/ui";
 import { cp, type Overview } from "@/lib/cp";
+import { formatMoment } from "@/lib/datetime";
 import { useI18n } from "@/lib/i18n";
 
 export default function Health() {
@@ -59,9 +73,16 @@ export default function Health() {
   }, [load]);
 
   if (failure) {
-    return <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>;
+    return <p role="alert" className="text-sm rounded-lg bg-danger-soft text-danger border border-danger-border px-3 py-2">{failure}</p>;
   }
-  if (!health) return <div className="text-muted">…</div>;
+  if (!health) {
+    return (
+      <p role="status" className="flex items-center gap-2 text-sm text-muted">
+        <Spinner size="md" decorative />
+        {t("base.message.loading")}
+      </p>
+    );
+  }
 
   const grafana = (path: string) =>
     health.grafana_url ? `${health.grafana_url}${path}` : "";
@@ -78,8 +99,9 @@ export default function Health() {
           </p>
         </div>
         {operator.role === "superadmin" && (
-          <button
+          <Button
             type="button"
+            leadingIcon={<Rocket className="w-4 h-4" />}
             onClick={() =>
               action.run({
                 title: t("cp.action.deploy"),
@@ -91,24 +113,20 @@ export default function Health() {
                 },
               })
             }
-            className="inline-flex items-center gap-2 rounded-lg bg-accent px-3 py-2 text-sm font-medium text-on-accent hover:brightness-105"
           >
-            <Rocket className="w-4 h-4" />
             {t("cp.action.deploy")}
-          </button>
+          </Button>
         )}
       </div>
 
       {health.warnings.map((warning) => (
-        <p key={warning} className="text-sm rounded-xl bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3">
+        <Alert key={warning} variant="warning">
           {warning}
-        </p>
+        </Alert>
       ))}
 
       {!health.monitoring && (
-        <p className="text-sm rounded-xl bg-surface-2 border border-line text-foreground px-4 py-3">
-          {t("cp.message.no_monitoring")}
-        </p>
+        <Alert variant="default">{t("cp.message.no_monitoring")}</Alert>
       )}
 
       {health.monitoring && (
@@ -121,7 +139,7 @@ export default function Health() {
           <Stat
             label={t("cp.stat.errors")}
             value={health.api.read ? `${(health.api.error_rate * 100).toFixed(2)}%` : "—"}
-            tone={health.api.error_rate > 0.01 ? "red" : "emerald"}
+            tone={health.api.error_rate > 0.01 ? "danger" : "success"}
             icon={<AlertTriangle className="w-4 h-4" />}
           />
           <Stat
@@ -133,33 +151,47 @@ export default function Health() {
       )}
 
       {health.alerts.length > 0 && (
-        <Card title={t("cp.section.alerts")}>
-          <Table
-            head={[t("cp.field.alert"), t("cp.field.severity"), t("cp.field.when"), ""]}
-            rows={health.alerts.map((alert) => [
-              <span key="n">
-                <strong className="text-foreground">{alert.name}</strong>
-                <span className="block text-xs text-muted">{alert.summary}</span>
-              </span>,
-              <Badge key="s" tone={alert.severity === "page" ? "red" : "amber"}>
-                {alert.severity}
-              </Badge>,
-              formatMoment(alert.starts_at),
-              alert.silenced ? <Badge key="q" tone="slate">{t("cp.state.silenced")}</Badge> : "",
-            ])}
-            empty={t("cp.message.no_alerts")}
-          />
+        <Card padding="none" className="overflow-hidden">
+          <CardHeader className="flex-row items-center gap-3 border-b border-line px-4 py-3">
+            <h2 className="flex-1 text-base leading-tight font-semibold text-foreground">{t("cp.section.alerts")}</h2>
+          </CardHeader>
+          <Table containerClassName="rounded-none border-0">
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("cp.field.alert")}</TableHead>
+                <TableHead>{t("cp.field.severity")}</TableHead>
+                <TableHead>{t("cp.field.when")}</TableHead>
+                <TableHead />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {health.alerts.map((alert, index) => (
+                <TableRow key={index}>
+                  <TableCell>
+                    <strong className="text-foreground">{alert.name}</strong>
+                    <span className="block text-xs text-muted">{alert.summary}</span>
+                  </TableCell>
+                  <TableCell>
+                    <Badge tone={alert.severity === "page" ? "danger" : "warning"}>{alert.severity}</Badge>
+                  </TableCell>
+                  <TableCell>{formatMoment(alert.starts_at)}</TableCell>
+                  <TableCell>{alert.silenced && <Badge tone="neutral">{t("cp.state.silenced")}</Badge>}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </Card>
       )}
 
       {health.external.length > 0 && (
-        <Card
-          title={t("cp.section.external")}
-          action={grafana("/d/nexus-external") ? <DeepLink href={grafana("/d/nexus-external")} /> : undefined}
-        >
+        <Card padding="none" className="overflow-hidden">
+          <CardHeader className="flex-row items-center gap-3 border-b border-line px-4 py-3">
+            <h2 className="flex-1 text-base leading-tight font-semibold text-foreground">{t("cp.section.external")}</h2>
+            {grafana("/d/nexus-external") ? <DeepLink href={grafana("/d/nexus-external")} /> : undefined}
+          </CardHeader>
           <div className="p-4 flex flex-wrap gap-3">
             {health.external.map((system) => (
-              <div key={system.system} className="rounded-xl border border-line px-3 py-2 min-w-[9rem]">
+              <div key={system.system} className="rounded-lg border border-line px-3 py-2 min-w-36">
                 <div className="flex items-center gap-2">
                   <span className={`w-2.5 h-2.5 rounded-full ${dot(system.state)}`} />
                   <strong className="text-sm text-foreground">{system.system}</strong>
@@ -176,13 +208,14 @@ export default function Health() {
       )}
 
       {health.infra.length > 0 && (
-        <Card
-          title={t("cp.section.infra")}
-          action={grafana("/d/nexus-infra") ? <DeepLink href={grafana("/d/nexus-infra")} /> : undefined}
-        >
+        <Card padding="none" className="overflow-hidden">
+          <CardHeader className="flex-row items-center gap-3 border-b border-line px-4 py-3">
+            <h2 className="flex-1 text-base leading-tight font-semibold text-foreground">{t("cp.section.infra")}</h2>
+            {grafana("/d/nexus-infra") ? <DeepLink href={grafana("/d/nexus-infra")} /> : undefined}
+          </CardHeader>
           <div className="p-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {health.infra.map((gauge) => (
-              <div key={gauge.name} className="rounded-xl border border-line px-3 py-2">
+              <div key={gauge.name} className="rounded-lg border border-line px-3 py-2">
                 <p className="text-xs uppercase tracking-wide text-muted">{gauge.name}</p>
                 <p className={`mt-1 text-lg tabular-nums ${textFor(gauge.state)}`}>
                   {gauge.measured ? `${gauge.value.toFixed(1)}${gauge.unit}` : t("cp.state.unmeasured")}
@@ -193,66 +226,108 @@ export default function Health() {
         </Card>
       )}
 
-      <Card title={t("cp.section.background")}>
-        <Table
-          head={[t("cp.field.job"), t("cp.field.last_run"), t("cp.field.state"), ""]}
-          rows={health.background.map((job) => [
-            // The job's own name when the dictionary has one; its key
-            // otherwise, so a job added later shows up rather than rendering
-            // an empty cell.
-            jobName(job.name, t),
-            formatMoment(job.last_run) || "—",
-            <Badge key="s" tone={job.ok ? "emerald" : "red"}>
-              {job.ok ? t("cp.state.ok") : t("cp.state.failing")}
-            </Badge>,
-            <span key="d" className="text-xs text-muted">
-              {job.detail}
-              {job.pending > 0 ? ` · ${job.pending}` : ""}
-            </span>,
-          ])}
-          empty={t("cp.message.no_activity")}
-        />
+      <Card padding="none" className="overflow-hidden">
+        <CardHeader className="flex-row items-center gap-3 border-b border-line px-4 py-3">
+          <h2 className="flex-1 text-base leading-tight font-semibold text-foreground">{t("cp.section.background")}</h2>
+        </CardHeader>
+        <Table containerClassName="rounded-none border-0">
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("cp.field.job")}</TableHead>
+              <TableHead>{t("cp.field.last_run")}</TableHead>
+              <TableHead>{t("cp.field.state")}</TableHead>
+              <TableHead />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {health.background.map((job) => (
+              <TableRow key={job.name}>
+                <TableCell>
+                  {/* The job's own name when the dictionary has one; its key
+                      otherwise, so a job added later shows up rather than
+                      rendering an empty cell. */}
+                  {jobName(job.name, t)}
+                </TableCell>
+                <TableCell>{formatMoment(job.last_run) || "—"}</TableCell>
+                <TableCell>
+                  <Badge tone={job.ok ? "success" : "danger"}>
+                    {job.ok ? t("cp.state.ok") : t("cp.state.failing")}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-xs text-muted">
+                  {job.detail}
+                  {job.pending > 0 ? ` · ${job.pending}` : ""}
+                </TableCell>
+              </TableRow>
+            ))}
+            {health.background.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={4} className="py-8 text-center text-muted">
+                  {t("cp.message.no_activity")}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </Card>
 
       {health.tenant_trouble.length > 0 && (
-        <Card title={t("cp.section.tenant_trouble")}>
-          <Table
-            head={[t("cp.field.organisation"), t("cp.field.failures"), t("cp.field.action")]}
-            rows={health.tenant_trouble.map((row) => [
-              <Link key="t" href={`/cp/tenants/${row.tenant_id}`} className="hover:underline text-foreground">
-                {row.name || row.tenant_id}
-              </Link>,
-              <span key="c" className="tabular-nums">{row.failures}</span>,
-              <span key="s" className="text-xs text-muted font-mono">{row.sample}</span>,
-            ])}
-            empty={t("cp.message.no_activity")}
-          />
+        <Card padding="none" className="overflow-hidden">
+          <CardHeader className="flex-row items-center gap-3 border-b border-line px-4 py-3">
+            <h2 className="flex-1 text-base leading-tight font-semibold text-foreground">{t("cp.section.tenant_trouble")}</h2>
+          </CardHeader>
+          <Table containerClassName="rounded-none border-0">
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("cp.field.organisation")}</TableHead>
+                <TableHead>{t("cp.field.failures")}</TableHead>
+                <TableHead>{t("cp.field.action")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {health.tenant_trouble.map((row) => (
+                <TableRow key={row.tenant_id}>
+                  <TableCell>
+                    <Link href={`/cp/tenants/${row.tenant_id}`} className="hover:underline text-foreground">
+                      {row.name || row.tenant_id}
+                    </Link>
+                  </TableCell>
+                  <TableCell className="tabular-nums">{row.failures}</TableCell>
+                  <TableCell className="text-xs text-muted font-mono">{row.sample}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </Card>
       )}
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card title={t("cp.section.backups")}>
+        <Card padding="none" className="overflow-hidden">
+          <CardHeader className="flex-row items-center gap-3 border-b border-line px-4 py-3">
+            <h2 className="flex-1 text-base leading-tight font-semibold text-foreground">{t("cp.section.backups")}</h2>
+          </CardHeader>
           <div className="p-4 space-y-2 text-sm">
             {!health.backups.configured ? (
-              <p className="rounded-lg bg-amber-50 border border-amber-200 text-amber-900 px-3 py-2">
-                {t("cp.message.no_backups")}
-              </p>
+              <Alert variant="warning">{t("cp.message.no_backups")}</Alert>
             ) : (
               <>
                 <Row
                   label={t("cp.field.last_backup")}
                   value={`${formatMoment(health.backups.last_backup_at)} · ${health.backups.last_size_mb.toFixed(1)} MB`}
-                  tone={health.backups.last_ok ? undefined : "red"}
+                  tone={health.backups.last_ok ? undefined : "danger"}
                 />
                 <Row
                   label={t("cp.field.last_restore_test")}
                   value={formatMoment(health.backups.last_restore_test_at) || t("cp.message.never_tested")}
-                  tone={health.backups.last_restore_test_at ? undefined : "amber"}
+                  tone={health.backups.last_restore_test_at ? undefined : "warning"}
                 />
               </>
             )}
-            <button
+            <Button
               type="button"
+              variant="outline"
+              className="mt-2"
+              leadingIcon={<DatabaseBackup className="w-4 h-4" />}
               onClick={() =>
                 action.run({
                   title: t("cp.action.record_restore_test"),
@@ -261,20 +336,21 @@ export default function Health() {
                   onDone: load,
                 })
               }
-              className="mt-2 inline-flex items-center gap-2 rounded-lg border border-input px-3 py-2 text-sm hover:bg-surface-hover"
             >
-              <DatabaseBackup className="w-4 h-4" />
               {t("cp.action.record_restore_test")}
-            </button>
+            </Button>
           </div>
         </Card>
 
-        <Card title={t("cp.section.catalog")}>
+        <Card padding="none" className="overflow-hidden">
+          <CardHeader className="flex-row items-center gap-3 border-b border-line px-4 py-3">
+            <h2 className="flex-1 text-base leading-tight font-semibold text-foreground">{t("cp.section.catalog")}</h2>
+          </CardHeader>
           <div className="p-4 space-y-2 text-sm">
             <Row
               label={t("cp.field.last_sync")}
               value={formatMoment(health.catalog.last_sync_at) || health.catalog.detail || "—"}
-              tone={health.catalog.ok ? undefined : "red"}
+              tone={health.catalog.ok ? undefined : "danger"}
             />
             <div className="pt-2 space-y-1">
               {health.catalog.apps.map((app) => (
@@ -289,8 +365,11 @@ export default function Health() {
                 </div>
               ))}
             </div>
-            <button
+            <Button
               type="button"
+              variant="outline"
+              className="mt-2"
+              leadingIcon={<RefreshCw className="w-4 h-4" />}
               onClick={() =>
                 action.run({
                   title: t("cp.action.sync_catalog"),
@@ -299,11 +378,9 @@ export default function Health() {
                   onDone: load,
                 })
               }
-              className="mt-2 inline-flex items-center gap-2 rounded-lg border border-input px-3 py-2 text-sm hover:bg-surface-hover"
             >
-              <RefreshCw className="w-4 h-4" />
               {t("cp.action.sync_catalog")}
-            </button>
+            </Button>
           </div>
         </Card>
       </div>
@@ -313,6 +390,9 @@ export default function Health() {
   );
 }
 
+/** How loudly a figure asks to be read: the design system's status tones. */
+type StatTone = "danger" | "warning" | "success";
+
 function Stat({
   label,
   value,
@@ -321,25 +401,25 @@ function Stat({
 }: {
   label: string;
   value: string;
-  tone?: Tone;
+  tone?: StatTone;
   icon: React.ReactNode;
 }) {
   return (
-    <div className="bg-surface rounded-xl border border-line px-4 py-3">
+    <div className="bg-surface rounded-lg border border-line px-4 py-3">
       <p className="text-xs uppercase tracking-wide text-muted flex items-center gap-1.5">
         {icon}
         {label}
       </p>
-      <p className={`mt-1 text-2xl tabular-nums ${tone === "red" ? "text-red-600" : "text-foreground"}`}>{value}</p>
+      <p className={`mt-1 text-2xl tabular-nums ${tone === "danger" ? "text-danger" : "text-foreground"}`}>{value}</p>
     </div>
   );
 }
 
-function Row({ label, value, tone }: { label: string; value: string; tone?: Tone }) {
+function Row({ label, value, tone }: { label: string; value: string; tone?: StatTone }) {
   return (
     <div className="flex items-baseline gap-3">
       <span className="text-xs uppercase tracking-wide text-muted w-40 shrink-0">{label}</span>
-      <span className={tone === "red" ? "text-red-700" : tone === "amber" ? "text-amber-700" : "text-foreground"}>
+      <span className={tone === "danger" ? "text-danger" : tone === "warning" ? "text-warning" : "text-foreground"}>
         {value}
       </span>
     </div>
@@ -377,11 +457,11 @@ function jobName(name: string, t: Translate): string {
 }
 
 function dot(state: string): string {
-  if (state === "unknown") return "bg-slate-300";
-  return state === "red" ? "bg-red-500" : state === "amber" ? "bg-amber-500" : "bg-emerald-500";
+  if (state === "unknown") return "bg-line-strong";
+  return state === "red" ? "bg-danger-solid" : state === "amber" ? "bg-warning-solid" : "bg-success-solid";
 }
 
 function textFor(state: string): string {
-  if (state === "unknown") return "text-slate-400";
-  return state === "red" ? "text-red-600" : state === "amber" ? "text-amber-700" : "text-foreground";
+  if (state === "unknown") return "text-subtle";
+  return state === "red" ? "text-danger" : state === "amber" ? "text-warning" : "text-foreground";
 }

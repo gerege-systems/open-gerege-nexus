@@ -30,6 +30,9 @@ export const ai = {
   "ai.scope.tenant": { mn: "Байгууллагын", en: "Tenant" },
 
   "ai.action.listen": { mn: "Сонсох", en: "Listen" },
+  "ai.action.send": { mn: "Илгээх", en: "Send" },
+  "ai.action.record": { mn: "Дуу бичих", en: "Record voice" },
+  "ai.action.stop_recording": { mn: "Бичлэг зогсоох", en: "Stop recording" },
   "ai.action.add_knowledge": { mn: "Мэдлэг нэмэх", en: "Add knowledge" },
 
   "ai.message.greeting": {

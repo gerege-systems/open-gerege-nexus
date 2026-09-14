@@ -112,5 +112,5 @@ export function proxy(request: NextRequest) {
 export const config = {
   // Статик хөрөнгө, зураг, manifest дээр ажиллуулах шаардлагагүй — тэдгээр нь
   // шугамаас үл хамааран ижил.
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|icons|brand.webp|manifest.webmanifest).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|icons|brand.webp|manifest.webmanifest|theme-init.js|sw.js|offline.html).*)"],
 };

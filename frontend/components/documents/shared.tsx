@@ -3,14 +3,35 @@
 import React, { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
-import { Banner, Modal, fieldClass } from "@/components/ui";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  ConfirmationDialog,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  EmptyState,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  Skeleton,
+  Spinner,
+  type BadgeProps,
+} from "@gerege-systems/ui";
 import {
   Ban,
   CheckCircle,
   Clock,
   FileText,
   History,
-  Loader2,
   PenLine,
   Send,
   ShieldCheck,
@@ -109,41 +130,20 @@ interface EIDSignSession {
  */
 export function StatusBadge({ status }: { status: string }) {
   const { t } = useI18n();
-  const shell = "inline-flex items-center space-x-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full";
 
   if (status === "APPROVED") {
-    return (
-      <span className={`${shell} bg-emerald-50 text-emerald-700 border border-emerald-200`}>
-        <CheckCircle className="w-3 h-3 text-emerald-500" />
-        <span>{t("documents.state.approved")}</span>
-      </span>
-    );
+    return <Badge tone="success" icon={<CheckCircle />}>{t("documents.state.approved")}</Badge>;
   }
   if (status === "REJECTED") {
-    return (
-      <span className={`${shell} bg-red-50 text-red-700 border border-red-200`}>
-        <XCircle className="w-3 h-3 text-red-500" />
-        <span>{t("documents.state.rejected")}</span>
-      </span>
-    );
+    return <Badge tone="danger" icon={<XCircle />}>{t("documents.state.rejected")}</Badge>;
   }
   if (status === PENDING) {
-    return (
-      <span className={`${shell} bg-amber-50 text-amber-700 border border-amber-200`}>
-        <Clock className="w-3 h-3 text-amber-500" />
-        <span>{t("documents.state.pending")}</span>
-      </span>
-    );
+    return <Badge tone="warning" icon={<Clock />}>{t("documents.state.pending")}</Badge>;
   }
   if (status === "DRAFT") {
-    return (
-      <span className={`${shell} bg-surface-2 text-muted border border-line`}>
-        <FileText className="w-3 h-3 text-muted" />
-        <span>{t("documents.state.draft")}</span>
-      </span>
-    );
+    return <Badge tone="neutral" icon={<FileText />}>{t("documents.state.draft")}</Badge>;
   }
-  return <span className={`${shell} bg-surface-2 text-muted border border-line`}>{status}</span>;
+  return <Badge tone="neutral">{status}</Badge>;
 }
 
 /**
@@ -168,22 +168,16 @@ export function SignatureProgress({ doc }: { doc: DocumentRecord }) {
     doc.outstanding_steps === 0 &&
     doc.signature_count >= doc.required_signatures;
   return (
-    <span
-      className={`inline-flex items-center space-x-1 text-[11px] font-semibold px-2 py-0.5 rounded-full border ${
-        complete
-          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-          : "bg-indigo-50 text-indigo-700 border-indigo-200"
-      }`}
+    <Badge
+      tone={complete ? "success" : "accent"}
+      icon={<Users />}
       title={t("documents.message.signature_progress", {
         applied: doc.signature_count,
         required: doc.required_signatures,
       })}
     >
-      <Users className="w-3 h-3" />
-      <span>
-        {doc.signature_count}/{doc.required_signatures}
-      </span>
-    </span>
+      {doc.signature_count}/{doc.required_signatures}
+    </Badge>
   );
 }
 
@@ -194,12 +188,9 @@ export function SignatureCell({ doc }: { doc: DocumentRecord }) {
   if (doc.signed_by) {
     return (
       <div className="space-y-1">
-        <span className="bg-blue-50 text-blue-700 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border border-blue-200 inline-flex items-center w-max space-x-1">
-          <ShieldCheck className="w-3 h-3 text-blue-500" />
-          <span>{doc.signed_by}</span>
-        </span>
+        <Badge tone="info" icon={<ShieldCheck />}>{doc.signed_by}</Badge>
         {doc.signature_hash && (
-          <div className="font-mono text-[10px] text-muted truncate max-w-[220px]" title={doc.signature_hash}>
+          <div className="font-mono text-xs text-muted truncate max-w-[220px]" title={doc.signature_hash}>
             {doc.signer_reg_number ? `${doc.signer_reg_number} · ` : ""}
             {doc.signature_hash}
           </div>
@@ -208,9 +199,9 @@ export function SignatureCell({ doc }: { doc: DocumentRecord }) {
     );
   }
   if (doc.status === "REJECTED") {
-    return <span className="text-red-400 italic">{t("documents.message.rejected_not_signed")}</span>;
+    return <span className="text-danger text-xs">{t("documents.message.rejected_not_signed")}</span>;
   }
-  return <span className="text-muted italic">{t("documents.state.pending_signature")}</span>;
+  return <span className="text-muted text-xs">{t("documents.state.pending_signature")}</span>;
 }
 
 /**
@@ -266,8 +257,8 @@ export function useDocumentActions(onChanged: () => void | Promise<void>) {
     }
   };
 
+  // Confirmed in RowActions, the only place that offers the button.
   const reject = async (doc: DocumentRecord) => {
-    if (!confirm(t("documents.message.reject_confirm", { title: doc.title }))) return;
     setBusyId(doc.id, true);
     setMessage(null);
     try {
@@ -303,48 +294,203 @@ export function RowActions({
   onRoute?: (doc: DocumentRecord) => void;
 }) {
   const { t } = useI18n();
+  const [rejecting, setRejecting] = useState(false);
 
   // A draft is not awaiting anybody: it has to be sent for approval first, and
   // that is a routing decision rather than a signing one.
   if (doc.status === "DRAFT") {
-    if (!canManage || !onRoute) return <span className="text-subtle text-[11px]">—</span>;
+    if (!canManage || !onRoute) return <span className="text-subtle text-xs">—</span>;
     return (
-      <button
-        onClick={() => onRoute(doc)}
-        disabled={busy}
-        className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border border-input text-foreground hover:bg-surface-hover transition disabled:opacity-50"
-      >
-        <Send className="w-3.5 h-3.5" />
-        <span>{t("documents.action.route")}</span>
-      </button>
+      <Button variant="outline" size="sm" onClick={() => onRoute(doc)} disabled={busy} leadingIcon={<Send />}>
+        {t("documents.action.route")}
+      </Button>
     );
   }
 
-  if (doc.status !== PENDING) return <span className="text-subtle text-[11px]">—</span>;
-  if (!canSign) return <span className="text-subtle text-[11px]">—</span>;
+  if (doc.status !== PENDING) return <span className="text-subtle text-xs">—</span>;
+  if (!canSign) return <span className="text-subtle text-xs">—</span>;
 
   return (
-    <div className="flex items-center justify-end space-x-2">
-      <button
-        onClick={() => onSign(doc)}
-        disabled={busy}
-        className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border border-indigo-200 text-indigo-600 hover:bg-indigo-50 transition disabled:opacity-50"
-      >
-        <PenLine className="w-3.5 h-3.5" />
-        <span>{t("documents.action.sign")}</span>
-      </button>
-      <button
-        onClick={() => onReject(doc)}
-        disabled={busy}
-        className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border border-red-200 text-red-600 hover:bg-red-50 transition disabled:opacity-50"
-      >
-        <Ban className="w-3.5 h-3.5" />
-        <span>{t("documents.action.reject")}</span>
-      </button>
+    <div className="flex items-center justify-end gap-2">
+      <Button variant="outline" size="sm" onClick={() => onSign(doc)} disabled={busy} leadingIcon={<PenLine />} className="text-accent">
+        {t("documents.action.sign")}
+      </Button>
+      <Button variant="outline" size="sm" onClick={() => setRejecting(true)} disabled={busy} leadingIcon={<Ban />} className="text-danger">
+        {t("documents.action.reject")}
+      </Button>
+      {rejecting && (
+        <ConfirmationDialog
+          open
+          onOpenChange={(open) => { if (!open) setRejecting(false); }}
+          title={doc.title}
+          description={t("documents.message.reject_confirm", { title: doc.title })}
+          confirmLabel={t("documents.action.reject")}
+          cancelLabel={t("base.action.cancel")}
+          confirmVariant="destructive"
+          onConfirm={() => {
+            setRejecting(false);
+            onReject(doc);
+          }}
+        />
+      )}
     </div>
   );
 }
 
+/** A number a screen states about itself: the queue's size, what is past its term. */
+export function StatTile({ value, label, tone = "foreground", mono }: {
+  value: React.ReactNode;
+  label: string;
+  tone?: "foreground" | "accent" | "warning";
+  mono?: boolean;
+}) {
+  const colour = tone === "accent" ? "text-accent" : tone === "warning" ? "text-warning" : "text-foreground";
+  return (
+    <Card padding="sm">
+      <CardContent>
+        <div className={`text-2xl font-semibold ${colour}`}>{value}</div>
+        <div className={`text-xs text-muted leading-snug mt-1 ${mono ? "font-mono" : ""}`}>{label}</div>
+      </CardContent>
+    </Card>
+  );
+}
+
+/**
+ * What a listing shows while its first load is outstanding: rows of the right
+ * shape, so the page does not jump when the real ones land. The library's
+ * Skeleton holds itself back for 300ms and, once drawn, stays for 500, so a
+ * fast reply renders straight to content. The label is still announced,
+ * because a skeleton says nothing to a screen reader.
+ */
+export function ListSkeleton({ label, rows = 4 }: { label?: string; rows?: number }) {
+  const { t } = useI18n();
+  return (
+    <div className="py-4" role="status" aria-live="polite" aria-busy="true">
+      <span className="sr-only">{label || t("base.message.loading")}</span>
+      <div className="space-y-3">
+        {Array.from({ length: rows }, (_, row) => (
+          <div key={row} className="flex items-center gap-3">
+            <Skeleton variant="circle" className="size-4 shrink-0" />
+            <Skeleton className="h-4 flex-1" />
+            <Skeleton className="h-4 w-24 shrink-0" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The news that the rows on screen are old, with the way to try again. Shown
+ * under a table for as long as a refresh keeps failing — the banner can be
+ * dismissed, and a refresh that failed after an action must not be the only
+ * thing that says the rows are stale.
+ */
+export function StaleNotice({ busy, onRetry, inset }: { busy: boolean; onRetry: () => void; inset?: boolean }) {
+  const { t } = useI18n();
+  return (
+    <div className={inset ? "border-t border-line" : ""}>
+      <Alert variant="warning" className={inset ? "rounded-none border-0" : undefined}>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <span>{t("documents.message.stale_rows")}</span>
+          <Button variant="outline" size="sm" disabled={busy} onClick={onRetry}>
+            {t("documents.action.retry")}
+          </Button>
+        </div>
+      </Alert>
+    </div>
+  );
+}
+
+/** A partial list says so, and can be read further. */
+export function LoadMoreFooter({ text, busy, onMore }: { text: string; busy: boolean; onMore: () => void }) {
+  const { t } = useI18n();
+  return (
+    <div className="flex items-center justify-between gap-3 px-4 py-3 border-t border-line bg-surface-2">
+      <p className="text-xs text-muted">{text}</p>
+      <Button variant="outline" size="sm" disabled={busy} onClick={onMore}>
+        {t("documents.action.load_more")}
+      </Button>
+    </div>
+  );
+}
+
+/**
+ * A labelled single-choice field over the design system's Select. Radix cannot
+ * carry an empty string as a value, so a "not chosen" option travels as
+ * `SELECT_NONE` and comes back to the caller as "".
+ */
+export const SELECT_NONE = "__none__";
+
+export function SelectField({
+  id,
+  label,
+  hideLabel,
+  value,
+  onValueChange,
+  options,
+  disabled,
+  helperText,
+  size,
+  className,
+  placeholder,
+}: {
+  id?: string;
+  label: string;
+  hideLabel?: boolean;
+  value: string;
+  onValueChange: (value: string) => void;
+  options: { value: string; label: string }[];
+  disabled?: boolean;
+  helperText?: string;
+  size?: "sm" | "md" | "lg";
+  className?: string;
+  placeholder?: string;
+}) {
+  const autoId = React.useId();
+  const fieldId = id ?? autoId;
+  return (
+    <div className={`flex flex-col gap-1.5 ${className ?? ""}`}>
+      <label htmlFor={fieldId} className={`text-sm font-medium text-foreground ${hideLabel ? "sr-only" : ""}`}>
+        {label}
+      </label>
+      <Select
+        value={value === "" ? SELECT_NONE : value}
+        onValueChange={(next) => onValueChange(next === SELECT_NONE ? "" : next)}
+        disabled={disabled}
+      >
+        <SelectTrigger id={fieldId} size={size} placeholder={placeholder} />
+        <SelectContent>
+          {options.map((option) => (
+            <SelectItem key={option.value || SELECT_NONE} value={option.value === "" ? SELECT_NONE : option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {helperText && <p className="text-xs text-subtle">{helperText}</p>}
+    </div>
+  );
+}
+
+/** A listing that has nothing to show. */
+export function ListEmpty({ icon, title, description }: { icon: React.ReactNode; title: string; description?: string }) {
+  return <EmptyState icon={icon} title={title} description={description} />;
+}
+
+/**
+ * The props that make a library DialogContent behave as these dialogs always
+ * have: no Escape, no backdrop dismissal — a stray click must not end a signing
+ * conversation or throw away a half-filled form. The dialog's own buttons close it.
+ */
+export const pinnedDialogProps = {
+  showClose: false,
+  onEscapeKeyDown: (event: Event) => event.preventDefault(),
+  onPointerDownOutside: (event: Event) => event.preventDefault(),
+  onInteractOutside: (event: Event) => event.preventDefault(),
+} as const;
+
+export type Tone = NonNullable<BadgeProps["tone"]>;
 
 /**
  * The signing ceremony, which is not the same shape for the two channels.
@@ -505,144 +651,128 @@ export function SignatureDialog({
   };
 
   return (
-    <Modal label={t("documents.view.sign_title")}>
-      <h2 className="text-xl font-semibold text-foreground mb-1 flex items-center space-x-2">
-        <PenLine className="w-5 h-5 text-indigo-600" />
-        <span>{t("documents.view.sign_title")}</span>
-      </h2>
-      <p className="text-xs text-muted mb-4 truncate">{doc.title}</p>
+    <Dialog open>
+      <DialogContent {...pinnedDialogProps}>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <PenLine className="size-5 text-accent" aria-hidden />
+            {t("documents.view.sign_title")}
+          </DialogTitle>
+          <DialogDescription className="truncate">{doc.title}</DialogDescription>
+        </DialogHeader>
 
-      {failure && (
-        <div className="mb-4">
-          <Banner tone="error" message={failure} />
-        </div>
-      )}
-
-      {session ? (
-        <div className="space-y-4">
-          <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-4 text-center">
-            <p className="text-[11px] font-semibold text-indigo-700 uppercase tracking-wide">
-              {t("documents.field.verification_code")}
-            </p>
-            <p className="text-3xl font-semibold tracking-[0.2em] text-indigo-900 mt-1">
-              {session.verification_code}
-            </p>
-            <p className="text-[11px] text-indigo-700 mt-2">{t("documents.message.verification_code_hint")}</p>
+        {failure && (
+          <div className="mb-4">
+            <Alert variant="danger" live>{failure}</Alert>
           </div>
+        )}
 
-          <div className="flex items-center gap-2 text-sm text-muted">
-            <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-            <span className="flex-1">
-              {t("documents.message.awaiting_approval", { reg: regNumber.toUpperCase() })}
-            </span>
-            {/* Only when eID gave a deadline to count down. A countdown we made up
-                is worse than none: it hurries the citizen and then says the
-                request expired while eID is still waiting for them. */}
-            {statedDeadline(session.expires_at) !== null && (
-              <span className="font-mono text-xs text-muted tabular-nums">
-                {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, "0")}
-              </span>
-            )}
-          </div>
-
-          <p className="text-[11px] text-muted">
-            {t("documents.message.approval_display_text")}: <span className="italic">{session.display_text}</span>
-          </p>
-
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-full bg-surface-2 hover:bg-slate-200 text-foreground font-medium py-2 rounded-lg text-xs"
-          >
-            {t("base.action.cancel")}
-          </button>
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-foreground mb-1.5">
-              {t("documents.field.signature_method")}
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {(["EID", "DAN"] as SignMethod[]).map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => setMethod(m)}
-                  className={`py-2 rounded-lg text-xs font-semibold border transition ${
-                    method === m
-                      ? "bg-indigo-600 text-white border-indigo-600"
-                      : "bg-surface text-foreground border-input hover:bg-surface-hover"
-                  }`}
-                >
-                  {m === "EID" ? "E-ID (eidmongolia.mn)" : "DAN (dan.gerege.mn)"}
-                </button>
-              ))}
+        {session ? (
+          <div className="space-y-4">
+            <div className="rounded-lg border border-accent bg-accent-soft p-4 text-center">
+              <p className="text-xs font-semibold text-accent uppercase tracking-wide">
+                {t("documents.field.verification_code")}
+              </p>
+              <p className="text-3xl font-semibold tracking-[0.2em] text-accent mt-1">
+                {session.verification_code}
+              </p>
+              <p className="text-xs text-accent mt-2">{t("documents.message.verification_code_hint")}</p>
             </div>
-            <p className="text-[11px] text-muted mt-1.5">
-              {method === "EID"
-                ? t("documents.message.eid_method_hint")
-                : t("documents.message.dan_method_hint")}
-            </p>
-          </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-foreground mb-1">
-              {t("documents.field.reg_number")} *
-            </label>
+            <div className="flex items-center gap-2 text-sm text-muted" role="status">
+              <Spinner size="md" decorative className="shrink-0" />
+              <span className="flex-1">
+                {t("documents.message.awaiting_approval", { reg: regNumber.toUpperCase() })}
+              </span>
+              {/* Only when eID gave a deadline to count down. A countdown we made up
+                  is worse than none: it hurries the citizen and then says the
+                  request expired while eID is still waiting for them. */}
+              {statedDeadline(session.expires_at) !== null && (
+                <span className="font-mono text-xs text-muted tabular-nums">
+                  {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, "0")}
+                </span>
+              )}
+            </div>
+
+            <p className="text-xs text-muted">
+              {t("documents.message.approval_display_text")}: <span className="italic">{session.display_text}</span>
+            </p>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={onClose}>
+                {t("base.action.cancel")}
+              </Button>
+            </DialogFooter>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <span className="block text-sm font-medium text-foreground mb-1.5">
+                {t("documents.field.signature_method")}
+              </span>
+              <div className="grid grid-cols-2 gap-2">
+                {(["EID", "DAN"] as SignMethod[]).map((m) => (
+                  <Button
+                    key={m}
+                    type="button"
+                    size="sm"
+                    variant={method === m ? "primary" : "outline"}
+                    aria-pressed={method === m}
+                    onClick={() => setMethod(m)}
+                  >
+                    {m === "EID" ? "E-ID (eidmongolia.mn)" : "DAN (dan.gerege.mn)"}
+                  </Button>
+                ))}
+              </div>
+              <p className="text-xs text-muted mt-1.5">
+                {method === "EID"
+                  ? t("documents.message.eid_method_hint")
+                  : t("documents.message.dan_method_hint")}
+              </p>
+            </div>
+
             {/* The same bounds the server holds (RegNumberLimit..RegNumberMax), so a
                 number that could never be a registration number is caught in the
                 field rather than as a 400 after the operator has committed to it. */}
-            <input
+            <Input
               type="text"
+              label={`${t("documents.field.reg_number")} *`}
               placeholder="УБ99010111"
               value={regNumber}
               onChange={(e) => setRegNumber(e.target.value)}
-              className={`${fieldClass} font-mono`}
+              className="[&_input]:font-mono"
               minLength={8}
               maxLength={64}
               required
             />
-          </div>
 
-          {method === "DAN" && (
-            <div>
-              <label className="block text-xs font-semibold text-foreground mb-1">
-                {t("documents.field.otp_code")}
-              </label>
-              <input
+            {method === "DAN" && (
+              <Input
                 type="text"
+                label={t("documents.field.otp_code")}
                 placeholder="123456"
                 value={otpCode}
                 onChange={(e) => setOtpCode(e.target.value)}
-                className={`${fieldClass} font-mono`}
+                className="[&_input]:font-mono"
               />
-            </div>
-          )}
+            )}
 
-          <div className="flex items-center space-x-2 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-1/2 bg-surface-2 hover:bg-slate-200 text-foreground font-medium py-2 rounded-lg text-xs"
-            >
-              {t("base.action.cancel")}
-            </button>
-            <button
-              type="submit"
-              disabled={busy}
-              className="w-1/2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-lg text-xs disabled:opacity-50"
-            >
-              {busy
-                ? t("documents.message.signing")
-                : method === "EID"
-                  ? t("documents.action.request_approval")
-                  : t("documents.action.sign")}
-            </button>
-          </div>
-        </form>
-      )}
-    </Modal>
+            <DialogFooter className="pt-2">
+              <Button type="button" variant="outline" onClick={onClose}>
+                {t("base.action.cancel")}
+              </Button>
+              <Button type="submit" loading={busy}>
+                {busy
+                  ? t("documents.message.signing")
+                  : method === "EID"
+                    ? t("documents.action.request_approval")
+                    : t("documents.action.sign")}
+              </Button>
+            </DialogFooter>
+          </form>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -709,138 +839,134 @@ export function SignatureHistoryDialog({ doc, onClose }: { doc: DocumentRecord; 
   const rows = [...chainRows, ...extraRows];
 
   return (
-    <Modal size="lg" label={t("documents.view.history_title")}>
-      <h2 className="text-xl font-semibold text-foreground mb-1 flex items-center space-x-2">
-        <ShieldCheck className="w-5 h-5 text-indigo-600" />
-        <span>{t("documents.view.history_title")}</span>
-      </h2>
-      <div className="flex items-center gap-2 mb-4 min-w-0">
-        <p className="text-xs text-muted truncate">{doc.title}</p>
-        {/* The trail covers the list, so the status has to travel with it: the same
-            unfilled steps mean "still to come" on a pending document and "never
-            given" on one that has been decided, and the dialog says nothing else
-            about which this is. */}
-        <StatusBadge status={doc.status} />
-      </div>
+    <Dialog open>
+      <DialogContent {...pinnedDialogProps} size="lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <ShieldCheck className="size-5 text-accent" aria-hidden />
+            {t("documents.view.history_title")}
+          </DialogTitle>
+          {/* The trail covers the list, so the status has to travel with it: the same
+              unfilled steps mean "still to come" on a pending document and "never
+              given" on one that has been decided, and the dialog says nothing else
+              about which this is. */}
+          <div className="flex items-center gap-2 min-w-0">
+            <DialogDescription className="truncate">{doc.title}</DialogDescription>
+            <StatusBadge status={doc.status} />
+          </div>
+        </DialogHeader>
 
-      {error ? (
-        <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3">{error}</p>
-      ) : signatures === null ? (
-        <div className="flex items-center gap-2 text-muted text-sm py-6">
-          <Loader2 className="w-4 h-4 animate-spin" />
-          {t("documents.message.loading")}
-        </div>
-      ) : rows.length === 0 ? (
-        <p className="text-sm text-muted py-6">{t("documents.message.no_signatures")}</p>
-      ) : (
-        <ol className="space-y-3 max-h-[60vh] overflow-y-auto">
-          {rows.map(({ step, signature }, index) => {
-            const filled = Boolean(signature);
-            // Only a pending document is still waiting for anything. On a decided
-            // one — rejected, or approved before its type had a chain — an unfilled
-            // step is an approval that was never given, and calling it "Later" told
-            // an operator that a closed document was still moving.
-            const open = doc.status === PENDING;
-            const isNext = !filled && open && rows.findIndex((r) => !r.signature) === index;
+        {error ? (
+          <Alert variant="danger" live>{error}</Alert>
+        ) : signatures === null ? (
+          <div className="flex items-center gap-2 text-muted text-sm py-6" role="status">
+            <Spinner size="md" decorative />
+            {t("documents.message.loading")}
+          </div>
+        ) : rows.length === 0 ? (
+          <EmptyState icon={<History />} title={t("documents.message.no_signatures")} />
+        ) : (
+          <ol className="space-y-3 max-h-[60dvh] overflow-y-auto">
+            {rows.map(({ step, signature }, index) => {
+              const filled = Boolean(signature);
+              // Only a pending document is still waiting for anything. On a decided
+              // one — rejected, or approved before its type had a chain — an unfilled
+              // step is an approval that was never given, and calling it "Later" told
+              // an operator that a closed document was still moving.
+              const open = doc.status === PENDING;
+              const isNext = !filled && open && rows.findIndex((r) => !r.signature) === index;
 
-            return (
-              <li
-                key={step ? `step-${step.order}` : `sig-${index}`}
-                className={`border rounded-lg p-3 ${
-                  filled
-                    ? "border-line"
-                    : isNext
-                      ? "border-indigo-300 bg-indigo-50/40"
-                      : "border-dashed border-line"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`w-5 h-5 shrink-0 rounded-full text-[10px] font-semibold grid place-items-center ${
-                          filled ? "bg-emerald-100 text-emerald-700" : "bg-surface-2 text-muted"
-                        }`}
-                      >
-                        {step ? step.order : index + 1}
-                      </span>
-                      <p className="text-sm font-semibold text-foreground truncate">
-                        {signature ? signature.signer_name : step?.name || "—"}
-                      </p>
-                      {!step && signature && steps.length > 0 && (
-                        <span className="shrink-0 text-[10px] text-muted italic">
-                          {t("documents.message.signature_outside_chain")}
+              return (
+                <li
+                  key={step ? `step-${step.order}` : `sig-${index}`}
+                  className={`border rounded-lg p-3 ${
+                    filled
+                      ? "border-line"
+                      : isNext
+                        ? "border-accent bg-accent-soft"
+                        : "border-dashed border-line"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`w-5 h-5 shrink-0 rounded-full text-xs font-semibold grid place-items-center ${
+                            filled ? "bg-success-soft text-success" : "bg-surface-2 text-muted"
+                          }`}
+                        >
+                          {step ? step.order : index + 1}
                         </span>
-                      )}
-                    </div>
-                    <p className="font-mono text-[11px] text-muted mt-0.5 pl-7">
-                      {signature
-                        ? signature.signer_reg_number
-                        : step?.signer_reg_number || t("documents.message.step_open_to_anyone")}
-                    </p>
-                  </div>
-                  {filled ? (
-                    <span className="shrink-0 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                      {signature!.signer_method === "EID" ? "E-ID" : signature!.signer_method}
-                    </span>
-                  ) : (
-                    <span
-                      className={`shrink-0 text-[11px] font-semibold px-2 py-0.5 rounded-full border ${
-                        isNext
-                          ? "bg-indigo-100 text-indigo-700 border-indigo-200"
-                          : "bg-surface-2 text-muted border-line"
-                      }`}
-                    >
-                      {isNext
-                        ? t("documents.state.awaiting_now")
-                        : open
-                          ? t("documents.state.awaiting_later")
-                          : t("documents.state.never_given")}
-                    </span>
-                  )}
-                </div>
-
-                {signature && (
-                  <dl className="mt-2 space-y-1 text-[11px] pl-7">
-                    <div className="flex gap-2">
-                      <dt className="text-muted shrink-0">{t("documents.field.signed_at")}:</dt>
-                      <dd className="text-foreground">{new Date(signature.signed_at).toLocaleString()}</dd>
-                    </div>
-                    {signature.certificate_serial ? (
-                      <>
-                        <div className="flex gap-2">
-                          <dt className="text-muted shrink-0">{t("documents.field.certificate_serial")}:</dt>
-                          <dd className="font-mono text-foreground break-all">{signature.certificate_serial}</dd>
-                        </div>
-                        {signature.certificate_issuer && (
-                          <div className="flex gap-2">
-                            <dt className="text-muted shrink-0">{t("documents.field.certificate_issuer")}:</dt>
-                            <dd className="text-foreground break-all">{signature.certificate_issuer}</dd>
-                          </div>
+                        <p className="text-sm font-semibold text-foreground truncate">
+                          {signature ? signature.signer_name : step?.name || "—"}
+                        </p>
+                        {!step && signature && steps.length > 0 && (
+                          <span className="shrink-0 text-xs text-muted italic">
+                            {t("documents.message.signature_outside_chain")}
+                          </span>
                         )}
-                      </>
-                    ) : (
-                      <div className="flex gap-2">
-                        <dt className="text-muted shrink-0">{t("documents.field.approval_reference")}:</dt>
-                        <dd className="font-mono text-muted break-all">{signature.signature_hash}</dd>
                       </div>
+                      <p className="font-mono text-xs text-muted mt-0.5 ps-7">
+                        {signature
+                          ? signature.signer_reg_number
+                          : step?.signer_reg_number || t("documents.message.step_open_to_anyone")}
+                      </p>
+                    </div>
+                    {filled && signature ? (
+                      <Badge tone="info" className="shrink-0">
+                        {signature.signer_method === "EID" ? "E-ID" : signature.signer_method}
+                      </Badge>
+                    ) : (
+                      <Badge tone={isNext ? "accent" : "neutral"} className="shrink-0">
+                        {isNext
+                          ? t("documents.state.awaiting_now")
+                          : open
+                            ? t("documents.state.awaiting_later")
+                            : t("documents.state.never_given")}
+                      </Badge>
                     )}
-                  </dl>
-                )}
-              </li>
-            );
-          })}
-        </ol>
-      )}
+                  </div>
 
-      <button
-        type="button"
-        onClick={onClose}
-        className="mt-5 w-full bg-surface-2 hover:bg-slate-200 text-foreground font-medium py-2 rounded-lg text-xs"
-      >
-        {t("base.action.close")}
-      </button>
-    </Modal>
+                  {signature && (
+                    <dl className="mt-2 space-y-1 text-xs ps-7">
+                      <div className="flex gap-2">
+                        <dt className="text-muted shrink-0">{t("documents.field.signed_at")}:</dt>
+                        <dd className="text-foreground">{new Date(signature.signed_at).toLocaleString()}</dd>
+                      </div>
+                      {signature.certificate_serial ? (
+                        <>
+                          <div className="flex gap-2">
+                            <dt className="text-muted shrink-0">{t("documents.field.certificate_serial")}:</dt>
+                            <dd className="font-mono text-foreground break-all">{signature.certificate_serial}</dd>
+                          </div>
+                          {signature.certificate_issuer && (
+                            <div className="flex gap-2">
+                              <dt className="text-muted shrink-0">{t("documents.field.certificate_issuer")}:</dt>
+                              <dd className="text-foreground break-all">{signature.certificate_issuer}</dd>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div className="flex gap-2">
+                          <dt className="text-muted shrink-0">{t("documents.field.approval_reference")}:</dt>
+                          <dd className="font-mono text-muted break-all">{signature.signature_hash}</dd>
+                        </div>
+                      )}
+                    </dl>
+                  )}
+                </li>
+              );
+            })}
+          </ol>
+        )}
+
+        <DialogFooter className="mt-5">
+          <Button type="button" variant="outline" onClick={onClose}>
+            {t("base.action.close")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -854,16 +980,15 @@ export function SignatureHistoryButton({ doc, onOpen }: { doc: DocumentRecord; o
   if (doc.signature_count === 0 && doc.outstanding_steps === 0) return null;
 
   return (
-    <button
+    <Button
+      variant="outline"
+      size="sm"
       onClick={() => onOpen(doc)}
       title={t("documents.action.view_history")}
       aria-label={t("documents.action.view_history")}
-      className="inline-flex items-center space-x-1 px-2 py-1 rounded-lg text-[11px] font-semibold border border-input text-muted hover:bg-surface-hover transition"
+      leadingIcon={<History />}
     >
-      <History className="w-3.5 h-3.5" />
-      <span>
-        {doc.signature_count}/{doc.required_signatures}
-      </span>
-    </button>
+      {doc.signature_count}/{doc.required_signatures}
+    </Button>
   );
 }

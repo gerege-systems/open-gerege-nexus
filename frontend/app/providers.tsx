@@ -4,6 +4,7 @@ import React from "react";
 
 import Layout from "@/components/Layout";
 import InstallApp from "@/components/InstallApp";
+import { DesignSystemProvider, Toaster, TooltipProvider, mnStrings } from "@gerege-systems/ui";
 import { I18nProvider } from "@/lib/i18n";
 import { ThemeProvider } from "@/lib/theme";
 import { BrandProvider } from "@/lib/brandContext";
@@ -40,8 +41,15 @@ export default function Providers({
     <I18nProvider brand={brand.name} copy={copy}>
       <BrandProvider brand={brand} copy={copy}>
         <ThemeProvider>
-          <Layout>{children}</Layout>
-          <InstallApp />
+          {/* The design system's own strings (aria-labels, "Close", pagination
+              words) in Mongolian; the platform's copy stays in lib/i18n. */}
+          <DesignSystemProvider strings={mnStrings}>
+            <TooltipProvider>
+              <Layout>{children}</Layout>
+              <InstallApp />
+              <Toaster />
+            </TooltipProvider>
+          </DesignSystemProvider>
         </ThemeProvider>
       </BrandProvider>
     </I18nProvider>

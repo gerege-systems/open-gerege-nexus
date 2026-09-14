@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import {api} from "@/lib/api";
 import {useI18n} from "@/lib/i18n";
 import {Fingerprint,RefreshCw,ShieldCheck,Smartphone,X} from "lucide-react";
+import {Button,Tabs,TabsList,TabsTrigger} from "@gerege-systems/ui";
 import {safeReturnPath} from "@/lib/safeReturnPath.mjs";
 
 // Fetched when a QR code is actually drawn, which is after the visitor has
@@ -143,19 +144,21 @@ export default function EIDLogin({next="/profile",compact=false,variant="card",b
   const bare=variant==="signin";
   return <div className={`eid-login ${compact?"eid-login--compact":""}`} aria-live="polite">
     {!bare&&<header className="eid-login__head"><span><Fingerprint/></span><div><h2>{t("auth.eid.title")}</h2><p>{t("auth.eid.subtitle")}</p></div></header>}
-    <div className="eid-tabs" role="tablist"><button className={method==="id"?"is-active":""} onClick={()=>switchMethod("id")}>{t("auth.eid.tab_id")}</button><button className={method==="qr"?"is-active":""} onClick={()=>switchMethod("qr")}>{t("auth.eid.tab_qr")}</button></div>
+    {/* The two ways in, as the design system's segmented tabs. Only the
+        triggers: what each one shows is drawn below from `method`. */}
+    <Tabs value={method} onValueChange={value=>switchMethod(value as Method)} className="mb-5"><TabsList variant="pills" className="flex w-full"><TabsTrigger value="id" className="flex-1">{t("auth.eid.tab_id")}</TabsTrigger><TabsTrigger value="qr" className="flex-1">{t("auth.eid.tab_qr")}</TabsTrigger></TabsList></Tabs>
     {bare&&method==="id"&&!pending&&<p className="signin-instruction">{t("auth.eid.instruction")}</p>}
     {error&&<p className="eid-alert eid-alert--error">{error}</p>}{phase==="expired"&&<p className="eid-alert">{t("auth.message.expired")}</p>}{phase==="refused"&&<p className="eid-alert eid-alert--error">{t("auth.message.refused")}</p>}
-    {method==="id"&&!pending&&<form onSubmit={e=>{e.preventDefault();void begin("id")}}><label htmlFor="eid-rd">{t("auth.eid.reg_number")}</label><input id="eid-rd" value={nationalId} onChange={e=>setNationalId(e.target.value.toUpperCase())} placeholder={t("auth.eid.reg_number_placeholder")} autoComplete="off" required minLength={8}/><button className="eid-primary"><Smartphone/> {t("auth.eid.send_request")}</button></form>}
+    {method==="id"&&!pending&&<form onSubmit={e=>{e.preventDefault();void begin("id")}}><label htmlFor="eid-rd">{t("auth.eid.reg_number")}</label><input id="eid-rd" value={nationalId} onChange={e=>setNationalId(e.target.value.toUpperCase())} placeholder={t("auth.eid.reg_number_placeholder")} autoComplete="off" required minLength={8}/><Button type="submit" size="xl" className="mt-1 w-full" leadingIcon={<Smartphone/>}>{t("auth.eid.send_request")}</Button></form>}
     {phase==="starting"&&<div className="eid-status"><RefreshCw className="animate-spin"/> {t("auth.message.starting")}</div>}
     {phase==="waiting"&&start&&<div className="eid-wait">
       {method==="qr"&&start.device_link_url&&<div className="eid-qr"><QRCodeSVG value={start.device_link_url} size={compact?154:190} level="M"/></div>}
       <p>{t(method==="qr"?"auth.message.scan_qr":"auth.message.sent_push")}</p><small>{t("auth.eid.verification_code")}</small><strong>{start.verification_code}</strong><span><ShieldCheck/> {t("auth.eid.confirm_hint")}</span>
       {hasDeadline(start)&&<span className="eid-countdown">{t("auth.message.expires_in",{time:clock(left)})}</span>}
     </div>}
-    {pending&&<button className="eid-cancel" onClick={cancel}><X/> {t("auth.action.cancel")}</button>}
+    {pending&&<Button variant="outline" className="mt-4 w-full text-muted" leadingIcon={<X/>} onClick={cancel}>{t("auth.action.cancel")}</Button>}
     {phase==="success"&&<p className="eid-alert eid-alert--success">{t("auth.message.success")}</p>}
-    {terminal&&<button className="eid-retry" onClick={()=>void begin(method)}><RefreshCw/> {t("auth.action.retry")}</button>}
+    {terminal&&<Button variant="outline" className="w-full" leadingIcon={<RefreshCw/>} onClick={()=>void begin(method)}>{t("auth.action.retry")}</Button>}
     {!bare&&<footer><ShieldCheck/> {t("auth.eid.footer")}</footer>}
   </div>
 }

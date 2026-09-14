@@ -19,10 +19,21 @@
  */
 
 import React, { useCallback, useState } from "react";
+import {
+  Alert,
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  Input,
+  Textarea,
+} from "@gerege-systems/ui";
 
 import { cp, StepUpRequired } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
-import { Modal } from "@/components/ui";
 
 interface Request {
   title: string;
@@ -51,13 +62,15 @@ function ActionDialog({ request, onClose }: { request: Request; onClose: () => v
   // operator inside the five-minute window is never shown a box they do not
   // need to fill in.
   const [needsCode, setNeedsCode] = useState(false);
-  const [failure, setFailure] = useState("");
+  // The server asking for the code again is a condition, not a failure, and
+  // is drawn as one; anything else the request answered with is an error.
+  const [failure, setFailure] = useState<{ tone: "warning" | "danger"; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     setBusy(true);
-    setFailure("");
+    setFailure(null);
     try {
       if (needsCode) {
         // Prove ourselves first, then do what was asked. The other order —
@@ -72,75 +85,70 @@ function ActionDialog({ request, onClose }: { request: Request; onClose: () => v
     } catch (error) {
       if (error instanceof StepUpRequired) {
         setNeedsCode(true);
-        setFailure(t("cp.message.step_up"));
+        setFailure({ tone: "warning", text: t("cp.message.step_up") });
         return;
       }
-      setFailure(error instanceof Error ? error.message : String(error));
+      setFailure({ tone: "danger", text: error instanceof Error ? error.message : String(error) });
     } finally {
       setBusy(false);
     }
   }
 
+  // The backdrop dismisses only while nothing has been typed: a stray click
+  // must not throw away a half-written reason. Escape always closes.
+  const typed = reason.trim() !== "" || code !== "";
+
   return (
-    <Modal onClose={onClose} label={request.title}>
-      <form onSubmit={submit} className="p-5 space-y-4">
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">{request.title}</h2>
-          {request.detail && <p className="mt-1 text-sm text-muted">{request.detail}</p>}
-        </div>
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent
+        showClose={false}
+        onInteractOutside={(event) => { if (typed) event.preventDefault(); }}
+        {...(request.detail ? {} : { "aria-describedby": undefined })}
+      >
+        <form onSubmit={submit} className="space-y-4">
+          <DialogHeader className="pb-0">
+            <DialogTitle>{request.title}</DialogTitle>
+            {request.detail && <DialogDescription>{request.detail}</DialogDescription>}
+          </DialogHeader>
 
-        {failure && (
-          <p className="text-sm rounded-lg bg-amber-50 text-amber-900 border border-amber-200 px-3 py-2">
-            {failure}
-          </p>
-        )}
+          {failure && (
+            <Alert variant={failure.tone} live>
+              {failure.text}
+            </Alert>
+          )}
 
-        <label className="block text-sm">
-          <span className="text-muted">{t("cp.field.reason")}</span>
-          <textarea
+          <Textarea
+            label={t("cp.field.reason")}
+            helperText={t("cp.hint.reason")}
             required
             rows={2}
             value={reason}
             onChange={(event) => setReason(event.target.value)}
-            className="mt-1 w-full rounded-lg border border-input px-3 py-2"
           />
-          <span className="mt-1 block text-xs text-muted">{t("cp.hint.reason")}</span>
-        </label>
 
-        {needsCode && (
-          <label className="block text-sm">
-            <span className="text-muted">{t("cp.field.code")}</span>
-            <input
+          {needsCode && (
+            <Input
+              label={t("cp.field.code")}
               inputMode="numeric"
               autoComplete="one-time-code"
               maxLength={6}
               required
               value={code}
               onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))}
-              className="mt-1 w-full rounded-lg border border-input px-3 py-2 font-mono tracking-[0.4em]"
+              className="[&_input]:font-mono [&_input]:tracking-[0.4em]"
             />
-          </label>
-        )}
+          )}
 
-        <div className="flex justify-end gap-2 pt-1">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg px-4 py-2 text-sm text-muted hover:bg-surface-hover"
-          >
-            {t("cp.action.cancel")}
-          </button>
-          <button
-            type="submit"
-            disabled={busy}
-            className={`rounded-lg px-4 py-2 text-sm font-medium text-on-accent disabled:opacity-60 ${
-              request.danger ? "bg-red-600 hover:bg-red-700" : "bg-accent hover:brightness-105"
-            }`}
-          >
-            {t("cp.action.confirm")}
-          </button>
-        </div>
-      </form>
-    </Modal>
+          <DialogFooter className="pt-2">
+            <Button variant="outline" onClick={onClose}>
+              {t("cp.action.cancel")}
+            </Button>
+            <Button type="submit" variant={request.danger ? "destructive" : "primary"} loading={busy}>
+              {t("cp.action.confirm")}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

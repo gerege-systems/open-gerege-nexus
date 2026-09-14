@@ -175,8 +175,8 @@ test("the enrolment code takes six digits and nothing else", async () => {
   await shown("bat@example.test");
   await person.click(screen.getByRole("button", { name: "cp.action.add_operator" }));
 
-  // The hint sits inside the label, so the field's accessible name is the
-  // label and the hint together.
+  // The hint is the field's description, not part of its label; a pattern
+  // keeps the query independent of which.
   const code = within(screen.getByRole("dialog", { name: "cp.action.add_operator" })).getByLabelText(
     /cp\.field\.code/,
   ) as HTMLInputElement;
@@ -195,7 +195,9 @@ test("changing somebody's role asks why, and sends the reason", async () => {
 
   render(<Operators />);
   await shown("bat@example.test");
-  await person.selectOptions(screen.getByRole("combobox", { name: "cp.field.role" }), "auditor");
+  // The role picker is the design system's Radix Select: open it, choose.
+  await person.click(screen.getByRole("combobox", { name: "cp.field.role" }));
+  await person.click(await screen.findByRole("option", { name: "cp.role.auditor" }));
 
   const dialog = await screen.findByRole("dialog", { name: "cp.action.change_role" });
   expect(api.setOperatorRole).not.toHaveBeenCalled();

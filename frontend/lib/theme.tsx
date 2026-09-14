@@ -4,19 +4,24 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from "
 import { getShell } from "@/lib/shell";
 
 export type ColorMode = "light" | "dark" | "system";
-export type Accent = "neutral" | "cobalt" | "teal" | "violet" | "emerald";
+/** "" = no choice: the deployment's theme (BRAND_THEME_*) stands. */
+export type Accent = "" | "neutral" | "cobalt" | "teal" | "violet" | "emerald";
 export type Density = "comfortable" | "compact";
-export type DesignTheme = "original" | "gerege";
 
 export interface ThemePreferences {
   mode: ColorMode;
   accent: Accent;
+  /** True once somebody picked an accent on the appearance screen. A stored
+      accent without it is the old default ("neutral") that rode along with
+      some other change, and the deployment's theme wins over that. */
+  accentChosen?: boolean;
   density: Density;
-  design: DesignTheme;
 }
 
 const STORAGE_KEY = "gerege_theme";
-const defaults: ThemePreferences = { design: "original", mode: "light", accent: "neutral", density: "comfortable" };
+// No accent by default: the deployment's own theme (lib/brandTheme.ts) is what
+// a fresh install shows, and a choice here overrides it for this browser only.
+const defaults: ThemePreferences = { mode: "light", accent: "", density: "comfortable" };
 
 interface ThemeContextValue extends ThemePreferences {
   resolvedMode: "light" | "dark";
@@ -51,7 +56,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
       if (saved) {
-        if (saved.design === "native") saved.design = "original";
+        // A retired preference (the "design" picker) is dropped, not carried.
+        delete saved.design;
+        if (saved.accent && !saved.accentChosen) saved.accent = "";
         setPreferences({ ...defaults, ...saved });
       }
     } catch {
@@ -70,9 +77,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       // `dark:` variant reads and the one the pre-paint script sets, and two
       // names for one state is how they came to disagree.
       document.documentElement.classList.toggle("dark", nextMode === "dark");
-      document.documentElement.dataset.accent = preferences.accent;
+      if (preferences.accent) document.documentElement.dataset.accent = preferences.accent;
+      else delete document.documentElement.dataset.accent;
       document.documentElement.dataset.density = preferences.density;
-      document.documentElement.dataset.design = preferences.design;
       document.documentElement.style.colorScheme = nextMode;
       // Бүрхүүлийн доторх харагдац нь хостынхоо платформоос хамаардаг. Хөтөч
       // дээр атрибут огт үлдэхгүй байх нь чухал — эсрэг тохиолдолд web горим
@@ -90,7 +97,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<ThemeContextValue>(() => ({
     ...preferences,
     resolvedMode,
-    updateTheme: (next) => setPreferences((current) => ({ ...current, ...next })),
+    updateTheme: (next) =>
+      setPreferences((current) => ({ ...current, ...next, ...("accent" in next ? { accentChosen: true } : {}) })),
     toggleMode: () => setPreferences((current) => ({
       ...current,
       mode: resolveMode(current.mode) === "dark" ? "light" : "dark",

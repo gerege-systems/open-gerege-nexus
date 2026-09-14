@@ -17,6 +17,7 @@
 import React, { Suspense, useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { KeyRound } from "lucide-react";
+import { Alert, Button, Card, Input, Spinner } from "@gerege-systems/ui";
 
 import { apiBase } from "@/lib/apiBase";
 import { useI18n } from "@/lib/i18n";
@@ -109,26 +110,26 @@ function SetPassword() {
 
   return (
     <div className="min-h-dvh grid place-items-center bg-surface-2 px-4">
-      <div className="w-full max-w-sm bg-surface rounded-xl border border-line p-6 space-y-4">
+      <Card padding="lg" className="w-full max-w-sm space-y-4">
         <div className="flex items-center gap-2 text-foreground">
-          <KeyRound className="w-5 h-5 text-blue-600" />
+          <KeyRound className="w-5 h-5 text-accent" aria-hidden="true" />
           <h1 className="text-lg font-semibold">
             {purpose === "invite" ? t("auth.view.set_password_invite") : t("auth.view.set_password_reset")}
           </h1>
         </div>
 
-        {state === "checking" && <p className="text-sm text-muted">…</p>}
+        {state === "checking" && <Spinner size="md" decorative />}
 
         {state === "dead" && (
-          <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">
+          <Alert variant="danger" live>
             {t("auth.message.link_dead")}
-          </p>
+          </Alert>
         )}
 
         {state === "done" && (
-          <p className="text-sm rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-2">
+          <Alert variant="success" live>
             {t("auth.message.password_saved")}
-          </p>
+          </Alert>
         )}
 
         {state === "ready" && (
@@ -140,62 +141,49 @@ function SetPassword() {
                 presses the button, hears nothing, and has no way to learn the
                 two passwords did not match. */}
             {failure && (
-              <p
-                id="password-failure"
-                role="alert"
-                className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2"
-              >
+              <Alert id="password-failure" variant="danger" live>
                 {failure}
-              </p>
+              </Alert>
             )}
 
-            <label className="block text-sm">
-              <span className="text-muted">{t("auth.field.new_password")}</span>
-              <input
-                type="password"
-                autoComplete="new-password"
-                required
-                minLength={MIN_LENGTH}
-                value={password}
-                onChange={(event) => { setPassword(event.target.value); setMismatch(false); }}
-                aria-describedby="password-length-hint"
-                className="mt-1 w-full rounded-lg border border-input px-3 py-2"
-              />
-            </label>
+            <Input
+              type="password"
+              label={t("auth.field.new_password")}
+              autoComplete="new-password"
+              required
+              minLength={MIN_LENGTH}
+              value={password}
+              onChange={(event) => { setPassword(event.target.value); setMismatch(false); }}
+              aria-describedby="password-length-hint"
+            />
 
             {/* The mismatch is a fact about this field, so it is this field
                 that carries the invalid state and points at the message. */}
-            <label className="block text-sm">
-              <span className="text-muted">{t("auth.field.repeat_password")}</span>
-              <input
-                type="password"
-                autoComplete="new-password"
-                required
-                minLength={MIN_LENGTH}
-                value={again}
-                onChange={(event) => { setAgain(event.target.value); setMismatch(false); }}
-                aria-invalid={mismatch || undefined}
-                aria-describedby={
-                  mismatch ? "password-failure password-length-hint" : "password-length-hint"
-                }
-                className="mt-1 w-full rounded-lg border border-input px-3 py-2"
-              />
-            </label>
+            <Input
+              type="password"
+              label={t("auth.field.repeat_password")}
+              autoComplete="new-password"
+              required
+              minLength={MIN_LENGTH}
+              value={again}
+              onChange={(event) => { setAgain(event.target.value); setMismatch(false); }}
+              tone={mismatch ? "error" : "default"}
+              aria-invalid={mismatch || undefined}
+              aria-describedby={
+                mismatch ? "password-failure password-length-hint" : "password-length-hint"
+              }
+            />
 
             <p id="password-length-hint" className="text-xs text-muted">
               {t("auth.hint.password_length")}
             </p>
 
-            <button
-              type="submit"
-              disabled={busy}
-              className="w-full rounded-lg bg-blue-600 text-white py-2.5 font-medium hover:bg-blue-700 disabled:opacity-60 transition"
-            >
+            <Button type="submit" loading={busy} className="w-full">
               {t("auth.action.save_password")}
-            </button>
+            </Button>
           </form>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

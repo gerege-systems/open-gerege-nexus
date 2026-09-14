@@ -15,20 +15,21 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { Bot, CheckCircle2, Clock, Hand, Sparkles, User, X } from "lucide-react";
+import { Bot, CheckCircle2, Clock, Hand, Sparkles, User } from "lucide-react";
+import { Alert, Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, Skeleton } from "@gerege-systems/ui";
 import { api, type AppHistoryEntry } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { formatDay } from "@/lib/datetime";
 
 /** Which marker a line gets. Releases are the publisher's; the rest are ours. */
 function marker(entry: AppHistoryEntry) {
-  if (entry.type === "release") return <Sparkles className="w-4 h-4 text-indigo-500" />;
-  if (entry.type === "held") return <Hand className="w-4 h-4 text-amber-500" />;
+  if (entry.type === "release") return <Sparkles className="w-4 h-4 text-accent" />;
+  if (entry.type === "held") return <Hand className="w-4 h-4 text-warning" />;
   // A version that moved on its own says so with a different mark, because
   // "who did this" is the first thing anybody asks of a line like it.
   if (entry.system) return <Bot className="w-4 h-4 text-muted" />;
   if (entry.type === "upgraded" || entry.type === "installed") {
-    return <CheckCircle2 className="w-4 h-4 text-emerald-500" />;
+    return <CheckCircle2 className="w-4 h-4 text-success" />;
   }
   return <Clock className="w-4 h-4 text-muted" />;
 }
@@ -57,16 +58,6 @@ export default function AppHistory({ slug, onClose }: { slug: string; onClose: (
   useEffect(() => {
     void load();
   }, [load]);
-
-  // Escape closes it. A drawer that can only be dismissed by finding a small
-  // button is a drawer people leave open.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
 
   /**
    * The name of an event kind.
@@ -104,34 +95,25 @@ export default function AppHistory({ slug, onClose }: { slug: string; onClose: (
   };
 
   return (
-    <div className="fixed inset-0 z-modal flex justify-end" role="dialog" aria-modal="true">
-      <button
-        aria-label={t("base.action.close")}
-        onClick={onClose}
-        className="absolute inset-0 bg-slate-900/20"
-      />
-      <aside className="relative w-full max-w-md bg-surface h-full shadow-lg border-l border-line flex flex-col">
-        <header className="px-5 py-4 border-b border-line flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h2 className="font-semibold text-foreground truncate">{title || slug}</h2>
-            <p className="text-xs text-muted">{t("app_history.view.subtitle")}</p>
-          </div>
-          <button
-            onClick={onClose}
-            aria-label={t("base.action.close")}
-            className="p-1.5 rounded-lg text-muted hover:bg-surface-hover shrink-0"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </header>
+    // The design system's sheet owns Escape, the backdrop, the focus trap and
+    // the close button; the title names the dialog for a screen reader.
+    <Sheet open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <SheetContent side="right" className="flex w-full max-w-md flex-col gap-0 p-0">
+        <SheetHeader className="border-b border-line px-5 py-4 pe-12">
+          <SheetTitle className="truncate">{title || slug}</SheetTitle>
+          <SheetDescription>{t("app_history.view.subtitle")}</SheetDescription>
+        </SheetHeader>
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
           {loading ? (
-            <p className="text-sm text-muted">{t("base.message.loading")}</p>
+            <div role="status" aria-busy="true" className="space-y-3">
+              <span className="sr-only">{t("base.message.loading")}</span>
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+              <Skeleton className="h-4 w-2/3" />
+            </div>
           ) : error ? (
-            <p className="text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
-              {error}
-            </p>
+            <Alert variant="danger" live>{error}</Alert>
           ) : entries.length === 0 ? (
             <p className="text-sm text-muted">{t("app_history.message.empty")}</p>
           ) : (
@@ -158,7 +140,7 @@ export default function AppHistory({ slug, onClose }: { slug: string; onClose: (
                     {entry.details && <p className="text-xs text-muted mt-0.5">{entry.details}</p>}
                     {/* Why an update is waiting, and what it asked for. */}
                     {entry.reason && (
-                      <p className="text-xs text-amber-700 mt-0.5">
+                      <p className="text-xs text-warning mt-0.5">
                         {entry.reason}
                         {entry.added ? ` · ${entry.added}` : ""}
                       </p>
@@ -179,7 +161,7 @@ export default function AppHistory({ slug, onClose }: { slug: string; onClose: (
             </ol>
           )}
         </div>
-      </aside>
-    </div>
+      </SheetContent>
+    </Sheet>
   );
 }

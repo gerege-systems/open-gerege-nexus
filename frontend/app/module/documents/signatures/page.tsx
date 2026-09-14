@@ -5,8 +5,22 @@ import { api } from "@/lib/api";
 import { useResource } from "@/lib/useResource";
 import { useAccess } from "@/lib/access";
 import { useI18n } from "@/lib/i18n";
-import { Banner, LoadingBlock, PageHeader, TableCard, rowActionClass } from "@/components/ui";
-import { ActionMessage } from "@/components/documents/shared";
+import { PageHeader } from "@/components/ui";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Checkbox,
+  ErrorState,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@gerege-systems/ui";
+import { ActionMessage, ListSkeleton } from "@/components/documents/shared";
 import { PenTool, Save } from "lucide-react";
 
 interface Policy {
@@ -40,6 +54,7 @@ export default function SignaturePoliciesPage() {
     data: policies,
     loading,
     failed: loadFailed,
+    reload,
     setData: setPolicies,
   } = useResource(async () => (await api.getSignaturePolicies()) || [], {
     initial: [] as Policy[],
@@ -84,90 +99,100 @@ export default function SignaturePoliciesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        icon={<PenTool className="w-7 h-7 text-indigo-600" />}
+        icon={<PenTool className="w-7 h-7 text-accent" />}
         title={t("documents.menu.signature_policies")}
         subtitle={t("documents.view.signature_policies_hint")}
       />
 
-      {message && <Banner tone={message.type} message={message.text} onDismiss={() => setMessage(null)} />}
+      {message && (
+        <Alert variant={message.type === "error" ? "danger" : message.type} live dismissible onDismiss={() => setMessage(null)}>
+          {message.text}
+        </Alert>
+      )}
 
       {loading ? (
-        <LoadingBlock label={t("documents.message.loading")} />
+        <ListSkeleton label={t("documents.message.loading")} />
       ) : loadFailed ? (
-        <div className="bg-surface border border-line rounded-xl p-8 text-center text-muted text-sm">
-          {t("documents.message.policies_failed")}
-        </div>
+        <Card>
+          <ErrorState
+            title={t("documents.message.policies_failed")}
+            description=""
+            action={
+              <Button variant="outline" onClick={() => void reload()}>
+                {t("base.action.retry")}
+              </Button>
+            }
+          />
+        </Card>
       ) : (
-        <TableCard
-          head={
-            <tr>
-              <th className="px-4 py-3">{t("base.field.type")}</th>
-              <th className="px-4 py-3">E-ID</th>
-              <th className="px-4 py-3">DAN</th>
-              <th className="px-4 py-3">{t("documents.field.require_named_signer")}</th>
-              <th className="px-4 py-3">{t("base.field.status")}</th>
-              <th className="px-4 py-3 text-right">{t("base.field.actions")}</th>
-            </tr>
-          }
-        >
-          {policies.map((policy) => (
-            <tr key={policy.doc_type} className="hover:bg-surface-hover">
-              <td className="px-4 py-3 font-mono font-semibold text-foreground">{policy.doc_type}</td>
-              <td className="px-4 py-3">
-                <input
-                  type="checkbox"
-                  checked={policy.allow_eid}
-                  disabled={!mayManage}
-                  onChange={(e) => edit(policy.doc_type, { allow_eid: e.target.checked })}
-                  className="w-4 h-4 accent-indigo-600"
-                />
-              </td>
-              <td className="px-4 py-3">
-                <input
-                  type="checkbox"
-                  checked={policy.allow_dan}
-                  disabled={!mayManage}
-                  onChange={(e) => edit(policy.doc_type, { allow_dan: e.target.checked })}
-                  className="w-4 h-4 accent-indigo-600"
-                />
-              </td>
-              <td className="px-4 py-3">
-                <input
-                  type="checkbox"
-                  checked={policy.require_named_signer}
-                  disabled={!mayManage}
-                  onChange={(e) => edit(policy.doc_type, { require_named_signer: e.target.checked })}
-                  className="w-4 h-4 accent-indigo-600"
-                />
-              </td>
-              <td className="px-4 py-3">
-                {policy.configured ? (
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
-                    {t("documents.state.policy_configured")}
-                  </span>
-                ) : (
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-surface-2 text-muted border border-line">
-                    {t("documents.state.policy_default")}
-                  </span>
-                )}
-              </td>
-              <td className="px-4 py-3 text-right">
-                {mayManage ? (
-                  <button
-                    onClick={() => save(policy)}
-                    disabled={busy === policy.doc_type || (!policy.allow_eid && !policy.allow_dan)}
-                    className={rowActionClass}
-                  >
-                    <Save className="w-3.5 h-3.5" />
-                    <span>{t("base.action.save")}</span>
-                  </button>
-                ) : (
-                  <span className="text-subtle text-[11px]">—</span>
-                )}
-              </td>
-            </tr>
-          ))}
-        </TableCard>
+        <Card padding="none" className="overflow-hidden">
+          <Table containerClassName="rounded-none border-0" className="text-xs" scrollLabel={t("documents.menu.signature_policies")}>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("base.field.type")}</TableHead>
+                <TableHead>E-ID</TableHead>
+                <TableHead>DAN</TableHead>
+                <TableHead>{t("documents.field.require_named_signer")}</TableHead>
+                <TableHead>{t("base.field.status")}</TableHead>
+                <TableHead align="right">{t("base.field.actions")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {policies.map((policy) => (
+                <TableRow key={policy.doc_type}>
+                  <TableCell className="font-mono font-semibold">{policy.doc_type}</TableCell>
+                  <TableCell>
+                    <Checkbox
+                      checked={policy.allow_eid}
+                      aria-label={`E-ID — ${policy.doc_type}`}
+                      disabled={!mayManage}
+                      onCheckedChange={(checked) => edit(policy.doc_type, { allow_eid: checked === true })}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Checkbox
+                      checked={policy.allow_dan}
+                      aria-label={`DAN — ${policy.doc_type}`}
+                      disabled={!mayManage}
+                      onCheckedChange={(checked) => edit(policy.doc_type, { allow_dan: checked === true })}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Checkbox
+                      checked={policy.require_named_signer}
+                      aria-label={`${t("documents.field.require_named_signer")} — ${policy.doc_type}`}
+                      disabled={!mayManage}
+                      onCheckedChange={(checked) => edit(policy.doc_type, { require_named_signer: checked === true })}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    {policy.configured ? (
+                      <Badge tone="accent">{t("documents.state.policy_configured")}</Badge>
+                    ) : (
+                      <Badge tone="neutral">{t("documents.state.policy_default")}</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell align="right">
+                    {mayManage ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => save(policy)}
+                        loading={busy === policy.doc_type}
+                        disabled={!policy.allow_eid && !policy.allow_dan}
+                        leadingIcon={<Save />}
+                      >
+                        {t("base.action.save")}
+                      </Button>
+                    ) : (
+                      <span className="text-subtle text-xs">—</span>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
       )}
 
       <p className="text-xs text-muted">{t("documents.message.policy_named_signer_hint")}</p>

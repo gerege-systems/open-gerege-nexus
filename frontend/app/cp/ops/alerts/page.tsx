@@ -12,8 +12,21 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { BellRing, ExternalLink, RefreshCw, ShieldAlert, VolumeX } from "lucide-react";
 
-import { Badge, Card, formatMoment, Table } from "@/components/cp/ui";
 import { cp, type Overview } from "@/lib/cp";
+import {
+  Badge,
+  Button,
+  Card,
+  CardHeader,
+  Skeleton,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@gerege-systems/ui";
+import { formatMoment } from "@/lib/datetime";
 import { useI18n } from "@/lib/i18n";
 
 export default function Alerts() {
@@ -51,60 +64,96 @@ export default function Alerts() {
           </h1>
           <p className="mt-1 text-sm text-muted">{t("cp.hint.alerts")}</p>
         </div>
-        <button
-          type="button"
-          onClick={() => void load()}
-          disabled={busy}
-          className="inline-flex items-center gap-2 rounded-lg border border-input px-3 py-2 text-sm text-foreground hover:bg-surface-hover disabled:opacity-50"
-        >
-          <RefreshCw className={`w-4 h-4 ${busy ? "animate-spin" : ""}`} />
+        <Button variant="outline" onClick={() => void load()} loading={busy} leadingIcon={<RefreshCw />}>
           {t("cp.action.refresh")}
-        </button>
+        </Button>
       </div>
 
       {failure && (
-        <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+        <p role="alert" className="text-sm rounded-lg bg-danger-soft text-danger border border-danger-border px-3 py-2">{failure}</p>
       )}
 
-      <Card title={t("cp.section.firing")}>
-        <Table
-          head={[t("cp.field.alert"), t("cp.field.severity"), t("cp.field.since"), ""]}
-          rows={alerts.map((alert) => [
-            <span key="n" className="min-w-0">
-              <strong className="text-foreground flex items-center gap-1.5">
-                {alert.name}
-                {alert.silenced && <VolumeX className="w-3.5 h-3.5 text-muted" aria-label={t("cp.state.silenced")} />}
-              </strong>
-              {alert.summary && <span className="block text-xs text-muted">{alert.summary}</span>}
-            </span>,
-            <Badge key="s" tone={alert.severity === "critical" ? "red" : alert.severity === "warning" ? "amber" : "slate"}>
-              {alert.severity || "—"}
-            </Badge>,
-            formatMoment(alert.starts_at),
-            alert.runbook ? (
-              <a
-                key="r"
-                href={alert.runbook}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
-              >
-                {t("cp.action.runbook")}
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            ) : (
-              <span key="r" className="text-xs text-muted">—</span>
-            ),
-          ])}
-          empty={t("cp.message.nothing_firing")}
-        />
+      <Card padding="none" className="overflow-hidden">
+        <CardHeader className="flex-row items-center gap-3 border-b border-line px-4 py-3">
+          <h2 className="flex-1 text-base leading-tight font-semibold text-foreground">{t("cp.section.firing")}</h2>
+        </CardHeader>
+        <Table containerClassName="rounded-none border-0">
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("cp.field.alert")}</TableHead>
+              <TableHead>{t("cp.field.severity")}</TableHead>
+              <TableHead>{t("cp.field.since")}</TableHead>
+              <TableHead></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {alerts.map((alert, index) => (
+              <TableRow key={index}>
+                <TableCell>
+                  <span className="min-w-0">
+                    <strong className="text-foreground flex items-center gap-1.5">
+                      {alert.name}
+                      {alert.silenced && <VolumeX className="w-3.5 h-3.5 text-muted" aria-label={t("cp.state.silenced")} />}
+                    </strong>
+                    {alert.summary && <span className="block text-xs text-muted">{alert.summary}</span>}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <Badge tone={alert.severity === "critical" ? "danger" : alert.severity === "warning" ? "warning" : "neutral"}>
+                    {alert.severity || "—"}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  {formatMoment(alert.starts_at)}
+                </TableCell>
+                <TableCell>
+                  {alert.runbook ? (
+                    <a
+                      href={alert.runbook}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
+                    >
+                      {t("cp.action.runbook")}
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  ) : (
+                    <span className="text-xs text-muted">—</span>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+            {!health && !failure && (
+              <TableRow>
+                <TableCell colSpan={4}>
+                  <div role="status" aria-busy="true" className="space-y-3 py-2">
+                    <span className="sr-only">{t("base.message.loading")}</span>
+                    <Skeleton className="h-4" />
+                    <Skeleton className="h-4" />
+                    <Skeleton className="h-4" />
+                  </div>
+                </TableCell>
+              </TableRow>
+            )}
+            {health && alerts.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={4} className="py-8 text-center text-muted">
+                  {t("cp.message.nothing_firing")}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </Card>
 
-      <Card title={t("cp.section.warnings")}>
+      <Card padding="none" className="overflow-hidden">
+        <CardHeader className="flex-row items-center gap-3 border-b border-line px-4 py-3">
+          <h2 className="flex-1 text-base leading-tight font-semibold text-foreground">{t("cp.section.warnings")}</h2>
+        </CardHeader>
         <div className="p-4 space-y-2">
           {warnings.length === 0 && <p className="text-sm text-muted">{t("cp.message.no_warnings")}</p>}
           {warnings.map((warning) => (
-            <p key={warning} className="flex items-start gap-2 text-sm rounded-lg bg-amber-50 border border-amber-200 text-amber-900 px-3 py-2">
+            <p key={warning} className="flex items-start gap-2 text-sm rounded-lg bg-warning-soft border border-warning-border text-warning px-3 py-2">
               <ShieldAlert className="w-4 h-4 mt-0.5 shrink-0" />
               {warning}
             </p>

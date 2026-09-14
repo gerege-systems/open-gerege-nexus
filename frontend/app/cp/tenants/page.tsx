@@ -13,8 +13,23 @@ import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Building2, Plus, Search } from "lucide-react";
 
+import {
+  Badge,
+  Button,
+  Card,
+  Input,
+  Spinner,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  type InputProps,
+} from "@gerege-systems/ui";
+
 import { useConsole } from "@/components/cp/Console";
-import { formatMoment } from "@/components/cp/ui";
+import { formatMoment } from "@/lib/datetime";
 import { cp, type DirectoryOrganisation, type TenantSummary, type VerifiedPerson } from "@/lib/cp";
 import { useI18n } from "@/lib/i18n";
 import { Modal } from "@/components/ui";
@@ -64,97 +79,91 @@ export default function Tenants() {
           <p className="mt-1 text-sm text-muted">{t("cp.view.subtitle")}</p>
         </div>
         {(operator.role === "superadmin" || operator.role === "operator") && (
-          <button
-            type="button"
-            onClick={() => setCreating(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-accent px-3 py-2 text-sm font-medium text-on-accent hover:brightness-105"
-          >
-            <Plus className="w-4 h-4" />
+          <Button onClick={() => setCreating(true)} leadingIcon={<Plus />}>
             {t("cp.action.new_tenant")}
-          </button>
+          </Button>
         )}
       </div>
 
-      <p className="text-sm rounded-xl bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3">
+      <p className="text-sm rounded-lg bg-warning-soft border border-warning-border text-warning px-4 py-3">
         {t("cp.message.read_only")}
       </p>
 
-      <div className="relative">
-        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-        <input
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder={t("cp.field.search")}
-          className="w-full rounded-xl border border-input bg-surface pl-9 pr-3 py-2.5"
-        />
-      </div>
+      <Input
+        type="search"
+        label={t("cp.field.search")}
+        hideLabel
+        prefix={<Search className="size-4" />}
+        value={search}
+        onChange={(event) => setSearch(event.target.value)}
+        placeholder={t("cp.field.search")}
+      />
 
       {failure && (
-        <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">
+        <p role="alert" className="text-sm rounded-lg bg-danger-soft text-danger border border-danger-border px-3 py-2">
           {t("cp.message.load_failed")}
         </p>
       )}
 
-      <div className="bg-surface rounded-xl border border-line overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-surface-2 text-muted">
-              <tr>
-                <th className="text-left font-medium px-4 py-3">{t("cp.field.organisation")}</th>
-                <th className="text-left font-medium px-4 py-3">{t("cp.field.registration")}</th>
-                <th className="text-right font-medium px-4 py-3">{t("cp.field.users")}</th>
-                <th className="text-right font-medium px-4 py-3">{t("cp.field.apps")}</th>
-                <th className="text-left font-medium px-4 py-3">{t("cp.field.last_activity")}</th>
-                <th className="text-left font-medium px-4 py-3">{t("cp.field.state")}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line">
-              {tenants.map((tenant) => (
-                <tr key={tenant.id} className="hover:bg-surface-hover">
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/cp/tenants/${tenant.id}`}
-                      className="flex items-center gap-2 font-medium text-foreground hover:underline"
-                    >
-                      <Building2 className="w-4 h-4 text-muted" />
-                      {tenant.name}
-                    </Link>
-                    <span className="text-xs text-muted">{tenant.slug}</span>
-                  </td>
-                  <td className="px-4 py-3 text-muted">{tenant.registration_number || "—"}</td>
-                  <td className="px-4 py-3 text-right tabular-nums">{tenant.user_count}</td>
-                  <td className="px-4 py-3 text-right tabular-nums">{tenant.app_count}</td>
-                  <td className="px-4 py-3 text-muted">
-                    {formatMoment(tenant.last_activity_at) || t("cp.message.never")}
-                  </td>
-                  <td className="px-4 py-3">
-                    {tenant.deletion_scheduled_at ? (
-                      <span className="text-xs font-medium rounded-full px-2 py-0.5 bg-red-100 text-red-800">
-                        {t("cp.state.deleting")}
-                      </span>
-                    ) : tenant.suspended_at ? (
-                      <span className="text-xs font-medium rounded-full px-2 py-0.5 bg-amber-100 text-amber-900">
-                        {t("cp.state.suspended")}
-                      </span>
-                    ) : (
-                      <span className="text-xs font-medium rounded-full px-2 py-0.5 bg-emerald-100 text-emerald-800">
-                        {t("cp.state.active")}
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-              {!loading && tenants.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-muted">
-                    {t("cp.message.no_tenants")}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <Card padding="none" className="overflow-hidden">
+        <Table containerClassName="rounded-none border-0">
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("cp.field.organisation")}</TableHead>
+              <TableHead>{t("cp.field.registration")}</TableHead>
+              <TableHead align="right">{t("cp.field.users")}</TableHead>
+              <TableHead align="right">{t("cp.field.apps")}</TableHead>
+              <TableHead>{t("cp.field.last_activity")}</TableHead>
+              <TableHead>{t("cp.field.state")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {tenants.map((tenant) => (
+              <TableRow key={tenant.id}>
+                <TableCell>
+                  <Link
+                    href={`/cp/tenants/${tenant.id}`}
+                    className="flex items-center gap-2 font-medium text-foreground hover:underline"
+                  >
+                    <Building2 className="w-4 h-4 text-muted" />
+                    {tenant.name}
+                  </Link>
+                  <span className="text-xs text-muted">{tenant.slug}</span>
+                </TableCell>
+                <TableCell className="text-muted">{tenant.registration_number || "—"}</TableCell>
+                <TableCell align="right">{tenant.user_count}</TableCell>
+                <TableCell align="right">{tenant.app_count}</TableCell>
+                <TableCell className="text-muted">
+                  {formatMoment(tenant.last_activity_at) || t("cp.message.never")}
+                </TableCell>
+                <TableCell>
+                  {tenant.deletion_scheduled_at ? (
+                    <Badge tone="danger">{t("cp.state.deleting")}</Badge>
+                  ) : tenant.suspended_at ? (
+                    <Badge tone="warning">{t("cp.state.suspended")}</Badge>
+                  ) : (
+                    <Badge tone="success">{t("cp.state.active")}</Badge>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+            {tenants.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} className="py-10 text-center text-muted">
+                  {loading ? (
+                    <span role="status" className="inline-flex items-center gap-2">
+                      <Spinner size="sm" decorative />
+                      {t("base.message.loading")}
+                    </span>
+                  ) : (
+                    t("cp.message.no_tenants")
+                  )}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </Card>
       {creating && (
         <NewTenantDialog
           onClose={() => setCreating(false)}
@@ -288,20 +297,14 @@ function NewTenantDialog({ onClose, onCreated }: { onClose: () => void; onCreate
         <h2 className="text-lg font-semibold text-foreground">{t("cp.action.new_tenant")}</h2>
 
         {failure && (
-          <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+          <p role="alert" className="text-sm rounded-lg bg-danger-soft text-danger border border-danger-border px-3 py-2">{failure}</p>
         )}
         {notice && (
           <div className="space-y-2">
-            <p className="text-sm rounded-lg bg-amber-50 text-amber-900 border border-amber-200 px-3 py-2">
+            <p className="text-sm rounded-lg bg-warning-soft text-warning border border-warning-border px-3 py-2">
               {notice}
             </p>
-            <button
-              type="button"
-              onClick={onCreated}
-              className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:brightness-105"
-            >
-              {t("cp.action.back")}
-            </button>
+            <Button onClick={onCreated}>{t("cp.action.back")}</Button>
           </div>
         )}
 
@@ -313,15 +316,15 @@ function NewTenantDialog({ onClose, onCreated }: { onClose: () => void; onCreate
               <div className="flex-1">
                 <TextField label={t("cp.field.registration")} value={registration} onChange={setRegistration} required />
               </div>
-              <button
-                type="button"
+              <Button
+                variant="outline"
                 onClick={() => void lookUp()}
-                disabled={looking || !registration.trim()}
-                className="inline-flex items-center gap-2 rounded-lg border border-input px-3 py-2 text-sm text-foreground hover:bg-surface-hover disabled:opacity-50"
+                disabled={!registration.trim()}
+                loading={looking}
+                leadingIcon={<Search />}
               >
-                <Search className={`w-4 h-4 ${looking ? "animate-pulse" : ""}`} />
                 {t("cp.action.look_up")}
-              </button>
+              </Button>
             </div>
             {found && (
               <p className="text-xs rounded-lg bg-accent-soft text-accent px-3 py-2">
@@ -348,24 +351,22 @@ function NewTenantDialog({ onClose, onCreated }: { onClose: () => void; onCreate
                       {admin.reg_number ? ` · ${admin.reg_number}` : ""}
                     </span>
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => setAdmin(null)}
-                    className="text-xs rounded-lg border border-input bg-surface px-2 py-1 hover:bg-surface-hover"
-                  >
+                  <Button variant="outline" size="sm" onClick={() => setAdmin(null)}>
                     {t("cp.action.change")}
-                  </button>
+                  </Button>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <input
+                  <Input
+                    type="search"
+                    label={t("cp.field.search_people")}
+                    hideLabel
                     value={search}
                     onChange={(event) => {
                       setSearch(event.target.value);
                       void loadPeople(event.target.value);
                     }}
                     placeholder={t("cp.field.search_people")}
-                    className="w-full rounded-lg border border-input px-3 py-2 text-sm"
                   />
                   <div className="max-h-48 overflow-y-auto divide-y divide-line rounded-lg border border-line">
                     {people.map((person) => (
@@ -373,7 +374,7 @@ function NewTenantDialog({ onClose, onCreated }: { onClose: () => void; onCreate
                         key={person.user_id}
                         type="button"
                         onClick={() => setAdmin(person)}
-                        className="w-full text-left px-3 py-2 hover:bg-surface-hover"
+                        className="w-full text-start px-3 py-2 hover:bg-surface-hover"
                       >
                         <strong className="block text-sm text-foreground truncate">{person.name}</strong>
                         <span className="block text-xs text-muted truncate">
@@ -397,17 +398,12 @@ function NewTenantDialog({ onClose, onCreated }: { onClose: () => void; onCreate
             <TextField label={t("cp.field.reason")} value={reason} onChange={setReason} required />
 
             <div className="flex justify-end gap-2">
-              <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-muted hover:bg-surface-hover">
+              <Button variant="ghost" onClick={onClose}>
                 {t("cp.action.cancel")}
-              </button>
-              <button
-                type="submit"
-                disabled={busy || !admin}
-                title={admin ? undefined : t("cp.hint.admin_is_chosen")}
-                className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:brightness-105 disabled:opacity-60"
-              >
+              </Button>
+              <Button type="submit" disabled={!admin} loading={busy} title={admin ? undefined : t("cp.hint.admin_is_chosen")}>
                 {t("cp.action.create")}
-              </button>
+              </Button>
             </div>
           </>
         )}
@@ -427,18 +423,15 @@ function TextField({
   value: string;
   onChange: (value: string) => void;
   required?: boolean;
-  type?: string;
+  type?: InputProps["type"];
 }) {
   return (
-    <label className="block text-sm">
-      <span className="text-muted">{label}</span>
-      <input
-        type={type}
-        required={required}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="mt-1 w-full rounded-lg border border-input px-3 py-2"
-      />
-    </label>
+    <Input
+      type={type}
+      label={label}
+      required={required}
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+    />
   );
 }

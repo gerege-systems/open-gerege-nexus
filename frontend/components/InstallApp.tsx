@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { currentDeviceLine } from "@/lib/deviceLine";
 import { Download, X, Share } from "lucide-react";
+import { Button, IconButton } from "@gerege-systems/ui";
 import { useI18n } from "@/lib/i18n";
 
 /**
@@ -135,43 +136,25 @@ export default function InstallApp() {
   return (
     // Above the native switcher rather than beside it: two cards competing for
     // the same corner is how a screen starts to look unmaintained.
-    <div className="fixed bottom-24 right-5 z-toast w-[min(20rem,calc(100vw-2.5rem))]">
-      <div
-        className="flex flex-col gap-3 rounded-xl border p-4 shadow-lg"
-        style={{
-          background: "var(--gerege-surface)",
-          borderColor: "var(--gerege-border)",
-          color: "var(--gerege-fg)",
-        }}
-      >
+    <div role="status" className="fixed bottom-24 inset-e-5 z-toast w-[min(20rem,calc(100vw-2.5rem))]">
+      <div className="flex flex-col gap-3 rounded-lg border border-line bg-surface p-4 text-foreground shadow-lg">
         <div className="flex items-start gap-3">
-          <img src="/icons/app-192.png" alt="" className="h-10 w-10 rounded-lg" />
+          <img src="/icons/app-192.png" alt="" className="size-10 rounded-lg" />
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold">{t("pwa.install.title")}</p>
-            <p className="mt-0.5 text-xs opacity-70">{t("pwa.install.body")}</p>
+            <p className="mt-0.5 text-xs text-muted">{t("pwa.install.body")}</p>
           </div>
-          <button
-            type="button"
-            onClick={dismiss}
-            aria-label={t("base.action.close")}
-            className="rounded-md p-1 opacity-60 transition hover:opacity-100"
-          >
-            <X size={15} />
-          </button>
+          <IconButton aria-label={t("base.action.close")} icon={<X />} size="sm" onClick={dismiss} />
         </div>
 
         {prompt ? (
-          <button
-            type="button"
-            onClick={install}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-on-accent transition hover:opacity-90"
-          >
-            <Download size={15} />
+          <Button variant="primary" onClick={install}>
+            <Download aria-hidden />
             {t("pwa.install.action")}
-          </button>
+          </Button>
         ) : (
-          <p className="flex items-center gap-1.5 text-xs opacity-70">
-            <Share size={14} className="shrink-0" />
+          <p className="flex items-center gap-1.5 text-xs text-muted">
+            <Share className="size-3.5 shrink-0" aria-hidden />
             {t("pwa.install.ios")}
           </p>
         )}

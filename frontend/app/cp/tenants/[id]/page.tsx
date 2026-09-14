@@ -28,12 +28,33 @@ import {
   Wrench,
 } from "lucide-react";
 
+import {
+  Badge,
+  Button,
+  Card,
+  CardHeader,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  Spinner,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@gerege-systems/ui";
+
 import { useConsole } from "@/components/cp/Console";
 import { useAction } from "@/components/cp/Action";
-import { Badge, Card, formatMoment, Table } from "@/components/cp/ui";
-import { cp, type Quota, type TenantDetail, type VerifiedPerson } from "@/lib/cp";
-import { useI18n } from "@/lib/i18n";
+// The console's Modal is the library Dialog plus the one rule this product
+// adds: a stray backdrop click does not throw away what has been typed.
 import { Modal } from "@/components/ui";
+import { cp, type Quota, type TenantDetail, type VerifiedPerson } from "@/lib/cp";
+import { formatMoment } from "@/lib/datetime";
+import { useI18n } from "@/lib/i18n";
 
 export default function Detail() {
   const { t } = useI18n();
@@ -64,13 +85,20 @@ export default function Detail() {
     return (
       <div className="space-y-4">
         <BackLink label={t("cp.action.back")} />
-        <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">
+        <p role="alert" className="text-sm rounded-lg bg-danger-soft text-danger border border-danger-border px-3 py-2">
           {t("cp.message.load_failed")}
         </p>
       </div>
     );
   }
-  if (!tenant) return <div className="text-muted">…</div>;
+  if (!tenant) {
+    return (
+      <p role="status" className="flex items-center gap-2 text-sm text-muted">
+        <Spinner size="md" decorative />
+        {t("base.message.loading")}
+      </p>
+    );
+  }
 
   const suspended = !!tenant.suspended_at;
   const deleting = !!tenant.deletion_scheduled_at;
@@ -92,17 +120,17 @@ export default function Detail() {
             {tenant.legal_name ? ` · ${tenant.legal_name}` : ""}
           </p>
           {suspended && tenant.suspension_reason && (
-            <p className="mt-1 text-sm text-amber-700">{tenant.suspension_reason}</p>
+            <p className="mt-1 text-sm text-warning">{tenant.suspension_reason}</p>
           )}
           {deleting && (
-            <p className="mt-1 text-sm text-red-700">
+            <p className="mt-1 text-sm text-danger">
               {formatMoment(tenant.deletion_scheduled_at)}
             </p>
           )}
         </div>
       </div>
 
-      <section className="bg-surface rounded-xl border border-line p-4">
+      <section className="bg-surface rounded-lg border border-line p-4">
         <h2 className="text-sm font-medium text-muted mb-3">{t("cp.section.actions")}</h2>
         <div className="flex flex-wrap gap-2">
           {may("tenant.suspend") && !suspended && (
@@ -186,21 +214,19 @@ export default function Detail() {
               }
             />
           )}
-          <Link
-            href={`/cp/tenants/${tenant.id}/usage`}
-            className="inline-flex items-center gap-2 rounded-lg border border-input px-3 py-2 text-sm text-foreground hover:bg-surface-hover"
-          >
-            <BarChart3 className="w-4 h-4" />
-            {t("cp.action.usage")}
-          </Link>
+          <Button variant="outline" asChild>
+            <Link href={`/cp/tenants/${tenant.id}/usage`}>
+              <BarChart3 className="w-4 h-4" />
+              {t("cp.action.usage")}
+            </Link>
+          </Button>
           {may("tenant.delete") && (
-            <a
-              href={cp.exportURL(tenant.id)}
-              className="inline-flex items-center gap-2 rounded-lg border border-input px-3 py-2 text-sm hover:bg-surface-hover"
-            >
-              <Download className="w-4 h-4" />
-              {t("cp.action.export")}
-            </a>
+            <Button variant="outline" asChild>
+              <a href={cp.exportURL(tenant.id)}>
+                <Download className="w-4 h-4" />
+                {t("cp.action.export")}
+              </a>
+            </Button>
           )}
         </div>
       </section>
@@ -219,111 +245,200 @@ export default function Detail() {
         />
       </dl>
 
-      <Card title={t("cp.section.apps")}>
-        <Table
-          head={[t("cp.field.apps"), t("cp.field.version"), t("cp.field.status"), t("cp.field.installed")]}
-          rows={tenant.apps.map((app) => [
-            app.name,
-            app.version,
-            app.enabled ? app.status : `${app.status} · off`,
-            formatMoment(app.installed_at),
-          ])}
-          empty={t("cp.message.no_activity")}
-        />
+      <Card padding="none" className="overflow-hidden">
+        <CardHeader className="flex-row items-center gap-3 border-b border-line px-4 py-3">
+          <h2 className="flex-1 text-base leading-tight font-semibold text-foreground">{t("cp.section.apps")}</h2>
+        </CardHeader>
+        <Table containerClassName="rounded-none border-0">
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("cp.field.apps")}</TableHead>
+              <TableHead>{t("cp.field.version")}</TableHead>
+              <TableHead>{t("cp.field.status")}</TableHead>
+              <TableHead>{t("cp.field.installed")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {tenant.apps.map((app, index) => (
+              <TableRow key={index}>
+                <TableCell>{app.name}</TableCell>
+                <TableCell>{app.version}</TableCell>
+                <TableCell>{app.enabled ? app.status : `${app.status} · off`}</TableCell>
+                <TableCell>{formatMoment(app.installed_at)}</TableCell>
+              </TableRow>
+            ))}
+            {tenant.apps.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={4} className="py-8 text-center text-muted">
+                  {t("cp.message.no_activity")}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </Card>
 
-      <Card
-        title={t("cp.section.members")}
-        action={
-          !suspended && (
-            <button
-              type="button"
-              onClick={() => setAddingPerson(true)}
-              className="inline-flex items-center gap-2 rounded-lg border border-input px-2.5 py-1.5 text-xs text-foreground hover:bg-surface-hover"
-            >
-              <UserPlus className="w-3.5 h-3.5" />
+      <Card padding="none" className="overflow-hidden">
+        <CardHeader className="flex-row items-center gap-3 border-b border-line px-4 py-3">
+          <h2 className="flex-1 text-base leading-tight font-semibold text-foreground">{t("cp.section.members")}</h2>
+          {!suspended && (
+            <Button variant="outline" size="sm" onClick={() => setAddingPerson(true)} leadingIcon={<UserPlus />}>
               {t("cp.action.add_person")}
-            </button>
-          )
-        }
-      >
-        <Table
-          head={[t("cp.field.email"), t("cp.field.person"), t("cp.field.roles"), ""]}
-          rows={tenant.members.map((member) => [
-            member.email,
-            member.name,
-            member.roles.length ? member.roles.join(", ") : "—",
-            // Looking at the platform as somebody is a decision about *which*
-            // somebody. It used to be a button on the action bar above that
-            // took tenant.members[0] — whoever the list happened to start
-            // with — so the operator got an arbitrary person and the reason
-            // they typed named a different one.
-            may("user.impersonate") && !suspended ? (
-              <button
-                key="i"
-                type="button"
-                onClick={() =>
-                  action.run({
-                    title: t("cp.action.impersonate"),
-                    detail: member.email,
-                    perform: async (reason) => {
-                      const { url } = await cp.impersonate(tenant.id, member.user_id, reason);
-                      // A new tab, so the console stays where it is: the
-                      // operator is about to be two people at once and should
-                      // not lose the window that can end it.
-                      window.open(url, "_blank", "noopener");
-                    },
-                  })
-                }
-                className="inline-flex items-center gap-1.5 text-xs rounded-lg border border-input px-2 py-1 hover:bg-surface-hover"
-              >
-                <Eye className="w-3.5 h-3.5" />
-                {t("cp.action.impersonate")}
-              </button>
-            ) : (
-              <span key="i" />
-            ),
-          ])}
-          empty={t("cp.message.no_activity")}
-        />
+            </Button>
+          )}
+        </CardHeader>
+        <Table containerClassName="rounded-none border-0">
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("cp.field.email")}</TableHead>
+              <TableHead>{t("cp.field.person")}</TableHead>
+              <TableHead>{t("cp.field.roles")}</TableHead>
+              <TableHead />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {tenant.members.map((member) => (
+              <TableRow key={member.user_id}>
+                <TableCell>{member.email}</TableCell>
+                <TableCell>{member.name}</TableCell>
+                <TableCell>{member.roles.length ? member.roles.join(", ") : "—"}</TableCell>
+                <TableCell>
+                  {/* Looking at the platform as somebody is a decision about *which*
+                      somebody. It used to be a button on the action bar above that
+                      took tenant.members[0] — whoever the list happened to start
+                      with — so the operator got an arbitrary person and the reason
+                      they typed named a different one. */}
+                  {may("user.impersonate") && !suspended && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        action.run({
+                          title: t("cp.action.impersonate"),
+                          detail: member.email,
+                          perform: async (reason) => {
+                            const { url } = await cp.impersonate(tenant.id, member.user_id, reason);
+                            // A new tab, so the console stays where it is: the
+                            // operator is about to be two people at once and should
+                            // not lose the window that can end it.
+                            window.open(url, "_blank", "noopener");
+                          },
+                        })
+                      }
+                      leadingIcon={<Eye />}
+                    >
+                      {t("cp.action.impersonate")}
+                    </Button>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+            {tenant.members.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={4} className="py-8 text-center text-muted">
+                  {t("cp.message.no_activity")}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </Card>
 
-      <Card title={t("cp.section.impersonations")}>
-        <Table
-          head={[t("cp.field.when"), t("cp.field.operator"), t("cp.field.person"), t("cp.field.reason")]}
-          rows={tenant.impersonations.map((visit) => [
-            formatMoment(visit.created_at),
-            visit.operator_email,
-            visit.user_email,
-            visit.reason,
-          ])}
-          empty={t("cp.message.no_activity")}
-        />
+      <Card padding="none" className="overflow-hidden">
+        <CardHeader className="flex-row items-center gap-3 border-b border-line px-4 py-3">
+          <h2 className="flex-1 text-base leading-tight font-semibold text-foreground">{t("cp.section.impersonations")}</h2>
+        </CardHeader>
+        <Table containerClassName="rounded-none border-0">
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("cp.field.when")}</TableHead>
+              <TableHead>{t("cp.field.operator")}</TableHead>
+              <TableHead>{t("cp.field.person")}</TableHead>
+              <TableHead>{t("cp.field.reason")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {tenant.impersonations.map((visit, index) => (
+              <TableRow key={index}>
+                <TableCell>{formatMoment(visit.created_at)}</TableCell>
+                <TableCell>{visit.operator_email}</TableCell>
+                <TableCell>{visit.user_email}</TableCell>
+                <TableCell>{visit.reason}</TableCell>
+              </TableRow>
+            ))}
+            {tenant.impersonations.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={4} className="py-8 text-center text-muted">
+                  {t("cp.message.no_activity")}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </Card>
 
-      <Card title={t("cp.section.activity")}>
-        <Table
-          head={[t("cp.field.when"), t("cp.field.action"), t("cp.field.resource")]}
-          rows={tenant.activity.map((entry) => [
-            formatMoment(entry.created_at),
-            entry.action,
-            entry.resource,
-          ])}
-          empty={t("cp.message.no_activity")}
-        />
+      <Card padding="none" className="overflow-hidden">
+        <CardHeader className="flex-row items-center gap-3 border-b border-line px-4 py-3">
+          <h2 className="flex-1 text-base leading-tight font-semibold text-foreground">{t("cp.section.activity")}</h2>
+        </CardHeader>
+        <Table containerClassName="rounded-none border-0">
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("cp.field.when")}</TableHead>
+              <TableHead>{t("cp.field.action")}</TableHead>
+              <TableHead>{t("cp.field.resource")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {tenant.activity.map((entry, index) => (
+              <TableRow key={index}>
+                <TableCell>{formatMoment(entry.created_at)}</TableCell>
+                <TableCell>{entry.action}</TableCell>
+                <TableCell>{entry.resource}</TableCell>
+              </TableRow>
+            ))}
+            {tenant.activity.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={3} className="py-8 text-center text-muted">
+                  {t("cp.message.no_activity")}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </Card>
 
-      <Card title={t("cp.section.operator_actions")}>
-        <Table
-          head={[t("cp.field.when"), t("cp.field.operator"), t("cp.field.action"), t("cp.field.reason")]}
-          rows={tenant.operator_actions.map((entry) => [
-            formatMoment(entry.created_at),
-            entry.operator_email,
-            entry.action,
-            entry.reason || "—",
-          ])}
-          empty={t("cp.message.no_activity")}
-        />
+      <Card padding="none" className="overflow-hidden">
+        <CardHeader className="flex-row items-center gap-3 border-b border-line px-4 py-3">
+          <h2 className="flex-1 text-base leading-tight font-semibold text-foreground">{t("cp.section.operator_actions")}</h2>
+        </CardHeader>
+        <Table containerClassName="rounded-none border-0">
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("cp.field.when")}</TableHead>
+              <TableHead>{t("cp.field.operator")}</TableHead>
+              <TableHead>{t("cp.field.action")}</TableHead>
+              <TableHead>{t("cp.field.reason")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {tenant.operator_actions.map((entry, index) => (
+              <TableRow key={index}>
+                <TableCell>{formatMoment(entry.created_at)}</TableCell>
+                <TableCell>{entry.operator_email}</TableCell>
+                <TableCell>{entry.action}</TableCell>
+                <TableCell>{entry.reason || "—"}</TableCell>
+              </TableRow>
+            ))}
+            {tenant.operator_actions.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={4} className="py-8 text-center text-muted">
+                  {t("cp.message.no_activity")}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </Card>
 
       {addingPerson && (
@@ -375,12 +490,12 @@ function allowed(role: string, capability: string): boolean {
 function StateBadge({ tenant }: { tenant: { suspended_at: string | null; deletion_scheduled_at: string | null } }) {
   const { t } = useI18n();
   if (tenant.deletion_scheduled_at) {
-    return <Badge tone="red">{t("cp.state.deleting")}</Badge>;
+    return <Badge tone="danger">{t("cp.state.deleting")}</Badge>;
   }
   if (tenant.suspended_at) {
-    return <Badge tone="amber">{t("cp.state.suspended")}</Badge>;
+    return <Badge tone="warning">{t("cp.state.suspended")}</Badge>;
   }
-  return <Badge tone="emerald">{t("cp.state.active")}</Badge>;
+  return <Badge tone="success">{t("cp.state.active")}</Badge>;
 }
 
 function ActionButton({
@@ -395,18 +510,14 @@ function ActionButton({
   danger?: boolean;
 }) {
   return (
-    <button
-      type="button"
+    <Button
+      variant="outline"
       onClick={onClick}
-      className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${
-        danger
-          ? "border-red-200 text-red-700 hover:bg-red-50"
-          : "border-input text-foreground hover:bg-surface-hover"
-      }`}
+      leadingIcon={icon}
+      className={danger ? "border-danger-border text-danger hover:bg-danger-soft" : undefined}
     >
-      {icon}
       {label}
-    </button>
+    </Button>
   );
 }
 
@@ -460,46 +571,35 @@ function QuotaDialog({
         <h2 className="text-lg font-semibold text-foreground">{t("cp.section.limits")}</h2>
 
         {failure && (
-          <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+          <p role="alert" className="text-sm rounded-lg bg-danger-soft text-danger border border-danger-border px-3 py-2">{failure}</p>
         )}
 
         <Field label={t("cp.field.max_users")} value={users} onChange={setUsers} />
         <Field label={t("cp.field.max_storage")} value={storage} onChange={setStorage} hint={t("cp.hint.not_enforced")} />
         <Field label={t("cp.field.max_ai")} value={ai} onChange={setAI} hint={t("cp.hint.not_enforced")} />
 
-        <label className="block text-sm">
-          <span className="text-muted">{t("cp.field.enforcement")}</span>
-          <select
-            value={enforcement}
-            onChange={(event) => setEnforcement(event.target.value as "soft" | "hard")}
-            className="mt-1 w-full rounded-lg border border-input px-3 py-2"
-          >
-            <option value="soft">{t("cp.state.soft")}</option>
-            <option value="hard">{t("cp.state.hard")}</option>
-          </select>
-        </label>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="quota-enforcement" className="text-sm font-medium text-foreground">
+            {t("cp.field.enforcement")}
+          </label>
+          <Select value={enforcement} onValueChange={(next) => setEnforcement(next as "soft" | "hard")}>
+            <SelectTrigger id="quota-enforcement" />
+            <SelectContent>
+              <SelectItem value="soft">{t("cp.state.soft")}</SelectItem>
+              <SelectItem value="hard">{t("cp.state.hard")}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-        <label className="block text-sm">
-          <span className="text-muted">{t("cp.field.reason")}</span>
-          <input
-            required
-            value={reason}
-            onChange={(event) => setReason(event.target.value)}
-            className="mt-1 w-full rounded-lg border border-input px-3 py-2"
-          />
-        </label>
+        <Input label={t("cp.field.reason")} required value={reason} onChange={(event) => setReason(event.target.value)} />
 
         <div className="flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-muted hover:bg-surface-hover">
+          <Button variant="ghost" onClick={onClose}>
             {t("cp.action.cancel")}
-          </button>
-          <button
-            type="submit"
-            disabled={busy}
-            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:brightness-105 disabled:opacity-60"
-          >
+          </Button>
+          <Button type="submit" loading={busy}>
             {t("cp.action.confirm")}
-          </button>
+          </Button>
         </div>
       </form>
     </Modal>
@@ -518,16 +618,13 @@ function Field({
   hint?: string;
 }) {
   return (
-    <label className="block text-sm">
-      <span className="text-muted">{label}</span>
-      <input
-        inputMode="numeric"
-        value={value}
-        onChange={(event) => onChange(event.target.value.replace(/\D/g, ""))}
-        className="mt-1 w-full rounded-lg border border-input px-3 py-2"
-      />
-      {hint && <span className="mt-1 block text-xs text-amber-700">{hint}</span>}
-    </label>
+    <Input
+      label={label}
+      inputMode="numeric"
+      value={value}
+      onChange={(event) => onChange(event.target.value.replace(/\D/g, ""))}
+      helperText={hint && <span className="text-warning">{hint}</span>}
+    />
   );
 }
 
@@ -542,7 +639,7 @@ function BackLink({ label }: { label: string }) {
 
 function Fact({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-surface rounded-xl border border-line px-4 py-3">
+    <div className="bg-surface rounded-lg border border-line px-4 py-3">
       <dt className="text-xs uppercase tracking-wide text-muted">{label}</dt>
       <dd className="mt-1 text-sm text-foreground">{value}</dd>
     </div>
@@ -612,7 +709,7 @@ function AddPersonDialog({
         <p className="text-xs text-muted">{t("cp.hint.member_is_chosen")}</p>
 
         {failure && (
-          <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+          <p role="alert" className="text-sm rounded-lg bg-danger-soft text-danger border border-danger-border px-3 py-2">{failure}</p>
         )}
 
         {chosen ? (
@@ -621,24 +718,22 @@ function AddPersonDialog({
               <strong className="block text-sm text-foreground truncate">{chosen.name}</strong>
               <span className="block text-xs text-muted truncate">{chosen.email}</span>
             </span>
-            <button
-              type="button"
-              onClick={() => setChosen(null)}
-              className="text-xs rounded-lg border border-input bg-surface px-2 py-1 hover:bg-surface-hover"
-            >
+            <Button variant="outline" size="sm" onClick={() => setChosen(null)}>
               {t("cp.action.change")}
-            </button>
+            </Button>
           </div>
         ) : (
           <div className="space-y-2">
-            <input
+            <Input
+              type="search"
+              label={t("cp.field.search_people")}
+              hideLabel
               value={search}
               onChange={(event) => {
                 setSearch(event.target.value);
                 void loadPeople(event.target.value);
               }}
               placeholder={t("cp.field.search_people")}
-              className="w-full rounded-lg border border-input px-3 py-2 text-sm"
             />
             <div className="max-h-48 overflow-y-auto divide-y divide-line rounded-lg border border-line">
               {people.map((person) => (
@@ -646,7 +741,7 @@ function AddPersonDialog({
                   key={person.user_id}
                   type="button"
                   onClick={() => setChosen(person)}
-                  className="w-full text-left px-3 py-2 hover:bg-surface-hover"
+                  className="w-full text-start px-3 py-2 hover:bg-surface-hover"
                 >
                   <strong className="block text-sm text-foreground truncate">{person.name}</strong>
                   <span className="block text-xs text-muted truncate">
@@ -664,54 +759,40 @@ function AddPersonDialog({
           </div>
         )}
 
-        <label className="block text-sm">
-          <span className="text-muted">{t("cp.field.reason")}</span>
-          <input
-            required
-            value={reason}
-            onChange={(event) => setReason(event.target.value)}
-            className="mt-1 w-full rounded-lg border border-input px-3 py-2"
-          />
-        </label>
+        <Input label={t("cp.field.reason")} required value={reason} onChange={(event) => setReason(event.target.value)} />
 
         {/* The API asks for the second factor before it hands anybody the keys
             to an organisation's data; confirming it here keeps what has been
             typed. */}
-        <label className="block text-sm">
-          <span className="text-muted">{t("cp.field.code")}</span>
-          <input
-            inputMode="numeric"
-            pattern="[0-9]*"
-            maxLength={6}
-            value={code}
-            onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))}
-            onBlur={async () => {
-              if (code.length === 6) {
-                try {
-                  await cp.stepUp(code);
-                  setCode("");
-                  setFailure("");
-                } catch (error) {
-                  setFailure(error instanceof Error ? error.message : String(error));
-                }
+        <Input
+          label={t("cp.field.code")}
+          helperText={t("cp.hint.step_up")}
+          inputMode="numeric"
+          pattern="[0-9]*"
+          maxLength={6}
+          value={code}
+          onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))}
+          onBlur={async () => {
+            if (code.length === 6) {
+              try {
+                await cp.stepUp(code);
+                setCode("");
+                setFailure("");
+              } catch (error) {
+                setFailure(error instanceof Error ? error.message : String(error));
               }
-            }}
-            className="mt-1 w-full rounded-lg border border-input px-3 py-2 font-mono tracking-[0.4em]"
-          />
-          <small className="text-xs text-muted">{t("cp.hint.step_up")}</small>
-        </label>
+            }
+          }}
+          className="font-mono tracking-[0.4em]"
+        />
 
         <div className="flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-muted hover:bg-surface-hover">
+          <Button variant="ghost" onClick={onClose}>
             {t("cp.action.cancel")}
-          </button>
-          <button
-            type="submit"
-            disabled={busy || !chosen}
-            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:brightness-105 disabled:opacity-60"
-          >
+          </Button>
+          <Button type="submit" disabled={!chosen} loading={busy}>
             {t("cp.action.add_person")}
-          </button>
+          </Button>
         </div>
       </form>
     </Modal>

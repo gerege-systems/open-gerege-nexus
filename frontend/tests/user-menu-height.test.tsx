@@ -9,14 +9,17 @@
  * was not usable, which is the worst of the two.
  *
  * So the assertion is arithmetic, not appearance: whatever the menu ends up
- * being, its bottom edge must sit inside the viewport.
+ * being, its bottom edge must sit inside the viewport. The menu is a
+ * design-system DropdownMenu now, and the room it may take is what Radix
+ * measures below the button and hands the panel as a CSS variable — that
+ * number is what is read here.
  *
  * The same fix's other half is here too: signing out is now also reachable from
  * the menu's header, which never scrolls away.
  */
 
 import { expect, test, vi, afterEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 vi.mock("@/lib/i18n", () => import("./helpers/i18n"));
@@ -45,14 +48,25 @@ function openMenuWithViewport(height: number) {
   );
 }
 
+/** How tall Radix lets the panel grow, once it has measured. */
+async function roomForMenu() {
+  const panel = screen.getByRole("menu");
+  // The number lives on the positioned wrapper Radix puts around the panel;
+  // the panel's own max-height refers to it by name.
+  expect(panel.style.getPropertyValue("--radix-dropdown-menu-content-available-height")).toContain("--radix-popper-available-height");
+  return waitFor(() => {
+    const room = Number.parseInt(panel.parentElement!.style.getPropertyValue("--radix-popper-available-height"), 10);
+    expect(Number.isNaN(room)).toBe(false);
+    return room;
+  });
+}
+
 test("the menu is capped by the room below the button, not by the whole screen", async () => {
   openMenuWithViewport(700);
   await userEvent.click(screen.getByRole("button", { expanded: false }));
 
-  const panel = screen.getByRole("menu") as HTMLElement;
-  const capped = Number.parseInt(panel.style.maxHeight, 10);
+  const capped = await roomForMenu();
 
-  expect(Number.isNaN(capped)).toBe(false);
   // Bottom edge = where it starts + how tall it may grow. It must fit.
   expect(PANEL_TOP + capped).toBeLessThanOrEqual(700);
   // And it must not have been capped against the full viewport height, which
@@ -64,8 +78,11 @@ test("a viewport too short to be worth capping still leaves a usable menu", asyn
   openMenuWithViewport(150);
   await userEvent.click(screen.getByRole("button", { expanded: false }));
 
-  const panel = screen.getByRole("menu") as HTMLElement;
-  expect(Number.parseInt(panel.style.maxHeight, 10)).toBe(200);
+  // Below the button there is no room to speak of; the panel goes wherever
+  // there is more, and what it gets is still something — a menu that fits
+  // and scrolls, not one capped to nothing.
+  expect(await roomForMenu()).toBeGreaterThan(0);
+  expect(screen.getAllByRole("menuitem", { name: "web.action.logout" }).length).toBeGreaterThan(0);
 });
 
 test("signing out is reachable without scrolling to the bottom of the menu", async () => {

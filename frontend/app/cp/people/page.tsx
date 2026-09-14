@@ -14,9 +14,23 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Users } from "lucide-react";
 import Link from "next/link";
 
-import { Badge, Card, formatMoment, Table } from "@/components/cp/ui";
 import { cp, type Roster } from "@/lib/cp";
+import { formatMoment } from "@/lib/datetime";
 import { useI18n } from "@/lib/i18n";
+import {
+  Badge,
+  Button,
+  Card,
+  CardHeader,
+  Input,
+  Spinner,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@gerege-systems/ui";
 import { useUrlState } from "@/lib/urlState";
 
 const FILTERS = ["", "verified", "locked", "homeless"] as const;
@@ -65,7 +79,7 @@ export default function People() {
       </div>
 
       {failure && (
-        <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+        <p role="alert" className="text-sm rounded-lg bg-danger-soft text-danger border border-danger-border px-3 py-2">{failure}</p>
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -76,89 +90,105 @@ export default function People() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <input
-          value={search}
-          onChange={(event) => {
-            setOffset(0);
-            setSearch(event.target.value);
-          }}
-          placeholder={t("cp.field.search_people")}
-          className="flex-1 min-w-56 rounded-lg border border-input px-3 py-2 text-sm"
-        />
+        <div className="flex-1 min-w-56">
+          <Input
+            type="search"
+            label={t("cp.field.search_people")}
+            hideLabel
+            value={search}
+            onChange={(event) => {
+              setOffset(0);
+              setSearch(event.target.value);
+            }}
+            placeholder={t("cp.field.search_people")}
+          />
+        </div>
         {FILTERS.map((option) => (
-          <button
+          <Button
             key={option || "all"}
-            type="button"
+            variant={filter === option ? "secondary" : "outline"}
+            aria-pressed={filter === option}
             onClick={() => {
               setOffset(0);
               setFilter(option);
             }}
-            className={`rounded-lg border px-3 py-2 text-sm ${
-              filter === option
-                ? "border-accent bg-accent-soft text-accent"
-                : "border-input text-muted hover:bg-surface-hover"
-            }`}
           >
             {t(`cp.filter.${option || "everybody"}` as "cp.filter.everybody")}
-          </button>
+          </Button>
         ))}
       </div>
 
-      <Card title={t("cp.section.people")}>
-        <Table
-          head={[
-            t("cp.field.person"),
-            t("cp.field.identities"),
-            t("cp.field.organisations"),
-            t("cp.field.sessions"),
-            t("cp.field.last_seen"),
-          ]}
-          rows={people.map((person) => [
-            <span key="n" className="min-w-0">
-              <Link href={`/cp/people/${person.id}`} className="font-medium text-accent hover:underline">
-                {person.name || person.email}
-              </Link>
-              <span className="block text-xs text-muted font-mono truncate">{person.email}</span>
-              {!person.active && <Badge tone="slate">{t("cp.state.disabled")}</Badge>}
-              {person.locked_until && <Badge tone="red">{t("cp.state.locked")}</Badge>}
-            </span>,
-            <span key="i" className="flex flex-wrap gap-1">
-              {person.verified && <Badge tone="emerald">eID</Badge>}
-              {person.providers > 0 && <Badge tone="slate">SSO × {person.providers}</Badge>}
-              {!person.verified && person.providers === 0 && (
-                <span className="text-xs text-muted">{t("cp.state.password_only")}</span>
-              )}
-            </span>,
-            <span key="o" className="tabular-nums">
-              {person.organisations || <span className="text-amber-700">0</span>}
-            </span>,
-            <span key="s" className="tabular-nums">{person.sessions}</span>,
-            formatMoment(person.last_seen_at) || <span key="l" className="text-xs text-muted">{t("cp.state.never")}</span>,
-          ])}
-          empty={t("cp.message.no_people")}
-        />
+      <Card padding="none" className="overflow-hidden">
+        <CardHeader className="flex-row items-center gap-3 border-b border-line px-4 py-3">
+          <h2 className="flex-1 text-base leading-tight font-semibold text-foreground">{t("cp.section.people")}</h2>
+        </CardHeader>
+        <Table containerClassName="rounded-none border-0">
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("cp.field.person")}</TableHead>
+              <TableHead>{t("cp.field.identities")}</TableHead>
+              <TableHead>{t("cp.field.organisations")}</TableHead>
+              <TableHead>{t("cp.field.sessions")}</TableHead>
+              <TableHead>{t("cp.field.last_seen")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {people.map((person) => (
+              <TableRow key={person.id}>
+                <TableCell className="min-w-0">
+                  <Link href={`/cp/people/${person.id}`} className="font-medium text-accent hover:underline">
+                    {person.name || person.email}
+                  </Link>
+                  <span className="block text-xs text-muted font-mono truncate">{person.email}</span>
+                  {!person.active && <Badge tone="neutral">{t("cp.state.disabled")}</Badge>}
+                  {person.locked_until && <Badge tone="danger">{t("cp.state.locked")}</Badge>}
+                </TableCell>
+                <TableCell>
+                  <span className="flex flex-wrap gap-1">
+                    {person.verified && <Badge tone="success">eID</Badge>}
+                    {person.providers > 0 && <Badge tone="neutral">SSO × {person.providers}</Badge>}
+                    {!person.verified && person.providers === 0 && (
+                      <span className="text-xs text-muted">{t("cp.state.password_only")}</span>
+                    )}
+                  </span>
+                </TableCell>
+                <TableCell className="tabular-nums">
+                  {person.organisations || <span className="text-warning">0</span>}
+                </TableCell>
+                <TableCell className="tabular-nums">{person.sessions}</TableCell>
+                <TableCell>
+                  {formatMoment(person.last_seen_at) || <span className="text-xs text-muted">{t("cp.state.never")}</span>}
+                </TableCell>
+              </TableRow>
+            ))}
+            {people.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5} className="py-8 text-center text-muted">
+                  {roster || failure ? (
+                    t("cp.message.no_people")
+                  ) : (
+                    <span role="status" className="inline-flex items-center gap-2">
+                      <Spinner size="sm" decorative />
+                      {t("base.message.loading")}
+                    </span>
+                  )}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </Card>
 
       {roster && roster.total > people.length && (
         <div className="flex items-center justify-between text-sm text-muted">
           <span>{t("cp.message.showing", { shown: String(people.length), total: String(roster.total) })}</span>
           <span className="flex gap-2">
-            <button
-              type="button"
-              disabled={offset === 0}
-              onClick={() => setOffset(Math.max(0, offset - 100))}
-              className="rounded-lg border border-input px-3 py-1.5 disabled:opacity-40"
-            >
+            <Button variant="outline" size="sm" disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - 100))}>
               {t("cp.action.previous")}
-            </button>
-            <button
-              type="button"
-              disabled={people.length < 100}
-              onClick={() => setOffset(offset + 100)}
-              className="rounded-lg border border-input px-3 py-1.5 disabled:opacity-40"
-            >
+            </Button>
+            <Button variant="outline" size="sm" disabled={people.length < 100} onClick={() => setOffset(offset + 100)}>
               {t("cp.action.next")}
-            </button>
+            </Button>
           </span>
         </div>
       )}
@@ -168,7 +198,7 @@ export default function People() {
 
 function Stat({ label, value, hint }: { label: string; value?: number; hint?: string }) {
   return (
-    <div className="rounded-xl border border-line bg-surface p-4">
+    <div className="rounded-lg border border-line bg-surface p-4">
       <p className="text-xs font-semibold uppercase tracking-wider text-muted">{label}</p>
       <p className="mt-1 text-2xl font-semibold text-foreground">{value ?? "—"}</p>
       {hint && <p className="text-xs text-muted">{hint}</p>}

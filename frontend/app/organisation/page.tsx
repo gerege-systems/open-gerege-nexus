@@ -3,9 +3,23 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
-import { Banner, fieldClass } from "@/components/ui";
 import { useAccess } from "@/lib/permissions";
-import { Building2, Megaphone, Plus, RefreshCw, Trash2 } from "lucide-react";
+import {
+  Alert,
+  Button,
+  Card,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  Spinner,
+} from "@gerege-systems/ui";
+import { Building2, RefreshCw } from "lucide-react";
+
+// Radix Select refuses an empty-string item value, so "no parent" is carried
+// under a sentinel and translated back to "" on the way to the draft.
+const NO_PARENT = "__none__";
 
 /**
  * The organisation as it is, rather than as it is labelled.
@@ -121,7 +135,15 @@ export default function OrganisationPage() {
   };
 
   if (!organisation) {
-    return <div className="py-12 text-center text-muted text-sm">{t("base.message.loading")}</div>;
+    // A first load that failed says so, instead of "loading" for ever.
+    if (message?.type === "error") {
+      return <Alert variant="danger" live>{message.text}</Alert>;
+    }
+    return (
+      <div className="py-12 flex items-center justify-center gap-2 text-muted text-sm" role="status">
+        <Spinner size="md" decorative /> {t("base.message.loading")}
+      </div>
+    );
   }
 
   const value = (key: keyof Organisation) => draft[key] ?? (organisation[key] as string) ?? "";
@@ -129,45 +151,51 @@ export default function OrganisationPage() {
   return (
     <div className="space-y-6">
       <div className="border-b border-line pb-4 flex items-center gap-3">
-        <Building2 className="w-6 h-6 text-muted" />
+        <Building2 className="w-6 h-6 text-muted" aria-hidden="true" />
         <div>
           <h1 className="text-2xl font-semibold text-foreground">{t("core.view.organisation_title")}</h1>
           <p className="text-sm text-muted">{t("core.view.organisation_subtitle")}</p>
         </div>
         {canManage && (
-          <button
+          <Button
             type="button"
+            variant="outline"
+            className="ms-auto"
             onClick={() => void syncFromCore()}
-            disabled={syncing || !value("registration_number")}
+            loading={syncing}
+            disabled={!value("registration_number")}
             title={t("core.hint.core_sync")}
-            className="ml-auto inline-flex items-center gap-2 rounded-lg border border-input px-3 py-2 text-sm hover:bg-surface-hover disabled:opacity-50"
+            leadingIcon={<RefreshCw />}
           >
-            <RefreshCw className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`} />
             {t("core.action.core_sync")}
-          </button>
+          </Button>
         )}
       </div>
 
-      {message && <Banner tone={message.type} message={message.text} onDismiss={() => setMessage(null)} />}
-      {!canManage && <Banner tone="info" message={t("base.message.admin_only_edit")} />}
+      {message && (
+        <Alert variant={message.type === "error" ? "danger" : "success"} live dismissible onDismiss={() => setMessage(null)}>
+          {message.text}
+        </Alert>
+      )}
+      {!canManage && <Alert variant="info">{t("base.message.admin_only_edit")}</Alert>}
 
       <div className="grid gap-6 md:grid-cols-2">
         {GROUPS.map((group) => (
-          <section key={group.title} className="bg-surface border border-line rounded-xl p-5 space-y-3">
-            <h2 className="font-semibold text-foreground">{t(group.title as any)}</h2>
-            {group.fields.map((field) => (
-              <label key={field.key} className="block">
-                <span className="block text-xs font-medium text-muted mb-1">{t(field.label as any)}</span>
-                <input
+          <Card asChild key={group.title} padding="none" className="p-5 space-y-3">
+            <section>
+              <h2 className="font-semibold text-foreground">{t(group.title as any)}</h2>
+              {group.fields.map((field) => (
+                <Input
+                  key={field.key}
+                  label={t(field.label as any)}
                   value={value(field.key)}
                   placeholder={field.placeholder}
                   disabled={!canManage}
                   onChange={(e) => setDraft((d) => ({ ...d, [field.key]: e.target.value }))}
-                  className="w-full px-3 py-2 text-sm border border-input rounded-lg disabled:bg-surface-2 disabled:text-muted"
                 />
-              </label>
-            ))}
-          </section>
+              ))}
+            </section>
+          </Card>
         ))}
       </div>
 
@@ -175,33 +203,37 @@ export default function OrganisationPage() {
           this screen that names somebody else, and it is a statement about the
           world rather than a setting — recording it grants nothing and changes
           nothing about what this organisation can see. */}
-      <section className="bg-surface border border-line rounded-xl p-5 space-y-2">
-        <h2 className="font-semibold text-foreground">{t("core.group.affiliation")}</h2>
-        <p className="text-xs text-muted">{t("core.message.parent_hint")}</p>
-        <label className="block max-w-md">
-          <span className="block text-xs font-medium text-muted mb-1">{t("core.field.parent_organisation")}</span>
-          <select
-            value={draft.parent_tenant_id ?? organisation.parent_tenant_id ?? ""}
-            disabled={!canManage}
-            onChange={(e) => setDraft((d) => ({ ...d, parent_tenant_id: e.target.value }))}
-            className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-surface disabled:bg-surface-2"
-          >
-            <option value="">{t("core.state.independent")}</option>
-            {/* The organisation currently recorded stays on offer even if the
-                person has since left it, or the selector would silently read
-                as "independent" and the next save would make that true. */}
-            {organisation.parent_tenant_id &&
-              !candidates.some((c) => c.id === organisation.parent_tenant_id) && (
-                <option value={organisation.parent_tenant_id}>{organisation.parent_name}</option>
-              )}
-            {candidates.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </label>
-      </section>
+      <Card asChild padding="none" className="p-5 space-y-2">
+        <section>
+          <h2 className="font-semibold text-foreground">{t("core.group.affiliation")}</h2>
+          <p className="text-xs text-muted">{t("core.message.parent_hint")}</p>
+          <div className="flex flex-col gap-1.5 max-w-md">
+            <label htmlFor="org-parent" className="text-sm font-medium text-foreground">{t("core.field.parent_organisation")}</label>
+            <Select
+              value={(draft.parent_tenant_id ?? organisation.parent_tenant_id ?? "") || NO_PARENT}
+              disabled={!canManage}
+              onValueChange={(next) => setDraft((d) => ({ ...d, parent_tenant_id: next === NO_PARENT ? "" : next }))}
+            >
+              <SelectTrigger id="org-parent" />
+              <SelectContent>
+                <SelectItem value={NO_PARENT}>{t("core.state.independent")}</SelectItem>
+                {/* The organisation currently recorded stays on offer even if the
+                    person has since left it, or the selector would silently read
+                    as "independent" and the next save would make that true. */}
+                {organisation.parent_tenant_id &&
+                  !candidates.some((c) => c.id === organisation.parent_tenant_id) && (
+                    <SelectItem value={organisation.parent_tenant_id}>{organisation.parent_name}</SelectItem>
+                  )}
+                {candidates.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </section>
+      </Card>
 
       {/* Хаалга. Энэ хэсэг «Харьяалал»-ын дараа байгаа нь дараалал зөв: дээрх нь
           энэ байгууллага хэн бэ гэдгийг хэлдэг, энэ нь хэн орж болохыг.
@@ -209,44 +241,44 @@ export default function OrganisationPage() {
           Хоёр сонголт, гурав биш. «Урилгаар л авна» гэдэг нь гурав дахь төлөв
           мэт харагддаг ч үнэндээ хүсэлт хүлээж авдаг байгууллагын өдөр тутмын
           хариулт — татгалзах — тул түүнд тусдаа тохиргоо хэрэггүй. */}
-      <section className="bg-surface border border-line rounded-xl p-5 space-y-2">
-        <h2 className="font-semibold text-foreground">{t("core.group.joining")}</h2>
-        <p className="text-xs text-muted">{t("core.message.join_policy_hint")}</p>
-        <label className="block max-w-md">
-          <span className="block text-xs font-medium text-muted mb-1">{t("core.field.join_policy")}</span>
-          <select
-            value={draft.join_policy ?? organisation.join_policy ?? "on_request"}
-            disabled={!canManage}
-            onChange={(e) => setDraft((d) => ({ ...d, join_policy: e.target.value }))}
-            className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-surface disabled:bg-surface-2"
-          >
-            <option value="on_request">{t("core.state.join_on_request")}</option>
-            <option value="open">{t("core.state.join_open")}</option>
-          </select>
-        </label>
-        {/* Нээлттэй болгосон хүнд юу өгч байгааг нь хэлнэ. Энэ мөр нь
-            чимэглэл биш: гишүүнчлэл дангаараа хоосон биш — платформын trigger
-            шинэ гишүүн бүрд `user` роль өгдөг, тэр нь уншилтын зөвшөөрөл
-            агуулна. «Хаалга нээх» ба «мэдээллээ харуулах» хоёрыг андуурах нь
-            энэ дэлгэц дээр гарч болох хамгийн үнэтэй алдаа. */}
-        {(draft.join_policy ?? organisation.join_policy) === "open" && (
-          <p className="text-xs text-accent">{t("core.message.join_open_note")}</p>
-        )}
-      </section>
+      <Card asChild padding="none" className="p-5 space-y-2">
+        <section>
+          <h2 className="font-semibold text-foreground">{t("core.group.joining")}</h2>
+          <p className="text-xs text-muted">{t("core.message.join_policy_hint")}</p>
+          <div className="flex flex-col gap-1.5 max-w-md">
+            <label htmlFor="org-join-policy" className="text-sm font-medium text-foreground">{t("core.field.join_policy")}</label>
+            <Select
+              value={draft.join_policy ?? organisation.join_policy ?? "on_request"}
+              disabled={!canManage}
+              onValueChange={(next) => setDraft((d) => ({ ...d, join_policy: next }))}
+            >
+              <SelectTrigger id="org-join-policy" />
+              <SelectContent>
+                <SelectItem value="on_request">{t("core.state.join_on_request")}</SelectItem>
+                <SelectItem value="open">{t("core.state.join_open")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {/* Нээлттэй болгосон хүнд юу өгч байгааг нь хэлнэ. Энэ мөр нь
+              чимэглэл биш: гишүүнчлэл дангаараа хоосон биш — платформын trigger
+              шинэ гишүүн бүрд `user` роль өгдөг, тэр нь уншилтын зөвшөөрөл
+              агуулна. «Хаалга нээх» ба «мэдээллээ харуулах» хоёрыг андуурах нь
+              энэ дэлгэц дээр гарч болох хамгийн үнэтэй алдаа. */}
+          {(draft.join_policy ?? organisation.join_policy) === "open" && (
+            <Alert variant="info">{t("core.message.join_open_note")}</Alert>
+          )}
+        </section>
+      </Card>
 
       {canManage && (
         <div className="flex items-center gap-3">
-          <button
-            onClick={save}
-            disabled={saving || Object.keys(draft).length === 0}
-            className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-medium text-sm py-2 px-5 rounded-lg"
-          >
+          <Button type="button" onClick={save} loading={saving} disabled={Object.keys(draft).length === 0}>
             {saving ? t("base.message.saving") : t("base.action.save")}
-          </button>
+          </Button>
           {Object.keys(draft).length > 0 && (
-            <button onClick={() => setDraft({})} className="text-sm text-muted hover:text-foreground">
+            <Button type="button" variant="ghost" onClick={() => setDraft({})}>
               {t("base.action.cancel")}
-            </button>
+            </Button>
           )}
         </div>
       )}

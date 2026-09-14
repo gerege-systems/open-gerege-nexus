@@ -5,8 +5,18 @@ import { api } from "@/lib/api";
 import { useLoadOnMount } from "@/lib/useResource";
 import { useAccess } from "@/lib/access";
 import { useI18n } from "@/lib/i18n";
-import { Banner, LoadingBlock, PageHeader, TableCard } from "@/components/ui";
-import { DocumentRecord, PENDING, RowActions, SignatureDialog, SignatureHistoryButton, SignatureHistoryDialog, SignatureProgress, useDocumentActions } from "@/components/documents/shared";
+import { PageHeader } from "@/components/ui";
+import {
+  Alert,
+  Card,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@gerege-systems/ui";
+import { DocumentRecord, ListEmpty, ListSkeleton, LoadMoreFooter, PENDING, RowActions, StaleNotice, StatTile, SignatureDialog, SignatureHistoryButton, SignatureHistoryDialog, SignatureProgress, useDocumentActions } from "@/components/documents/shared";
 import { ListChecks } from "lucide-react";
 
 /**
@@ -134,144 +144,102 @@ export default function DocumentApprovalsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        icon={<ListChecks className="w-7 h-7 text-indigo-600" />}
+        icon={<ListChecks className="w-7 h-7 text-accent" />}
         title={t("documents.menu.approvals")}
         subtitle={t("documents.view.approvals_hint")}
       />
 
-      {message && <Banner tone={message.type} message={message.text} onDismiss={() => setMessage(null)} />}
+      {message && (
+        <Alert variant={message.type === "error" ? "danger" : message.type} live dismissible onDismiss={() => setMessage(null)}>
+          {message.text}
+        </Alert>
+      )}
 
       {/* With no rows there is no table footer to carry this, and a refresh that failed
           after an action is exactly when there are none: the news that the list is stale
           — and the way to try again — must not live only inside the table. */}
-      {loadFailed && pending.length === 0 && (
-        <div className="flex items-center justify-between gap-3 px-4 py-3 border border-amber-200 rounded-xl bg-amber-50">
-          <p className="text-[11px] text-amber-800">{t("documents.message.stale_rows")}</p>
-          <button
-            type="button"
-            disabled={loading}
-            onClick={() => loadData()}
-            className="text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-surface border border-amber-300 text-amber-800 hover:bg-amber-100 disabled:opacity-50"
-          >
-            {t("documents.action.retry")}
-          </button>
-        </div>
-      )}
+      {loadFailed && pending.length === 0 && <StaleNotice busy={loading} onRetry={() => loadData()} />}
 
       {/* A tile is as much a claim as a sentence. "Awaiting signature: 0" over a
           queue the page could not read is the same falsehood the prose below is
           careful not to tell, so a failed load shows a dash in both places. */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="p-4 bg-surface border border-line rounded-xl">
-          {/* The queue's real size, not this page's — the server counted it. */}
-          {/* A dash until there is something to state: during the first load these read
-              0, which is the same falsehood the dash exists to prevent. */}
-          <div className="text-2xl font-semibold text-amber-600">{loadFailed || !answered ? "—" : total}</div>
-          <div className="text-[11px] text-muted leading-snug mt-1">{t("documents.stat.awaiting")}</div>
-        </div>
-        <div className="p-4 bg-surface border border-line rounded-xl">
-          <div className="text-2xl font-semibold text-foreground">
-            {loadFailed || !answered ? "—" : waitingSince ? days(waitingSince.created_at) : 0}
-          </div>
-          <div className="text-[11px] text-muted leading-snug mt-1">{t("documents.stat.oldest_days")}</div>
-        </div>
+        {/* The queue's real size, not this page's — the server counted it. A dash
+            until there is something to state: during the first load these read 0,
+            which is the same falsehood the dash exists to prevent. */}
+        <StatTile tone="warning" value={loadFailed || !answered ? "—" : total} label={t("documents.stat.awaiting")} />
+        <StatTile
+          value={loadFailed || !answered ? "—" : waitingSince ? days(waitingSince.created_at) : 0}
+          label={t("documents.stat.oldest_days")}
+        />
         {/* Counted over the rows this page holds, so a partial queue is marked: the
             server counts the queue as a whole but not its breakdown by type. */}
         {byType.slice(0, 2).map(([docType, count]) => (
-          <div key={docType} className="p-4 bg-surface border border-line rounded-xl">
-            <div className="text-2xl font-semibold text-indigo-600">
-              {total > pending.length ? `≥${count}` : count}
-            </div>
-            <div className="text-[11px] text-muted leading-snug mt-1 font-mono">{docType}</div>
-          </div>
+          <StatTile key={docType} tone="accent" mono value={total > pending.length ? `≥${count}` : count} label={docType} />
         ))}
       </section>
 
       {/* The table stays up while a refresh runs, so the click that started it is not
           swallowed by the table coming down under the pointer. */}
       {loading && pending.length === 0 ? (
-        <LoadingBlock label={t("documents.message.loading")} />
+        <ListSkeleton label={t("documents.message.loading")} />
       ) : pending.length === 0 ? (
         // "Nothing is waiting" is a claim about the queue, so only a load that
         // succeeded may make it.
-        loadFailed ? null : (
-          <div className="bg-surface border border-line rounded-xl p-8 text-center text-muted text-sm">
-            {t("documents.message.no_pending")}
-          </div>
-        )
+        loadFailed ? null : <ListEmpty icon={<ListChecks />} title={t("documents.message.no_pending")} />
       ) : (
-        <TableCard
-          head={
-            <tr>
-              <th className="px-4 py-3">{t("documents.field.title")}</th>
-              <th className="px-4 py-3">{t("base.field.type")}</th>
-              <th className="px-4 py-3">{t("documents.field.created")}</th>
-              <th className="px-4 py-3">{t("documents.field.waiting_days")}</th>
-              <th className="px-4 py-3 text-right">{t("base.field.actions")}</th>
-            </tr>
-          }
-          footer={
-            <>
-            {/* A stale list says so for as long as it is stale — the banner can be
-                dismissed, and a refresh that failed after an action must not be the only
-                thing that says the rows are old. */}
-            {loadFailed && (
-              <div className="flex items-center justify-between gap-3 px-4 py-3 border-t border-amber-200 bg-amber-50">
-                <p className="text-[11px] text-amber-800">{t("documents.message.stale_rows")}</p>
-                <button
-                  type="button"
-                  disabled={loading}
-                  onClick={() => loadData()}
-                  className="text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-surface border border-amber-300 text-amber-800 hover:bg-amber-100 disabled:opacity-50"
-                >
-                  {t("documents.action.retry")}
-                </button>
-              </div>
-            )}
+        <Card padding="none" className="overflow-hidden">
+          <Table containerClassName="rounded-none border-0" className="text-xs" scrollLabel={t("documents.menu.approvals")}>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("documents.field.title")}</TableHead>
+                <TableHead>{t("base.field.type")}</TableHead>
+                <TableHead>{t("documents.field.created")}</TableHead>
+                <TableHead>{t("documents.field.waiting_days")}</TableHead>
+                <TableHead align="right">{t("base.field.actions")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {pending.map((doc) => (
+                <TableRow key={doc.id}>
+                  <TableCell className="font-semibold">{doc.title}</TableCell>
+                  <TableCell className="font-mono text-muted">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span>{doc.doc_type}</span>
+                      <SignatureProgress doc={doc} />
+                      <SignatureHistoryButton doc={doc} onOpen={setHistoryTarget} />
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-muted">{new Date(doc.created_at).toLocaleDateString()}</TableCell>
+                  <TableCell className="text-muted">{days(doc.created_at)}</TableCell>
+                  <TableCell align="right">
+                    <RowActions
+                      doc={doc}
+                      busy={isBusy(doc.id)}
+                      canSign={can("documents.sign")}
+                      onSign={setSignTarget}
+                      onReject={reject}
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
 
-            {/* A queue shown in part says so, and can be read to the end. */}
-            {hasMore && (
-              <div className="flex items-center justify-between gap-3 px-4 py-3 border-t border-line bg-surface-2">
-                <p className="text-[11px] text-muted">
-                  {t("documents.message.showing_some_oldest", { shown: pending.length, total })}
-                </p>
-                <button
-                  type="button"
-                  disabled={loading}
-                  onClick={loadMore}
-                  className="text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-surface border border-input text-foreground hover:bg-surface-hover disabled:opacity-50"
-                >
-                  {t("documents.action.load_more")}
-                </button>
-              </div>
-            )}
-            </>
-          }
-        >
-          {pending.map((doc) => (
-            <tr key={doc.id} className="hover:bg-surface-hover">
-              <td className="px-4 py-3 font-semibold text-foreground">{doc.title}</td>
-              <td className="px-4 py-3 font-mono text-muted">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span>{doc.doc_type}</span>
-                  <SignatureProgress doc={doc} />
-                  <SignatureHistoryButton doc={doc} onOpen={setHistoryTarget} />
-                </div>
-              </td>
-              <td className="px-4 py-3 text-muted">{new Date(doc.created_at).toLocaleDateString()}</td>
-              <td className="px-4 py-3 text-muted">{days(doc.created_at)}</td>
-              <td className="px-4 py-3 text-right">
-                <RowActions
-                  doc={doc}
-                  busy={isBusy(doc.id)}
-                  canSign={can("documents.sign")}
-                  onSign={setSignTarget}
-                  onReject={reject}
-                />
-              </td>
-            </tr>
-          ))}
-        </TableCard>
+          {/* A stale list says so for as long as it is stale — the banner can be
+              dismissed, and a refresh that failed after an action must not be the only
+              thing that says the rows are old. */}
+          {loadFailed && <StaleNotice inset busy={loading} onRetry={() => loadData()} />}
+
+          {/* A queue shown in part says so, and can be read to the end. */}
+          {hasMore && (
+            <LoadMoreFooter
+              text={t("documents.message.showing_some_oldest", { shown: pending.length, total })}
+              busy={loading}
+              onMore={loadMore}
+            />
+          )}
+        </Card>
       )}
 
       {ready && !can("documents.sign") && pending.length > 0 && (

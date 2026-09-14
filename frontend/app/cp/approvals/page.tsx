@@ -12,10 +12,11 @@
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Check, X } from "lucide-react";
+import { Button, Card, CardHeader, EmptyState } from "@gerege-systems/ui";
 
 import { useAction } from "@/components/cp/Action";
-import { Card, formatMoment } from "@/components/cp/ui";
 import { cp, type Approval } from "@/lib/cp";
+import { formatMoment } from "@/lib/datetime";
 import { useI18n } from "@/lib/i18n";
 
 export default function Approvals() {
@@ -45,15 +46,18 @@ export default function Approvals() {
       </div>
 
       {failure && (
-        <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+        <p role="alert" className="text-sm rounded-lg bg-danger-soft text-danger border border-danger-border px-3 py-2">{failure}</p>
       )}
 
       {approvals.length === 0 && (
-        <p className="text-center text-muted py-10">{t("cp.message.no_approvals")}</p>
+        <EmptyState icon={<Check className="size-6" />} title={t("cp.message.no_approvals")} />
       )}
 
       {approvals.map((approval) => (
-        <Card key={approval.id} title={approval.action}>
+        <Card key={approval.id} padding="none" className="overflow-hidden">
+          <CardHeader className="flex-row items-center gap-3 border-b border-line px-4 py-3">
+            <h2 className="flex-1 text-base leading-tight font-semibold text-foreground">{approval.action}</h2>
+          </CardHeader>
           <div className="p-4 space-y-3">
             <dl className="grid gap-3 sm:grid-cols-3 text-sm">
               <div>
@@ -83,8 +87,10 @@ export default function Approvals() {
             </p>
 
             <div className="flex gap-2">
-              <button
+              <Button
                 type="button"
+                variant="destructive"
+                leadingIcon={<Check className="w-4 h-4" />}
                 onClick={() =>
                   action.run({
                     title: t("cp.action.approve"),
@@ -94,13 +100,13 @@ export default function Approvals() {
                     onDone: load,
                   })
                 }
-                className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700"
               >
-                <Check className="w-4 h-4" />
                 {t("cp.action.approve")}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="outline"
+                leadingIcon={<X className="w-4 h-4" />}
                 onClick={() =>
                   action.run({
                     title: t("cp.action.reject"),
@@ -109,11 +115,9 @@ export default function Approvals() {
                     onDone: load,
                   })
                 }
-                className="inline-flex items-center gap-2 rounded-lg border border-input px-3 py-2 text-sm text-foreground hover:bg-surface-hover"
               >
-                <X className="w-4 h-4" />
                 {t("cp.action.reject")}
-              </button>
+              </Button>
             </div>
           </div>
         </Card>

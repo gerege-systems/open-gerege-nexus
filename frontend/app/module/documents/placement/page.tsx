@@ -4,7 +4,8 @@ import React, { useEffect, useState } from "react";
 import { Move, RotateCcw, Save } from "lucide-react";
 import { esign, type Placement } from "@/lib/esign";
 import { useI18n } from "@/lib/i18n";
-import { Banner, Loading, PageHeader, fieldClass } from "@/components/ui";
+import { Loading, PageHeader } from "@/components/ui";
+import { Alert, Button, Input } from "@gerege-systems/ui";
 import { Card, useErrorMessage } from "@/components/esign/shared";
 
 /** A4 in PostScript points — the page the preview and the limits are drawn to. */
@@ -56,7 +57,7 @@ export default function EsignPlacementPage() {
   };
 
   if (loading) return <Loading />;
-  if (!placement) return <Banner tone="error" message={error ?? t("base.message.error")} />;
+  if (!placement) return <Alert variant="danger" live>{error ?? t("base.message.error")}</Alert>;
 
   const offPage =
     placement.x + placement.width > A4_WIDTH || placement.y + placement.height > A4_HEIGHT;
@@ -64,14 +65,14 @@ export default function EsignPlacementPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        icon={<Move className="w-7 h-7 text-indigo-600" />}
+        icon={<Move className="w-7 h-7 text-accent" />}
         title={t("esign.view.placement_title")}
         subtitle={t("esign.view.placement_subtitle")}
       />
 
-      {error && <Banner tone="error" message={error} onDismiss={() => setError(null)} />}
-      {notice && <Banner tone="success" message={notice} onDismiss={() => setNotice(null)} />}
-      {offPage && <Banner tone="error" message={t("esign.message.placement_off_page")} />}
+      {error && <Alert variant="danger" live dismissible onDismiss={() => setError(null)}>{error}</Alert>}
+      {notice && <Alert variant="success" live dismissible onDismiss={() => setNotice(null)}>{notice}</Alert>}
+      {offPage && <Alert variant="danger" live>{t("esign.message.placement_off_page")}</Alert>}
 
       <div className="grid lg:grid-cols-2 gap-6 items-start">
         <Card title={t("esign.view.placement_form")}>
@@ -113,53 +114,38 @@ export default function EsignPlacementPage() {
               />
             </div>
 
-            <div>
-              <label htmlFor="place-page" className="block text-xs font-semibold text-foreground mb-1">
-                {t("esign.field.page_number")}
-              </label>
-              <input
-                id="place-page"
-                type="number"
-                min={0}
-                value={placement.page_number}
-                onChange={(event) => update({ page_number: Number(event.target.value) })}
-                className={fieldClass}
-              />
-              <p className="text-[11px] text-muted mt-1">{t("esign.field.page_number_hint")}</p>
-            </div>
+            <Input
+              id="place-page"
+              type="number"
+              min={0}
+              label={t("esign.field.page_number")}
+              helperText={t("esign.field.page_number_hint")}
+              value={placement.page_number}
+              onChange={(event) => update({ page_number: Number(event.target.value) })}
+            />
 
-            <div>
-              <label htmlFor="place-text" className="block text-xs font-semibold text-foreground mb-1">
-                {t("esign.field.caption")}
-              </label>
-              <input
-                id="place-text"
-                value={placement.text}
-                maxLength={120}
-                onChange={(event) => update({ text: event.target.value })}
-                className={fieldClass}
-              />
-            </div>
+            <Input
+              id="place-text"
+              label={t("esign.field.caption")}
+              value={placement.text}
+              maxLength={120}
+              onChange={(event) => update({ text: event.target.value })}
+            />
 
             <div className="flex gap-2 pt-1">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                leadingIcon={<RotateCcw />}
                 onClick={() =>
                   setPlacement({ x: 80, y: 216, width: 200, height: 56, page_number: 0, text: "Тоон гарын үсгээр баталгаажив." })
                 }
-                className="bg-surface-2 hover:bg-slate-200 text-foreground text-xs font-medium px-4 py-2 rounded-lg inline-flex items-center gap-1.5"
               >
-                <RotateCcw className="w-3.5 h-3.5" />
                 {t("esign.action.reset_default")}
-              </button>
-              <button
-                type="submit"
-                disabled={saving || offPage}
-                className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-semibold px-4 py-2 rounded-lg inline-flex items-center gap-1.5"
-              >
-                <Save className="w-3.5 h-3.5" />
+              </Button>
+              <Button type="submit" loading={saving} disabled={offPage} leadingIcon={<Save />}>
                 {saving ? t("base.message.saving") : t("base.action.save")}
-              </button>
+              </Button>
             </div>
           </form>
         </Card>
@@ -172,7 +158,7 @@ export default function EsignPlacementPage() {
             >
               {/* Percentages keep the preview faithful at any rendered width. */}
               <div
-                className="absolute bg-indigo-100/70 border-2 border-dashed border-indigo-500 flex items-end justify-center"
+                className="absolute bg-accent-soft border-2 border-dashed border-accent flex items-end justify-center"
                 style={{
                   left: `${(placement.x / A4_WIDTH) * 100}%`,
                   top: `${(placement.y / A4_HEIGHT) * 100}%`,
@@ -180,12 +166,12 @@ export default function EsignPlacementPage() {
                   height: `${(placement.height / A4_HEIGHT) * 100}%`,
                 }}
               >
-                <span className="text-[7px] text-indigo-700 font-semibold truncate px-1 pb-0.5">
+                <span className="text-xs text-accent font-semibold truncate px-1 pb-0.5">
                   {placement.text}
                 </span>
               </div>
             </div>
-            <p className="text-[11px] text-muted mt-3 text-center">
+            <p className="text-xs text-muted mt-3 text-center">
               {t("esign.message.placement_preview_hint", { width: A4_WIDTH, height: A4_HEIGHT })}
             </p>
           </div>
@@ -213,20 +199,15 @@ function NumberField({
   onChange: (value: number) => void;
 }) {
   return (
-    <div>
-      <label htmlFor={id} className="block text-xs font-semibold text-foreground mb-1">
-        {label}
-      </label>
-      <input
-        id={id}
-        type="number"
-        min={min}
-        max={max}
-        value={value}
-        onChange={(event) => onChange(Number(event.target.value))}
-        className={fieldClass}
-      />
-      {hint && <p className="text-[11px] text-muted mt-1">{hint}</p>}
-    </div>
+    <Input
+      id={id}
+      type="number"
+      min={min}
+      max={max}
+      label={label}
+      helperText={hint}
+      value={value}
+      onChange={(event) => onChange(Number(event.target.value))}
+    />
   );
 }

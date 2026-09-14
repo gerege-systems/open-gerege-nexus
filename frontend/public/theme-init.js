@@ -24,16 +24,16 @@
       (mode === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
     var root = document.documentElement;
     if (dark) root.classList.add("dark");
-    // The three that are not light/dark but do change the first paint: the
-    // accent repaints every surface, density sets the root font size, and the
-    // design decides whether the top bar is blue.
-    root.dataset.accent = saved.accent || "neutral";
+    // The two that are not light/dark but do change the first paint: the
+    // accent repaints every surface, and density sets the root font size.
+    // Only a chosen accent is written: without one the deployment's own
+    // theme (app/layout.tsx, BRAND_THEME_*) is what the page keeps.
+    if (saved.accent && saved.accentChosen) root.dataset.accent = saved.accent;
     root.dataset.density = saved.density || "comfortable";
-    root.dataset.design = saved.design === "gerege" ? "gerege" : "original";
     // Native form controls, scrollbars and <select> popups follow this, not
     // the class — without it dark mode keeps a white scrollbar.
     root.style.colorScheme = dark ? "dark" : "light";
-  } catch (e) {
+  } catch {
     /* localStorage can be unavailable (private mode, blocked cookies). Light. */
   }
 })();

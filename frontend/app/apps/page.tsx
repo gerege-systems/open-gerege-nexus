@@ -3,10 +3,22 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { api, type ManifestReleaseNotes, type ReleaseKind } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
-import { Banner } from "@/components/ui";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  IconButton,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  Spinner,
+} from "@gerege-systems/ui";
 import AppHistory from "@/components/AppHistory";
 import {
-  Search,
   Download,
   Power,
   PowerOff,
@@ -54,9 +66,9 @@ interface AppItem {
  * or a fix is one they can take on a Tuesday. Colouring all five would say
  * nothing — everything urgent means nothing is.
  */
-const releaseTone: Partial<Record<NonNullable<ReleaseKind>, string>> = {
-  breaking: "bg-rose-50 text-rose-700 border-rose-200",
-  security: "bg-amber-50 text-amber-700 border-amber-200",
+const releaseTone: Partial<Record<NonNullable<ReleaseKind>, "danger" | "warning">> = {
+  breaking: "danger",
+  security: "warning",
 };
 
 
@@ -192,8 +204,9 @@ export default function AppStorePage() {
       {/* Both versions, and only when they differ: an installation that is
           current has one version, and printing it twice would read as a
           pending change. */}
-      <span
-        className="text-xs bg-surface-2 text-muted font-semibold px-2 py-0.5 rounded"
+      <Badge
+        variant="subtle"
+        tone="neutral"
         title={
           app.update_available
             ? `${t("app_store.field.installed_version")}: ${app.installed_version} · ${t("app_store.field.latest_version")}: ${app.latest_version}`
@@ -201,20 +214,16 @@ export default function AppStorePage() {
         }
       >
         {app.update_available ? `v${app.installed_version} → v${app.latest_version}` : `v${app.version}`}
-      </span>
+      </Badge>
       {app.installed && app.update_available && (
-        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-indigo-100 text-indigo-700">
+        <Badge variant="subtle" tone="accent">
           {t("app_store.state.update_available")}
-        </span>
+        </Badge>
       )}
       {app.installed && (
-        <span
-          className={`text-xs font-semibold px-2 py-0.5 rounded ${
-            app.enabled ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
-          }`}
-        >
+        <Badge variant="subtle" tone={app.enabled ? "success" : "warning"} dot>
           {app.enabled ? t("app_store.state.installed") : t("app_store.state.disabled")}
-        </span>
+        </Badge>
       )}
     </div>
   );
@@ -245,14 +254,14 @@ export default function AppStorePage() {
           : "";
     return (
       <p className="text-xs text-muted mt-1 flex items-start gap-1.5">
-        <Sparkles className="w-3.5 h-3.5 text-indigo-500 shrink-0 mt-px" />
+        <Sparkles className="w-3.5 h-3.5 text-accent shrink-0 mt-px" aria-hidden="true" />
         <span className="min-w-0">
           <span className="font-semibold text-foreground">{t("app_store.field.whats_new")}</span>{" "}
           {line}
           {tone && kindLabel && (
-            <span className={`ml-1.5 border px-1 py-px rounded text-[10px] font-semibold ${tone}`}>
+            <Badge variant="outline" tone={tone} className="ms-1.5">
               {kindLabel}
-            </span>
+            </Badge>
           )}
         </span>
       </p>
@@ -263,6 +272,7 @@ export default function AppStorePage() {
   // are as wide as their words and sit at the end of the line.
   const renderActions = (app: AppItem, mode: ViewMode) => {
     const width = mode === "grid" ? "w-full" : "";
+    const busy = actionLoading === app.slug;
     return (
       <div
         className={
@@ -272,65 +282,35 @@ export default function AppStorePage() {
         }
       >
         {!app.installed ? (
-          <button
-            onClick={() => handleInstall(app)}
-            disabled={actionLoading === app.slug}
-            className={`${width} bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm py-2 px-4 rounded-lg flex items-center justify-center space-x-2 transition disabled:opacity-50`}
-          >
-            <Download className="w-4 h-4" />
-            <span>
-              {actionLoading === app.slug ? t("app_store.message.installing") : t("app_store.action.install")}
-            </span>
-          </button>
+          <Button className={width} loading={busy} leadingIcon={<Download />} onClick={() => handleInstall(app)}>
+            {busy ? t("app_store.message.installing") : t("app_store.action.install")}
+          </Button>
         ) : (
           <>
             {/* Offered only on an installed app: a history is the publisher's
                 releases interleaved with this organisation's dealings, and an
                 app nobody has installed has only the first half — which the
                 card's release note already shows. */}
-            <button
-              onClick={() => setHistoryFor(app.slug)}
-              className={`${width} bg-surface hover:bg-surface-hover text-foreground border border-line font-medium text-sm py-2 px-4 rounded-lg flex items-center justify-center space-x-2 transition`}
-            >
-              <History className="w-4 h-4" />
-              <span>{t("app_store.action.history")}</span>
-            </button>
+            <Button variant="outline" className={width} leadingIcon={<History />} onClick={() => setHistoryFor(app.slug)}>
+              {t("app_store.action.history")}
+            </Button>
             {/* Update sits beside enable/disable rather than replacing it: a
                 tenant that has deliberately switched an app off should still be
                 able to bring it up to date. */}
             {app.update_available && (
-              <button
-                onClick={() => handleUpdate(app)}
-                disabled={actionLoading === app.slug}
-                className={`${width} bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm py-2 px-4 rounded-lg flex items-center justify-center space-x-2 transition disabled:opacity-50`}
-              >
-                <ArrowUpCircle className="w-4 h-4" />
-                <span>
-                  {actionLoading === app.slug ? t("app_store.message.updating") : t("app_store.action.update")}
-                </span>
-              </button>
+              <Button className={width} loading={busy} leadingIcon={<ArrowUpCircle />} onClick={() => handleUpdate(app)}>
+                {busy ? t("app_store.message.updating") : t("app_store.action.update")}
+              </Button>
             )}
-            <button
+            <Button
+              variant="outline"
+              className={`${width} ${app.enabled ? "border-danger-border text-danger hover:bg-danger-soft" : "border-success-border text-success hover:bg-success-soft"}`}
+              disabled={busy}
+              leadingIcon={app.enabled ? <PowerOff /> : <Power />}
               onClick={() => handleToggleState(app)}
-              disabled={actionLoading === app.slug}
-              className={`${width} font-medium text-sm py-2 px-4 rounded-lg flex items-center justify-center space-x-2 transition border ${
-                app.enabled
-                  ? "bg-surface hover:bg-red-50 text-red-600 border-red-200"
-                  : "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600"
-              }`}
             >
-              {app.enabled ? (
-                <>
-                  <PowerOff className="w-4 h-4" />
-                  <span>{t("app_store.action.disable")}</span>
-                </>
-              ) : (
-                <>
-                  <Power className="w-4 h-4" />
-                  <span>{t("app_store.action.enable")}</span>
-                </>
-              )}
-            </button>
+              {app.enabled ? t("app_store.action.disable") : t("app_store.action.enable")}
+            </Button>
           </>
         )}
       </div>
@@ -357,29 +337,35 @@ export default function AppStorePage() {
         </div>
 
         {/* Search & Category */}
-        <div className="flex items-center space-x-3">
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-2.5 text-muted" />
-            <input
-              type="text"
-              placeholder={t("app_store.view.search_placeholder")}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 pr-3 py-1.5 text-sm border border-input rounded-lg w-64 bg-surface"
-            />
-          </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <Input
+            type="search"
+            label={t("app_store.view.search_placeholder")}
+            hideLabel
+            placeholder={t("app_store.view.search_placeholder")}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onClear={() => setSearch("")}
+            className="w-64"
+          />
 
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-3 py-1.5 text-sm border border-input rounded-lg bg-surface"
-          >
-            {categories.map((c) => (
-              <option key={c} value={c}>
-                {c === "All" ? t("app_store.filter.all") : c}
-              </option>
-            ))}
-          </select>
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            {/* Named after what it currently says, the way a native select is
+                announced — there is no separate caption for this control. */}
+            <SelectTrigger
+              aria-label={selectedCategory === "All" ? t("app_store.filter.all") : selectedCategory}
+              className="w-44"
+            />
+            <SelectContent>
+              {/* An app with no category still shows under "All"; an empty
+                  value cannot be a Select item. */}
+              {categories.filter(Boolean).map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c === "All" ? t("app_store.filter.all") : c}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
           {/* Two buttons rather than a third dropdown entry: it is one choice
               with two answers, and the icons say which is which without being
@@ -387,24 +373,20 @@ export default function AppStorePage() {
               hears the state instead of a button that renames itself. */}
           <div className="flex items-center gap-1 p-1 bg-surface-2 rounded-lg border border-line">
             {([
-              { mode: "grid" as const, icon: <LayoutGrid className="w-4 h-4" />, label: t("app_store.action.view_grid") },
-              { mode: "list" as const, icon: <Rows3 className="w-4 h-4" />, label: t("app_store.action.view_list") },
+              { mode: "grid" as const, icon: <LayoutGrid />, label: t("app_store.action.view_grid") },
+              { mode: "list" as const, icon: <Rows3 />, label: t("app_store.action.view_list") },
             ]).map((option) => (
-              <button
+              <IconButton
                 key={option.mode}
-                type="button"
+                size="sm"
+                variant={view === option.mode ? "secondary" : "ghost"}
                 onClick={() => chooseView(option.mode)}
                 aria-pressed={view === option.mode}
                 aria-label={option.label}
                 title={option.label}
-                className={`p-1.5 rounded-md transition ${
-                  view === option.mode
-                    ? "bg-surface text-indigo-600 shadow-sm"
-                    : "text-muted hover:text-foreground"
-                }`}
-              >
-                {option.icon}
-              </button>
+                icon={option.icon}
+                className={view === option.mode ? "text-accent" : "text-muted"}
+              />
             ))}
           </div>
         </div>
@@ -414,36 +396,39 @@ export default function AppStorePage() {
 
       {/* Notifications */}
       {message && (
-        <Banner tone={message.type} message={message.text} onDismiss={() => setMessage(null)} />
+        <Alert variant={message.type === "error" ? "danger" : "success"} live dismissible onDismiss={() => setMessage(null)}>
+          {message.text}
+        </Alert>
       )}
 
       {/* App Cards Grid */}
       {loading ? (
-        <div className="py-12 text-center text-muted text-sm">{t("app_store.message.loading")}</div>
+        <div className="py-12 flex items-center justify-center gap-2 text-muted text-sm" role="status">
+          <Spinner size="md" decorative /> {t("app_store.message.loading")}
+        </div>
       ) : filteredApps.length === 0 ? (
-        <div className="py-12 text-center text-muted text-sm">{t("app_store.message.no_match")}</div>
+        <EmptyState title={t("app_store.message.no_match")} className="py-12" />
       ) : view === "list" ? (
-        <div className="bg-surface border border-line rounded-xl divide-y divide-line">
+        <Card padding="none" className="divide-y divide-line">
           {filteredApps.map((app) => (
             <div key={app.id} className="p-4 flex flex-wrap items-center gap-4">
               <div className="p-2 bg-surface-2 rounded-lg border border-line shrink-0">
-                <MenuIcon name={appIcon(app)} className="w-8 h-8 text-indigo-500" />
+                <MenuIcon name={appIcon(app)} className="w-8 h-8 text-accent" />
               </div>
               {/* min-w-0 so the description truncates instead of pushing the
                   buttons off the end of the row. */}
               <div className="flex-1 min-w-56">
                 <div className="flex items-baseline gap-2">
                   <h2 className="font-semibold text-foreground">{app.name}</h2>
-                  <span className="text-xs font-medium text-indigo-600">{app.category}</span>
+                  <span className="text-xs font-medium text-accent">{app.category}</span>
                   {/* Said out loud, because an app in this list looks exactly
                       like one every platform can get. Whoever is deciding to
                       install it should know it arrived by arrangement — and
                       that the platform next door does not see it. */}
                   {app.visibility === "private" && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700 ring-1 ring-amber-200">
-                      <Lock className="w-3 h-3" />
+                    <Badge variant="outline" tone="warning" icon={<Lock />}>
                       {t("app_store.label.private")}
-                    </span>
+                    </Badge>
                   )}
                 </div>
                 <p className="text-sm text-muted truncate">{app.description}</p>
@@ -459,24 +444,21 @@ export default function AppStorePage() {
               {renderActions(app, "list")}
             </div>
           ))}
-        </div>
+        </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredApps.map((app) => (
-            <div
-              key={app.id}
-              className="bg-surface border border-line rounded-xl p-5 hover:shadow-md transition flex flex-col justify-between"
-            >
+            <Card key={app.id} padding="none" className="p-5 flex flex-col justify-between hover:border-line-strong">
               <div>
                 <div className="flex items-start justify-between mb-3">
-                  <div className="p-2.5 bg-surface-2 rounded-xl border border-line">
-                    <MenuIcon name={appIcon(app)} className="w-8 h-8 text-indigo-500" />
+                  <div className="p-2.5 bg-surface-2 rounded-lg border border-line">
+                    <MenuIcon name={appIcon(app)} className="w-8 h-8 text-accent" />
                   </div>
                   {renderChips(app)}
                 </div>
 
                 <h2 className="text-lg font-semibold text-foreground">{app.name}</h2>
-                <p className="text-xs font-medium text-indigo-600 mb-2">{app.category}</p>
+                <p className="text-xs font-medium text-accent mb-2">{app.category}</p>
                 <p className="text-sm text-muted line-clamp-2">{app.description}</p>
                 {renderReleaseNote(app)}
                 <div className="mb-4" />
@@ -491,7 +473,7 @@ export default function AppStorePage() {
               </div>
 
               {renderActions(app, "grid")}
-            </div>
+            </Card>
           ))}
         </div>
       )}

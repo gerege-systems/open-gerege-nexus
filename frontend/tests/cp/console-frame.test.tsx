@@ -26,6 +26,8 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: route.push, replace: vi.fn(), refresh: vi.fn(), back: vi.fn() }),
 }));
 
+import { TooltipProvider } from "@gerege-systems/ui";
+
 import { Unauthorized } from "@/lib/cp";
 import { ThemeProvider } from "@/lib/theme";
 import Console from "@/components/cp/Console";
@@ -34,11 +36,15 @@ const OPERATOR = { id: "op-me", email: "me@example.test", name: "Мөнх Опе
 
 function frame(pathname = "/cp") {
   route.pathname = pathname;
+  // The rail's tiles are named by the library's Tooltip, which — as in
+  // app/providers.tsx — needs the one provider near the root.
   return render(
     <ThemeProvider>
-      <Console>
-        <p>дэлгэцийн агуулга</p>
-      </Console>
+      <TooltipProvider>
+        <Console>
+          <p>дэлгэцийн агуулга</p>
+        </Console>
+      </TooltipProvider>
     </ThemeProvider>,
   );
 }
@@ -161,10 +167,12 @@ test("a group folded in a previous session comes back folded", async () => {
   frame();
   await screen.findByText("дэлгэцийн агуулга");
 
-  const folded = await screen.findByRole("button", { name: "cp.group.platform", expanded: false });
-  // A link folded away is still a link, and Tab must not walk into it.
-  expect(document.getElementById(folded.getAttribute("aria-controls")!)?.hasAttribute("inert")).toBe(true);
+  expect(await screen.findByRole("button", { name: "cp.group.platform", expanded: false })).toBeTruthy();
+  // A folded group's destinations are out of the document — the library's
+  // SidebarGroup unmounts them — so Tab cannot walk into one.
+  expect(screen.queryByRole("link", { name: "cp.section.config" })).toBeNull();
   expect(screen.getByRole("button", { name: "cp.group.watch", expanded: true })).toBeTruthy();
+  expect(screen.getByRole("link", { name: "cp.section.health" })).toBeTruthy();
 });
 
 test("half-written storage does not take the console down with it", async () => {

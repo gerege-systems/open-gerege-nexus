@@ -11,12 +11,31 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  AlertTriangle, Check, Code2, Copy, KeyRound, Loader2, Plus,
-  RefreshCw, Server, Shield, Smartphone, Trash2, X,
+  Check, Code2, Copy, KeyRound, Plus, RefreshCw, Server, Shield, Smartphone, Trash2,
 } from "lucide-react";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Checkbox,
+  ConfirmationDialog,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  EmptyState,
+  IconButton,
+  Input,
+  RadioGroup,
+  RadioItem,
+  Spinner,
+  Textarea,
+} from "@gerege-systems/ui";
 import { api, type OAuth2Client, type OAuth2ClientDraft, type OAuth2Scope } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
-import { Modal as Dialog } from "@/components/ui";
+import { Modal } from "@/components/ui";
 import { ReadOnlyNote, useAccess } from "@/lib/permissions";
 import { formatDay } from "@/lib/datetime";
 
@@ -112,40 +131,38 @@ export default function SSOClientsPage() {
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-foreground flex items-center gap-2">
-            <Code2 className="w-7 h-7 text-indigo-600" />
+            <Code2 className="w-7 h-7 text-accent" />
             {t("sso_clients.view.title")}
           </h1>
           <p className="text-sm text-muted mt-1">{t("sso_clients.view.subtitle")}</p>
         </div>
-        {canManage && <button
-          onClick={() => setEditing({ draft: { ...emptyDraft } })}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm"
-        >
-          <Plus className="w-4 h-4" />
-          {t("sso_clients.action.create")}
-        </button>}
+        {canManage && (
+          <Button leadingIcon={<Plus />} onClick={() => setEditing({ draft: { ...emptyDraft } })}>
+            {t("sso_clients.action.create")}
+          </Button>
+        )}
       </header>
 
       {!canManage && <ReadOnlyNote permission="sso_clients.manage" />}
 
       <EndpointCard endpoints={endpoints} copied={copied} onCopy={copy} title={t("sso_clients.view.endpoints_title")} />
 
-      {error && (
-        <p className="text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2 flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 shrink-0" /> {error}
-        </p>
-      )}
+      {error && <Alert variant="danger" live>{error}</Alert>}
 
       {loading ? (
-        <p className="p-12 text-center text-muted flex items-center justify-center gap-2">
-          <Loader2 className="w-4 h-4 animate-spin" /> {t("sso_clients.message.loading")}
+        <p className="p-12 text-center text-muted flex items-center justify-center gap-2" role="status">
+          <Spinner size="md" decorative /> {t("sso_clients.message.loading")}
         </p>
       ) : apps.length === 0 ? (
-        <div className="p-12 text-center border border-dashed border-input rounded-xl bg-surface">
-          <Shield className="w-9 h-9 text-slate-300 mx-auto mb-3" />
-          <h2 className="font-semibold text-foreground">{t("sso_clients.view.empty_title")}</h2>
-          <p className="text-sm text-muted mt-1 max-w-md mx-auto">{t("sso_clients.view.empty_body")}</p>
-        </div>
+        <Card padding="none" className="border-dashed">
+          <EmptyState
+            icon={<Shield />}
+            title={t("sso_clients.view.empty_title")}
+            description={t("sso_clients.view.empty_body")}
+            headingLevel={2}
+            className="p-12"
+          />
+        </Card>
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           {apps.map((app) => (
@@ -181,14 +198,15 @@ export default function SSOClientsPage() {
       )}
 
       {confirming && (
-        <ConfirmModal
+        <ConfirmationDialog
+          open
+          onOpenChange={(open) => { if (!open) setConfirming(null); }}
           title={confirming.app.client_name}
-          body={confirming.action === "delete" ? t("sso_clients.message.delete_warning") : t("sso_clients.message.rotate_warning")}
-          danger={confirming.action === "delete"}
+          description={confirming.action === "delete" ? t("sso_clients.message.delete_warning") : t("sso_clients.message.rotate_warning")}
+          confirmVariant={confirming.action === "delete" ? "destructive" : "primary"}
           confirmLabel={confirming.action === "delete" ? t("base.action.delete") : t("sso_clients.action.rotate")}
           cancelLabel={t("base.action.cancel")}
-          onCancel={() => setConfirming(null)}
-          onConfirm={runConfirmed}
+          onConfirm={() => void runConfirmed()}
         />
       )}
     </div>
@@ -208,6 +226,22 @@ function toDraft(app: OAuth2Client): OAuth2ClientDraft {
   };
 }
 
+/** The copy affordance beside a value: a tick for two seconds after it is pressed. */
+function CopyIcon({ value, id, copied, onCopy }: {
+  value: string; id: string; copied: string; onCopy: (value: string, id: string) => void;
+}) {
+  return (
+    <IconButton
+      size="sm"
+      variant="ghost"
+      className="shrink-0 -m-1"
+      aria-label="copy"
+      icon={copied === id ? <Check className="text-success" /> : <Copy />}
+      onClick={() => onCopy(value, id)}
+    />
+  );
+}
+
 function EndpointCard({ endpoints, copied, onCopy, title }: {
   endpoints: Record<string, string>; copied: string; title: string;
   onCopy: (value: string, id: string) => void;
@@ -222,26 +256,26 @@ function EndpointCard({ endpoints, copied, onCopy, title }: {
   if (rows.length === 0) return null;
 
   return (
-    <section className="bg-slate-900 text-white rounded-xl border border-slate-800 p-5">
-      <div className="flex items-center gap-3 mb-4">
-        <Shield className="w-6 h-6 text-cyan-400" />
-        <h2 className="font-semibold text-sm text-white">{title}</h2>
-        <span className="ml-auto text-[11px] bg-emerald-500/20 text-emerald-300 font-mono px-3 py-1 rounded-full border border-emerald-500/30">
-          Active SSO Provider
-        </span>
-      </div>
-      <dl className="grid sm:grid-cols-2 gap-x-6 gap-y-2">
-        {rows.map(([label, url]) => (
-          <div key={label} className="flex items-center gap-2 min-w-0">
-            <dt className="text-[11px] uppercase tracking-wide text-muted w-24 shrink-0">{label}</dt>
-            <dd className="font-mono text-xs text-slate-300 truncate flex-1">{url}</dd>
-            <button onClick={() => onCopy(url, label)} className="text-muted hover:text-white shrink-0">
-              {copied === label ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-            </button>
-          </div>
-        ))}
-      </dl>
-    </section>
+    <Card asChild padding="none" className="p-5 bg-surface-2">
+      <section>
+        <div className="flex items-center gap-3 mb-4">
+          <Shield className="w-6 h-6 text-accent" />
+          <h2 className="font-semibold text-sm text-foreground">{title}</h2>
+          <Badge variant="outline" tone="success" dot className="ms-auto font-mono">
+            Active SSO Provider
+          </Badge>
+        </div>
+        <dl className="grid sm:grid-cols-2 gap-x-6 gap-y-2">
+          {rows.map(([label, url]) => (
+            <div key={label} className="flex items-center gap-2 min-w-0">
+              <dt className="text-xs uppercase tracking-wide text-muted w-24 shrink-0">{label}</dt>
+              <dd className="font-mono text-xs text-foreground truncate flex-1">{url}</dd>
+              <CopyIcon value={url} id={label} copied={copied} onCopy={onCopy} />
+            </div>
+          ))}
+        </dl>
+      </section>
+    </Card>
   );
 }
 
@@ -257,111 +291,93 @@ function AppCard({ app, scopes, copied, onCopy, onEdit, onRotate, onDelete, canM
   );
 
   return (
-    <article className={`bg-surface p-5 rounded-xl border space-y-4 ${app.disabled ? "border-line opacity-70" : "border-line"}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="font-semibold text-foreground truncate">{app.client_name}</h3>
-          <p className="text-[11px] text-muted mt-0.5">
-            {app.last_used_at
-              ? `${t("sso_clients.field.last_used")}: ${formatDay(app.last_used_at)}`
-              : t("sso_clients.message.never_used")}
-          </p>
+    <Card asChild padding="none" className={`p-5 space-y-4 ${app.disabled ? "opacity-70" : ""}`}>
+      <article>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="font-semibold text-foreground truncate">{app.client_name}</h3>
+            <p className="text-xs text-muted mt-0.5">
+              {app.last_used_at
+                ? `${t("sso_clients.field.last_used")}: ${formatDay(app.last_used_at)}`
+                : t("sso_clients.message.never_used")}
+            </p>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {app.disabled && <Badge tone="neutral">{t("sso_clients.message.disabled")}</Badge>}
+            <Badge tone="accent" icon={app.client_type === "public" ? <Smartphone /> : <Server />}>
+              {app.client_type}
+            </Badge>
+          </div>
         </div>
-        <div className="flex items-center gap-1.5 shrink-0">
-          {app.disabled && (
-            <span className="text-[11px] bg-surface-2 text-muted px-2 py-0.5 rounded-full">
-              {t("sso_clients.message.disabled")}
+
+        <div className="text-xs font-mono bg-surface-2 p-3 rounded-lg border border-line space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-muted shrink-0">client_id</span>
+            <span className="text-foreground font-semibold truncate">{app.client_id}</span>
+            <CopyIcon value={app.client_id} id={app.client_id} copied={copied} onCopy={onCopy} />
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-muted shrink-0">client_secret</span>
+            <span className="text-muted italic font-sans text-xs">
+              {app.client_type === "public" ? "—" : t("sso_clients.message.secret_hidden")}
             </span>
-          )}
-          <span className="text-[11px] bg-indigo-50 text-indigo-700 font-medium px-2 py-0.5 rounded-full flex items-center gap-1">
-            {app.client_type === "public" ? <Smartphone className="w-3 h-3" /> : <Server className="w-3 h-3" />}
-            {app.client_type}
-          </span>
+          </div>
         </div>
-      </div>
 
-      <div className="text-xs font-mono bg-surface-2 p-3 rounded-lg border border-line space-y-2">
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-muted shrink-0">client_id</span>
-          <span className="text-foreground font-semibold truncate">{app.client_id}</span>
-          <button onClick={() => onCopy(app.client_id, app.client_id)} className="shrink-0">
-            {copied === app.client_id
-              ? <Check className="w-3.5 h-3.5 text-emerald-600" />
-              : <Copy className="w-3.5 h-3.5 text-muted" />}
-          </button>
-        </div>
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-muted shrink-0">client_secret</span>
-          <span className="text-muted italic font-sans text-[11px]">
-            {app.client_type === "public" ? "—" : t("sso_clients.message.secret_hidden")}
-          </span>
-        </div>
-      </div>
-
-      <Field label={t("sso_clients.field.redirect_uris")}>
-        {app.redirect_uris.map((uri) => (
-          <Chip key={uri} mono>{uri}</Chip>
-        ))}
-      </Field>
-
-      {/* Only shown once there is one: an application that never ends a session
-          here has no reason to carry an empty row about it. */}
-      {(app.post_logout_redirect_uris || []).length > 0 && (
-        <Field label={t("sso_clients.field.post_logout_redirect_uris")}>
-          {app.post_logout_redirect_uris.map((uri) => (
-            <Chip key={uri} mono>{uri}</Chip>
+        <Field label={t("sso_clients.field.redirect_uris")}>
+          {app.redirect_uris.map((uri) => (
+            <Badge className="break-all font-mono" tone="neutral" key={uri}>{uri}</Badge>
           ))}
         </Field>
-      )}
 
-      <Field label={t("sso_clients.field.scopes")}>
-        {app.scopes.map((scope) => (
-          <Chip key={scope} mono tone={sensitive.has(scope) ? "amber" : "blue"}>{scope}</Chip>
-        ))}
-      </Field>
-
-      <Field label={t("sso_clients.field.grant_types")}>
-        {app.grant_types.map((grant) => <Chip key={grant} mono tone="slate">{grant}</Chip>)}
-      </Field>
-
-      <div className={`flex gap-2 pt-1 border-t border-line ${canManage ? "" : "hidden"}`}>
-        <button onClick={onEdit} className="text-xs font-semibold text-muted hover:bg-surface-hover px-3 py-1.5 rounded-lg mt-2">
-          {t("sso_clients.view.edit_title")}
-        </button>
-        {app.client_type !== "public" && (
-          <button onClick={onRotate} className="text-xs font-semibold text-amber-700 hover:bg-amber-50 px-3 py-1.5 rounded-lg mt-2 flex items-center gap-1.5">
-            <RefreshCw className="w-3.5 h-3.5" /> {t("sso_clients.action.rotate")}
-          </button>
+        {/* Only shown once there is one: an application that never ends a session
+            here has no reason to carry an empty row about it. */}
+        {(app.post_logout_redirect_uris || []).length > 0 && (
+          <Field label={t("sso_clients.field.post_logout_redirect_uris")}>
+            {app.post_logout_redirect_uris.map((uri) => (
+              <Badge className="break-all font-mono" tone="neutral" key={uri}>{uri}</Badge>
+            ))}
+          </Field>
         )}
-        <button onClick={onDelete} className="text-xs font-semibold text-rose-700 hover:bg-rose-50 px-3 py-1.5 rounded-lg mt-2 ml-auto flex items-center gap-1.5">
-          <Trash2 className="w-3.5 h-3.5" /> {t("base.action.delete")}
-        </button>
-      </div>
-    </article>
+
+        <Field label={t("sso_clients.field.scopes")}>
+          {app.scopes.map((scope) => (
+            <Badge className="break-all font-mono" key={scope} tone={sensitive.has(scope) ? "warning" : "info"}>{scope}</Badge>
+          ))}
+        </Field>
+
+        <Field label={t("sso_clients.field.grant_types")}>
+          {app.grant_types.map((grant) => (
+            <Badge className="break-all font-mono" key={grant} tone="neutral">{grant}</Badge>
+          ))}
+        </Field>
+
+        {canManage && (
+          <div className="flex gap-2 pt-3 border-t border-line">
+            <Button variant="ghost" size="sm" onClick={onEdit}>
+              {t("sso_clients.view.edit_title")}
+            </Button>
+            {app.client_type !== "public" && (
+              <Button variant="ghost" size="sm" className="text-warning hover:bg-warning-soft" leadingIcon={<RefreshCw />} onClick={onRotate}>
+                {t("sso_clients.action.rotate")}
+              </Button>
+            )}
+            <Button variant="ghost" size="sm" className="ms-auto text-danger hover:bg-danger-soft" leadingIcon={<Trash2 />} onClick={onDelete}>
+              {t("base.action.delete")}
+            </Button>
+          </div>
+        )}
+      </article>
+    </Card>
   );
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <span className="text-[11px] font-semibold text-foreground block mb-1">{label}</span>
+      <span className="text-xs font-semibold text-foreground block mb-1">{label}</span>
       <div className="flex flex-wrap gap-1">{children}</div>
     </div>
-  );
-}
-
-function Chip({ children, mono, tone = "slate" }: {
-  children: React.ReactNode; mono?: boolean; tone?: "slate" | "blue" | "amber";
-}) {
-  const tones = {
-    slate: "bg-surface-2 text-muted",
-    blue: "bg-blue-50 text-blue-700",
-    amber: "bg-amber-50 text-amber-700 border border-amber-200",
-  };
-  return (
-    <span className={`text-[11px] px-2 py-0.5 rounded ${tones[tone]} ${mono ? "font-mono" : ""} break-all`}>
-      {children}
-    </span>
   );
 }
 
@@ -392,147 +408,128 @@ function AppForm({ initial, isNew, scopes, grantTypes, describe, onCancel, onSav
   }
 
   return (
-    <Modal onClose={onCancel} wide label={isNew ? t("sso_clients.view.create_title") : t("sso_clients.view.edit_title")}>
+    // The shared dialog: Escape closes it, and a backdrop click does too until
+    // something has been typed — a stray click must not lose a half-filled form.
+    <Modal onClose={onCancel} size="lg" scrollable>
       <form onSubmit={submit} className="space-y-4">
-        <h2 className="text-lg font-semibold text-foreground">
-          {isNew ? t("sso_clients.view.create_title") : t("sso_clients.view.edit_title")}
-        </h2>
+        <DialogHeader>
+          <DialogTitle>{isNew ? t("sso_clients.view.create_title") : t("sso_clients.view.edit_title")}</DialogTitle>
+        </DialogHeader>
 
-        <label className="block">
-          <span className="text-xs font-semibold text-foreground">{t("sso_clients.field.name")} *</span>
-          <input
-            value={draft.client_name}
-            onChange={(e) => setDraft({ ...draft, client_name: e.target.value })}
-            required
-            className="mt-1 w-full px-3 py-2 text-sm border border-input rounded-lg"
-          />
-        </label>
+        <Input
+          label={`${t("sso_clients.field.name")} *`}
+          value={draft.client_name}
+          onChange={(e) => setDraft({ ...draft, client_name: e.target.value })}
+          required
+        />
 
-        <label className="block">
-          <span className="text-xs font-semibold text-foreground">{t("sso_clients.field.homepage")}</span>
-          <input
-            value={draft.client_uri || ""}
-            onChange={(e) => setDraft({ ...draft, client_uri: e.target.value })}
-            placeholder="https://example.mn"
-            className="mt-1 w-full px-3 py-2 text-sm border border-input rounded-lg font-mono"
-          />
-        </label>
+        <Input
+          label={t("sso_clients.field.homepage")}
+          value={draft.client_uri || ""}
+          onChange={(e) => setDraft({ ...draft, client_uri: e.target.value })}
+          placeholder="https://example.mn"
+          className="font-mono"
+        />
 
         {isNew && (
           <fieldset>
-            <legend className="text-xs font-semibold text-foreground mb-1">{t("sso_clients.field.client_type")}</legend>
-            <div className="grid sm:grid-cols-2 gap-2">
+            <legend className="text-sm font-medium text-foreground mb-1.5">{t("sso_clients.field.client_type")}</legend>
+            <RadioGroup
+              value={draft.client_type}
+              onValueChange={(type) => setDraft({ ...draft, client_type: type as OAuth2ClientDraft["client_type"] })}
+              className="grid sm:grid-cols-2 gap-2"
+            >
               {(["confidential", "public"] as const).map((type) => (
-                <label
+                <RadioItem
                   key={type}
-                  className={`border rounded-lg p-3 cursor-pointer text-xs ${draft.client_type === type ? "border-indigo-500 bg-indigo-50" : "border-line"}`}
-                >
-                  <input
-                    type="radio"
-                    name="client_type"
-                    className="sr-only"
-                    checked={draft.client_type === type}
-                    onChange={() => setDraft({ ...draft, client_type: type })}
-                  />
-                  <span className="font-semibold text-foreground flex items-center gap-1.5">
-                    {type === "public" ? <Smartphone className="w-3.5 h-3.5" /> : <Server className="w-3.5 h-3.5" />}
-                    {type === "public" ? t("sso_clients.type.public") : t("sso_clients.type.confidential")}
-                  </span>
-                  <span className="text-muted block mt-1">
-                    {type === "public" ? t("sso_clients.type.public_hint") : t("sso_clients.type.confidential_hint")}
-                  </span>
-                </label>
+                  value={type}
+                  className={`border rounded-lg p-3 ${draft.client_type === type ? "border-accent bg-accent-soft" : "border-line"}`}
+                  label={
+                    <span className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                      {type === "public" ? <Smartphone className="w-3.5 h-3.5" /> : <Server className="w-3.5 h-3.5" />}
+                      {type === "public" ? t("sso_clients.type.public") : t("sso_clients.type.confidential")}
+                    </span>
+                  }
+                  description={type === "public" ? t("sso_clients.type.public_hint") : t("sso_clients.type.confidential_hint")}
+                />
               ))}
-            </div>
+            </RadioGroup>
           </fieldset>
         )}
 
-        <label className="block">
-          <span className="text-xs font-semibold text-foreground">{t("sso_clients.field.redirect_uris")} *</span>
-          <textarea
-            value={uris}
-            onChange={(e) => setUris(e.target.value)}
-            rows={3}
-            placeholder={"https://app.example.mn/callback\nhttp://localhost:3000/callback"}
-            className="mt-1 w-full px-3 py-2 text-sm border border-input rounded-lg font-mono"
-          />
-          <span className="text-[11px] text-muted">
-            {/* Exact matching is what stops a code being delivered somewhere else. */}
-            one per line · https only, except on localhost
-          </span>
-        </label>
+        <Textarea
+          label={`${t("sso_clients.field.redirect_uris")} *`}
+          value={uris}
+          onChange={(e) => setUris(e.target.value)}
+          rows={3}
+          placeholder={"https://app.example.mn/callback\nhttp://localhost:3000/callback"}
+          className="font-mono"
+          // Exact matching is what stops a code being delivered somewhere else.
+          helperText="one per line · https only, except on localhost"
+        />
 
-        <label className="block">
-          <span className="text-xs font-semibold text-foreground">{t("sso_clients.field.post_logout_redirect_uris")}</span>
-          <textarea
-            value={logoutUris}
-            onChange={(e) => setLogoutUris(e.target.value)}
-            rows={2}
-            placeholder={"https://app.example.mn/"}
-            className="mt-1 w-full px-3 py-2 text-sm border border-input rounded-lg font-mono"
-          />
-          <span className="text-[11px] text-muted">
-            {/* Matched exactly too: an unchecked return address would make the
-                logout endpoint an open redirector. */}
-            {t("sso_clients.hint.post_logout_redirect_uris")}
-          </span>
-        </label>
+        <Textarea
+          label={t("sso_clients.field.post_logout_redirect_uris")}
+          value={logoutUris}
+          onChange={(e) => setLogoutUris(e.target.value)}
+          rows={2}
+          placeholder={"https://app.example.mn/"}
+          className="font-mono"
+          // Matched exactly too: an unchecked return address would make the
+          // logout endpoint an open redirector.
+          helperText={t("sso_clients.hint.post_logout_redirect_uris")}
+        />
 
         <fieldset>
-          <legend className="text-xs font-semibold text-foreground mb-1">{t("sso_clients.field.grant_types")}</legend>
-          <div className="flex flex-wrap gap-2">
+          <legend className="text-sm font-medium text-foreground mb-1.5">{t("sso_clients.field.grant_types")}</legend>
+          <div className="flex flex-wrap gap-x-4 gap-y-2">
             {grantTypes.map((grant) => (
-              <label
+              <Checkbox
                 key={grant}
-                className={`text-[11px] font-mono px-2.5 py-1 rounded-lg border cursor-pointer ${draft.grant_types?.includes(grant) ? "border-indigo-500 bg-indigo-50 text-indigo-700" : "border-line text-muted"}`}
-              >
-                <input type="checkbox" className="sr-only" checked={draft.grant_types?.includes(grant)} onChange={() => toggle("grant_types", grant)} />
-                {grant}
-              </label>
+                checked={Boolean(draft.grant_types?.includes(grant))}
+                onCheckedChange={() => toggle("grant_types", grant)}
+                label={<span className="font-mono text-xs">{grant}</span>}
+              />
             ))}
           </div>
-          <p className="text-[11px] text-muted mt-1">{t("sso_clients.message.pkce_note")}</p>
+          <p className="text-xs text-muted mt-1">{t("sso_clients.message.pkce_note")}</p>
         </fieldset>
 
         <fieldset>
-          <legend className="text-xs font-semibold text-foreground mb-1">{t("sso_clients.field.scopes")}</legend>
-          <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+          <legend className="text-sm font-medium text-foreground mb-1.5">{t("sso_clients.field.scopes")}</legend>
+          <div className="space-y-1.5 max-h-52 overflow-y-auto pe-1">
             {scopes.map((scope) => (
-              <label key={scope.name} className="flex items-start gap-2 text-xs cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={draft.scopes?.includes(scope.name)}
-                  onChange={() => toggle("scopes", scope.name)}
-                  className="mt-0.5"
-                />
-                <span>
-                  <span className="font-mono text-foreground">{scope.name}</span>
-                  {scope.sensitive && (
-                    <span className="ml-1.5 text-[10px] bg-amber-50 text-amber-700 border border-amber-200 px-1 rounded">
-                      sensitive
-                    </span>
-                  )}
-                  <span className="block text-muted">{describe(scope)}</span>
-                </span>
-              </label>
+              <Checkbox
+                key={scope.name}
+                checked={Boolean(draft.scopes?.includes(scope.name))}
+                onCheckedChange={() => toggle("scopes", scope.name)}
+                label={
+                  <span className="text-xs">
+                    <span className="font-mono text-foreground">{scope.name}</span>
+                    {scope.sensitive && <span className="ms-1.5"><Badge tone="warning">sensitive</Badge></span>}
+                  </span>
+                }
+                description={describe(scope)}
+              />
             ))}
           </div>
         </fieldset>
 
         {!isNew && (
-          <label className="flex items-center gap-2 text-xs text-foreground">
-            <input type="checkbox" checked={Boolean(draft.disabled)} onChange={(e) => setDraft({ ...draft, disabled: e.target.checked })} />
-            {t("sso_clients.action.disable")}
-          </label>
+          <Checkbox
+            checked={Boolean(draft.disabled)}
+            onCheckedChange={(checked) => setDraft({ ...draft, disabled: checked === true })}
+            label={t("sso_clients.action.disable")}
+          />
         )}
 
         <div className="flex justify-end gap-2 pt-2">
-          <button type="button" onClick={onCancel} className="px-4 py-2 text-sm text-muted hover:bg-surface-hover rounded-lg">
+          <Button variant="ghost" type="button" onClick={onCancel}>
             {t("base.action.cancel")}
-          </button>
-          <button type="submit" className="px-4 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold">
+          </Button>
+          <Button type="submit">
             {t("base.action.save")}
-          </button>
+          </Button>
         </div>
       </form>
     </Modal>
@@ -545,26 +542,28 @@ function SecretModal({ secret, clientID, copied, onCopy, onClose }: {
 }) {
   const { t } = useI18n();
   return (
-    <Modal onClose={onClose} label={t("sso_clients.message.secret_once_title")}>
-      <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-          <KeyRound className="w-5 h-5 text-amber-600" />
-          {t("sso_clients.message.secret_once_title")}
-        </h2>
-        <p className="text-sm text-muted">{t("sso_clients.message.secret_once_body")}</p>
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="max-h-[90dvh] overflow-y-auto">
+        <div className="space-y-4">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="size-5 text-warning" aria-hidden />
+              {t("sso_clients.message.secret_once_title")}
+            </DialogTitle>
+            <DialogDescription>{t("sso_clients.message.secret_once_body")}</DialogDescription>
+          </DialogHeader>
 
-        <div className="space-y-2">
-          <ReadOnlyField label="client_id" value={clientID} copied={copied} onCopy={onCopy} />
-          <ReadOnlyField label="client_secret" value={secret} copied={copied} onCopy={onCopy} highlight />
-        </div>
+          <div className="space-y-2">
+            <ReadOnlyField label="client_id" value={clientID} copied={copied} onCopy={onCopy} />
+            <ReadOnlyField label="client_secret" value={secret} copied={copied} onCopy={onCopy} highlight />
+          </div>
 
-        <div className="flex justify-end">
-          <button onClick={onClose} className="px-4 py-2 text-sm bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-semibold">
-            {t("sso_clients.action.done")}
-          </button>
+          <div className="flex justify-end">
+            <Button onClick={onClose}>{t("sso_clients.action.done")}</Button>
+          </div>
         </div>
-      </div>
-    </Modal>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -573,57 +572,10 @@ function ReadOnlyField({ label, value, copied, onCopy, highlight }: {
   onCopy: (value: string, id: string) => void;
 }) {
   return (
-    <div className={`flex items-center gap-2 p-3 rounded-lg border ${highlight ? "bg-amber-50 border-amber-200" : "bg-surface-2 border-line"}`}>
-      <span className="text-[11px] font-semibold text-muted w-24 shrink-0">{label}</span>
+    <div className={`flex items-center gap-2 p-3 rounded-lg border ${highlight ? "bg-warning-soft border-warning-border" : "bg-surface-2 border-line"}`}>
+      <span className="text-xs font-semibold text-muted w-24 shrink-0">{label}</span>
       <code className="text-xs font-mono text-foreground break-all flex-1">{value}</code>
-      <button onClick={() => onCopy(value, label)} className="shrink-0">
-        {copied === label ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-muted" />}
-      </button>
+      <CopyIcon value={value} id={label} copied={copied} onCopy={onCopy} />
     </div>
-  );
-}
-
-function ConfirmModal({ title, body, danger, confirmLabel, cancelLabel, onCancel, onConfirm }: {
-  title: string; body: string; danger?: boolean; confirmLabel: string; cancelLabel: string;
-  onCancel: () => void; onConfirm: () => void;
-}) {
-  return (
-    <Modal onClose={onCancel} label={title}>
-      <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-          <AlertTriangle className={`w-5 h-5 ${danger ? "text-rose-600" : "text-amber-600"}`} />
-          {title}
-        </h2>
-        <p className="text-sm text-muted">{body}</p>
-        <div className="flex justify-end gap-2">
-          <button onClick={onCancel} className="px-4 py-2 text-sm text-muted hover:bg-surface-hover rounded-lg">
-            {cancelLabel}
-          </button>
-          <button
-            onClick={onConfirm}
-            className={`px-4 py-2 text-sm text-white rounded-lg font-semibold ${danger ? "bg-rose-600 hover:bg-rose-700" : "bg-amber-600 hover:bg-amber-700"}`}
-          >
-            {confirmLabel}
-          </button>
-        </div>
-      </div>
-    </Modal>
-  );
-}
-
-// The platform's dialog, with the close affordance these three need. The shared
-// one deliberately has no dismissal — most dialogs here hold typed input — but a
-// secret shown once, and a confirmation, are read and dismissed, so they carry
-// an X. What comes from the shared component is what no dialog should be
-// without: the role, the name, focus taken on open and returned on close, and
-// Tab that cannot walk out into the page behind.
-function Modal({ children, onClose, wide, label }: { children: React.ReactNode; onClose: () => void; wide?: boolean; label?: string }) {
-  return (
-    <Dialog size={wide ? "lg" : "md"} scrollable label={label} className="my-8 relative">
-      <button type="button" onClick={onClose} className="absolute top-4 right-4 text-muted hover:text-muted" aria-label={label ? undefined : "close"}>
-        <X className="w-4 h-4" />
-      </button>
-      {children}
-    </Dialog>
   );
 }

@@ -17,7 +17,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
-import { Building2, Loader2, Lock, Search, ShieldCheck, UserRound } from "lucide-react";
+import { Search } from "lucide-react";
+import { Alert, Button, Input, Stepper } from "@gerege-systems/ui";
 
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { api, type SetupEnrolment, type SetupStatus } from "@/lib/api";
@@ -204,7 +205,7 @@ export default function SetupPage() {
       <Shell brand={brand}>
         <h1 className="signin-card__title">{t("setup.view.title")}</h1>
         <p className="signin-card__lede">{t("setup.message.not_required")}</p>
-        <Link className="signin-btn signin-btn--primary" href="/login">{t("setup.action.sign_in")}</Link>
+        <Button asChild size="xl" className="w-full"><Link href="/login">{t("setup.action.sign_in")}</Link></Button>
       </Shell>
     );
   }
@@ -214,8 +215,8 @@ export default function SetupPage() {
       <Shell brand={brand}>
         <h1 className="signin-card__title">{name}</h1>
         <p className="signin-card__lede">{t("setup.message.done")}</p>
-        <p className="signin-note">{t("setup.message.apps_next")}</p>
-        <Link className="signin-btn signin-btn--primary" href="/login">{t("setup.action.sign_in")}</Link>
+        <p className="m-0 text-center text-sm text-muted">{t("setup.message.apps_next")}</p>
+        <Button asChild size="xl" className="w-full"><Link href="/login">{t("setup.action.sign_in")}</Link></Button>
       </Shell>
     );
   }
@@ -226,7 +227,7 @@ export default function SetupPage() {
     return (
       <Shell brand={brand}>
         <h1 className="signin-card__title">{t("setup.view.title")}</h1>
-        <p className="signin-alert">{t("setup.message.not_armed")}</p>
+        <Alert variant="danger">{t("setup.message.not_armed")}</Alert>
       </Shell>
     );
   }
@@ -248,15 +249,12 @@ export default function SetupPage() {
       <Shell brand={brand}>
         <h1 className="signin-card__title">{t("setup.view.title")}</h1>
         <p className="signin-card__lede">{t("setup.message.token_missing")}</p>
-        {error && <p className="signin-alert">{error}</p>}
-        <form className="setup-form" onSubmit={(e) => { e.preventDefault(); setToken(typedToken.trim()); }}>
-          <label>
-            <span>{t("setup.field.token")}</span>
-            <input value={typedToken} onChange={(e) => setTypedToken(e.target.value)} autoFocus required />
-          </label>
-          <button className="signin-btn signin-btn--primary" type="submit" disabled={!typedToken.trim()}>
+        {error && <Alert variant="danger" live>{error}</Alert>}
+        <form className="flex flex-col gap-4" onSubmit={(e) => { e.preventDefault(); setToken(typedToken.trim()); }}>
+          <Input label={t("setup.field.token")} value={typedToken} onChange={(e) => setTypedToken(e.target.value)} autoFocus required />
+          <Button type="submit" size="xl" className="w-full" disabled={!typedToken.trim()}>
             {t("setup.action.use_token")}
-          </button>
+          </Button>
         </form>
       </Shell>
     );
@@ -269,54 +267,25 @@ export default function SetupPage() {
         <p className="signin-card__lede">{t("setup.view.subtitle")}</p>
       </div>
 
-      {/* Шидтэн бол урагшлах зам тул алхмууд нэг мөрөнд зогсоно. Дөрвөн шошго
-          нэг мөрөнд багтдаггүй — «Байгууллага», «Administrator» гэх мэт орчуулга
-          картын өргөнөөс хальдаг — тиймээс шошгыг явж буй алхам дээр нь үзүүлж,
-          бусад нь дүрсээрээ зогсоно. Шошго DOM-д үлдэж байгаа (`sr-only`) тул
-          дэлгэц уншигч алхам бүрийн нэрийг хэвээр уншина. */}
-      <ol className="setup-steps">
-        <li
-          className={step === 1 ? "is-current" : step > 1 ? "is-done" : ""}
-          aria-current={step === 1 ? "step" : undefined}
-          title={t("setup.view.step_organisation")}
-        >
-          <Building2 size={16} />
-          <span className={step === 1 ? undefined : "sr-only"}>{t("setup.view.step_organisation")}</span>
-        </li>
-        <li
-          className={step === 2 ? "is-current" : step > 2 ? "is-done" : ""}
-          aria-current={step === 2 ? "step" : undefined}
-          title={t("setup.view.step_admin")}
-        >
-          <UserRound size={16} />
-          <span className={step === 2 ? undefined : "sr-only"}>{t("setup.view.step_admin")}</span>
-        </li>
-        <li
-          className={step === 3 ? "is-current" : step > 3 ? "is-done" : ""}
-          aria-current={step === 3 ? "step" : undefined}
-          title={t("setup.view.step_password")}
-        >
-          <Lock size={16} />
-          <span className={step === 3 ? undefined : "sr-only"}>{t("setup.view.step_password")}</span>
-        </li>
-        {consoleOffered && (
-          <li
-            className={step === 4 ? "is-current" : ""}
-            aria-current={step === 4 ? "step" : undefined}
-            title={t("setup.view.step_console")}
-          >
-            <ShieldCheck size={16} />
-            <span className={step === 4 ? undefined : "sr-only"}>{t("setup.view.step_console")}</span>
-          </li>
-        )}
-      </ol>
+      {/* Шидтэн бол урагшлах зам тул алхмууд нэг мөрөнд зогсоно. Урт орчуулга
+          картын өргөнөөс хальдаггүй: сангийн Stepper гарчгийг таслаж, бүтэн
+          нэрийг дэлгэц уншигчид үлдээнэ. */}
+      <Stepper
+        current={step - 1}
+        steps={[
+          { title: t("setup.view.step_organisation") },
+          { title: t("setup.view.step_admin") },
+          { title: t("setup.view.step_password") },
+          ...(consoleOffered ? [{ title: t("setup.view.step_console") }] : []),
+        ]}
+      />
 
-      {status && !status.core && <p className="signin-note">{t("setup.message.core_off")}</p>}
-      {error && <p className="signin-alert">{error}</p>}
+      {status && !status.core && <p className="m-0 text-center text-sm text-muted">{t("setup.message.core_off")}</p>}
+      {error && <Alert variant="danger" live>{error}</Alert>}
 
       {step === 1 && (
         <form
-          className="setup-form"
+          className="flex flex-col gap-4"
           onSubmit={(e) => {
             e.preventDefault();
             // Хөтчийн `pattern` дээр найдахгүй давхар шалгана: сервер богино
@@ -330,73 +299,66 @@ export default function SetupPage() {
             setStep(2);
           }}
         >
-          <label>
-            <span>{t("setup.field.registration_number")}</span>
-            <div className="setup-lookup">
-              <input value={regNo} onChange={(e) => setRegNo(e.target.value)} required />
-              <button type="button" onClick={lookupOrganisation} disabled={busy || !status?.core || !regNo}>
-                {busy ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
-                {t("setup.action.lookup")}
-              </button>
-            </div>
-          </label>
-          <label>
-            <span>{t("setup.field.organisation_name")}</span>
-            <input
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-                if (!slugTouched) setSlug(slugFromName(e.target.value));
-              }}
-              required
-            />
-          </label>
-          <label>
-            <span>{t("setup.field.legal_name")}</span>
-            <input value={legalName} onChange={(e) => setLegalName(e.target.value)} />
-          </label>
-          <label>
-            <span>{t("setup.field.slug")}</span>
-            <input
-              value={slug}
-              onChange={(e) => {
-                setSlugTouched(true);
-                setSlug(normaliseSlugInput(e.target.value));
-              }}
-              pattern={SETUP_SLUG_PATTERN}
-              required
-            />
-            <small>{t("setup.message.slug_hint")}</small>
-          </label>
-          <button className="signin-btn signin-btn--primary" type="submit">{t("base.action.next")}</button>
+          <div className="flex items-end gap-2">
+            <Input className="flex-1" label={t("setup.field.registration_number")} value={regNo} onChange={(e) => setRegNo(e.target.value)} required />
+            <Button
+              type="button"
+              variant="outline"
+              loading={busy}
+              leadingIcon={<Search />}
+              onClick={lookupOrganisation}
+              disabled={!status?.core || !regNo}
+            >
+              {t("setup.action.lookup")}
+            </Button>
+          </div>
+          <Input
+            label={t("setup.field.organisation_name")}
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+              if (!slugTouched) setSlug(slugFromName(e.target.value));
+            }}
+            required
+          />
+          <Input label={t("setup.field.legal_name")} value={legalName} onChange={(e) => setLegalName(e.target.value)} />
+          <Input
+            label={t("setup.field.slug")}
+            value={slug}
+            onChange={(e) => {
+              setSlugTouched(true);
+              setSlug(normaliseSlugInput(e.target.value));
+            }}
+            pattern={SETUP_SLUG_PATTERN}
+            required
+            helperText={t("setup.message.slug_hint")}
+          />
+          <Button type="submit" size="xl" className="w-full">{t("base.action.next")}</Button>
         </form>
       )}
 
       {step === 2 && (
         <form
-          className="setup-form"
+          className="flex flex-col gap-4"
           onSubmit={(e) => {
             e.preventDefault();
             setStep(3);
           }}
         >
-          <p className="setup-note">{t("setup.hint.super_admin")}</p>
-          <label>
-            <span>{t("base.field.email")}</span>
-            <input type="email" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} required />
-          </label>
-          <div className="setup-actions">
-            <button type="button" className="signin-btn signin-btn--quiet" onClick={() => setStep(1)}>
+          <p className="m-0 text-sm text-muted">{t("setup.hint.super_admin")}</p>
+          <Input type="email" label={t("base.field.email")} value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} required />
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" size="xl" className="w-full" onClick={() => setStep(1)}>
               {t("base.action.previous")}
-            </button>
-            <button className="signin-btn signin-btn--primary" type="submit">{t("base.action.next")}</button>
+            </Button>
+            <Button type="submit" size="xl" className="w-full">{t("base.action.next")}</Button>
           </div>
         </form>
       )}
 
       {step === 3 && (
         <form
-          className="setup-form"
+          className="flex flex-col gap-4"
           onSubmit={(e) => {
             e.preventDefault();
             if (!consoleOffered || operatorDone) {
@@ -413,115 +375,94 @@ export default function SetupPage() {
             setStep(4);
           }}
         >
-          <label>
-            <span>{t("auth.field.password")}</span>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              minLength={MIN_SETUP_PASSWORD}
-              required
-            />
-            <small>{t("setup.message.password_rule")}</small>
-          </label>
-          <label>
-            <span>{t("setup.field.password_again")}</span>
-            <input
-              type="password"
-              value={again}
-              onChange={(e) => setAgain(e.target.value)}
-              minLength={MIN_SETUP_PASSWORD}
-              required
-            />
-          </label>
-          <div className="setup-actions">
-            <button type="button" className="signin-btn signin-btn--quiet" onClick={() => setStep(2)}>
+          <Input
+            type="password"
+            label={t("auth.field.password")}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            minLength={MIN_SETUP_PASSWORD}
+            required
+            helperText={t("setup.message.password_rule")}
+          />
+          <Input
+            type="password"
+            label={t("setup.field.password_again")}
+            value={again}
+            onChange={(e) => setAgain(e.target.value)}
+            minLength={MIN_SETUP_PASSWORD}
+            required
+          />
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" size="xl" className="w-full" onClick={() => setStep(2)}>
               {t("base.action.previous")}
-            </button>
-            <button className="signin-btn signin-btn--primary" type="submit" disabled={busy}>
-              {busy ? <Loader2 size={16} className="animate-spin" /> : null}
+            </Button>
+            <Button type="submit" size="xl" className="w-full" loading={busy}>
               {consoleOffered ? t("base.action.next") : t("setup.action.finish")}
-            </button>
+            </Button>
           </div>
         </form>
       )}
 
       {step === 4 && !enrolment && (
-        <form className="setup-form" onSubmit={createOperator}>
+        <form className="flex flex-col gap-4" onSubmit={createOperator}>
           <p className="signin-card__lede">
             {t("setup.message.console_lede", { host: status?.console?.host ?? "" })}
           </p>
-          <label>
-            <span>{t("setup.field.admin_name")}</span>
-            <input value={operatorName} onChange={(e) => setOperatorName(e.target.value)} required />
-          </label>
-          <label>
-            <span>{t("auth.field.email")}</span>
-            <input
-              type="email"
-              value={operatorEmail}
-              onChange={(e) => setOperatorEmail(e.target.value)}
-              required
-            />
-          </label>
-          <label>
-            <span>{t("auth.field.password")}</span>
-            <input
-              type="password"
-              value={operatorPassword}
-              onChange={(e) => setOperatorPassword(e.target.value)}
-              minLength={MIN_OPERATOR_PASSWORD}
-              required
-            />
-            <small>{t("setup.message.operator_password_rule")}</small>
-          </label>
-          <div className="setup-actions">
+          <Input label={t("setup.field.admin_name")} value={operatorName} onChange={(e) => setOperatorName(e.target.value)} required />
+          <Input
+            type="email"
+            label={t("auth.field.email")}
+            value={operatorEmail}
+            onChange={(e) => setOperatorEmail(e.target.value)}
+            required
+          />
+          <Input
+            type="password"
+            label={t("auth.field.password")}
+            value={operatorPassword}
+            onChange={(e) => setOperatorPassword(e.target.value)}
+            minLength={MIN_OPERATOR_PASSWORD}
+            required
+            helperText={t("setup.message.operator_password_rule")}
+          />
+          <div className="flex gap-2">
             {/* Skipping is a first-class answer, not a way out of a form that
                 went wrong: a deployment can open its console later with
                 operator-bootstrap, and one that never opens a console is an
                 ordinary deployment rather than an unfinished one. */}
-            <button
-              type="button"
-              className="signin-btn signin-btn--quiet"
-              onClick={() => void finish()}
-              disabled={busy}
-            >
+            <Button type="button" variant="outline" size="xl" className="w-full" onClick={() => void finish()} disabled={busy}>
               {t("setup.action.skip_console")}
-            </button>
-            <button className="signin-btn signin-btn--primary" type="submit" disabled={busy}>
-              {busy ? <Loader2 size={16} className="animate-spin" /> : null}
+            </Button>
+            <Button type="submit" size="xl" className="w-full" loading={busy}>
               {t("base.action.next")}
-            </button>
+            </Button>
           </div>
         </form>
       )}
 
       {step === 4 && enrolment && (
-        <form className="setup-form" onSubmit={confirmOperator}>
+        <form className="flex flex-col gap-4" onSubmit={confirmOperator}>
           <p className="signin-card__lede">{t("setup.message.enrolment")}</p>
           {/* Shown once and never again: the secret is in the account's row and
               nothing here stores it. A deployment that closes this screen
-              without confirming finishes with operator-bootstrap -confirm. */}
-          <div className="setup-enrolment">
+              without confirming finishes with operator-bootstrap -confirm. The
+              code draws its own white quiet zone (marginSize), which a scanner
+              needs in both colour modes. */}
+          <div className="flex flex-col items-center gap-3 rounded-md border border-line bg-surface-2 p-4">
             <QRCodeSVG value={enrolment.uri} size={168} marginSize={2} />
-            <code>{enrolment.secret}</code>
+            <code className="break-all text-center text-xs tracking-wide text-muted">{enrolment.secret}</code>
           </div>
-          <label>
-            <span>{t("setup.field.totp_code")}</span>
-            <input
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              required
-            />
-          </label>
-          <div className="setup-actions">
-            <button className="signin-btn signin-btn--primary" type="submit" disabled={busy}>
-              {busy ? <Loader2 size={16} className="animate-spin" /> : null}
-              {t("setup.action.finish")}
-            </button>
-          </div>
+          <Input
+            label={t("setup.field.totp_code")}
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            required
+          />
+          <Button type="submit" size="xl" className="w-full" loading={busy}>
+            {t("setup.action.finish")}
+          </Button>
         </form>
       )}
     </Shell>

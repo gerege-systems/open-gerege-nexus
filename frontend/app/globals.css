@@ -1,93 +1,226 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@import 'tw-animate-css';
+/* The design system: tokens, the `dark` variant, the base layer and the
+ * `data-style` / `data-depth` attribute layers. Its component classes are
+ * compiled from dist-lib by the @source line. */
+@import '@gerege-systems/ui/theme.css';
+@source '../node_modules/@gerege-systems/ui/dist-lib';
+
+@theme {
+  --color-background: var(--gerege-bg);
+  --color-surface: var(--gerege-surface);
+  --color-surface-2: var(--gerege-surface-2);
+  --color-surface-hover: var(--gerege-surface-hover);
+  --color-chrome: var(--gerege-chrome);
+  --color-foreground: var(--gerege-fg);
+  --color-muted: var(--gerege-muted);
+  --color-subtle: var(--gerege-fg-subtle);
+  --color-accent: var(--gerege-blue);
+  --color-accent-hover: var(--gerege-blue-hover);
+  --color-accent-soft: var(--gerege-blue-soft);
+  --color-accent-border: var(--gerege-blue-border);
+  --color-on-accent: var(--gerege-on-blue);
+  /* Text and hairlines on the fixed navy band — white, whatever the mode. */
+  --color-on-navy: var(--gerege-on-navy);
+  --color-line: var(--gerege-border);
+  --color-line-strong: var(--gerege-border-strong);
+  --color-input: var(--gerege-border-input);
+  --color-ring: var(--gerege-ring);
+  --color-overlay: var(--gerege-overlay);
+  --color-danger: var(--gerege-danger-fg);
+  --color-danger-soft: var(--gerege-danger-soft);
+  --color-danger-border: var(--gerege-danger-border);
+  --color-danger-solid: var(--gerege-danger);
+  --color-danger-hover: var(--gerege-danger-hover);
+  --color-success: var(--gerege-success-fg);
+  --color-success-soft: var(--gerege-success-soft);
+  --color-success-border: var(--gerege-success-border);
+  --color-success-solid: var(--gerege-success);
+  --color-success-hover: var(--gerege-success-hover);
+  --color-warning: var(--gerege-warning-fg);
+  --color-warning-soft: var(--gerege-warning-soft);
+  --color-warning-border: var(--gerege-warning-border);
+  --color-warning-solid: var(--gerege-warning);
+  --color-info: var(--gerege-info-fg);
+  --color-info-soft: var(--gerege-info-soft);
+  --color-info-border: var(--gerege-info-border);
+  --color-neutral: var(--gerege-neutral-fg);
+  --color-neutral-soft: var(--gerege-neutral-soft);
+  --color-neutral-border: var(--gerege-neutral-border);
+
+  /* Radii and shadows are the library's (@gerege-systems/ui theme.css); only
+     the menu shadow has no name there. */
+  --shadow-menu: var(--shadow-md);
+
+  --z-index-dropdown: var(--z-dropdown);
+  --z-index-sticky: var(--z-sticky);
+  --z-index-overlay: var(--z-overlay);
+  --z-index-modal: var(--z-modal);
+  --z-index-popover: var(--z-popover);
+  --z-index-toast: var(--z-toast);
+  --z-index-tooltip: var(--z-tooltip);
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+/* ─── Theme editor — ui.gecore.mn/#theme ─────────────────────────────────────
+   Gerege Nexus-ийн өөрийн харагдац: accent oklch(0.534 0.2 259),
+   style «nexus», depth «soft» (сүүлийн хоёр нь app/layout.tsx-ийн <html>
+   атрибут). Энэ блок нь тэр хуудасны «Get code»-оос шууд хуулагдсан.
+   Deployment өөрийн харагдацтай бол энд засахгүй: BRAND_THEME_CSS_FILE-д
+   өөрийн «Get code»-оо өгнө — тэр нь <body>-ийн төгсгөлд орж энэ блокийг
+   дарна. Сангийн :root-той нэг давхаргад (layer-гүй) байх нь чухал — @layer
+   дотор бичвэл сангийн indigo хожно. */
+:root {
+  --accent: oklch(0.534 0.2 259);
+  --accent-subtle: oklch(0.97 0.03 259);
+  --accent-subtle-foreground: oklch(0.474 0.19 259);
+  --ring: oklch(0.604 0.2 259);
+}
+.dark {
+  --accent: oklch(0.714 0.18 259);
+  --accent-subtle: oklch(0.24 0.07 259);
+  --accent-subtle-foreground: oklch(0.82 0.12 259);
+  --ring: oklch(0.754 0.18 259);
+}
+
+/* The shell's chrome is edge to edge. The style layer gives every surface
+   slot — the top bar and the sidebar among them — the surface radius, which
+   drew a rounded corner where the bar meets the rail. Unlayered, like the
+   rule it overrides. */
+html[data-style]:not([data-style="nova"]) [data-slot="top-nav"][data-slot],
+html[data-style]:not([data-style="nova"]) [data-slot="sidebar"][data-slot] {
+  /* One notch more specific than the style layer's group rule, whose :is()
+     list carries a two-attribute member ((0,4,0)); the doubled attribute
+     makes this (0,4,1). */
+  border-radius: 0;
+}
+
+/* Тохиргоо → Харагдац дахь accent сонголтууд, сангийн нэрсээр. `cobalt` = дээрх
+   default; `violet`/`emerald` нь сангийн өөрийн preset (theme.css). Хэрэглэгч
+   сонгосон үед л <html data-accent> тавигдана (theme-init.js), эс бөгөөс
+   deployment-ийн theme хэвээр. */
+:root[data-accent="cobalt"] {
+  --accent: oklch(0.534 0.2 259);
+  --accent-subtle: oklch(0.97 0.03 259);
+  --accent-subtle-foreground: oklch(0.474 0.19 259);
+  --ring: oklch(0.604 0.2 259);
+}
+.dark[data-accent="cobalt"] {
+  --accent: oklch(0.714 0.18 259);
+  --accent-subtle: oklch(0.24 0.07 259);
+  --accent-subtle-foreground: oklch(0.82 0.12 259);
+  --ring: oklch(0.754 0.18 259);
+}
+:root[data-accent="teal"] {
+  --accent: oklch(0.582 0.100 207);
+  --accent-subtle: oklch(0.961 0.018 201);
+  --accent-subtle-foreground: oklch(0.515 0.089 208);
+  --ring: oklch(0.582 0.100 207);
+}
+.dark[data-accent="teal"] {
+  --accent: oklch(0.756 0.104 205);
+  --accent-foreground: oklch(0.198 0.028 207);
+  --accent-subtle: oklch(0.316 0.043 207);
+  --accent-subtle-foreground: oklch(0.865 0.066 203);
+  --ring: oklch(0.756 0.104 205);
+}
+:root[data-accent="neutral"] {
+  --accent: oklch(0.446 0.037 257);
+  --accent-subtle: oklch(0.968 0.007 248);
+  --accent-subtle-foreground: oklch(0.372 0.039 257);
+  --ring: oklch(0.446 0.037 257);
+}
+.dark[data-accent="neutral"] {
+  --accent: oklch(0.869 0.020 253);
+  --accent-foreground: oklch(0.183 0.031 263);
+  --accent-subtle: oklch(0.315 0.036 260);
+  --accent-subtle-foreground: oklch(0.929 0.013 256);
+  --ring: oklch(0.869 0.020 253);
+}
 
 @layer base {
-  :root {
-    /* Gerege Theme — aligned with open-gerege-mn's shared design system. */
-    --gerege-blue: #0064e1;
-    --gerege-blue-hover: #0054c2;
-    /* Үндсэн товчны бичиг. Accent нь үргэлж бараан байдаггүй: харанхуй
-       горимын `neutral` нь --gerege-blue-г цайвар саарал болгодог тул тэнд
-       цагаан бичиг цагаан дээр бичигдэж, товч уншигдахаа болдог байв. */
-    --gerege-on-blue: #ffffff;
-    --gerege-blue-soft: #eef6ff;
-    /* Chrome-profile style tonal surfaces derived from the selected accent.
-       The page background matches sso.gerege.mn (--bg: #f9fafc) so the two
-       products read as one platform when a user moves between them. */
-    --gerege-bg: #f9fafc;
-    --gerege-chrome: #ffffff;
-    --gerege-surface-2: #f1f3f7;
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--border, currentcolor);
+  }
+}
+
+@layer base {
+  /* ─── Токенууд: ганц эх сурвалж нь @gerege-systems/ui ────────────────────
+     Энэ кодын хуучин `--gerege-*` нэрс сангийн семантик токенуудын alias
+     болов — өнгө, радиус, сүүдэр бүр сангаас (theme.css) ирнэ. Ингэснээр
+     ui.gecore.mn/#theme-ийн «Get code» гаргасан `:root`/`.dark` блок
+     (BRAND_THEME_CSS_FILE) болон `<html data-style/data-depth/data-accent>`
+     (BRAND_THEME_*) л deployment-ийн харагдацыг бүхэлд нь шийднэ; цөмд
+     утга бичих шаардлагагүй. Доорх alias-ыг өөрчлөх хэрэггүй. */
+  :root,
+  .dark {
+    --gerege-bg: var(--background);
+    --gerege-chrome: var(--background);
+    --gerege-surface: var(--card);
+    --gerege-surface-2: var(--background-muted);
+    --gerege-surface-hover: var(--surface-hover);
+    --gerege-fg: var(--foreground);
+    --gerege-muted: var(--foreground-muted);
+    --gerege-fg-subtle: var(--foreground-subtle);
+    --gerege-border: var(--border);
+    --gerege-border-strong: var(--border-strong);
+    --gerege-border-input: var(--border-input);
+    --gerege-overlay: var(--overlay);
+    --gerege-ring: var(--ring);
+
+    --gerege-blue: var(--accent);
+    --gerege-blue-hover: var(--accent-hover);
+    --gerege-blue-soft: var(--accent-subtle);
+    --gerege-on-blue: var(--accent-foreground);
+    --gerege-blue-border: color-mix(in srgb, var(--accent) 35%, transparent);
+    /* Navy is the one fixed surface (the landing's brand band): it follows
+       neither the mode nor the accent, by design — see the landing rules. */
     --gerege-navy: #0b2550;
-    --gerege-surface: #ffffff;
-    --gerege-fg: #11161e;
-    --gerege-muted: #5e646c;
-    --gerege-border: #e2e5e9;
-    /* The divider colour for the top bar specifically. It follows the page
-       border everywhere the bar is painted from --gerege-chrome, and is
-       re-pointed by the design that paints the bar dark in both colour modes,
-       so a divider drawn on the bar always matches the bar it sits on. */
-    --gerege-chrome-border: var(--gerege-border);
-    --gerege-success: #159455;
-    --gerege-danger: #d92d20;
-    /* Хилийн хоёр төрөл. `--gerege-border` нь чимэглэл — карт, зураас — тул
-       контрастын шаардлага тавигддаггүй. Оролтын талбар, сонгогч зэрэг
-       харилцан үйлчлэх хяналтын хил нь WCAG 1.4.11-ийн дагуу СУУДАГ бүх
-       гадаргуу дээрээ ≥3:1 байх ёстой: цагаан карт 4.21:1, хуудасны дэвсгэр
-       4.03:1, --gerege-surface-2 3.79:1. Tailwind-ийн slate-300 нь цагаан
-       дээр 1.48:1 — тэр нь энэ шаардлагад унана. */
-    --gerege-border-input: #767c85;
-    /* Фокусын цагираг accent-аа дагана: сонгогдсон өнгө бүр өөрийн дэвсгэр
-       дээрээ ≥3:1 (хамгийн нарийн нь teal 3.65:1, харанхуй violet 3.22:1).
-       Тунгалаг бус байх нь чухал — өмнөх 28%-ийн хольц цагаан дэвсгэр дээр
-       1.52:1 болж, гараас ажилладаг хүн фокусаа олдоггүй байв. */
-    --gerege-ring: var(--gerege-blue);
-    /* Дизайны жишгийн шат: товч/оролт 6, карт 8, modal 12, badge 4.
-       Өмнө нь 8/10 байсан ба файлын бусад хэсэгт 5,7,9,11,13,14,16,18,22
-       гэсэн бас 9 утга тарсан байв. Native бүрхүүлийн платформын
-       ялгаварлалт (macOS/Windows) эдгээрийг доор нь хэвээр дардаг. */
-    --gerege-radius-card: 8px;
-    --gerege-radius-control: 6px;
-    --gerege-shadow-menu: var(--gerege-shadow-md);
+    --gerege-on-navy: white;
 
-    /* ─── Токены давхаргыг гүйцээх ──────────────────────────────────────────
-       Доорх нэрс шинэ систем биш — компонентууд өнөөдөр Tailwind-ийн slate,
-       red, emerald, amber, blue шаталбарыг ШУУД бичдэг, тэр нь харанхуй
-       горимд ажиллахгүй тул файлын доод хэсэгт !important-аар нэг бүрчлэн
-       эргүүлж засдаг байв. Утга бүр яг тэр Tailwind өнгө хэвээр — өөрчлөлт нь
-       өнгө биш, ХААНА бичигдэж байгаа нь: одооноос компонент нэрийг л мэднэ,
-       theme-ийг энэ файл мэднэ. */
+    --gerege-danger: var(--danger-solid);
+    --gerege-danger-hover: var(--danger-hover);
+    --gerege-danger-soft: var(--danger-subtle);
+    --gerege-danger-border: var(--danger-border);
+    --gerege-danger-fg: var(--danger-foreground);
+    --gerege-success: var(--success-solid);
+    --gerege-success-hover: color-mix(in oklab, var(--success-solid) 88%, black);
+    --gerege-success-soft: var(--success-subtle);
+    --gerege-success-border: var(--success-border);
+    --gerege-success-fg: var(--success-foreground);
+    --gerege-warning: var(--warning-solid);
+    --gerege-warning-soft: var(--warning-subtle);
+    --gerege-warning-border: var(--warning-border);
+    --gerege-warning-fg: var(--warning-foreground);
+    --gerege-info-soft: var(--info-subtle);
+    --gerege-info-border: var(--info-border);
+    --gerege-info-fg: var(--info-foreground);
+    --gerege-neutral-soft: var(--background-muted);
+    --gerege-neutral-border: var(--border);
+    --gerege-neutral-fg: var(--foreground-muted);
 
-    /* Гадаргуу ба бичвэрийн шат */
-    --gerege-surface-hover: #f8fafc;   /* slate-50  — мөр, цэсний hover */
-    --gerege-fg-subtle: #6d737c;       /* placeholder, caption — 4.78:1 */
-    --gerege-border-strong: #c0c4cb;
-    --gerege-overlay: rgb(15 23 42 / 50%);
-
-    /* Статусын шат: soft (дэвсгэр) · border · fg (soft дээрх бичвэр).
-       fg×soft хос бүр ≥4.5:1 (danger 5.91, success 5.21, warning 6.84,
-       info 6.16, neutral 9.45). */
-    --gerege-danger-soft: #fef2f2;  --gerege-danger-border: #fecaca;  --gerege-danger-fg: #b91c1c;
-    --gerege-success-soft: #ecfdf5; --gerege-success-border: #a7f3d0; --gerege-success-fg: #047857;
-    --gerege-warning-soft: #fffbeb; --gerege-warning-border: #fde68a; --gerege-warning-fg: #92400e;
-    --gerege-info-soft: #eff6ff;    --gerege-info-border: #bfdbfe;    --gerege-info-fg: #1d4ed8;
-    --gerege-neutral-soft: #f1f5f9; --gerege-neutral-border: #e2e8f0; --gerege-neutral-fg: #334155;
-
-    /* Радиусын шат. Өмнө нь энэ файлд 17 өөр утга байсан; товч/оролт 8,
-       карт 10 гэсэн бүрхүүлийн хоёр утгыг хэвээр үлдээж (тэр нь native
-       shell-д платформоор солигддог), бусдыг эдгээрт нийлүүлнэ. */
-    --gerege-radius-sm: 4px;
-    --gerege-radius-lg: 12px;
+    --gerege-radius-sm: var(--radius-sm);
+    --gerege-radius-control: var(--radius-md);
+    --gerege-radius-card: var(--radius-lg);
+    --gerege-radius-lg: var(--radius-xl);
     --gerege-radius-full: 9999px;
+    --gerege-shadow-sm: var(--shadow-sm);
+    --gerege-shadow-md: var(--shadow-md);
+    --gerege-shadow-lg: var(--shadow-lg);
+    --gerege-shadow-menu: var(--shadow-md);
 
-    /* Сүүдэр: нейтрал хар, хоёр давхар, зөвхөн хөвөгч гадаргуунд. */
-    --gerege-shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 6%), 0 1px 2px -1px rgb(0 0 0 / 4%);
-    --gerege-shadow-md: 0 4px 8px -2px rgb(0 0 0 / 6%), 0 2px 4px -2px rgb(0 0 0 / 4%);
-    --gerege-shadow-lg: 0 12px 24px -6px rgb(0 0 0 / 8%), 0 4px 8px -4px rgb(0 0 0 / 4%);
-
-    /* Давхаргын дараалал. Файлд өмнө нь 30/40/45/60/64/65/70/80/9998 гэсэн
-       гараар сонгосон утгууд байсан — аль нь алийнхаа дээр гарахыг хэн ч
-       хэлж чадахгүй байв. */
+    /* Давхаргын дараалал. Файлд өмнө нь гараар сонгосон утгууд тарсан байв. */
     --z-dropdown: 1000;
     --z-sticky: 1100;
     --z-overlay: 1200;
@@ -96,54 +229,6 @@
     --z-toast: 1500;
     --z-tooltip: 1600;
   }
-
-  html.dark {
-    --gerege-bg: #0a0d12;
-    --gerege-chrome: #12161c;
-    --gerege-surface: #12161c;
-    --gerege-surface-2: #1b1f27;
-    --gerege-fg: #f0f2f5;
-    --gerege-muted: #8e929a;
-    --gerege-border: #252930;
-    --gerege-blue-soft: #102d55;
-    /* Бараан гадаргуун дээрх хяналтын хил: --gerege-surface (#12161c) дээр
-       3.96:1, --gerege-surface-2 (#1b1f27) дээр 3.61:1, хуудсан дээр 4.25:1. */
-    --gerege-border-input: #70767f;
-
-    --gerege-surface-hover: #1b1f27;
-    --gerege-fg-subtle: #7c828b;
-    --gerege-border-strong: #3a3f47;
-    --gerege-overlay: rgb(2 4 8 / 66%);
-
-    /* Бараан горимын статус. fg×soft: danger 8.36, success 9.65,
-       warning 9.97, info 8.46, neutral 9.82 — бүгд ≥4.5:1. */
-    --gerege-danger-soft: #3f1416;  --gerege-danger-border: #7f2326;  --gerege-danger-fg: #fca5a5;
-    --gerege-success-soft: #0b2e21; --gerege-success-border: #186c4d; --gerege-success-fg: #6ee7b7;
-    --gerege-warning-soft: #3a2609; --gerege-warning-border: #7c5410; --gerege-warning-fg: #fcd34d;
-    --gerege-info-soft: #12244a;    --gerege-info-border: #2a4a8c;    --gerege-info-fg: #93c5fd;
-    --gerege-neutral-soft: #1b1f27; --gerege-neutral-border: #333a45; --gerege-neutral-fg: #c3c8d0;
-  }
-
-  html[data-accent="teal"] {
-    --gerege-blue: #008b99; --gerege-blue-hover: #007582; --gerege-blue-soft: #e5f6f7;
-    --gerege-bg: #f1f8f8; --gerege-chrome: #e8f5f5; --gerege-surface-2: #edf7f7; --gerege-border: #d7e9e9;
-  }
-  html[data-accent="neutral"] {
-    --gerege-blue: #475569; --gerege-blue-hover: #334155; --gerege-blue-soft: #f1f5f9;
-    --gerege-bg: #f8fafc; --gerege-chrome: #ffffff; --gerege-surface-2: #f1f5f9; --gerege-border: #e2e8f0;
-  }
-  html[data-accent="violet"] {
-    --gerege-blue: #7656d6; --gerege-blue-hover: #6343bf; --gerege-blue-soft: #f0ebff;
-    --gerege-bg: #f6f3fb; --gerege-chrome: #f0ecfa; --gerege-surface-2: #f3effa; --gerege-border: #e3dcf1;
-  }
-  html[data-accent="emerald"] {
-    --gerege-blue: #16845b; --gerege-blue-hover: #0f6f4b; --gerege-blue-soft: #e8f6ef;
-    --gerege-bg: #f1f8f5; --gerege-chrome: #e9f5ef; --gerege-surface-2: #eef7f2; --gerege-border: #d8e9df;
-  }
-  html.dark[data-accent="teal"] { --gerege-blue-soft: #12383d; --gerege-bg: #0f1c20; --gerege-chrome: #14282d; --gerege-surface-2: #193238; --gerege-border: #29454a; }
-  html.dark[data-accent="neutral"] { --gerege-blue: #cbd5e1; --gerege-blue-hover: #e2e8f0; --gerege-on-blue: #0b1220; --gerege-blue-soft: #273244; --gerege-bg: #111827; --gerege-chrome: #18212f; --gerege-surface-2: #222d3d; --gerege-border: #334155; }
-  html.dark[data-accent="violet"] { --gerege-blue-soft: #2b2348; --gerege-bg: #171421; --gerege-chrome: #211b30; --gerege-surface-2: #292239; --gerege-border: #3b3250; }
-  html.dark[data-accent="emerald"] { --gerege-blue-soft: #173a2d; --gerege-bg: #101c18; --gerege-chrome: #162820; --gerege-surface-2: #1c3229; --gerege-border: #2d473d; }
 
   body {
     background-color: var(--gerege-bg);
@@ -173,67 +258,6 @@
   }
 }
 
-@layer components {
-  .gerege-shell { background: var(--gerege-bg); color: var(--gerege-fg); }
-  .gerege-topbar { background: var(--gerege-chrome); border-color: var(--gerege-border); }
-  .gerege-sidebar { background: var(--gerege-chrome); border-color: var(--gerege-border); }
-  .gerege-nav-link { color: #475467; border-radius: var(--gerege-radius-control); }
-  .gerege-nav-link:hover { background: var(--gerege-surface-2); color: var(--gerege-fg); }
-  .gerege-nav-link-active {
-    color: var(--gerege-blue);
-    background: var(--gerege-blue-soft);
-    box-shadow: inset 3px 0 0 var(--gerege-blue);
-  }
-  .gerege-nav-icon { color: #7d838c; }
-  .gerege-nav-link-active .gerege-nav-icon { color: var(--gerege-blue); }
-  /* The open/closed halves of a menu group.
-
-     A 1fr -> 0fr grid row rather than an animated height, because the links
-     inside are a list of unknown length and a height transition needs a number
-     to travel to. The row does the measuring; min-height:0 is what lets the
-     child shrink below its content, and overflow:hidden is what makes the
-     links disappear behind the fold rather than spill over the group below.
-     Transitions are already neutralised under prefers-reduced-motion. */
-  .gerege-menu-group-body {
-    display: grid;
-    grid-template-rows: 1fr;
-    transition: grid-template-rows 0.22s ease;
-  }
-  .gerege-menu-group-body[data-collapsed="true"] { grid-template-rows: 0fr; }
-  .gerege-menu-group-body > div { min-height: 0; overflow: hidden; }
-  .gerege-parent-menu { border: 0; background: transparent; }
-  .gerege-submenu { border-left: 1px solid var(--gerege-border); }
-  .gerege-submenu .gerege-nav-link-active { box-shadow: none; position: relative; }
-  .gerege-submenu .gerege-nav-link-active::before {
-    content: "";
-    position: absolute;
-    left: -13px;
-    width: 3px;
-    height: 20px;
-    border-radius:var(--gerege-radius-full);
-    background: var(--gerege-blue);
-  }
-  .gerege-session-dot {
-    background: var(--gerege-success);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--gerege-success) 16%, transparent);
-  }
-  @media (min-width: 1024px) {
-    .gerege-sidebar.is-collapsed .sidebar-section-title,
-    .gerege-sidebar.is-collapsed .sidebar-footer,
-    .gerege-sidebar.is-collapsed .gerege-submenu,
-    .gerege-sidebar.is-collapsed .gerege-nav-link > span:not(.gerege-nav-icon),
-    .gerege-sidebar.is-collapsed .gerege-nav-link > svg:last-child:not(:first-child) { display: none; }
-    .gerege-sidebar.is-collapsed nav { padding-left: 0.5rem; padding-right: 0.5rem; }
-    .gerege-sidebar.is-collapsed .gerege-nav-link {
-      justify-content: center;
-      gap: 0;
-      padding-left: 0.625rem;
-      padding-right: 0.625rem;
-    }
-    .gerege-sidebar.is-collapsed .gerege-menu-group { width: 100%; }
-  }
-}
-
 /* Native Shell + Web Work Area — бүрхүүл дотор апп нь толгой, хажуугийн цэс,
    хөлгүйгээр зөвхөн ажлын муж болж рендерлэгддэг тул хэв маягаа хостынхоо
    системийн хэв маягт ойртуулна. Хөтөч дээр `data-shell` атрибут огт
@@ -245,21 +269,6 @@ html[data-shell] { font-size: 15px; }
 html[data-shell] body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
 }
-/* Дээрээ toolbar байхгүй тул ажлын муж цонхны ирмэгээс шууд эхэлнэ. Хажуугийн
-   цэс энд үлддэг учир main нь шууд хүүхэд биш. */
-html[data-shell] .gerege-workarea main { padding: 1rem 1.25rem 1.25rem; }
-html[data-shell] .gerege-workarea .gerege-sidebar { padding-top: 0.5rem; }
-
-/* Native толгой хэсгээс ирсэн хайлтын query-г харуулах давхарга. */
-html[data-shell] .gerege-shell-search { position: fixed; inset: 0; z-index: var(--z-modal); }
-html[data-shell] .gerege-shell-search-backdrop { position: absolute; inset: 0; background: rgb(15 23 42 / 25%); }
-html[data-shell] .gerege-shell-search-panel {
-  position: relative; margin: 3.5rem auto 0; width: min(34rem, calc(100vw - 2rem));
-  padding: 0.75rem; border: 1px solid var(--gerege-border);
-  border-radius: var(--gerege-radius-card); background: var(--gerege-chrome);
-  box-shadow: var(--gerege-shadow-menu);
-}
-
 /* Платформын нюанс — цөөхөн, зөвхөн танигдахуйц ялгаа. */
 html[data-shell="macos"] { --gerege-radius-card: 12px; --gerege-radius-control: 8px; }
 html[data-shell="macos"] ::-webkit-scrollbar { width: 9px; height: 9px; }
@@ -270,72 +279,8 @@ html[data-shell="windows"] ::-webkit-scrollbar { width: 12px; height: 12px; }
 html[data-shell="windows"] ::-webkit-scrollbar-thumb { background: var(--gerege-border); }
 
 html[data-density="compact"] { font-size: 14px; }
-html[data-density="compact"] .gerege-topbar { height: 56px; }
 html[data-density="compact"] main { padding-top: 1rem; padding-bottom: 1rem; }
 
-/* Original Theme preserves the repository's original Odoo-inspired shell. */
-html[data-design="original"] .gerege-topbar { background: #0064e1; border-color: #0054c2; color: white; }
-
-/* The brand cell and the open app-context block use the same translucent white
-   border as the search field, so every separator on the blue bar has one tone. */
-html[data-design="original"] { --gerege-chrome-border: rgb(255 255 255 / 18%); }
-
-/* Толгойн зурвас энд ханасан цэнхэр тул дээр нь бичигдэх утилитуудыг
-   эргүүлнэ. Ангийн нэрс token-той болсон ч дүрэм нь өөрчлөгдөөгүй: цэнхэр
-   гадаргуу нь theme биш, тусдаа контекст. */
-html[data-design="original"] .gerege-topbar .text-foreground { color: #f8fafc !important; }
-html[data-design="original"] .gerege-topbar .text-muted { color: rgb(255 255 255 / 68%) !important; }
-html[data-design="original"] .gerege-topbar .border-line { border-color: rgb(255 255 255 / 18%) !important; }
-html[data-design="original"] .gerege-topbar .gerege-header-context > span:first-child { color: white !important; }
-
-/* Тэр цэнхэр зурвас дотор байрлах цайвар гадаргуунууд: хэрэглэгчийн цэс,
-   хайлтын үр дүн, нээгдсэн үедээ --gerege-blue-soft-оор дүүрдэг дансны товч.
-   Дээрх эргүүлэлт эдгээрийн бичгийг цагаан дээр цагаан болгох тул тэдгээрт
-   буцаана; мөн зурвасын өвлүүлж буй `color: white`-ыг өнгөний утилитгүй
-   элементүүд дээр тэглэнэ.
-
-   Энгийн удам сонгуураар зориуд бичсэн — нэг ангиар гүн тул specificity-гээр
-   хожно. Өмнөх оролдлого нь эргүүлэлтийг :not(.x, .x *)-ээр хүрээлсэн бөгөөд
-   Selectors-4 дэмждэггүй хөтөч түүний нийлмэл хэлбэрийг голж, эргүүлэлт
-   бүхэлдээ хүчингүй болж зурвасын өөрийнх нь бичиг ч алга болдог байв. */
-html[data-design="original"] .gerege-topbar .gerege-topbar-onlight { color: var(--gerege-fg); }
-html[data-design="original"] .gerege-topbar .gerege-topbar-onlight.text-foreground,
-html[data-design="original"] .gerege-topbar .gerege-topbar-onlight .text-foreground {
-  color: var(--gerege-fg) !important;
-}
-html[data-design="original"] .gerege-topbar .gerege-topbar-onlight.text-muted,
-html[data-design="original"] .gerege-topbar .gerege-topbar-onlight .text-muted {
-  color: var(--gerege-muted) !important;
-}
-html[data-design="original"] .gerege-topbar .gerege-topbar-onlight.border-line,
-html[data-design="original"] .gerege-topbar .gerege-topbar-onlight .border-line {
-  border-color: var(--gerege-border) !important;
-}
-
-/* Зурвас дээр шууд суусан хяналтууд цайвар дүүргэлттэй — данс болон цэсний
-   товчны hover, хайлтын талбарын тайван дэвсгэр. Дээрх эргүүлэлт тэдгээрийн
-   дээр бараг цагаан бичиг бичих тул тунгалаг цагаан давхаргаар солино:
-   цэнхэр нь хадгалагдаж, эргүүлсэн бичиг уншигдана. */
-html[data-design="original"] .gerege-topbar .hover\:bg-surface-hover:hover,
-html[data-design="original"] .gerege-topbar .bg-surface-2 {
-  background-color: rgb(255 255 255 / 10%) !important;
-}
-html[data-design="original"] .gerege-topbar input::placeholder { color: rgb(255 255 255 / 55%); }
-
-/* Цайвар гадаргуу дотор цайвар hover нь зөв — нэг ангиар гүн, token-оор. */
-html[data-design="original"] .gerege-topbar .gerege-topbar-onlight .hover\:bg-surface-hover:hover {
-  background-color: var(--gerege-surface-2) !important;
-}
-html[data-design="original"] .original-brand-mark { color: white; background: rgb(255 255 255 / 12%); }
-html[data-design="original"] .gerege-nav-link-active {
-  color: var(--gerege-blue);
-  background: var(--gerege-blue-soft);
-  box-shadow: none;
-}
-html[data-design="original"] .gerege-nav-link-active .gerege-nav-icon { color: var(--gerege-blue); }
-html[data-design="original"] .gerege-session-dot { background: #10b981; }
-
-html[data-design="gerege"] .original-brand-mark { color: var(--gerege-blue); background: var(--gerege-blue-soft); }
 
 /* Энд өмнө нь 20 гаруй `!important` дүрэм байсан: компонентууд `bg-white`,
    `text-slate-900`, `border-slate-200` гэж Tailwind-ийн тогтмол өнгийг шууд
@@ -386,10 +331,9 @@ html { scrollbar-gutter: stable; }
    дээр хажуугийн цэс, толгойн зурвас, товчнууд гарч, харанхуй горимд бүхэл
    хуудас хар бэхээр хэвлэгддэг. */
 @media print {
-  /* Бүрхүүл нь дэлгэцийн навигаци — цаасан дээр утгагүй. */
-  .gerege-topbar, .gerege-sidebar, .gerege-mobile-tabs, .gerege-ribbon,
-  .gerege-footer, .gerege-mobile-backdrop, .gp-nav, .gp-footer { display: none !important; }
-  .gerege-main { margin: 0 !important; width: 100% !important; padding: 0 !important; }
+  /* Бүрхүүл нь дэлгэцийн навигаци — цаасан дээр утгагүй. Бүрхүүлийн хэсгүүд
+     өөрсдөө `print:hidden`; энд зөвхөн нүүр хуудасных. */
+  .gp-nav, .gp-footer { display: none !important; }
 
   /* Харанхуй горимд ч цаас нь цагаан. */
   html.dark, html.dark body { background: #fff !important; color: #000 !important; }
@@ -412,7 +356,7 @@ html { scrollbar-gutter: stable; }
    #7890ad falls from 5.1:1 to 2.3:1. Text on the brand surface therefore comes
    from the on-navy tokens, which are white at an alpha chosen to stay above
    4.5:1 for copy and 3:1 for incidental labels. */
-.gp-landing,.eid-page,.eid-callback{--gp-navy:#0050b0;--gp-on-navy:#f7f8fb;--gp-on-navy-70:rgb(247 248 251 / 78%);--gp-on-navy-45:rgb(247 248 251 / 74%);--gp-gold:#f2bd42;--gp-gold-h:#ffd267;--gp-ink:#15233b;--gp-muted:#66758c;background:#f7f9fc;color:var(--gp-ink);min-height:100dvh}
+.gp-landing,.eid-callback{--gp-navy:#0050b0;--gp-on-navy:#f7f8fb;--gp-on-navy-70:rgb(247 248 251 / 78%);--gp-on-navy-45:rgb(247 248 251 / 74%);--gp-gold:#f2bd42;--gp-gold-h:#ffd267;--gp-ink:#15233b;--gp-muted:#66758c;background:#f7f9fc;color:var(--gp-ink);min-height:100dvh}
 /* Консолын хаалганы nav наалддаггүй.
    Нийтийн хуудас дээр наалддаг нь цэсийг хаанаас ч хүрэхийн тулд; консолын
    nav дээр цэс байхгүй — зөвхөн тэмдэг ба хэлний сонголт. Наалдацтай үлдээх
@@ -422,7 +366,7 @@ html { scrollbar-gutter: stable; }
 .gp-nav--plain{position:static}
 .gp-nav{height:72px;padding:0 max(24px,calc((100vw - 1180px)/2));display:flex;align-items:center;justify-content:space-between;background:var(--gp-navy);color:#fff;position:sticky;top:0;z-index:var(--z-sticky);border-bottom:1px solid rgba(255,255,255,.11)}
 .gp-brand{display:flex;align-items:center;gap:10px;color:inherit;text-decoration:none;font-weight:600;letter-spacing:-.02em}.gp-brand img{width:36px;height:36px;border-radius:var(--gerege-radius-card)}.gp-nav>nav{display:flex;gap:30px}.gp-nav>nav a{font-size:14px;color:var(--gp-on-navy-70);text-decoration:none}.gp-nav>nav a:hover{color:var(--gp-gold-h)}.gp-actions{display:flex;align-items:center;gap:12px}.gp-nav__toggle{display:none;align-items:center;justify-content:center;width:40px;height:40px;border-radius:var(--gerege-radius-card);border:1px solid rgba(255,255,255,.22);background:transparent;color:#fff;font-size:18px;line-height:1;cursor:pointer}.gp-nav__toggle:hover{background:rgba(255,255,255,.08)}.gp-nav__menu{display:none}.gp-gold{display:inline-flex;align-items:center;justify-content:center;gap:9px;background:var(--gp-gold);color:#17243a!important;padding:10px 17px;border-radius:var(--gerege-radius-card);font-weight:600;text-decoration:none;}.gp-gold:hover{background:var(--gp-gold-h)}.gp-gold--large{padding:14px 22px}.gp-gold svg,.gp-outline svg{width:18px}
-.gp-hero{position:relative;background:var(--gp-navy);color:#fff;overflow:hidden}.gp-pattern,.eid-page__pattern{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.07) 1px,transparent 1px);background-size:44px 44px;mask-image:linear-gradient(110deg,#000,transparent 72%)}.gp-hero__inner{position:relative;max-width:1180px;margin:auto;padding:82px 24px 88px;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(360px,.75fr);gap:70px;align-items:center}.gp-copy{max-width:680px}.gp-eyebrow{display:inline-flex;align-items:center;gap:9px;color:var(--gp-on-navy-70);font-size:12px;font-weight:600;letter-spacing:.12em}.gp-eyebrow i{display:block;width:7px;height:7px;border-radius:50%;background:var(--gp-gold);box-shadow:0 0 0 5px rgba(242,189,66,.16)}.gp-eyebrow--blue{color:#45607f}.gp-eyebrow--blue i{background:#0064e1;box-shadow:0 0 0 5px rgba(0,100,225,.12)}.gp-copy h1,.eid-page__intro h1{font-size:clamp(44px,6vw,76px);line-height:1.02;letter-spacing:-.055em;color:#fff;margin:22px 0 24px;font-weight:600}.gp-copy h1 em,.eid-page__intro h1 em{font-style:normal;color:var(--gp-gold)}.gp-copy>p{font-size:18px;line-height:1.7;color:var(--gp-on-navy-70);max-width:650px}.gp-cta{display:flex;gap:13px;margin:34px 0}.gp-outline{display:inline-flex;align-items:center;padding:13px 20px;border:1px solid rgba(255,255,255,.26);border-radius:var(--gerege-radius-card);color:#fff;text-decoration:none;font-weight:600}.gp-outline:hover{border-color:#fff;background:rgba(255,255,255,.06)}.gp-stats{display:flex;gap:30px;margin-top:42px}.gp-stats span{display:flex;flex-direction:column;color:var(--gp-on-navy-45);font-size:12px}.gp-stats b{font-size:17px;color:#fff;margin-bottom:3px}.gp-hero__inner--solo{grid-template-columns:minmax(0,1fr)}.gp-login-slot{position:relative}.gp-login-slot:before{content:"";position:absolute;inset:-24px;background:radial-gradient(circle,rgba(0,100,225,.27),transparent 68%);filter:blur(20px)}
+.gp-hero{position:relative;background:var(--gp-navy);color:#fff;overflow:hidden}.gp-pattern{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.07) 1px,transparent 1px);background-size:44px 44px;mask-image:linear-gradient(110deg,#000,transparent 72%)}.gp-hero__inner{position:relative;max-width:1180px;margin:auto;padding:82px 24px 88px;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(360px,.75fr);gap:70px;align-items:center}.gp-copy{max-width:680px}.gp-eyebrow{display:inline-flex;align-items:center;gap:9px;color:var(--gp-on-navy-70);font-size:12px;font-weight:600;letter-spacing:.12em}.gp-eyebrow i{display:block;width:7px;height:7px;border-radius:50%;background:var(--gp-gold);box-shadow:0 0 0 5px rgba(242,189,66,.16)}.gp-eyebrow--blue{color:#45607f}.gp-eyebrow--blue i{background:#0064e1;box-shadow:0 0 0 5px rgba(0,100,225,.12)}.gp-copy h1{font-size:clamp(44px,6vw,76px);line-height:1.02;letter-spacing:-.055em;color:#fff;margin:22px 0 24px;font-weight:600}.gp-copy h1 em{font-style:normal;color:var(--gp-gold)}.gp-copy>p{font-size:18px;line-height:1.7;color:var(--gp-on-navy-70);max-width:650px}.gp-cta{display:flex;gap:13px;margin:34px 0}.gp-outline{display:inline-flex;align-items:center;padding:13px 20px;border:1px solid rgba(255,255,255,.26);border-radius:var(--gerege-radius-card);color:#fff;text-decoration:none;font-weight:600}.gp-outline:hover{border-color:#fff;background:rgba(255,255,255,.06)}.gp-stats{display:flex;gap:30px;margin-top:42px}.gp-stats span{display:flex;flex-direction:column;color:var(--gp-on-navy-45);font-size:12px}.gp-stats b{font-size:17px;color:#fff;margin-bottom:3px}.gp-hero__inner--solo{grid-template-columns:minmax(0,1fr)}.gp-login-slot{position:relative}.gp-login-slot:before{content:"";position:absolute;inset:-24px;background:radial-gradient(circle,rgba(0,100,225,.27),transparent 68%);filter:blur(20px)}
 .gp-section{max-width:1180px;margin:auto;padding:90px 24px}.gp-heading{text-align:center;max-width:740px;margin:0 auto 48px}.gp-heading span{font-size:11px;font-weight:600;letter-spacing:.14em;color:#0064e1}.gp-heading h2,.gp-trust h2{font-size:clamp(30px,4vw,46px);line-height:1.12;letter-spacing:-.04em;margin:12px 0 16px}.gp-heading p,.gp-trust p{color:var(--gp-muted);font-size:16px;line-height:1.7}.gp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}.gp-feature{min-height:245px;border:1px solid #dfe6ef;background:#fff;border-radius:var(--gerege-radius-lg);padding:30px;transition:.2s}.gp-feature:hover{transform:translateY(-3px);border-color:#7a9fca}.gp-feature>svg{width:31px;height:31px;color:#0064e1}.gp-feature h3{font-size:22px;margin:45px 0 10px}.gp-feature p{color:var(--gp-muted);line-height:1.65}.gp-feature--dark{background:var(--gp-navy);border-color:var(--gp-navy);color:#fff}.gp-feature--dark h3{color:#fff}.gp-feature--dark>svg{color:var(--gp-gold)}.gp-feature--dark p{color:var(--gp-on-navy-70)}
 /* Энэ суулгацын үйлчилгээнүүд — карт бүр бүхэлдээ холбоос.
    .gp-feature-ийн хэмжээ, радиус, hover-ийг дагана: тэдгээр нь энэ хуудасны
@@ -466,41 +410,8 @@ html { scrollbar-gutter: stable; }
    тэр найдвар нурсан: hero-гийн дараа шууд ирэхэд карт navy блокт наалдаж,
    хоорондоо нэг ч пиксел зайгүй хоёр өөр гадаргуу болж харагдана. Дүрмийг
    нөхцөлгүй болгосон нь тэр хоёр тохиолдлыг нэг утгаар хариулна. */
-.eid-login{position:relative;background:#fff;border:1px solid #dce4ee;border-radius:var(--gerege-radius-lg);padding:28px;color:var(--gp-ink,#15233b);box-shadow:var(--gerege-shadow-lg);width:100%;max-width:460px}.eid-login__head{display:flex;gap:13px;align-items:center;margin-bottom:22px}.eid-login__head>span{display:grid;place-items:center;width:44px;height:44px;border-radius:var(--gerege-radius-lg);background:#eaf3ff;color:#0064e1}.eid-login__head svg{width:23px}.eid-login__head h2{font-size:19px;margin:0;color:#15233b}.eid-login__head p{font-size:12px;color:#6b7b91;margin:2px 0 0}.eid-tabs{display:flex;background:#eef2f7;padding:4px;border-radius:var(--gerege-radius-card);margin-bottom:20px}.eid-tabs button{flex:1;border:0;background:transparent;padding:10px 7px;border-radius:var(--gerege-radius-card);color:#65758b;font-weight:600;font-size:12px}.eid-tabs button.is-active{background:#fff;color:#10213b;box-shadow:var(--gerege-shadow-sm)}.eid-login form{display:grid;gap:9px}.eid-login label{font-size:12px;font-weight:600}.eid-login input{height:47px;border:1px solid #ced8e5;border-radius:var(--gerege-radius-card);padding:0 13px;font:600 16px ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase}.eid-login input:focus{border-color:#0064e1;box-shadow:0 0 0 3px rgba(0,100,225,.12)}.eid-primary{height:48px;margin-top:5px;border:0;border-radius:var(--gerege-radius-card);background:#0064e1;color:#fff;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px}.eid-primary:hover{background:#0054c2}.eid-primary svg{width:18px}.eid-status{display:flex;justify-content:center;gap:9px;padding:40px 0;color:#607188}.eid-status svg{width:18px}.eid-wait{text-align:center;display:grid;justify-items:center;gap:8px}.eid-qr{background:#fff;padding:11px;border:1px solid #dfe6ef;border-radius:var(--gerege-radius-lg)}.eid-wait p{font-size:13px;color:#5f7087;margin:4px 0}.eid-wait small{font-size:11px;color:#66758c}.eid-wait strong{font:600 30px ui-monospace,monospace;letter-spacing:.18em}.eid-wait span{display:flex;gap:7px;align-items:center;font-size:11px;color:#698096}.eid-wait span svg{width:14px}.eid-alert{padding:11px;border-radius:var(--gerege-radius-card);background:#fff6dd;color:#785713;font-size:12px}.eid-alert--error{background:#fff0f0;color:#a22c2c}.eid-alert--success{background:#e9f8ef;color:#18733c}.eid-wait .eid-countdown{font:600 11px/1.4 ui-monospace,monospace;color:#66758c;letter-spacing:.04em;margin-top:2px}.eid-retry,.eid-cancel{width:100%;border:1px solid #cfd9e5;background:#fff;padding:10px;border-radius:var(--gerege-radius-card);display:flex;align-items:center;justify-content:center;gap:7px}.eid-retry svg,.eid-cancel svg{width:16px}.eid-cancel{margin-top:16px;color:#65758b;font-weight:600;font-size:12px}.eid-cancel:hover{background:#f5f8fc;color:#10213b}.eid-login footer{display:flex;gap:7px;align-items:center;justify-content:center;border-top:1px solid #e8edf3;margin-top:20px;padding-top:15px;color:#66758c;font-size:10px}.eid-login footer svg{width:13px}.eid-login--compact{padding:24px}
-
-/* Бараан суурин дээрх eID картны хувилбар.
-   Зөвхөн `.eid-on-dark` дотор л идэвхжинэ: `.eid-login` дангаараа нийтийн
-   landing хуудсанд (`app/page.tsx` дахь `.gp-login-slot`) мөн зурагддаг бөгөөд
-   тэнд цагаан карт хэвээр байх ёстой. */
-.eid-on-dark .eid-login{background:transparent;border:none;border-radius:0;padding:0;color:#f8fafc;box-shadow:none;max-width:none}
-.eid-on-dark .eid-login__head{margin-bottom:20px}
-.eid-on-dark .eid-login__head>span{background:rgba(59,130,246,.15);color:#3b82f6;border:1px solid rgba(59,130,246,.3)}
-.eid-on-dark .eid-login__head h2{font-size:18px;font-weight:600;color:#fff}
-.eid-on-dark .eid-login__head p{color:#94a3b8}
-.eid-on-dark .eid-tabs{background:#020617;border:1px solid #1e293b;border-radius:var(--gerege-radius-lg)}
-.eid-on-dark .eid-tabs button{color:#94a3b8;transition:all .2s ease;cursor:pointer}
-.eid-on-dark .eid-tabs button.is-active{background:#2563eb;color:#fff;}
-.eid-on-dark .eid-login form{gap:12px}
-.eid-on-dark .eid-login label{color:#cbd5e1;font-weight:600}
-.eid-on-dark .eid-login input{height:48px;border:1px solid #1e293b;background:#020617;color:#fff;border-radius:var(--gerege-radius-lg);padding:0 16px}
-.eid-on-dark .eid-login input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.2)}
-.eid-on-dark .eid-primary{height:48px;margin-top:8px;border-radius:var(--gerege-radius-lg);background:#2563eb;color:#fff;font-size:13px;cursor:pointer;transition:all .2s ease}
-.eid-on-dark .eid-primary:hover{background:#1d4ed8}
-.eid-on-dark .eid-status{padding:30px 0;color:#94a3b8}
-.eid-on-dark .eid-wait{color:#f8fafc}
-.eid-on-dark .eid-qr{background:#fff;padding:12px;border:1px solid #1e293b;border-radius:var(--gerege-radius-lg)}
-.eid-on-dark .eid-wait p{color:#cbd5e1}
-.eid-on-dark .eid-wait small{color:#94a3b8}
-.eid-on-dark .eid-wait strong{font-size:32px;color:#38bdf8}
-.eid-on-dark .eid-wait span{color:#94a3b8}
-.eid-on-dark .eid-alert{padding:12px;border-radius:var(--gerege-radius-card);background:rgba(234,179,8,.15);border:1px solid rgba(234,179,8,.3);color:#fef08a}
-.eid-on-dark .eid-alert--error{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.3);color:#fca5a5}
-.eid-on-dark .eid-alert--success{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.3);color:#86efac}
-.eid-on-dark .eid-wait .eid-countdown{color:#94a3b8}
-.eid-on-dark .eid-retry,.eid-on-dark .eid-cancel{border:1px solid #1e293b;background:#090d16;color:#cbd5e1;padding:11px;border-radius:var(--gerege-radius-card);cursor:pointer}
-.eid-on-dark .eid-cancel:hover{background:#1e293b;color:#fff}
-.eid-on-dark .eid-login footer{border-top:1px solid #1e293b;color:#64748b;font-size:11px}
-.eid-page{position:relative;background:var(--gp-navy);color:#fff;overflow:hidden}.eid-page>header{position:relative;z-index:2;height:72px;max-width:1180px;margin:auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between}.eid-page__content{position:relative;z-index:2;max-width:1080px;margin:auto;padding:54px 24px 90px;display:grid;grid-template-columns:1fr 430px;gap:90px;align-items:center}.eid-page__intro h1{font-size:58px}.eid-page__intro>p{color:var(--gp-on-navy-70);line-height:1.7;font-size:17px}.eid-page__intro ul{padding:0;list-style:none;color:var(--gp-on-navy-70);display:grid;gap:10px;margin-top:28px}.eid-page__intro li:before{content:"✓";color:var(--gp-gold);font-weight:600;margin-right:10px}.admin-disclosure{width:100%;margin-top:14px;border:1px solid rgba(255,255,255,.24);background:rgba(255,255,255,.1);color:var(--gp-on-navy);border-radius:var(--gerege-radius-card);padding:11px;display:flex;align-items:center;gap:8px;justify-content:center;font-size:12px}.admin-disclosure svg{width:15px}.admin-disclosure svg:last-child{margin-left:auto;transition:.2s}.admin-login{display:grid;gap:9px;padding:14px;background:#fff;border-radius:var(--gerege-radius-card);margin-top:8px}.admin-login>p{color:#b42318;font-size:12px}.admin-login label{display:flex;align-items:center;gap:8px;border:1px solid #d7e0ea;border-radius:var(--gerege-radius-card);padding:0 10px;color:#8793a4}.admin-login input{border:0;height:40px;flex:1}.admin-login button{height:42px;border:0;border-radius:var(--gerege-radius-card);background:#122a50;color:#fff;font-weight:600}/* ─── Нэвтрэх дэлгэц ────────────────────────────────────────────────────────
+.eid-login{position:relative;background:var(--gerege-surface);border:1px solid var(--gerege-border);border-radius:var(--gerege-radius-lg);padding:1.5rem;color:var(--gerege-fg);box-shadow:var(--gerege-shadow-lg);width:100%;max-width:28.75rem}.eid-login__head{display:flex;gap:.75rem;align-items:center;margin-bottom:1.5rem}.eid-login__head>span{display:grid;place-items:center;width:2.75rem;height:2.75rem;border-radius:var(--gerege-radius-lg);background:var(--gerege-blue-soft);color:var(--gerege-blue)}.eid-login__head svg{width:1.5rem}.eid-login__head h2{font-size:1.1875rem;margin:0;color:var(--gerege-fg)}.eid-login__head p{font-size:.75rem;color:var(--gerege-muted);margin:.125rem 0 0}.eid-login form{display:grid;gap:.5rem}.eid-login label{font-size:.75rem;font-weight:600}.eid-login input{height:3rem;border:1px solid var(--gerege-border-input);border-radius:var(--gerege-radius-control);padding:0 .75rem;font:600 1rem ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase}.eid-login input:focus{border-color:var(--gerege-blue)}.eid-status{display:flex;justify-content:center;gap:.5rem;padding:2.5rem 0;color:var(--gerege-muted)}.eid-status svg{width:1.125rem}.eid-wait{text-align:center;display:grid;justify-items:center;gap:.5rem}.eid-qr{background:white;padding:.75rem;border:1px solid var(--gerege-border);border-radius:var(--gerege-radius-lg)}.eid-wait p{font-size:.8125rem;color:var(--gerege-muted);margin:.25rem 0}.eid-wait small{font-size:.75rem;color:var(--gerege-muted)}.eid-wait strong{font:600 1.875rem ui-monospace,monospace;letter-spacing:.18em}.eid-wait span{display:flex;gap:.5rem;align-items:center;font-size:.75rem;color:var(--gerege-muted)}.eid-wait span svg{width:.875rem}.eid-alert{padding:.75rem;border-radius:var(--gerege-radius-card);background:var(--gerege-warning-soft);color:var(--gerege-warning-fg);font-size:.75rem}.eid-alert--error{background:var(--gerege-danger-soft);color:var(--gerege-danger-fg)}.eid-alert--success{background:var(--gerege-success-soft);color:var(--gerege-success-fg)}.eid-wait .eid-countdown{font:600 .75rem/1.4 ui-monospace,monospace;color:var(--gerege-muted);letter-spacing:.04em;margin-top:.125rem}.eid-login footer{display:flex;gap:.5rem;align-items:center;justify-content:center;border-top:1px solid var(--gerege-border);margin-top:1.25rem;padding-top:1rem;color:var(--gerege-muted);font-size:.75rem}.eid-login footer svg{width:.8125rem}.eid-login--compact{padding:1.5rem}
+/* ─── Нэвтрэх дэлгэц ────────────────────────────────────────────────────────
    Дизайныг government-line/sso-dgov-mn төслөөс авсан: токен, хэмжээс, радиус,
    градиент бүгд тэндхийн утга. Ангийн нэрсийг `signin-` угтвартай болгосон нь
    ганц шалтгаантай — `.btn`, `.input`, `.field` гэх нийтлэг нэрс энэ файлын
@@ -516,23 +427,17 @@ html { scrollbar-gutter: stable; }
    Консолын нүүр хуудас нь navy hero дээр яг ижил цагаан картыг суулгадаг тул
    токенууд хэрэгтэй ч `min-height:100dvh` бүхий цайвар дэлгэц хэрэггүй. Хоёрыг
    нь салгаснаар карт хоёр газарт нэг тодорхойлолтоор ажиллана. */
-.signin-shell,.cp-signin{
-  --sg-bg:#f9fafc;--sg-surface:#fff;--sg-surface-2:#f1f3f7;
-  --sg-fg:#11161e;--sg-muted:#5e646c;--sg-faint:#6d737c;
-  --sg-border:#e2e5e9;--sg-border-strong:#c0c4cb;
-  --sg-blue:#0065da;--sg-blue-hover:#0056c6;--sg-blue-soft:#e4f0ff;--sg-blue-text:#005ccd;
-  --sg-danger:#cc272e;--sg-danger-soft:#ffecea
+.signin-shell{
+  /* Сангийн токенуудын alias: карт ба доторх сангийн компонентууд нэг theme-ээр
+     (гэрэл/харанхуй) зурагдана. Тогтмол цайвар утгууд байхад харанхуй горимд
+     цагаан карт дээр харанхуй таб, товч гарч байв. */
+  --sg-bg:var(--background);--sg-surface:var(--card);--sg-surface-2:var(--background-muted);
+  --sg-fg:var(--foreground);--sg-muted:var(--foreground-muted);--sg-faint:var(--foreground-subtle);
+  --sg-border:var(--border);--sg-border-strong:var(--border-strong);
+  --sg-blue:var(--accent);--sg-blue-hover:var(--accent-hover);--sg-blue-soft:var(--accent-subtle);--sg-blue-text:var(--accent-subtle-foreground);
+  --sg-danger:var(--danger-foreground);--sg-danger-soft:var(--danger-subtle)
 }
 .signin-shell{background:var(--sg-bg);color:var(--sg-fg);min-height:100dvh;display:flex;flex-direction:column}
-/* Hero дотор карт нь өөрийн дэлгэц биш, багана — нарийхан, багавтар зайтай. */
-.cp-signin{color:var(--sg-fg)}
-/* `position:relative` нь чимэглэл биш, шаардлага. `.gp-login-slot` нь ард нь
-   гэрэлтэх давхаргыг `::before`-оор зурдаг ба тэр нь inset:-24px-тэй — өөрөөр
-   хэлбэл картаас том. Байрлуулаагүй карт түүний доогуур үлдэж, товч нь
-   харагдсаар атлаа дарагдахгүй болно. Нийтийн хуудасны eID карт яг үүний
-   тулд `position:relative` байдаг; e2e тест энэ ялгааг олсон. */
-.cp-signin .signin-card{position:relative;max-width:460px;padding:30px;box-shadow:var(--gerege-shadow-lg)}
-.cp-signin .signin-card__title{font-size:23px}
 .signin-shell__nav{border-bottom:1px solid var(--sg-border);display:flex;align-items:center;justify-content:space-between;padding:18px 32px}
 .signin-shell__nav .gp-brand{color:var(--sg-fg)}
 .signin-shell__nav .gp-brand img{width:26px;height:26px;border-radius:var(--gerege-radius-control)}
@@ -546,178 +451,20 @@ html { scrollbar-gutter: stable; }
 .signin-card__asker{display:flex;flex-direction:column;gap:4px}
 .signin-card__asker strong{font-size:17px;font-weight:600;line-height:1.35}
 .signin-card__asker span{color:var(--sg-muted);font-size:13px;line-height:1.5}
-.signin-card__rule{border:0;border-top:1px solid var(--sg-border);margin:0}
 .signin-card__title{font-size:30px;font-weight:600;letter-spacing:-.02em;margin:0;color:var(--sg-fg)}
 .signin-card__lede{color:var(--sg-muted);font-size:15px;line-height:1.6;margin:6px 0 0}
 
-.signin-seg{background:var(--sg-surface-2);border:1px solid var(--sg-border);border-radius:var(--gerege-radius-control);padding:2px;gap:2px;display:flex}
-.signin-seg button{flex:1;min-height:44px;border:0;border-radius:var(--gerege-radius-control);background:0 0;color:var(--sg-muted);font-size:14px;font-weight:500;cursor:pointer;transition:background .12s,color .12s,box-shadow .12s}
-.signin-seg button:hover{color:var(--sg-fg)}
-.signin-seg button.is-active{background:var(--sg-surface);color:var(--sg-fg);box-shadow:var(--gerege-shadow-sm)}
-.signin-seg button:focus-visible{outline:2px solid var(--sg-blue);outline-offset:1px}
-
 .signin-instruction{text-align:center;color:var(--sg-blue-text);font-size:13.5px;line-height:1.55;margin:0}
-.signin-field{display:flex;flex-direction:column;gap:6px}
-.signin-field label{color:var(--sg-fg);font-size:13px;font-weight:500}
-.signin-field input{width:100%;background:var(--sg-surface);border:1px solid var(--sg-border);border-radius:var(--gerege-radius-card);color:var(--sg-fg);font-size:17px;text-align:center;letter-spacing:2px;padding:14px 12px;transition:border-color .12s,box-shadow .12s}
-.signin-field input::placeholder{color:var(--sg-faint)}
-.signin-field input:hover{border-color:var(--sg-border-strong)}
-.signin-field input:focus{border-color:var(--sg-blue);box-shadow:0 0 0 3px var(--sg-blue-soft)}
-
-.signin-btn{width:100%;min-height:44px;border-radius:var(--gerege-radius-card);border:1px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 22px;font-size:15px;font-weight:600;cursor:pointer;transition:background .12s,border-color .12s,color .12s,filter .12s}
-.signin-btn:disabled{opacity:.55;cursor:not-allowed}
-.signin-btn--eid{background:var(--sg-blue);color:#fff}
-.signin-btn--eid:hover:not(:disabled){filter:brightness(1.05)}
-.signin-btn--eid:active:not(:disabled){filter:brightness(.97)}
-.signin-btn--google{background:var(--sg-surface);color:var(--sg-fg);border-color:var(--sg-border)}
-.signin-btn--google:hover:not(:disabled){background:var(--sg-surface-2)}
-.signin-btn--google svg{width:18px;height:18px}
-.signin-btn--ghost{background:0 0;color:var(--sg-blue-text);font-weight:500;min-height:38px;padding:8px 12px}
-.signin-btn--ghost:hover{background:var(--sg-blue-soft)}
-
-.signin-or{display:flex;align-items:center;gap:10px;color:var(--sg-muted);font-size:12px;margin:6px 0}
-.signin-or:before,.signin-or:after{content:"";flex:1;border-top:1px solid var(--sg-border)}
-
-.signin-footer{text-align:center;margin-top:4px}
-.signin-footer hr{border:0;border-top:1px solid var(--sg-border);margin:4px 0 16px}
-.signin-footer__register{display:block;color:var(--sg-fg);font-size:14.5px;font-weight:600;text-decoration:none}
-.signin-footer__register:hover{color:var(--sg-blue-text)}
-.signin-footer__help{display:inline-flex;align-items:center;gap:6px;margin-top:12px;color:var(--sg-muted);font-size:13px;text-decoration:none}
-.signin-footer__help:hover{color:var(--sg-fg)}
-/* Хувийн профайл. Ажлын мужийн дотор амьдардаг тул хүрээний өнгө биш,
-   контентын өнгөөр — платформын бусад settings дэлгэцтэй ижил. */
-/* Өргөн ба зайг өөрөө тогтоохгүй. Бүрхүүлийн <main> нь аль хэдийн gutter
-   өгсөн байдаг тул энд дахин нэмбэл хоёр тал хэт сул, агуулга нарийн багана
-   болно — бусад дэлгэц бүр зөвхөн босоо хэмнэлээ зарлаж, өргөнөө бүрхүүлд
-   үлдээдэг. Энэ нь ч мөн адил. */
-/* Профайлын палитр нэг дор.
-   Энэ блокийн дүрмүүд өнгөө шууд бичдэг байсан (#fff, #0f172a…) тул харанхуй
-   горимд карт бүр цагаан үлдэж, дараа нь сонголт тус бүрээр нөхөх гэсэн нь
-   нэгийг нь орхигдуулсан: байгууллагын нэр (`.profile__grow b`) бараан дээр
-   бараан хэвээр байв. Одоо өнгө бүр эндээс л ирнэ — шинэ дүрэм нэмэхэд
-   хоёр горим хоёулаа автоматаар зөв болно. */
-.profile{
-  --pf-fg:#0f172a;--pf-muted:#64748b;--pf-surface:#fff;--pf-border:#e2e8f0;
-  --pf-soft:#eef4ff;--pf-soft-fg:#1d4ed8;
-  display:grid;gap:28px
-}
-html.dark .profile{
-  --pf-fg:var(--gerege-fg);--pf-muted:var(--gerege-muted);--pf-surface:var(--gerege-surface);
-  --pf-border:var(--gerege-border);--pf-soft:var(--gerege-blue-soft);--pf-soft-fg:var(--gerege-fg)
-}
-.profile__head{display:flex;align-items:center;gap:16px}
-.profile__avatar{width:56px;height:56px;border-radius:var(--gerege-radius-lg);background:#1d4ed8;color:#fff;display:grid;place-items:center;font-size:24px;font-weight:600}
-.profile__head h1{font-size:22px;font-weight:600;margin:0;color:var(--pf-fg)}
-.profile__head p{margin:2px 0 0;color:var(--pf-muted);font-size:14px}
-.profile__stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
-.profile__stats>div{background:var(--pf-surface);border:1px solid var(--pf-border);border-radius:var(--gerege-radius-lg);padding:14px 16px;display:grid;gap:2px}
-.profile__stats svg{width:18px;height:18px;color:var(--pf-muted)}
-.profile__stats b{font-size:20px;font-weight:600;color:var(--pf-fg)}
-.profile__stats span{font-size:12px;color:var(--pf-muted)}
-.profile__section h2{font-size:16px;font-weight:600;color:var(--pf-fg);margin:0 0 4px}
-.profile__muted{color:var(--pf-muted);font-size:13px;margin:0 0 12px}
-.profile__error{color:#b42318;font-size:14px}
-.profile__list{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:10px}
-.profile__list>li{background:var(--pf-surface);border:1px solid var(--pf-border);border-radius:var(--gerege-radius-lg);padding:14px 16px}
-.profile__row{display:flex;align-items:center;gap:12px}
-/* Таних тэмдгийн карт. Хоёр мөр: провайдер, дараа нь тэнд байгаа хүн. */
-.profile__id-head{display:flex;align-items:center;gap:10px}
-.profile__mark{display:grid;place-items:center;width:22px;height:22px;flex:none}
-.profile__mark svg{width:20px;height:20px}
-.profile__id-head b{font-size:14px;font-weight:600;color:var(--pf-fg)}
-.profile__id-head span{font-size:12px;color:var(--pf-muted);word-break:break-all}
-.profile__id-person{display:flex;align-items:center;gap:12px;margin-top:12px}
-.profile__photo{width:44px;height:44px;border-radius:var(--gerege-radius-card);object-fit:cover;flex:none;background:var(--pf-soft)}
-.profile__photo--letter{display:grid;place-items:center;color:var(--pf-soft-fg);font-weight:600;font-size:17px}
-.profile__id-person b{font-size:14px;color:var(--pf-fg);display:flex;align-items:center;gap:8px}
-.profile__id-person span{font-size:13px;color:var(--pf-muted)}
-.profile__id-person code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;color:var(--pf-muted)}
-.profile__badge{font-style:normal;font-size:11px;font-weight:600;color:#047857;background:#d1fae5;border-radius:var(--gerege-radius-full);padding:2px 9px}
-/* Салгах товч нь сүйрлийн үйлдэл — улаанаар зарлана, гэхдээ дарагдтал
-   тайван: анхаарлыг татах ёстой нь товч өөрөө биш, дарсны үр дүн. */
-.profile__unlink{display:inline-flex;align-items:center;gap:6px;flex:none;border:1px solid #fecdca;background:var(--pf-surface);color:#b42318;border-radius:var(--gerege-radius-card);padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer}
-.profile__unlink:hover:not(:disabled){background:#fef3f2}
-.profile__unlink:disabled{opacity:.55;cursor:default}
-.profile__unlink svg{width:15px;height:15px}
-/* Холбох товч. Салгахын эсрэг тал тул хэлбэрээр нь хосолно, гэхдээ саармаг
-   өнгөөр: холбох нь сүйрлийн үйлдэл биш. */
-.profile__link-provider{display:inline-flex;align-items:center;gap:9px;margin-top:12px;border:1px solid var(--pf-border);background:var(--pf-surface);color:var(--pf-fg);border-radius:var(--gerege-radius-card);padding:10px 16px;font-size:14px;font-weight:600;text-decoration:none}
-.profile__link-provider:hover{background:#f8fafc;border-color:#cbd5e1}
-.profile__link-provider svg{width:18px;height:18px}
-.profile__link-note{margin:8px 0 0;max-width:62ch}
-.profile__link-error{margin:12px 0 0;padding:11px 14px;border:1px solid #fecdca;background:#fef3f2;border-radius:var(--gerege-radius-card);max-width:62ch}
-.profile__icon{display:grid;place-items:center;width:34px;height:34px;border-radius:var(--gerege-radius-card);background:var(--pf-soft);color:var(--pf-soft-fg);flex:none}
-.profile__icon svg{width:18px;height:18px}
-.profile__grow{flex:1;display:grid}
-.profile__grow b{font-size:14px;color:var(--pf-fg)}
-.profile__grow span{font-size:13px;color:var(--pf-muted)}
-.profile__meta{display:grid;text-align:right;font-size:12px;color:var(--pf-muted)}
-.profile__toggle{margin-top:10px;border:0;background:0 0;color:var(--pf-soft-fg);font-size:13px;cursor:pointer;padding:0}
-.profile__claims{margin:10px 0 0;display:grid;gap:6px;border-top:1px solid var(--pf-border);padding-top:10px}
-.profile__claims>div{display:flex;justify-content:space-between;gap:16px;font-size:12.5px}
-.profile__claims dt{color:var(--pf-muted);font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
-.profile__claims dd{margin:0;color:var(--pf-fg);text-align:right;word-break:break-word}
-@media(max-width:640px){.profile__meta{display:none}}
-
-/* Холболтын дэлгэц дээрх "юу дамжих вэ" хоёр блок. */
-.bind-block{background:var(--sg-surface-2);border:1px solid var(--sg-border);border-radius:var(--gerege-radius-card);padding:14px 16px}
-.bind-block h3{font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--sg-muted);margin:0 0 8px}
-.bind-block ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
-.bind-block li{display:flex;justify-content:space-between;gap:12px;font-size:13.5px;color:var(--sg-fg)}
-.bind-block li span{color:var(--sg-muted)}
-.bind-block li b{font-weight:600}
-.signin-alert{border-radius:var(--gerege-radius-card);padding:10px 12px;font-size:13px;background:var(--sg-danger-soft);color:var(--sg-danger)}
-.signin-note{color:var(--sg-muted);font-size:12.5px;text-align:center;margin:0}
-
-/* Анхны тохиргооны шидтэн. Нэвтрэх картын дотор амьдардаг тул хүрээ, товчны
-   хэлбэрийг тэндээсээ авна — энэ хоёр дэлгэц нь хүний хувьд нэг л мөч:
-   суулгацын гадаа зогсоод дотогш орох гэж байгаа. */
-.signin-btn--primary{background:var(--sg-blue);color:#fff}
-.signin-btn--primary:hover:not(:disabled){filter:brightness(1.06)}
-.signin-btn--quiet{background:var(--sg-surface);color:var(--sg-fg);border-color:var(--sg-border)}
-.signin-btn--quiet:hover:not(:disabled){background:var(--sg-surface-2)}
-
-/* Алхмууд нэг мөрөнд: явж буй алхам шошготойгоо мөрийн үлдсэнийг эзэлж, бусад
-   нь дүрсийн хэмжээнд зогсоно (шошго нь `sr-only`, харагдацаас л хасагдана).
-   Дөрвүүлээ шошготой байхад «Байгууллага», «Administrator» зэрэг орчуулга
-   картын өргөнөөс халж хүрээгээ давдаг байв. */
-.setup-steps{display:flex;gap:8px;list-style:none;margin:0;padding:0}
-.setup-steps li{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:6px;min-height:36px;min-width:36px;padding:0 10px;white-space:nowrap;border:1px solid var(--sg-border);border-radius:var(--gerege-radius-card);color:var(--sg-muted);font-size:13px;font-weight:500}
-.setup-steps li svg{flex:none}
-.setup-steps li.is-current{flex:1 1 auto;border-color:var(--sg-blue);color:var(--sg-blue-text);background:var(--sg-blue-soft)}
-.setup-steps li.is-done{color:var(--sg-fg)}
-
-.setup-form{display:flex;flex-direction:column;gap:16px}
-.setup-form label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:500}
-.setup-form input{width:100%;background:var(--sg-surface);border:1px solid var(--sg-border);border-radius:var(--gerege-radius-card);color:var(--sg-fg);font-size:15px;font-weight:400;padding:11px 12px;transition:border-color .12s,box-shadow .12s}
-.setup-form input:focus{border-color:var(--sg-blue);box-shadow:0 0 0 3px var(--sg-blue-soft)}
-.setup-form small{color:var(--sg-muted);font-size:12px;font-weight:400}
-
-.setup-lookup{display:flex;gap:8px}
-.setup-lookup input{flex:1}
-.setup-lookup button{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;background:var(--sg-surface-2);border:1px solid var(--sg-border);border-radius:var(--gerege-radius-card);color:var(--sg-fg);font-size:13px;font-weight:500;padding:0 14px;cursor:pointer}
-.setup-lookup button:hover:not(:disabled){background:var(--sg-surface)}
-.setup-lookup button:disabled{opacity:.5;cursor:not-allowed}
-
-.setup-actions{display:flex;gap:10px}
-.setup-enrolment{display:flex;flex-direction:column;align-items:center;gap:12px;padding:16px;background:var(--sg-surface);border:1px solid var(--sg-border);border-radius:var(--gerege-radius-card)}
-.setup-enrolment svg{background:#fff;padding:8px;border-radius:var(--gerege-radius-control)}
-.setup-enrolment code{font-size:12px;letter-spacing:.04em;color:var(--sg-muted);word-break:break-all;text-align:center}
 
 /* eID картыг энэ дизайны дотор буулгах. EIDLogin өөрөө навигацийн логикоо
    барина — энд зөвхөн харагдац солигдоно. */
 .signin-card .eid-login{background:0 0;border:0;padding:0;box-shadow:none;gap:16px;display:flex;flex-direction:column}
 .signin-card .eid-login__head,.signin-card .eid-login>footer{display:none}
-.signin-card .eid-tabs{background:var(--sg-surface-2);border:1px solid var(--sg-border);border-radius:var(--gerege-radius-control);padding:2px;gap:2px;display:flex}
-.signin-card .eid-tabs button{flex:1;min-height:44px;border:0;border-radius:var(--gerege-radius-control);background:0 0;color:var(--sg-muted);font-size:14px;font-weight:500}
-.signin-card .eid-tabs button.is-active{background:var(--sg-surface);color:var(--sg-fg);box-shadow:var(--gerege-shadow-sm)}
 .signin-card .eid-login form{display:flex;flex-direction:column;gap:6px}
 .signin-card .eid-login form label{color:var(--sg-fg);font-size:13px;font-weight:500}
 .signin-card .eid-login form input{width:100%;background:var(--sg-surface);border:1px solid var(--sg-border);border-radius:var(--gerege-radius-card);color:var(--sg-fg);font-size:17px;text-align:center;letter-spacing:2px;padding:14px 12px}
 .signin-card .eid-login form input::placeholder{color:var(--sg-faint)}
 .signin-card .eid-login form input:focus{border-color:var(--sg-blue);box-shadow:0 0 0 3px var(--sg-blue-soft)}
-.signin-card .eid-primary{margin-top:10px;width:100%;min-height:44px;border:0;border-radius:var(--gerege-radius-card);background:var(--sg-blue);color:#fff;font-size:15px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:8px}
-.signin-card .eid-primary:hover{filter:brightness(1.05)}
 .signin-card .eid-wait,.signin-card .eid-status{color:var(--sg-fg)}
 .signin-card .eid-wait small{color:var(--sg-muted)}
 .signin-card .eid-qr{background:#fff;border:1px solid var(--sg-border);border-radius:var(--gerege-radius-card)}
@@ -727,18 +474,8 @@ html.dark .profile{
   .signin-shell__nav{padding:14px 20px}
   .signin-card__title{font-size:26px}
 }
-
-.admin-login__pending{color:var(--sg-muted,#5e646c);font-size:13px;text-align:center;padding:22px 0}
-/* Провайдераар нэвтрэх карт: eID картын байрыг эзэлдэг тул түүнтэй ижил
-   өргөн, ижил өнцөгтэй — нэг дэлгэц дээр хоёул гарч ирж болно. */
-.sso-card{background:#fff;color:#0f1b2d;border-radius:var(--gerege-radius-lg);padding:26px;display:grid;justify-items:center;text-align:center;gap:10px}
-.sso-card>svg{width:38px;height:38px;color:#122a50}
-.sso-card strong{font-size:18px}
-.sso-card p{color:#5b6779;font-size:13px;line-height:1.6}
-.sso-card__error{color:#b42318}
-.sso-card button{width:100%;height:44px;margin-top:6px;border:0;border-radius:var(--gerege-radius-card);background:#122a50;color:#fff;font-weight:600}
 .eid-callback{min-height:100dvh;background:var(--gp-navy);color:#fff;display:grid;place-content:center;justify-items:center;text-align:center;gap:8px}.eid-callback>svg{width:50px;height:50px;color:#f2bd42}.eid-callback h1{color:#fff}.eid-callback p{color:var(--gp-on-navy-70)}.eid-callback a{color:#f2bd42}
-@media(max-width:900px){.gp-nav>nav{display:none}.gp-nav__toggle{display:inline-flex}.gp-nav__menu{display:block;position:absolute;top:72px;left:0;right:0;background:var(--gp-navy);border-bottom:1px solid rgba(255,255,255,.14);box-shadow:0 18px 32px rgba(0,0,0,.22);padding:14px 24px 18px}.gp-nav__menu nav{display:flex;flex-direction:column;gap:2px}.gp-nav__menu nav a{display:block;padding:11px 2px;font-size:15px;color:var(--gp-on-navy-70);text-decoration:none;border-bottom:1px solid rgba(255,255,255,.08)}.gp-nav__menu nav a:hover{color:var(--gp-gold)}.gp-nav__menu-actions{padding-top:12px}.gp-hero__inner,.eid-page__content{grid-template-columns:1fr;gap:42px}.gp-hero__inner{padding-top:60px}.gp-copy{text-align:center;margin:auto}.gp-cta,.gp-stats{justify-content:center}.gp-login-slot,.eid-login{margin:auto}.gp-trust{grid-template-columns:1fr;gap:30px}.eid-page__intro{text-align:center}.eid-page__intro ul{justify-content:center}.eid-page__content{padding-top:30px}.eid-page__intro h1{font-size:44px}}
+@media(max-width:900px){.gp-nav>nav{display:none}.gp-nav__toggle{display:inline-flex}.gp-nav__menu{display:block;position:absolute;top:72px;left:0;right:0;background:var(--gp-navy);border-bottom:1px solid rgba(255,255,255,.14);box-shadow:0 18px 32px rgba(0,0,0,.22);padding:14px 24px 18px}.gp-nav__menu nav{display:flex;flex-direction:column;gap:2px}.gp-nav__menu nav a{display:block;padding:11px 2px;font-size:15px;color:var(--gp-on-navy-70);text-decoration:none;border-bottom:1px solid rgba(255,255,255,.08)}.gp-nav__menu nav a:hover{color:var(--gp-gold)}.gp-nav__menu-actions{padding-top:12px}.gp-hero__inner{grid-template-columns:1fr;gap:42px}.gp-hero__inner{padding-top:60px}.gp-copy{text-align:center;margin:auto}.gp-cta,.gp-stats{justify-content:center}.gp-login-slot,.eid-login{margin:auto}.gp-trust{grid-template-columns:1fr;gap:30px}}
 /* The store's catalogue. It reuses gp-feature for the card so a store and the
    platform page cannot drift into two visual languages; what is added is only
    what a catalogue entry needs and a capability card does not — a version, a
@@ -754,232 +491,7 @@ html.dark .profile{
 .gp-store-card__foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;padding-top:14px;border-top:1px solid #eef2f7;font-size:12px;color:var(--gp-muted)}
 .gp-store-card__foot code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#5b6b80;overflow:hidden;text-overflow:ellipsis}
 
-@media(max-width:640px){.gp-nav{padding:0 14px}.gp-nav>nav,.gp-actions>:first-child{display:none}.gp-nav__menu{padding:14px 14px 18px}.gp-hero__inner{padding:46px 16px 65px}.gp-copy h1{font-size:44px}.gp-copy>p{font-size:15px}.gp-cta{flex-direction:column}.gp-stats{gap:14px}.gp-stats span{flex:1}.gp-section{padding:66px 16px}.gp-grid{grid-template-columns:1fr}.gp-store-card__foot{flex-direction:column;align-items:flex-start;gap:6px}.gp-trust{width:calc(100% - 32px);margin:48px auto 60px;padding:28px}.gp-tech{width:calc(100% - 32px);margin:0 auto 60px;padding:24px 14px;flex-direction:column}.gp-tech>svg{transform:rotate(90deg)}.gp-footer{margin:0 16px;flex-direction:column;gap:8px}.eid-page__content{padding:24px 14px 70px}.eid-page__intro h1{font-size:38px}.eid-login{padding:21px}.eid-login--compact{padding:20px}}
-
-/* Mobile shell follows open-gerege-mn: app switching moves to a fixed bottom
-   tab bar and the active app's menu becomes an off-canvas drawer. */
-:root { --gerege-mobile-tabs-h: 64px; }
-/* Wide enough for the menu button alone, and free to grow when the fold-all
-   button joins it — the cell used to be a fixed 4rem, which cropped the second
-   button rather than making room for it. */
-.gerege-menu-toggle { min-width: 4rem; padding-inline: 0.25rem; }
-.gerege-header-context { width: 0; padding-inline: 0; }
-.gerege-header-context.is-open { width: 14rem; padding-inline: 1rem; border-right: 1px solid var(--gerege-chrome-border); }
-.gerege-sidebar { position: static; width: 4rem; transition: width 0.24s ease; }
-.gerege-sidebar.is-desktop-open { width: 18rem; }
-.gerege-menu-panel { width: 0; border-right: 0; transition: width 0.24s ease; }
-.gerege-sidebar.is-desktop-open .gerege-menu-panel { width: 14rem; border-right: 1px solid var(--gerege-border); }
-.gerege-mobile-tabs { display: none; }
-
-@media (max-width: 900px) {
-  .gerege-topbar { padding-inline: 0.25rem; }
-  .gerege-header-brand { display: none; }
-  .gerege-menu-toggle { order: 1; min-width: 3.5rem; padding-inline: 0; }
-  .gerege-header-context,
-  .gerege-header-context.is-open {
-    order: 2; flex: 1 1 auto; width: auto; padding-inline: 0.25rem;
-    border-right: 0; min-width: 0;
-  }
-  .gerege-header-search { display: none !important; }
-  .gerege-header-user { order: 4; flex: 0 0 auto; }
-
-  .gerege-sidebar:not(.gerege-workarea .gerege-sidebar),
-  .gerege-sidebar.is-desktop-open:not(.gerege-workarea .gerege-sidebar) {
-    position: fixed; top: 4rem; left: 0; bottom: var(--gerege-mobile-tabs-h);
-    width: min(82vw, 18rem); height: auto; z-index: var(--z-modal);
-    background: var(--gerege-chrome); border-right: 1px solid var(--gerege-border);
-    box-shadow: 8px 0 28px rgb(0 0 0 / 16%);
-    transform: translateX(-100%); transition: transform 0.24s ease;
-  }
-  /* Open, and it has to say so twice.
-     
-     The closed state above is two selectors, and the one that actually matches
-     an open panel — `.gerege-sidebar.is-desktop-open:not(.gerege-workarea
-     .gerege-sidebar)` — weighs four classes, because `:not()` carries the
-     specificity of its argument and that argument is two. A bare
-     `.gerege-sidebar.is-mobile-open` weighs two, so it lost, and the drawer
-     stayed parked at translateX(-100%) with the backdrop up over an empty
-     screen. The class was on the element; the transform was not.
-     
-     It went in on 2026-08-10 with the native shell's workarea exclusions and
-     was invisible for a fortnight: the drawer is the only way to a menu on a
-     phone, but the bottom tab bar still switched apps, so it read as "this app
-     has no menu" rather than as a broken control. It became unmissable on
-     2026-08-25, when the core's catalogue emptied and the tab bar was down to
-     one tile.
-     
-     Both alternatives spelled out rather than `!important`: the rule that has
-     to be beaten is the one written above it, and matching its shape says so.
-     `is-desktop-open` rides along because localStorage sets it on a phone too —
-     nothing there knows the window is narrow. */
-  .gerege-sidebar.is-mobile-open:not(.gerege-workarea .gerege-sidebar),
-  .gerege-sidebar.is-mobile-open.is-desktop-open:not(.gerege-workarea .gerege-sidebar) {
-    transform: translateX(0);
-  }
-  .gerege-sidebar:not(.gerege-workarea .gerege-sidebar) > nav { display: none; }
-  .gerege-menu-panel:not(.gerege-workarea .gerege-menu-panel),
-  .gerege-sidebar.is-desktop-open:not(.gerege-workarea .gerege-sidebar) .gerege-menu-panel {
-    width: 100%; height: 100%; overflow-y: auto;
-    border-right: 0;
-  }
-  .gerege-mobile-backdrop { bottom: var(--gerege-mobile-tabs-h); }
-  .gerege-main {
-    margin-left: 0; width: 100%; overflow-x: clip;
-    padding-bottom: calc(var(--gerege-mobile-tabs-h) + env(safe-area-inset-bottom, 0px) + 1.5rem);
-  }
-  .gerege-mobile-tabs {
-    display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: var(--z-sticky);
-    height: calc(var(--gerege-mobile-tabs-h) + env(safe-area-inset-bottom, 0px));
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    background: var(--gerege-chrome); border-top: 1px solid var(--gerege-border);
-    box-shadow: 0 -2px 12px rgb(0 0 0 / 6%);
-  }
-  .gerege-mobile-tab {
-    flex: 1 1 20%; min-width: 0; max-width: none; border: 0; background: transparent;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 0.2rem; padding: 0.4rem 0.2rem; color: var(--gerege-muted);
-    font-family: inherit; text-decoration: none; cursor: pointer;
-  }
-  .gerege-mobile-tab > span { flex: 0 0 auto; }
-  .gerege-mobile-tab small {
-    width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    text-align: center; font-size: 0.65rem; font-weight: 600;
-  }
-  .gerege-mobile-tab.is-active { color: var(--gerege-blue); }
-  .gerege-mobile-more-backdrop {
-    position: fixed; inset: 0; z-index: var(--z-overlay); border: 0;
-    background: var(--gerege-overlay);
-  }
-  .gerege-mobile-more-sheet {
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: var(--z-modal);
-    max-height: min(68dvh, 34rem); overflow-y: auto;
-    padding: 0.5rem 1rem calc(var(--gerege-mobile-tabs-h) + env(safe-area-inset-bottom, 0px) + 1rem);
-    background: var(--gerege-chrome); border-radius:var(--gerege-radius-lg) var(--gerege-radius-lg) 0 0;
-    box-shadow: 0 -12px 40px rgb(0 0 0 / 20%);
-  }
-  .gerege-mobile-more-handle {
-    width: 2.5rem; height: 0.25rem; margin: 0 auto 0.75rem;
-    border-radius:var(--gerege-radius-full); background: var(--gerege-border);
-  }
-  .gerege-mobile-more-sheet h2 { margin: 0 0 0.75rem; font-size: 1rem; font-weight:600; color: var(--gerege-fg); }
-  .gerege-mobile-more-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
-  .gerege-mobile-more-app {
-    display: flex; align-items: center; gap: 0.75rem; min-width: 0;
-    padding: 0.8rem; border: 1px solid var(--gerege-border); border-radius:var(--gerege-radius-lg);
-    background: var(--gerege-surface); color: var(--gerege-fg); text-decoration: none;
-  }
-  .gerege-mobile-more-app > span { flex: 0 0 auto; color: var(--gerege-muted); }
-  .gerege-mobile-more-app strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.8rem; }
-  .gerege-mobile-more-app.is-active { border-color: var(--gerege-blue); background: var(--gerege-blue-soft); color: var(--gerege-blue); }
-  .gerege-mobile-more-app.is-active > span { color: var(--gerege-blue); }
-  /* On a phone the drawer is the screen, and it stops above the tab bar rather
-     than under it. */
-  .gerege-copilot-drawer {
-    width: 100vw;
-    bottom: calc(var(--gerege-mobile-tabs-h) + env(safe-area-inset-bottom, 0px));
-  }
-}
-
-/* The copilot drawer.
- *
- * It comes in from the side the trigger sits on — inline-end, which is the
- * right in Mongolian and English and the left in Arabic, where the whole shell
- * flips. A physical `right` would have it fly in from the far side of the
- * screen from the button that opened it.
- *
- * It sits under the header rather than over it, so the control that opened it
- * stays visible and can close it again, and it deliberately does not cover the
- * page: this is a copilot, and the work it is asked about has to stay readable
- * behind it.
- */
-.gerege-copilot-drawer {
-  position: fixed;
-  top: 4rem;
-  bottom: 0;
-  inset-inline-end: 0;
-  width: 420px;
-  max-width: 100vw;
-  z-index: var(--z-modal);
-  overflow: hidden;
-  transform: translateX(100%);
-  visibility: hidden;
-  transition: transform 0.25s ease, visibility 0.25s;
-}
-[dir="rtl"] .gerege-copilot-drawer { transform: translateX(-100%); }
-.gerege-copilot-drawer.is-open { transform: translateX(0); visibility: visible; }
-
-/* Somebody who has asked not to be moved about is not moved about. */
-@media (prefers-reduced-motion: reduce) {
-  .gerege-copilot-drawer { transition: visibility 0s; }
-}
-
-/* Native Shell workarea sidebar rules — must come AFTER @media (max-width: 900px) */
-.gerege-workarea .gerege-sidebar,
-.gerege-workarea .gerege-sidebar.is-desktop-open,
-html[data-shell] .gerege-workarea .gerege-sidebar,
-html[data-shell] .gerege-workarea .gerege-sidebar.is-desktop-open,
-html[data-shell] .gerege-sidebar,
-html[data-shell] .gerege-sidebar.is-desktop-open {
-  position: static !important;
-  top: auto !important;
-  bottom: auto !important;
-  left: auto !important;
-  transform: none !important;
-  width: 18rem !important;
-  /* Өндөр нь эцгийн эгнээнээс ирнэ. `min-height: 100dvh` тавибал ribbon ба
-     footer-ийн эзэлсэн ~4.25rem-ээр доод тал нь тасарч, олон цэстэй tenant-д
-     сүүлийн бичлэгүүд хүрэхгүй болно. */
-  height: auto !important;
-  box-shadow: none !important;
-  background: var(--gerege-chrome) !important;
-  z-index: var(--z-modal) !important;
-}
-
-.gerege-workarea .gerege-sidebar > nav,
-html[data-shell] .gerege-sidebar > nav {
-  display: flex !important;
-  width: 4rem !important;
-  min-width: 4rem !important;
-  flex-shrink: 0 !important;
-}
-
-.gerege-workarea .gerege-menu-panel,
-.gerege-workarea .gerege-sidebar.is-desktop-open .gerege-menu-panel,
-html[data-shell] .gerege-menu-panel,
-html[data-shell] .gerege-sidebar.is-desktop-open .gerege-menu-panel {
-  display: block !important;
-  width: 14rem !important;
-  height: auto !important;
-  overflow-y: auto !important;
-  border-right: 1px solid var(--gerege-border) !important;
-}
-
-.gerege-workarea .gerege-main,
-html[data-shell] .gerege-main {
-  margin-left: 0 !important;
-  padding-bottom: 1.5rem !important;
-}
-
-/* Ribbon Bar & Footer rules for desktop shell workarea.
-   Өндөр нь JSX-ийн `h-10` / `h-7`-тэй таарах ёстой: зөрвөл дотоод контент
-   голдоо тогтохгүй, sidebar-ын тооцоо ч зөрнө. */
-.gerege-ribbon {
-  display: flex !important;
-  height: 2.5rem !important;
-  min-height: 2.5rem !important;
-  background: var(--gerege-chrome) !important;
-  border-bottom: 1px solid var(--gerege-border) !important;
-  z-index: var(--z-sticky) !important;
-}
-
-.gerege-footer {
-  display: flex !important;
-  height: 1.75rem !important;
-  min-height: 1.75rem !important;
-  background: var(--gerege-chrome) !important;
-  border-top: 1px solid var(--gerege-border) !important;
-  z-index: var(--z-sticky) !important;
-}
+@media(max-width:640px){.gp-nav{padding:0 14px}.gp-nav>nav,.gp-actions>:first-child{display:none}.gp-nav__menu{padding:14px 14px 18px}.gp-hero__inner{padding:46px 16px 65px}.gp-copy h1{font-size:44px}.gp-copy>p{font-size:15px}.gp-cta{flex-direction:column}.gp-stats{gap:14px}.gp-stats span{flex:1}.gp-section{padding:66px 16px}.gp-grid{grid-template-columns:1fr}.gp-store-card__foot{flex-direction:column;align-items:flex-start;gap:6px}.gp-trust{width:calc(100% - 32px);margin:48px auto 60px;padding:28px}.gp-tech{width:calc(100% - 32px);margin:0 auto 60px;padding:24px 14px;flex-direction:column}.gp-tech>svg{transform:rotate(90deg)}.gp-footer{margin:0 16px;flex-direction:column;gap:8px}.eid-login{padding:21px}.eid-login--compact{padding:20px}}
 
 /* ── Шугамын нүүр дэлгэц ─────────────────────────────────────────────────
    Native хүрээний дотор, ribbon ба rail-ын дунд суудаг тул өөрийн толгой

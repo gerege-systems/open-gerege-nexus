@@ -3,6 +3,14 @@
 import React, { useCallback } from "react";
 import { EsignApiError, type BatchItemStatus, type BatchStatus, type LogOutcome } from "@/lib/esign";
 import { useI18n } from "@/lib/i18n";
+import {
+  Badge as UIBadge,
+  Card as UICard,
+  CardHeader,
+  CardTitle,
+  Pagination,
+  type BadgeProps,
+} from "@gerege-systems/ui";
 
 /**
  * Turns any thrown value into a message, without the machine code.
@@ -51,51 +59,56 @@ export function useErrorMessage() {
   );
 }
 
+/**
+ * A titled section on its own card. The body is the caller's — a table wants
+ * no padding, a form brings its own — so the card itself has none.
+ */
 export function Card({ title, children, actions }: { title?: string; children: React.ReactNode; actions?: React.ReactNode }) {
   return (
-    <section className="bg-surface border border-line rounded-xl shadow-sm overflow-hidden">
+    <UICard padding="none" className="overflow-hidden">
       {(title || actions) && (
-        <header className="px-4 py-3 border-b border-line flex items-center justify-between gap-3">
-          {title && <h2 className="text-sm font-semibold text-foreground">{title}</h2>}
+        <CardHeader className="flex-row items-center justify-between gap-3 px-4 py-3 border-b border-line">
+          {title && <CardTitle className="text-sm">{title}</CardTitle>}
           {actions}
-        </header>
+        </CardHeader>
       )}
       {children}
-    </section>
+    </UICard>
   );
 }
 
+export type Tone = NonNullable<BadgeProps["tone"]>;
 
-const BATCH_STYLE: Record<BatchStatus, string> = {
-  DRAFT: "bg-surface-2 text-muted border-line",
-  RUNNING: "bg-blue-50 text-blue-700 border-blue-200",
-  COMPLETED: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  FAILED: "bg-red-50 text-red-700 border-red-200",
-  CANCELLED: "bg-surface-2 text-muted border-line",
+const BATCH_TONE: Record<BatchStatus, Tone> = {
+  DRAFT: "neutral",
+  RUNNING: "info",
+  COMPLETED: "success",
+  FAILED: "danger",
+  CANCELLED: "neutral",
 };
 
-const ITEM_STYLE: Record<BatchItemStatus, string> = {
-  PENDING: "bg-surface-2 text-muted border-line",
-  RUNNING: "bg-blue-50 text-blue-700 border-blue-200",
-  SIGNED: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  FAILED: "bg-red-50 text-red-700 border-red-200",
-  SKIPPED: "bg-surface-2 text-muted border-line",
+const ITEM_TONE: Record<BatchItemStatus, Tone> = {
+  PENDING: "neutral",
+  RUNNING: "info",
+  SIGNED: "success",
+  FAILED: "danger",
+  SKIPPED: "neutral",
 };
 
-const OUTCOME_STYLE: Record<LogOutcome, string> = {
-  OK: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  FAILED: "bg-red-50 text-red-700 border-red-200",
-  REJECTED: "bg-rose-50 text-rose-700 border-rose-200",
-  EXPIRED: "bg-surface-2 text-muted border-line",
-  CANCELLED: "bg-surface-2 text-muted border-line",
-  UNVERIFIED: "bg-amber-50 text-amber-700 border-amber-200",
+const OUTCOME_TONE: Record<LogOutcome, Tone> = {
+  OK: "success",
+  FAILED: "danger",
+  REJECTED: "danger",
+  EXPIRED: "neutral",
+  CANCELLED: "neutral",
+  UNVERIFIED: "warning",
 };
 
-export function Badge({ tone, children }: { tone: string; children: React.ReactNode }) {
+export function Badge({ tone, icon, children }: { tone: Tone; icon?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${tone}`}>
+    <UIBadge tone={tone} icon={icon}>
       {children}
-    </span>
+    </UIBadge>
   );
 }
 
@@ -115,17 +128,17 @@ function useEnumLabel(prefix: string) {
 
 export function BatchBadge({ status }: { status: BatchStatus }) {
   const label = useEnumLabel("esign.batch");
-  return <Badge tone={BATCH_STYLE[status] ?? BATCH_STYLE.DRAFT}>{label(status)}</Badge>;
+  return <Badge tone={BATCH_TONE[status] ?? BATCH_TONE.DRAFT}>{label(status)}</Badge>;
 }
 
 export function ItemBadge({ status }: { status: BatchItemStatus }) {
   const label = useEnumLabel("esign.item");
-  return <Badge tone={ITEM_STYLE[status] ?? ITEM_STYLE.PENDING}>{label(status)}</Badge>;
+  return <Badge tone={ITEM_TONE[status] ?? ITEM_TONE.PENDING}>{label(status)}</Badge>;
 }
 
 export function OutcomeBadge({ outcome }: { outcome: LogOutcome }) {
   const label = useEnumLabel("esign.outcome");
-  return <Badge tone={OUTCOME_STYLE[outcome] ?? OUTCOME_STYLE.OK}>{label(outcome)}</Badge>;
+  return <Badge tone={OUTCOME_TONE[outcome] ?? OUTCOME_TONE.OK}>{label(outcome)}</Badge>;
 }
 
 /**
@@ -143,32 +156,19 @@ export function Pager({
   pageSize: number;
   onPage: (offset: number) => void;
 }) {
-  const { t } = useI18n();
   if (total <= pageSize) return null;
 
   const page = Math.floor(offset / pageSize) + 1;
   const pages = Math.ceil(total / pageSize);
 
   return (
-    <nav className="flex items-center justify-between text-xs text-muted">
-      <span>{t("base.message.page_summary", { page, pages, total })}</span>
-      <div className="flex gap-2">
-        <button
-          onClick={() => onPage(Math.max(0, offset - pageSize))}
-          disabled={offset === 0}
-          className="px-3 py-1.5 rounded-lg bg-surface-2 hover:bg-slate-200 disabled:opacity-40 font-medium"
-        >
-          {t("base.action.previous")}
-        </button>
-        <button
-          onClick={() => onPage(offset + pageSize)}
-          disabled={offset + pageSize >= total}
-          className="px-3 py-1.5 rounded-lg bg-surface-2 hover:bg-slate-200 disabled:opacity-40 font-medium"
-        >
-          {t("base.action.next")}
-        </button>
-      </div>
-    </nav>
+    <Pagination
+      page={page}
+      pageCount={pages}
+      totalItems={total}
+      pageSize={pageSize}
+      onPageChange={(next) => onPage((next - 1) * pageSize)}
+    />
   );
 }
 

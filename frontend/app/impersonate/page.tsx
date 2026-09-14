@@ -17,6 +17,7 @@
 import React, { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ShieldCheck } from "lucide-react";
+import { Alert, Card, Spinner } from "@gerege-systems/ui";
 
 import { apiBase } from "@/lib/apiBase";
 import { useI18n } from "@/lib/i18n";
@@ -71,16 +72,19 @@ function Impersonate() {
 
   return (
     <div className="min-h-dvh grid place-items-center bg-surface-2 px-4">
-      <div className="w-full max-w-sm bg-surface rounded-xl border border-line p-6 space-y-3 text-center">
-        <ShieldCheck className="w-6 h-6 text-amber-500 mx-auto" />
+      <Card padding="lg" className="w-full max-w-sm space-y-3 text-center">
+        <ShieldCheck className="w-6 h-6 text-warning mx-auto" aria-hidden="true" />
         {failure ? (
-          <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">
+          <Alert variant="danger" live className="text-start">
             {failure}
-          </p>
+          </Alert>
         ) : (
-          <p className="text-sm text-muted">{t("auth.message.impersonation_starting")}</p>
+          <p className="flex items-center justify-center gap-2 text-sm text-muted" role="status">
+            <Spinner size="sm" decorative />
+            {t("auth.message.impersonation_starting")}
+          </p>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

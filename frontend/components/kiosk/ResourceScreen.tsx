@@ -4,9 +4,32 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { kioskList, kioskCreate, kioskUpdate, kioskRemove } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import type { KioskResource } from "@/lib/kiosk/types";
-import { Plus, Pencil, Trash2, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, RefreshCw } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw, Inbox } from "lucide-react";
+import {
+  Alert,
+  Button,
+  Card,
+  Checkbox,
+  ConfirmationDialog,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  EmptyState,
+  ErrorState,
+  IconButton,
+  Input,
+  Pagination,
+  Skeleton,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  Textarea,
+} from "@gerege-systems/ui";
+import { Modal } from "@/components/ui";
 import { MediaCell, MediaViewer } from "./MediaCell";
-import { formatNumber } from "@/lib/datetime";
 
 const PAGE_SIZES = [25, 50, 100, 200, 500];
 const DEFAULT_PAGE_SIZE = 50;
@@ -152,8 +175,6 @@ export default function ResourceScreen({ resource }: { resource: KioskResource }
   // A server-paged response is already the page. A bare array is the whole
   // table, so the slice happens here.
   const visible = serverPaged ? rows : rows.slice((page - 1) * pageSize, page * pageSize);
-  const firstShown = total === 0 ? 0 : (page - 1) * pageSize + 1;
-  const lastShown = Math.min(page * pageSize, total);
 
   const canWrite = Boolean(resource.create || resource.update || resource.remove);
   const actionCount = useMemo(
@@ -167,65 +188,79 @@ export default function ResourceScreen({ resource }: { resource: KioskResource }
     // on top of each other and the page buttons could not be clicked. The
     // padding keeps the end of the content clear of it.
     <div className="space-y-6 pb-24">
-      <div className="flex items-start justify-between border-b border-line pb-4 gap-4">
+      <header className="flex items-start justify-between border-b border-line pb-4 gap-4">
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold text-foreground">{t(resource.title)}</h1>
           <p className="text-sm text-muted">{t(resource.description)}</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <button
+          <IconButton
+            variant="outline"
             onClick={() => void load()}
-            className="border border-input text-foreground hover:bg-surface-hover font-medium text-sm py-2 px-3 rounded-lg flex items-center gap-2"
             aria-label={t("kiosk.action.refresh")}
-          >
-            <RefreshCw className="w-4 h-4" />
-          </button>
+            icon={<RefreshCw />}
+          />
           {resource.create && (
-            <button
-              onClick={openCreate}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm py-2 px-4 rounded-lg flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              <span>{t("kiosk.action.create")}</span>
-            </button>
+            <Button onClick={openCreate} leadingIcon={<Plus />}>
+              {t("kiosk.action.create")}
+            </Button>
           )}
         </div>
-      </div>
+      </header>
 
       {!canWrite && resource.readOnlyReason && (
-        <div className="p-3 bg-surface-2 border border-line text-muted text-sm rounded-lg">
-          {t(resource.readOnlyReason)}
-        </div>
+        <Alert variant="info">{t(resource.readOnlyReason)}</Alert>
       )}
 
-      {error && (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg break-words">{error}</div>
+      {/* A failed delete leaves the rows that were already on screen, so the
+          reason sits above them; a failed load has no rows and says it in
+          place of the table. */}
+      {error && rows.length > 0 && (
+        <Alert variant="danger" live className="wrap-break-word">{error}</Alert>
       )}
 
       {loading ? (
-        <div className="py-8 text-muted text-sm">{t("kiosk.message.loading")}</div>
-      ) : rows.length === 0 && !error ? (
-        <div className="bg-surface border border-line rounded-xl p-12 text-center text-muted text-sm">
-          {t("kiosk.message.empty")}
+        <div className="space-y-3 py-4" role="status" aria-live="polite" aria-busy="true">
+          <span className="sr-only">{t("kiosk.message.loading")}</span>
+          {Array.from({ length: 6 }, (_, row) => (
+            <div key={row} className="flex items-center gap-3">
+              <Skeleton variant="circle" className="size-4 shrink-0" />
+              <Skeleton className="h-4 flex-1" />
+              <Skeleton className="h-4 w-24 shrink-0" />
+            </div>
+          ))}
         </div>
-      ) : rows.length > 0 ? (
+      ) : rows.length === 0 && error ? (
+        <ErrorState
+          title={t("kiosk.message.load_failed")}
+          description={<span className="wrap-break-word">{error}</span>}
+          live
+          action={
+            <Button variant="outline" onClick={() => void load()}>
+              {t("kiosk.action.refresh")}
+            </Button>
+          }
+        />
+      ) : rows.length === 0 ? (
+        <EmptyState icon={<Inbox />} title={t("kiosk.message.empty")} />
+      ) : (
         <>
-          <div className="bg-surface border border-line rounded-xl overflow-x-auto">
-            <table className="w-full text-left border-collapse text-sm">
-              <thead>
-                <tr className="bg-surface-2 border-b border-line text-muted font-semibold text-xs uppercase tracking-wider">
-                  {resource.media && <th className="py-3 px-4 w-px">{t("kiosk.field.preview")}</th>}
+          <Card padding="none" className="overflow-hidden">
+            <Table containerClassName="rounded-none border-0" scrollLabel={t(resource.title)}>
+              <TableHeader>
+                <TableRow>
+                  {resource.media && <TableHead className="w-px">{t("kiosk.field.preview")}</TableHead>}
                   {resource.columns.map((c) => (
-                    <th key={c.key} className="py-3 px-4 whitespace-nowrap">{t(c.label)}</th>
+                    <TableHead key={c.key} className="whitespace-nowrap">{t(c.label)}</TableHead>
                   ))}
-                  {actionCount > 0 && <th className="py-3 px-4 w-px" />}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-line">
+                  {actionCount > 0 && <TableHead className="w-px" />}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {visible.map((row, i) => (
-                  <tr key={String(row[idKey] ?? i)} className="hover:bg-surface-hover">
+                  <TableRow key={String(row[idKey] ?? i)}>
                     {resource.media && (
-                      <td className="py-2 px-4">
+                      <TableCell className="py-2">
                         <MediaCell
                           url={String(row[resource.media.urlKey] ?? "")}
                           name={resource.media.nameKey ? String(row[resource.media.nameKey] ?? "") : undefined}
@@ -236,195 +271,129 @@ export default function ResourceScreen({ resource }: { resource: KioskResource }
                             })
                           }
                         />
-                      </td>
+                      </TableCell>
                     )}
                     {resource.columns.map((c) => (
-                      <td key={c.key} className="py-3.5 px-4 text-foreground max-w-xs truncate">
+                      <TableCell key={c.key} className="max-w-xs truncate">
                         {c.render ? c.render(row) : format(row[c.key])}
-                      </td>
+                      </TableCell>
                     ))}
                     {actionCount > 0 && (
-                      <td className="py-3.5 px-4">
+                      <TableCell>
                         <div className="flex items-center gap-1 justify-end">
                           {resource.update && (
-                            <button
+                            <IconButton
+                              size="sm"
+                              variant="ghost"
                               onClick={() => openEdit(row)}
-                              className="p-1.5 rounded-lg text-muted hover:bg-surface-hover hover:text-foreground"
                               aria-label={t("kiosk.action.edit")}
-                            >
-                              <Pencil className="w-4 h-4" />
-                            </button>
+                              icon={<Pencil />}
+                            />
                           )}
                           {resource.remove && (
-                            <button
+                            <IconButton
+                              size="sm"
+                              variant="ghost"
+                              className="hover:text-danger hover:bg-danger-soft"
                               onClick={() => setConfirming(row)}
-                              className="p-1.5 rounded-lg text-muted hover:bg-red-50 hover:text-red-600"
                               aria-label={t("kiosk.action.delete")}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                              icon={<Trash2 />}
+                            />
                           )}
                         </div>
-                      </td>
+                      </TableCell>
                     )}
-                  </tr>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </TableBody>
+            </Table>
+          </Card>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted">
-            <div className="flex items-center gap-3">
-              <span>
-                {formatNumber(firstShown)}–{formatNumber(lastShown)} / {formatNumber(total)}
-              </span>
-              <label className="flex items-center gap-1.5">
-                <span className="text-muted">{t("kiosk.label.per_page")}</span>
-                <select
-                  value={pageSize}
-                  onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
-                  className="border border-input rounded-lg px-2 py-1 text-sm bg-surface"
-                >
-                  {PAGE_SIZES.map((n) => <option key={n} value={n}>{n}</option>)}
-                </select>
-              </label>
-            </div>
-            {pages > 1 && (
-              <div className="flex items-center gap-1.5">
-                <button
-                  disabled={page <= 1}
-                  onClick={() => setPage(1)}
-                  className="p-1.5 rounded-lg border border-input disabled:opacity-40 hover:bg-surface-hover"
-                  aria-label={t("kiosk.action.first_page")}
-                >
-                  <ChevronsLeft className="w-4 h-4" />
-                </button>
-                <button
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => p - 1)}
-                  className="p-1.5 rounded-lg border border-input disabled:opacity-40 hover:bg-surface-hover"
-                  aria-label={t("kiosk.action.prev_page")}
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                <span className="px-1 tabular-nums">{page} / {formatNumber(pages)}</span>
-                <button
-                  disabled={page >= pages}
-                  onClick={() => setPage((p) => p + 1)}
-                  className="p-1.5 rounded-lg border border-input disabled:opacity-40 hover:bg-surface-hover"
-                  aria-label={t("kiosk.action.next_page")}
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-                <button
-                  disabled={page >= pages}
-                  onClick={() => setPage(pages)}
-                  className="p-1.5 rounded-lg border border-input disabled:opacity-40 hover:bg-surface-hover"
-                  aria-label={t("kiosk.action.last_page")}
-                >
-                  <ChevronsRight className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-          </div>
+          <Pagination
+            page={page}
+            pageCount={pages}
+            totalItems={total}
+            pageSize={pageSize}
+            pageSizeOptions={PAGE_SIZES}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
+          />
         </>
-      ) : null}
+      )}
 
       {editing && resource.fields && (
-        <div className="fixed inset-0 bg-overlay flex items-center justify-center z-modal p-4">
-          <div className="bg-surface rounded-xl max-w-lg w-full shadow-lg border border-line max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between p-6 pb-4">
-              <h2 className="text-xl font-semibold text-foreground">
+        <Modal onClose={() => setEditing(null)} scrollable>
+          <form onSubmit={submit} className="space-y-4">
+            <DialogHeader>
+              <DialogTitle>
                 {isNew ? t("kiosk.action.create") : t("kiosk.action.edit")} — {t(resource.title)}
-              </h2>
-              <button onClick={() => setEditing(null)} aria-label={t("kiosk.action.cancel")}>
-                <X className="w-5 h-5 text-muted hover:text-foreground" />
-              </button>
-            </div>
-            <form onSubmit={submit} className="px-6 pb-6 space-y-4 overflow-y-auto">
-              {formError && (
-                <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg break-words">
-                  {formError}
-                </div>
-              )}
-              {resource.fields.filter((f) => !f.readOnly).map((f) => (
-                <div key={f.key}>
-                  <label className="block text-xs font-semibold text-foreground mb-1">
-                    {t(f.label)}{f.required && " *"}
-                  </label>
-                  {f.type === "boolean" ? (
-                    <input
-                      type="checkbox"
-                      checked={Boolean(form[f.key])}
-                      onChange={(e) => setForm({ ...form, [f.key]: e.target.checked })}
-                      className="w-4 h-4"
-                    />
-                  ) : f.type === "textarea" || f.type === "json" ? (
-                    <textarea
-                      value={form[f.key] ?? ""}
-                      onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
-                      required={f.required}
-                      rows={f.type === "json" ? 6 : 3}
-                      placeholder={f.placeholder}
-                      className="w-full px-3 py-2 text-sm border border-input rounded-lg font-mono"
-                    />
-                  ) : (
-                    <input
-                      type={f.type === "number" ? "number" : f.type === "date" ? "date" : "text"}
-                      value={form[f.key] ?? ""}
-                      onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
-                      required={f.required}
-                      placeholder={f.placeholder}
-                      className="w-full px-3 py-2 text-sm border border-input rounded-lg"
-                    />
-                  )}
-                </div>
-              ))}
-              <div className="flex items-center gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setEditing(null)}
-                  className="w-1/2 bg-surface-2 hover:bg-slate-200 text-foreground font-medium py-2 rounded-lg text-sm"
-                >
-                  {t("kiosk.action.cancel")}
-                </button>
-                <button
-                  type="submit"
-                  disabled={busy}
-                  className="w-1/2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-medium py-2 rounded-lg text-sm"
-                >
-                  {busy ? t("kiosk.message.saving") : t("kiosk.action.save")}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+              </DialogTitle>
+            </DialogHeader>
+            {formError && <Alert variant="danger" live className="wrap-break-word">{formError}</Alert>}
+            {resource.fields.filter((f) => !f.readOnly).map((f) => {
+              const label = `${t(f.label)}${f.required ? " *" : ""}`;
+              if (f.type === "boolean") {
+                return (
+                  <Checkbox
+                    key={f.key}
+                    label={label}
+                    checked={Boolean(form[f.key])}
+                    onCheckedChange={(checked) => setForm({ ...form, [f.key]: checked === true })}
+                  />
+                );
+              }
+              if (f.type === "textarea" || f.type === "json") {
+                return (
+                  <Textarea
+                    key={f.key}
+                    label={label}
+                    value={form[f.key] ?? ""}
+                    onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
+                    required={f.required}
+                    rows={f.type === "json" ? 6 : 3}
+                    placeholder={f.placeholder}
+                    className="font-mono"
+                  />
+                );
+              }
+              return (
+                <Input
+                  key={f.key}
+                  label={label}
+                  type={f.type === "number" ? "number" : f.type === "date" ? "date" : "text"}
+                  value={form[f.key] ?? ""}
+                  onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
+                  required={f.required}
+                  placeholder={f.placeholder}
+                />
+              );
+            })}
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditing(null)}>
+                {t("kiosk.action.cancel")}
+              </Button>
+              <Button type="submit" disabled={busy}>
+                {busy ? t("kiosk.message.saving") : t("kiosk.action.save")}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Modal>
       )}
 
       {viewing && <MediaViewer url={viewing.url} name={viewing.name} onClose={() => setViewing(null)} />}
 
       {confirming && (
-        <div className="fixed inset-0 bg-overlay flex items-center justify-center z-modal p-4">
-          <div className="bg-surface rounded-xl max-w-sm w-full p-6 shadow-lg border border-line">
-            <h2 className="text-lg font-semibold text-foreground mb-2">{t("kiosk.action.delete")}</h2>
-            <p className="text-sm text-muted mb-5">{t("kiosk.message.confirm_delete")}</p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setConfirming(null)}
-                className="w-1/2 bg-surface-2 hover:bg-slate-200 text-foreground font-medium py-2 rounded-lg text-sm"
-              >
-                {t("kiosk.action.cancel")}
-              </button>
-              <button
-                onClick={() => void doRemove()}
-                disabled={busy}
-                className="w-1/2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-medium py-2 rounded-lg text-sm"
-              >
-                {t("kiosk.action.delete")}
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmationDialog
+          open
+          onOpenChange={(open) => { if (!open) setConfirming(null); }}
+          title={t("kiosk.action.delete")}
+          description={t("kiosk.message.confirm_delete")}
+          confirmLabel={t("kiosk.action.delete")}
+          cancelLabel={t("kiosk.action.cancel")}
+          confirmVariant="destructive"
+          loading={busy}
+          onConfirm={doRemove}
+        />
       )}
     </div>
   );

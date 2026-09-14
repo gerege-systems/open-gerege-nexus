@@ -13,20 +13,36 @@ import React, { useCallback, useEffect, useState } from "react";
 import { CalendarClock, RefreshCw } from "lucide-react";
 import Link from "next/link";
 
-import { Badge, Card, formatMoment, Table } from "@/components/cp/ui";
 import { cp, type ReportSchedule } from "@/lib/cp";
+import {
+  Badge,
+  Button,
+  Card,
+  CardHeader,
+  Skeleton,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@gerege-systems/ui";
+import { formatMoment } from "@/lib/datetime";
 import { useI18n } from "@/lib/i18n";
 
 export default function Schedules() {
   const { t } = useI18n();
   const [schedules, setSchedules] = useState<ReportSchedule[]>([]);
   const [failure, setFailure] = useState("");
+  // Until the first answer, an empty list is not yet a claim that nothing exists.
+  const [loaded, setLoaded] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
     setBusy(true);
     try {
       setSchedules((await cp.reportSchedules()).schedules);
+      setLoaded(true);
       setFailure("");
     } catch (error) {
       setFailure(error instanceof Error ? error.message : String(error));
@@ -52,67 +68,98 @@ export default function Schedules() {
           </h1>
           <p className="mt-1 text-sm text-muted">{t("cp.hint.schedules")}</p>
         </div>
-        <button
-          type="button"
-          onClick={() => void load()}
-          disabled={busy}
-          className="inline-flex items-center gap-2 rounded-lg border border-input px-3 py-2 text-sm text-foreground hover:bg-surface-hover disabled:opacity-50"
-        >
-          <RefreshCw className={`w-4 h-4 ${busy ? "animate-spin" : ""}`} />
+        <Button variant="outline" onClick={() => void load()} loading={busy} leadingIcon={<RefreshCw />}>
           {t("cp.action.refresh")}
-        </button>
+        </Button>
       </div>
 
       {failure && (
-        <p role="alert" className="text-sm rounded-lg bg-red-50 text-red-700 border border-red-200 px-3 py-2">{failure}</p>
+        <p role="alert" className="text-sm rounded-lg bg-danger-soft text-danger border border-danger-border px-3 py-2">{failure}</p>
       )}
 
       {(failing > 0 || never > 0) && (
-        <p className="text-sm rounded-xl bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3">
+        <p className="text-sm rounded-lg bg-warning-soft border border-warning-border text-warning px-4 py-3">
           {t("cp.message.schedules_trouble", { failing: String(failing), never: String(never) })}
         </p>
       )}
 
-      <Card title={t("cp.section.schedules")}>
-        <Table
-          head={[
-            t("cp.field.organisation"),
-            t("cp.field.report"),
-            t("cp.field.cron"),
-            t("cp.field.recipients"),
-            t("cp.field.last_run"),
-            t("cp.field.status"),
-          ]}
-          rows={schedules.map((schedule) => [
-            <Link
-              key="t"
-              href={`/cp/tenants/${schedule.tenant_id}`}
-              className="font-medium text-accent hover:underline"
-            >
-              {schedule.tenant_name || t("cp.state.deleted")}
-            </Link>,
-            <span key="r" className="min-w-0">
-              <strong className="text-foreground">{schedule.name || schedule.report_key}</strong>
-              <span className="block text-xs text-muted font-mono">{schedule.report_key} · {schedule.format}</span>
-            </span>,
-            <span key="c" className="font-mono text-xs">{schedule.cron}</span>,
-            <span key="p" className="text-xs text-muted">{schedule.recipients.join(", ") || "—"}</span>,
-            formatMoment(schedule.last_run_at) || <span key="n" className="text-xs text-muted">{t("cp.state.never")}</span>,
-            <Badge
-              key="s"
-              tone={!schedule.active ? "slate" : !schedule.last_run_at ? "amber" : schedule.last_status === "" || schedule.last_status === "ok" ? "emerald" : "red"}
-            >
-              {!schedule.active
-                ? t("cp.state.off")
-                : !schedule.last_run_at
-                  ? t("cp.state.never")
-                  : schedule.last_status === "" || schedule.last_status === "ok"
-                    ? t("cp.state.normal")
-                    : schedule.last_status}
-            </Badge>,
-          ])}
-          empty={t("cp.message.no_schedules")}
-        />
+      <Card padding="none" className="overflow-hidden">
+        <CardHeader className="flex-row items-center gap-3 border-b border-line px-4 py-3">
+          <h2 className="flex-1 text-base leading-tight font-semibold text-foreground">{t("cp.section.schedules")}</h2>
+        </CardHeader>
+        <Table containerClassName="rounded-none border-0">
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("cp.field.organisation")}</TableHead>
+              <TableHead>{t("cp.field.report")}</TableHead>
+              <TableHead>{t("cp.field.cron")}</TableHead>
+              <TableHead>{t("cp.field.recipients")}</TableHead>
+              <TableHead>{t("cp.field.last_run")}</TableHead>
+              <TableHead>{t("cp.field.status")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {schedules.map((schedule, index) => (
+              <TableRow key={index}>
+                <TableCell>
+                  <Link
+                    href={`/cp/tenants/${schedule.tenant_id}`}
+                    className="font-medium text-accent hover:underline"
+                  >
+                    {schedule.tenant_name || t("cp.state.deleted")}
+                  </Link>
+                </TableCell>
+                <TableCell>
+                  <span className="min-w-0">
+                    <strong className="text-foreground">{schedule.name || schedule.report_key}</strong>
+                    <span className="block text-xs text-muted font-mono">{schedule.report_key} · {schedule.format}</span>
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <span className="font-mono text-xs">{schedule.cron}</span>
+                </TableCell>
+                <TableCell>
+                  <span className="text-xs text-muted">{schedule.recipients.join(", ") || "—"}</span>
+                </TableCell>
+                <TableCell>
+                  {formatMoment(schedule.last_run_at) || <span className="text-xs text-muted">{t("cp.state.never")}</span>}
+                </TableCell>
+                <TableCell>
+                  <Badge
+                    tone={!schedule.active ? "neutral" : !schedule.last_run_at ? "warning" : schedule.last_status === "" || schedule.last_status === "ok" ? "success" : "danger"}
+                  >
+                    {!schedule.active
+                      ? t("cp.state.off")
+                      : !schedule.last_run_at
+                        ? t("cp.state.never")
+                        : schedule.last_status === "" || schedule.last_status === "ok"
+                          ? t("cp.state.normal")
+                          : schedule.last_status}
+                  </Badge>
+                </TableCell>
+              </TableRow>
+            ))}
+            {!loaded && !failure && (
+              <TableRow>
+                <TableCell colSpan={6}>
+                  <div role="status" aria-busy="true" className="space-y-3 py-2">
+                    <span className="sr-only">{t("base.message.loading")}</span>
+                    <Skeleton className="h-4" />
+                    <Skeleton className="h-4" />
+                    <Skeleton className="h-4" />
+                  </div>
+                </TableCell>
+              </TableRow>
+            )}
+            {loaded && schedules.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} className="py-8 text-center text-muted">
+                  {t("cp.message.no_schedules")}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </Card>
     </div>
   );
