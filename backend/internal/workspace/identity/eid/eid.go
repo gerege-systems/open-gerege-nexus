@@ -100,6 +100,10 @@ type EIDService struct {
 	tokenURL     string
 	userInfoURL  string
 	mockMode     bool
+	// rpConfigured is whether this deployment holds relying-party
+	// credentials. Without them no session can start, so the sign-in screens
+	// do not offer eID at all.
+	rpConfigured bool
 	httpClient   *http.Client
 	rpClient     coreeid.Client
 	mockMu       sync.Mutex
@@ -162,6 +166,7 @@ func NewEIDService() *EIDService {
 		tokenURL:     tokenURL,
 		userInfoURL:  userURL,
 		mockMode:     mock,
+		rpConfigured: os.Getenv("EID_RP_UUID") != "" && os.Getenv("EID_RP_SECRET") != "",
 		httpClient:   &http.Client{Timeout: 15 * time.Second},
 		rpClient: coreeid.NewClient(
 			os.Getenv("EID_BASE_URL"), os.Getenv("EID_RP_UUID"),
@@ -170,6 +175,12 @@ func NewEIDService() *EIDService {
 		),
 		mockSessions: make(map[string]mockSession),
 	}
+}
+
+// Configured reports whether eID sign-in can be offered: mock mode, or both
+// relying-party credentials present. Nil-safe for deployments built without it.
+func (s *EIDService) Configured() bool {
+	return s != nil && (s.mockMode || s.rpConfigured)
 }
 
 func valueOr(value, fallback string) string {

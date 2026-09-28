@@ -31,7 +31,10 @@ export async function localSignInEnabledOnServer(): Promise<boolean> {
       next: { revalidate: 60 },
     });
     if (!res.ok) return true;
-    const cfg = (await res.json()) as { enabled?: boolean; local_login?: boolean };
+    const cfg = (await res.json()) as { enabled?: boolean; local_login?: boolean; eid?: { enabled?: boolean } };
+    // eID-ийн RP credential-гүй суулгац дээр hero-ийн eID карт start бүрд 502
+    // өгөх тул зурахгүй. `eid` байхгүй (хуучин API) бол өмнөх шигээ.
+    if (cfg.eid?.enabled === false) return false;
     // Federation унтраалттай суулгац бол дотоод нэвтрэлт нь цорын ганц зам,
     // `local_login` юу ч гэж хэлсэн бай.
     return !(cfg.enabled === true && cfg.local_login === false);

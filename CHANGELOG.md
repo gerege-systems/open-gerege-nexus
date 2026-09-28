@@ -21,6 +21,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed — eID нь RP credential-тай deployment дээр л санал болгогдоно
+
+`EID_RP_UUID`/`EID_RP_SECRET` хоёулаа тохируулаагүй бол `/auth/sso/config` нь
+`eid.enabled=false` гэж хэлж, нэвтрэх хуудас, landing-ийн hero, профайлын «eID
+холбох» товч eID-ийн картыг зурахгүй (өмнө нь start бүр 502 өгдөг карт
+харагддаг байв). Deploy-ийн guard эдгээр хоёрыг шаардахаа больсон — eID-гүй
+deployment хэвийн. open.gerege.mn-ээс eID RP credential хасагдсан. `eid` талбаргүй
+хуучин API-тай бол frontend өмнөх шигээ картыг харуулна.
+
 ### Changed — утаснаас eID апп руу албан ёсны device link-ээр үсэрнэ
 
 eID Mongolia апп 2.2.2-оос хуучин `geregesmartid://` схемийг бүртгэхээ больсон
