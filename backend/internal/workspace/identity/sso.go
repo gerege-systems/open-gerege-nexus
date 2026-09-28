@@ -111,6 +111,10 @@ func (h *Handlers) HandleSSOConfig(w http.ResponseWriter, r *http.Request) {
 	// private deployment is an invitation to a refusal.
 	answer["access_mode"] = auth.AccessMode()
 
+	// eID, likewise, only when this deployment holds relying-party
+	// credentials: without them every start answers 502.
+	answer["eid"] = map[string]any{"enabled": h.eidSvc.Configured() && h.LocalLoginAllowed()}
+
 	answer["google"] = map[string]any{"enabled": false}
 	if h.GoogleLoginEnabled() && h.LocalLoginAllowed() {
 		answer["google"] = map[string]any{"enabled": true, "start_url": h.GoogleStartURL()}

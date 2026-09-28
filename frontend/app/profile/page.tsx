@@ -77,6 +77,7 @@ export default function ProfilePage(){const {t}=useI18n();
   const [busy,setBusy]=useState<string>("");
 
   const [canLinkGoogle,setCanLinkGoogle]=useState(false);
+  const [canLinkEID,setCanLinkEID]=useState(true);
   // Google-ээс буцаж ирэхэд асуудал гарсан бол шалтгаан нь URL-д ирнэ. Хүн
   // товч дараад юу ч болоогүй мэт байхаас, юу болсныг хэлэх нь дээр.
   const [linkError,setLinkError]=useState("");
@@ -94,7 +95,7 @@ export default function ProfilePage(){const {t}=useI18n();
   useEffect(()=>{void api.profile().then(setProfile).catch((e:any)=>setError(e?.message||"—"))},[round]);
   // Серверээс асууна, таамаглахгүй: Google-ээр нэвтрэх тохируулаагүй
   // deployment дээр холбох товч гарч ирээд дарахад л бүтэлгүйтэх нь дор.
-  useEffect(()=>{void api.ssoConfig().then(c=>setCanLinkGoogle(!!c.google?.enabled)).catch(()=>{})},[]);
+  useEffect(()=>{void api.ssoConfig().then(c=>{setCanLinkGoogle(!!c.google?.enabled);setCanLinkEID(c.eid?.enabled!==false)}).catch(()=>{})},[]);
 
   /**
    * Салгах. Асууж байж — буцаах товч байхгүй үйлдэл тул нэг товшилтоор
@@ -213,7 +214,7 @@ export default function ProfilePage(){const {t}=useI18n();
           хүнийг нэрлэх цорын ганц үг (pkg/nexus.PersonFeed, 00086) — нууц
           үгээр нээсэн дансанд огт байхгүй. Тиймээс энэ товч нь чимэглэл биш:
           үүнгүйгээр иргэн хүсэлт гаргаад хариуг нь хүлээж авах аргагүй. */}
-      {!hasEID&&<div className="space-y-2">
+      {canLinkEID&&!hasEID&&<div className="space-y-2">
         {!linking
           ? <Button type="button" variant="outline" leadingIcon={<ShieldCheck/>} onClick={()=>setLinking(true)}>
               {t("profile.link_eid")}

@@ -41,7 +41,7 @@ export default function LoginPage(){const router=useRouter();const {t}=useI18n()
   // undefined = хараахан асуугаагүй. Энэ ялгаа чухал: асуухаас өмнө eID
   // хэлбэрийг зурчихвал холбоосон суулгац дээр хүн энд нэвтэрч болно гэж
   // хэсэг хугацаанд итгэж, дараа нь өөр рүү шилжсэн нь будлиантай.
-  const [sso,setSSO]=useState<{enabled:boolean;provider_name?:string;start_url?:string;local_login:boolean;google?:{enabled:boolean;start_url?:string};access_mode?:"public"|"private"}|undefined>();
+  const [sso,setSSO]=useState<{enabled:boolean;provider_name?:string;start_url?:string;local_login:boolean;google?:{enabled:boolean;start_url?:string};eid?:{enabled:boolean};access_mode?:"public"|"private"}|undefined>();
   // Хэн асууж байна. Зөвхөн authorization хүсэлтээс ирсэн үед л утгатай, ба
   // нэрийг нь серверээс асууна — `next` дотор ирсэн client_id-г л ашиглаж,
   // дэлгэц дээр гарах нэрийг хаяг тодорхойлохыг зөвшөөрөхгүй.
@@ -116,7 +116,8 @@ export default function LoginPage(){const router=useRouter();const {t}=useI18n()
               that makes the refusal make sense. */}
           {sso?.access_mode==="private"&&<p className="m-0 text-center text-sm text-muted">{t("auth.message.platform_private")}</p>}
           {error&&!federated&&<Alert variant="danger" live>{error}</Alert>}
-          <EIDLogin next={next} variant="signin"/>
+          {/* eID — RP-ийн credential тохируулсан deployment дээр л. */}
+          {sso?.eid?.enabled!==false&&<EIDLogin next={next} variant="signin"/>}
 
           {/* Google. Сервер тохируулсан үед л гарна: тохируулаагүй байхад
               дарж болох мөртлөө юу ч болдоггүй товч харуулах нь амлалт биш,

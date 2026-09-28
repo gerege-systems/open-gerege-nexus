@@ -308,6 +308,9 @@ export const coreApi = {
       // Reported available only when it can actually be used: a deployment that
       // federates has closed its own sign-in paths, and Google is one of them.
       google: { enabled: boolean; start_url?: string };
+      // eID is reported enabled only when the deployment holds relying-party
+      // credentials. Absent (an older API) means the card is shown as before.
+      eid?: { enabled: boolean };
       // "private" means this deployment provisions nobody: somebody who has
       // never been invited cannot get in however they authenticate, so the
       // screen says so instead of letting them find out by failing.

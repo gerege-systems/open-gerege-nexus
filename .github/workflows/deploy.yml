@@ -29,8 +29,9 @@ name: Deploy to Production (open.gerege.mn)
 #   POSTGRES_PASSWORD           database password on the server
 #   SSO_DEFAULT_CLIENT_SECRET   OAuth2 secret for the built-in client
 #   GEMINI_API_KEY              Google Gemini API key (AI degrades safely if empty)
-#   EID_RP_UUID                 eID Mongolia relying-party UUID
-#   EID_RP_SECRET               eID Mongolia relying-party secret
+#   EID_RP_UUID                 eID Mongolia relying-party UUID (optional)
+#   EID_RP_SECRET               eID Mongolia relying-party secret (optional:
+#                               without the pair eID sign-in is not offered)
 #   ESIGN_TOKEN                 Gerege eSign HSM credential (optional)
 #   INTEGRATION_ENCRYPTION_KEY  the deployment's one cipher for credentials at
 #                               rest (nexus.SecretSealer). Named for the
@@ -255,8 +256,6 @@ jobs:
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD || env.POSTGRES_PASSWORD }}
           SSO_DEFAULT_CLIENT_SECRET: ${{ secrets.SSO_DEFAULT_CLIENT_SECRET || env.SSO_DEFAULT_CLIENT_SECRET }}
           INTEGRATION_ENCRYPTION_KEY: ${{ secrets.INTEGRATION_ENCRYPTION_KEY || env.INTEGRATION_ENCRYPTION_KEY }}
-          EID_RP_UUID: ${{ secrets.EID_RP_UUID || env.EID_RP_UUID }}
-          EID_RP_SECRET: ${{ secrets.EID_RP_SECRET || env.EID_RP_SECRET }}
           GEREGE_CORE_TOKEN: ${{ secrets.GEREGE_CORE_TOKEN || env.GEREGE_CORE_TOKEN }}
         run: |
           if [ -z "${{ secrets.DEPLOY_SSH_KEY }}" ]; then
@@ -275,8 +274,7 @@ jobs:
           # анхдагчтай тул хоосон байх боломжгүй. `secrets.PUBLIC_ORIGIN`-ээс
           # уншсан хувилбар нь бүх rollout-ыг унагаах байсан.
           for name in POSTGRES_PASSWORD SSO_DEFAULT_CLIENT_SECRET \
-                      INTEGRATION_ENCRYPTION_KEY EID_RP_UUID EID_RP_SECRET \
-                      GEREGE_CORE_TOKEN; do
+                      INTEGRATION_ENCRYPTION_KEY GEREGE_CORE_TOKEN; do
             [ -n "${!name}" ] || missing="$missing $name"
           done
 
