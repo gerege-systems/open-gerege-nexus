@@ -134,6 +134,11 @@ type StartResult struct {
 	VerificationCode string
 	ExpiresAt        string
 	DeviceLinkURL    string
+	// DeviceLinkBase is eID's App2App/QR link base (`https://…/dl`), from a
+	// device-link initiate only. The link a phone opens is
+	// `{DeviceLinkBase}?sessionId=…&vc=…`; empty when eID sent none or sent
+	// something that is not an https URL.
+	DeviceLinkBase string
 }
 
 // SessionResult is one poll. Identity is filled only on COMPLETE.
@@ -265,9 +270,10 @@ func (c *client) QRInitiate(ctx context.Context, displayText, callbackURL, _ str
 		return nil, err
 	}
 	var out struct {
-		SessionID    string          `json:"sessionID"`
-		SessionToken string          `json:"sessionToken"`
-		VC           json.RawMessage `json:"vc"`
+		SessionID      string          `json:"sessionID"`
+		SessionToken   string          `json:"sessionToken"`
+		VC             json.RawMessage `json:"vc"`
+		DeviceLinkBase string          `json:"deviceLinkBase"`
 	}
 	if err := json.Unmarshal(raw, &out); err != nil || out.SessionID == "" {
 		return nil, fmt.Errorf("eid initiate: no session id in the answer: %s", snippet(raw))
@@ -279,7 +285,20 @@ func (c *client) QRInitiate(ctx context.Context, displayText, callbackURL, _ str
 		SessionID:        out.SessionID,
 		VerificationCode: parseVerificationCode(out.VC),
 		DeviceLinkURL:    out.SessionID,
+		DeviceLinkBase:   httpsBase(out.DeviceLinkBase),
 	}, nil
+}
+
+// httpsBase keeps a device-link base only when it is an absolute https URL
+// without query or fragment. The browser navigates to it, so anything else
+// (another scheme, a relative path) is dropped rather than passed on.
+func httpsBase(raw string) string {
+	raw = strings.TrimSpace(raw)
+	u, err := url.Parse(raw)
+	if err != nil || u.Scheme != "https" || u.Host == "" || u.RawQuery != "" || u.Fragment != "" || u.User != nil {
+		return ""
+	}
+	return raw
 }
 
 func (c *client) Initiate(ctx context.Context, nationalID, displayText, callbackURL string) (*StartResult, error) {

@@ -51,7 +51,7 @@ import mn.gerege.nexus.ui.theme.Space
  *
  * Мак дээр QR/РД push-ыг ХӨРШ утас зөвшөөрдөг. Утсан дээр тэр зөвшөөрөгч нь
  * өөрөө байгаа тул session-ийг **app-to-app**-аар eID Mongolia апп руу
- * шилжүүлнэ: `geregesmartid://approve?sessionId=...`.
+ * шилжүүлнэ: `eidmongolia://approve?sessionId=...`.
  *
  * Session нь ЭНЭ ПЛАТФОРМЫН RP-ээр үүснэ (`/api/v1/auth/eid/…`) — хөтөч дээрх
  * нэвтрэлт яг эдгээр route-уудыг дууддаг. Өмнө нь `/api/start` рүү явдаг
@@ -79,7 +79,7 @@ fun LoginScreen(state: AppState) {
     // eID апп суусан эсэх. `<queries>` блокгүй бол Android 11+ дээр үргэлж
     // null буцаана — тэр тохиолдолд РД push зам нээлттэй тул апп гацахгүй.
     fun eidAppIntent(sessionId: String): Intent? =
-        listOf("geregesmartid", "eidmongolia").firstNotNullOfOrNull { scheme ->
+        listOf("eidmongolia").firstNotNullOfOrNull { scheme ->
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("$scheme://approve?sessionId=$sessionId"))
             if (intent.resolveActivity(context.packageManager) != null) intent else null
         }

@@ -42,3 +42,13 @@ func TestPollWindowFitsTheSurroundingDeadlines(t *testing.T) {
 		t.Errorf("PollWindow %s exceeds the relying party HTTP client timeout", PollWindow)
 	}
 }
+
+// The https App2App base reaches the browser, which builds
+// `{base}?sessionId=…&vc=…` for a phone instead of a custom scheme.
+func TestNormalizeStartPassesTheDeviceLinkBase(t *testing.T) {
+	const base = "https://ca.eidmongolia.mn/dl"
+	got := normalizeStart(&coreeid.StartResult{SessionID: "s-3", DeviceLinkURL: "s-3", DeviceLinkBase: base, VerificationCode: "48213"})
+	if got.DeviceLinkBase != base || got.DeviceLinkURL != "s-3" {
+		t.Errorf("normalizeStart = %+v, want base %q and the QR unchanged", got, base)
+	}
+}

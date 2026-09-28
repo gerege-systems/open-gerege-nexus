@@ -92,7 +92,6 @@ targets:
         # `canOpenURL` үргэлж false буцааж, апп «суугаагүй» гэж худал хэлнэ.
         LSApplicationQueriesSchemes:
           - eidmongolia
-          - geregesmartid
         UILaunchScreen: {}
         # Брэндийн фонт. xcodegen нь `Resources/` доторх хавтасны бүтцийг
         # багцын үндэс рүү ХАВТГАЙЛДАГ тул энд зөвхөн файлын нэр

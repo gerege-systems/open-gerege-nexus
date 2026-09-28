@@ -21,6 +21,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed — утаснаас eID апп руу албан ёсны device link-ээр үсэрнэ
+
+eID Mongolia апп 2.2.2-оос хуучин `geregesmartid://` схемийг бүртгэхээ больсон
+тул утсан дээрх вэб нэвтрэлт апп руу үсэрч чадахаа болив. Одоо backend нь eID
+RP-API-ийн device-link хариуны `deviceLinkBase`-ийг (зөвхөн https) `/auth/eid/start`
+хариунд `device_link_base` болгон дамжуулж, `EIDLogin` утсан дээр
+`{deviceLinkBase}?sessionId=…&vc=…` руу шилжинэ — апп суусан утсанд
+Universal/App Link-ээр апп нээгдэж, үгүй бол fallback хуудас дэлгүүр рүү заана.
+Base ирээгүй бол `eidmongolia://approve?sessionId=…&vc=…`. QR-ийн агуулга (түүхий
+session id) хөндөгдөөгүй. iOS/Android native клиент, `docs/IDENTITY.md`,
+`native-apps/README.md`-ээс `geregesmartid` хасагдсан.
+
 ### Added — ажиглалт нь OpenTelemetry дээр, өөрийн домэйнтэй
 
 Хэмжүүрүүд client_golang дээр гараар бичигдсэн, нэр нь өөрсдийн зохиосон

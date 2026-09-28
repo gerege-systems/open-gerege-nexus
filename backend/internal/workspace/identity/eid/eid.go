@@ -107,8 +107,11 @@ type EIDService struct {
 }
 
 type StartResult struct {
-	SessionID        string `json:"session_id"`
-	DeviceLinkURL    string `json:"device_link_url,omitempty"`
+	SessionID     string `json:"session_id"`
+	DeviceLinkURL string `json:"device_link_url,omitempty"`
+	// DeviceLinkBase is eID's https App2App base; a phone opens
+	// `{base}?sessionId=…&vc=…`. Device-link sessions only.
+	DeviceLinkBase   string `json:"device_link_base,omitempty"`
 	VerificationCode string `json:"verification_code"`
 	ExpiresAt        string `json:"expires_at"`
 }
@@ -261,7 +264,7 @@ func (s *EIDService) startSignature(ctx context.Context, nationalID, displayText
 // notification and enter a PIN had the browser abandon a session eID was
 // still waiting on. The relying party's own EXPIRED state is what ends a wait.
 func normalizeStart(started *coreeid.StartResult) *StartResult {
-	return &StartResult{SessionID: started.SessionID, DeviceLinkURL: started.DeviceLinkURL, VerificationCode: started.VerificationCode, ExpiresAt: started.ExpiresAt}
+	return &StartResult{SessionID: started.SessionID, DeviceLinkURL: started.DeviceLinkURL, DeviceLinkBase: started.DeviceLinkBase, VerificationCode: started.VerificationCode, ExpiresAt: started.ExpiresAt}
 }
 
 func (s *EIDService) startMock(nationalID string, deviceLink bool) *StartResult {

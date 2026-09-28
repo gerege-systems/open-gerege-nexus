@@ -31,7 +31,7 @@
 
 ### Native App2App callback
 
-Утасны Nexus клиент eID аппыг `geregesmartid://approve?sessionId=…`
+Утасны Nexus клиент eID аппыг `eidmongolia://approve?sessionId=…`
 хаягаар нээгээд, зөвшөөрсний дараа `gerege-nexus://auth?sessionId=…`
 хаягаар буцаж ирнэ. Энэ буцалт дөрвөн тааралтай:
 

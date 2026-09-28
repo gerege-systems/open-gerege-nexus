@@ -1,5 +1,6 @@
 package mn.gerege.nexus
 
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
@@ -39,8 +40,8 @@ class CallbackContractTest {
         // ОЛОХГҮЙ бөгөөд нэвтрэлт «апп суугаагүй» гэсэн буруу мөрөөр явна.
         val manifest = File("src/main/AndroidManifest.xml").readText()
         val queries = manifest.substringAfter("<queries>", "").substringBefore("</queries>")
-        listOf("geregesmartid", "eidmongolia").forEach { scheme ->
-            assertTrue("<queries> дотор $scheme схем алга", queries.contains("""android:scheme="$scheme""""))
-        }
+        assertTrue("<queries> дотор eidmongolia схем алга", queries.contains("""android:scheme="eidmongolia""""))
+        // eID апп 2.2.2-оос хуучин брэндийн схемийг бүртгэхээ больсон.
+        assertFalse("<queries> дотор хуучин geregesmartid схем үлдсэн", queries.contains("geregesmartid"))
     }
 }

@@ -19,7 +19,7 @@ type Method="id"|"qr";
 type Phase="idle"|"starting"|"waiting"|"expired"|"refused"|"error"|"success";
 // expires_at is absent for push sessions: eID reports no deadline for them, and
 // the API no longer invents one.
-type Start={session_id:string;device_link_url?:string;verification_code:string;expires_at?:string};
+type Start={session_id:string;device_link_url?:string;device_link_base?:string;verification_code:string;expires_at?:string};
 
 // The API holds every /auth/eid/poll open for up to 25s and answers the moment
 // the citizen approves, so this gap is the only stretch where an approval is
@@ -45,6 +45,11 @@ const IOS_BROWSERS:Array<[RegExp,string]>=[[/CriOS/i,"googlechromes"],[/EdgiOS/i
 // түүнийг агуулдаг тул эхэнд шалгавал бүгд Chrome болж таарна.
 const ANDROID_BROWSERS:Array<[RegExp,string]>=[[/EdgA\//i,"com.microsoft.emmx"],[/OPR\//i,"com.opera.browser"],[/Opera Mini/i,"com.opera.mini.native"],[/SamsungBrowser\//i,"com.sec.android.app.sbrowser"],[/YaBrowser\//i,"com.yandex.browser"],[/DuckDuckGo\//i,"com.duckduckgo.mobile.android"],[/Vivaldi\//i,"com.vivaldi.browser"],[/Whale\//i,"com.naver.whale"],[/UCBrowser\//i,"com.UCMobile.intl"],[/Focus\//i,"org.mozilla.focus"],[/Firefox\//i,"org.mozilla.firefox"],[/Chrome\//i,"com.android.chrome"]]
 export function browserHint(ua:string){const table=/iPhone|iPad|iPod/i.test(ua)?IOS_BROWSERS:/Android/i.test(ua)?ANDROID_BROWSERS:[];const hit=table.find(([re])=>re.test(ua));return hit?`?${table===IOS_BROWSERS?"retScheme":"retPkg"}=${encodeURIComponent(hit[1])}`:""}
+// Утсан дээр eID аппыг нээх холбоос. eID RP-API device-link хариундаа `deviceLinkBase`
+// (https …/dl) өгвөл албан ёсны `{base}?sessionId=…&vc=…` — апп суусан утсанд Universal/App
+// Link-ээр апп нээгдэнэ, үгүй бол fallback хуудас дэлгүүр рүү заана. Base ирээгүй бол
+// `eidmongolia://approve`. Хуучин брэндийн custom scheme-ийг eID апп 2.2.2-оос бүртгэхээ больсон.
+export function appLink(start:Pick<Start,"session_id"|"device_link_base"|"verification_code">){const q=new URLSearchParams({sessionId:start.session_id});if(start.verification_code)q.set("vc",start.verification_code);const base=start.device_link_base??"";return /^https:\/\/[^?#]+$/i.test(base)?`${base}?${q}`:`eidmongolia://approve?${q}`}
 function callbackURL(){return typeof window==="undefined"?"":`${window.location.origin}/auth/eid/callback${browserHint(navigator.userAgent)}`}
 function deadlineOf(start:Start){const at=Date.parse(start.expires_at??"");return Number.isNaN(at)?Date.now()+BACKSTOP:at}
 function hasDeadline(start:Start){return !Number.isNaN(Date.parse(start.expires_at??""))}
@@ -115,7 +120,7 @@ export default function EIDLogin({next="/profile",compact=false,variant="card",b
         ?await api.bindingEIDStart(binding,selected==="qr"?undefined:nationalId.trim().toUpperCase())
         :(selected==="qr"?await api.startEID(cb):await api.startEIDByNationalID(nationalId.trim().toUpperCase(),cb));
       if(ticket.current!==mine)return;
-      if(selected==="qr"&&mobile())window.location.href=`geregesmartid://approve?sessionId=${encodeURIComponent(data.session_id)}`;
+      if(selected==="qr"&&mobile())window.location.href=appLink(data);
       void watch(data);
     }catch(e:any){
       if(ticket.current!==mine)return;
