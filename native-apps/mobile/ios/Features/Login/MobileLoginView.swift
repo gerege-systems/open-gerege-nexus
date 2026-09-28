@@ -42,7 +42,7 @@ struct MobileLoginView: View {
 
     /// eID Mongolia аппын deep link. Схемийг Info.plist-ийн
     /// `LSApplicationQueriesSchemes`-д мөн бүртгэсэн байх ёстой.
-    private static let appSchemes = ["eidmongolia", "geregesmartid"]
+    private static let appSchemes = ["eidmongolia"]
 
     var body: some View {
         // Богино агуулгыг ГОЛЛУУЛЖ, гар гарч ирэхэд ГҮЙЛГЭНЭ. Зөвхөн ScrollView
@@ -395,8 +395,8 @@ struct MobileLoginView: View {
         }
     }
 
-    /// eID Mongolia апп руу шилжүүлнэ. Аль схем нээгдэхийг iOS шийднэ —
-    /// `geregesmartid` нь backend-ийн хуучин схем, `eidmongolia` нь rebrand.
+    /// eID Mongolia апп руу `eidmongolia://approve`-оор шилжүүлнэ. Хуучин брэндийн
+    /// схемийг eID апп 2.2.2-оос бүртгэхээ больсон.
     @MainActor
     private func openEidApp(sessionID: String) async {
         for scheme in Self.appSchemes {

@@ -210,3 +210,36 @@ func TestTheInitiateBodyCarriesTheAuthenticationChallenge(t *testing.T) {
 		t.Errorf("the approval screen would show %v", first)
 	}
 }
+
+// eID's device-link answer names the https base a phone opens as
+// `{deviceLinkBase}?sessionId=…&vc=…`. The browser navigates to it, so only an
+// absolute https URL passes; the QR keeps carrying the bare session id.
+func TestQRInitiatePassesTheHTTPSDeviceLinkBaseOnly(t *testing.T) {
+	cases := map[string]string{
+		"https://ca.eidmongolia.mn/dl":         "https://ca.eidmongolia.mn/dl",
+		"":                                     "",
+		"http://ca.eidmongolia.mn/dl":          "",
+		"javascript:alert(1)":                  "",
+		"/dl":                                  "",
+		"https://ca.eidmongolia.mn/dl?x=1":     "",
+		"https://user@ca.eidmongolia.mn/dl":    "",
+		"geregesmartid://approve?sessionId=s1": "",
+	}
+	for base, want := range cases {
+		client := serve(t, "/authentication/device-link/anonymous", map[string]any{
+			"sessionID":      "s-1",
+			"vc":             "48213",
+			"deviceLinkBase": base,
+		})
+		started, err := client.QRInitiate(context.Background(), "Нэвтрэх", "", "")
+		if err != nil {
+			t.Fatalf("%q: initiate: %v", base, err)
+		}
+		if started.DeviceLinkBase != want {
+			t.Errorf("%q: DeviceLinkBase = %q, want %q", base, started.DeviceLinkBase, want)
+		}
+		if started.DeviceLinkURL != "s-1" || started.VerificationCode != "48213" {
+			t.Errorf("%q: the rest of the answer changed: %+v", base, started)
+		}
+	}
+}

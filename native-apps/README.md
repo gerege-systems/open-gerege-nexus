@@ -41,7 +41,7 @@
 | Клиент | Хэрхэн | Яагаад |
 |---|---|---|
 | macOS | QR + РД push | Зөвшөөрөгч нь ХӨРШ утас |
-| iOS / Android | app-to-app (`geregesmartid://approve?sessionId=…`), fallback РД push | Зөвшөөрөгч нь ӨӨРӨӨ тэр утас — QR-аа өөрөө скан хийж чадахгүй |
+| iOS / Android | app-to-app (`eidmongolia://approve?sessionId=…`), fallback РД push | Зөвшөөрөгч нь ӨӨРӨӨ тэр утас — QR-аа өөрөө скан хийж чадахгүй |
 
 Гурвуулан ижил `POST /api/start` → `GET /api/status` poll дээр суудаг: session
 нь хэн зөвшөөрснөөс үл хамааран ижил тул app-to-app-д НЭГ Ч шинэ backend

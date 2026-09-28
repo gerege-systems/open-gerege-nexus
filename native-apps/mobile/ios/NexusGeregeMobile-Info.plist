@@ -38,7 +38,6 @@
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>eidmongolia</string>
-		<string>geregesmartid</string>
 	</array>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Gerege Nexus session-ийг аюулгүй нээхийн тулд Face ID ашиглана.</string>

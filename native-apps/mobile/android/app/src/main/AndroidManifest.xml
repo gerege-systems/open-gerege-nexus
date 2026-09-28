@@ -8,10 +8,6 @@
     <queries>
         <intent>
             <action android:name="android.intent.action.VIEW" />
-            <data android:scheme="geregesmartid" />
-        </intent>
-        <intent>
-            <action android:name="android.intent.action.VIEW" />
             <data android:scheme="eidmongolia" />
         </intent>
     </queries>
