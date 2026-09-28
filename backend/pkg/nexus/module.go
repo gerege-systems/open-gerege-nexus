@@ -147,6 +147,14 @@ type MenuDefinition struct {
 	// add to; internal/workspace/menu/blueprints.go was that table.
 	Group string `json:"-"`
 
+	// Permission hides this one entry from a member who does not hold it,
+	// beside the app-wide AccessPolicy.MenuPermission that hides all of an
+	// app's entries. Empty means the entry follows the app, as before it
+	// existed. An administrator sees every entry, as RequirePermission lets
+	// them through every route: the menu must not offer less than the routes
+	// accept, nor more.
+	Permission string `json:"permission,omitempty"`
+
 	// AppOrder and AppChrome describe the *app* this entry belongs to rather
 	// than the entry itself, and the platform fills them in from the app's
 	// manifest — a module does not set them, the same as AppID and AppName.

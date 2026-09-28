@@ -492,7 +492,8 @@ func New(deps Deps) (*Service, error) {
 	// Deployment-wide budgets for the endpoints where a per-replica one is not
 	// a budget at all. Each is nil without Redis, and a nil one allows.
 	client := s.bus.Client()
-	s.sharedLogin = security.NewSharedLimiter(client, "login", auth.LoginRatePerMinute, time.Minute)
+	loginPerMinute, _ := auth.LoginBudget()
+	s.sharedLogin = security.NewSharedLimiter(client, "login", loginPerMinute, time.Minute)
 	s.sharedPoll = security.NewSharedLimiter(client, "poll", auth.PollRatePerMinute, time.Minute)
 	s.sharedVerify = security.NewSharedLimiter(client, "verify", auth.VerifyRatePerMinute, time.Minute)
 

@@ -98,6 +98,7 @@
   MenuDefinition.Order int
   MenuDefinition.ParentID string
   MenuDefinition.Path string
+  MenuDefinition.Permission string
   Module.Dependencies() []Dependency
   Module.ID() string
   Module.Menus() []MenuDefinition
@@ -315,6 +316,7 @@
   StaffIdentity.MembershipID string
   StaffIdentity.Name string
   StaffIdentity.UserID string
+  Starter.Start(ctx context.Context)
   StateRail.Endpoint string
   StateRail.ID string
   StateRail.Mode string
@@ -491,6 +493,7 @@ type SignerIdentity struct
 type SigningRails interface
 type StaffCredential interface
 type StaffIdentity struct
+type Starter interface
 type StateRail struct
 type StateRails func() []StateRail
 type StateRegistry interface

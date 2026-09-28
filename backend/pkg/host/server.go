@@ -272,4 +272,11 @@ func (s *server) StartBackgroundJobs(ctx context.Context) {
 	s.credentials.StartRefresh(ctx)
 	s.workspace.StartBackgroundJobs(ctx)
 	s.platform.StartBackgroundJobs(ctx)
+	// A distribution's modules with periodic work of their own, on the same
+	// context: cancelled by run.go's stopJobs before the HTTP server drains.
+	for _, mod := range nexus.List() {
+		if starter, ok := mod.(nexus.Starter); ok {
+			starter.Start(ctx)
+		}
+	}
 }
