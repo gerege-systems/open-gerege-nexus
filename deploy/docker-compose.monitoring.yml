@@ -266,15 +266,18 @@ services:
       GF_AUTH_GENERIC_OAUTH_EMAIL_ATTRIBUTE_PATH: email
       GF_AUTH_GENERIC_OAUTH_LOGIN_ATTRIBUTE_PATH: email
       GF_AUTH_GENERIC_OAUTH_NAME_ATTRIBUTE_PATH: name
-      # JMESPath over the claims. Anyone who is not the platform's own
-      # administrator can read the dashboards and change nothing.
-      GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH: "platform_admin && 'GrafanaAdmin' || 'Viewer'"
+      # JMESPath over the claims. Only the platform's own administrator gets a
+      # role; the path answers nothing for anyone else.
+      GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH: "platform_admin && 'GrafanaAdmin' || ''"
       # Required before the path above is allowed to hand out the server
       # administrator role at all; without it GrafanaAdmin silently becomes Admin.
       GF_AUTH_GENERIC_OAUTH_ALLOW_ASSIGN_GRAFANA_ADMIN: "true"
-      # A path that resolves to nothing must not lock a person out — they become
-      # a Viewer, which is what an account with no roles is.
-      GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_STRICT: "false"
+      # Strict: every platform account other than the administrator is refused
+      # at sign-in instead of being given a Viewer seat. Anyone who can sign in
+      # to the platform is not someone who should read this host's
+      # infrastructure dashboards. Other operators get a Grafana account by
+      # hand from the administrator, which also means somebody decides.
+      GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_STRICT: "true"
       # The provider supports PKCE and this is a browser-initiated flow; there is
       # no reason to run one without it.
       GF_AUTH_GENERIC_OAUTH_USE_PKCE: "true"
