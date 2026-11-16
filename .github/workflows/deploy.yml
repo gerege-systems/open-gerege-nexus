@@ -125,7 +125,10 @@ jobs:
   build-and-push:
     name: Build & push ${{ matrix.component }} image
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    # `branches: [main]` above matches the triggering run's head branch NAME,
+    # which a fork can also call `main`. Deploy only CI runs that came from a
+    # push to this repository; `deploy` inherits this through `needs:`.
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_repository.full_name == github.repository) }}
     strategy:
       matrix:
         include:
