@@ -221,3 +221,20 @@ func TestProductionRefusesAnEphemeralDocumentSigner(t *testing.T) {
 		t.Fatalf("development should fall back to a self-signed key: %v", err)
 	}
 }
+
+// A client certificate that was configured and cannot be loaded stops the
+// service at boot. Building anyway would send every ceremony to eID without
+// one, and the 401 that comes back says nothing about a file on this host.
+func TestBrokenClientCertificateRefusesToBuild(t *testing.T) {
+	t.Setenv("EID_RP_CLIENT_CERT_FILE", "/nonexistent/rp.chain.pem")
+	t.Setenv("EID_RP_CLIENT_KEY_FILE", "")
+	if _, err := NewUsecase(newMemoryCache(), Config{RPUUID: "rp", APISecret: "rp_sk"}); err == nil ||
+		!strings.Contains(err.Error(), "must be set together") {
+		t.Fatalf("built with a half-configured certificate: err = %v", err)
+	}
+	// The control: unset, it builds.
+	t.Setenv("EID_RP_CLIENT_CERT_FILE", "")
+	if _, err := NewUsecase(newMemoryCache(), Config{RPUUID: "rp", APISecret: "rp_sk"}); err != nil {
+		t.Fatalf("plain build refused: %v", err)
+	}
+}

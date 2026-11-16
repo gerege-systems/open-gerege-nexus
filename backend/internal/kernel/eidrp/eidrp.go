@@ -44,6 +44,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strings"
@@ -182,6 +183,9 @@ type client struct {
 	secret    string
 	certLevel string
 	http      *http.Client
+	// httpErr is a client certificate that was configured and could not be
+	// used. Every call answers it rather than going out without one.
+	httpErr error
 }
 
 // NewClient builds the client. Empty base, name and certificate level take the
@@ -197,9 +201,17 @@ func NewClient(base, rpUUID, rpName, secret, certLevel string) Client {
 	if certLevel = strings.TrimSpace(certLevel); certLevel == "" {
 		certLevel = defaultCertLevel
 	}
+	// The client certificate, when one is configured — see mtls.go. A broken
+	// one is logged here, at boot, and then answered by every call: falling
+	// back to no certificate would turn a configuration error into a 401 that
+	// reads as eID's fault.
+	httpClient, err := HTTPClient(httpTimeout)
+	if err != nil {
+		slog.Error("eid: the relying-party client certificate cannot be used; every eID call will fail", "error", err)
+	}
 	return &client{
 		base: base, rpUUID: rpUUID, rpName: rpName, secret: secret, certLevel: certLevel,
-		http: &http.Client{Timeout: httpTimeout},
+		http: httpClient, httpErr: err,
 	}
 }
 
@@ -491,6 +503,9 @@ func (c *client) get(ctx context.Context, path string) ([]byte, int, error) {
 }
 
 func (c *client) do(req *http.Request) ([]byte, int, error) {
+	if c.httpErr != nil {
+		return nil, 0, c.httpErr
+	}
 	if c.secret != "" {
 		req.Header.Set("Authorization", "Bearer "+c.secret)
 	}

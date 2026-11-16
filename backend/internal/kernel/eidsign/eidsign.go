@@ -62,6 +62,8 @@ import (
 	"github.com/pdfcpu/pdfcpu/pkg/api"
 	pdfcpumodel "github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 	pdfcputypes "github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types"
+
+	"github.com/gerege-systems/open-gerege-nexus/backend/internal/kernel/eidrp"
 )
 
 // What can go wrong, as errors a caller can match on.
@@ -195,6 +197,14 @@ const (
 
 // NewUsecase loads the Document-Signer and builds the ceremony.
 func NewUsecase(store cache, cfg Config) (Usecase, error) {
+	// The relying-party API, with the client certificate when the registration
+	// requires mTLS. Unlike a missing Document-Signer below, a certificate that
+	// was configured and cannot be loaded IS a reason to refuse to start: every
+	// ceremony would fail at eID with a 401 that names nothing about files.
+	client, err := eidrp.HTTPClient(15 * time.Second)
+	if err != nil {
+		return nil, err
+	}
 	signer, err := resolveSigner(cfg)
 	// A missing Document-Signer is not a reason to refuse to start: it is
 	// needed only to embed a PAdES signature on download, and the citizen's own
@@ -202,7 +212,7 @@ func NewUsecase(store cache, cfg Config) (Usecase, error) {
 	return &usecase{
 		cache:       store,
 		cfg:         cfg,
-		client:      &http.Client{Timeout: 15 * time.Second},
+		client:      client,
 		assetClient: newAssetFetchClient(15 * time.Second),
 		signer:      signer,
 		signerErr:   err,
